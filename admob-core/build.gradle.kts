@@ -11,6 +11,13 @@ android {
     defaultConfig {
         buildConfigField("String", "LIBRARY_VERSION", "\"${project.version}\"")
     }
+    buildTypes {
+        debug {
+            // Opt-in JaCoCo for unit tests, off by default so regular builds aren't instrumented:
+            // ./gradlew :admob-core:createDebugUnitTestCoverageReport -Pcompanyadmob.coverage
+            enableUnitTestCoverage = providers.gradleProperty("companyadmob.coverage").isPresent
+        }
+    }
 }
 
 dependencies {
