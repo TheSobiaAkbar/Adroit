@@ -21,7 +21,7 @@ internal class OnceCallback<T>(
         get() = invoked.get()
 
     /** Delivers [value] if this is the first call. Returns true if it was delivered, false if already invoked. */
-    fun invoke(value: T): Boolean {
+    operator fun invoke(value: T): Boolean {
         if (!invoked.compareAndSet(false, true)) return false
         val target = callback ?: return true
         callback = null
