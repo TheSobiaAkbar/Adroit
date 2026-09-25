@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Large native template: attribution, full-width media, header (icon, headline, advertiser), body, rating, store and
+    price, then a full-width call to action. The top row keeps its end free (paddingEnd) for the AdChoices icon.
+-->
+<!-- Overdraw: the template is embedded in your screen, not a window root, and its default background is transparent. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/company_admob_nativeBackground"
+    android:orientation="vertical"
+    android:padding="@dimen/company_admob_native_spacing"
+    android:theme="@style/CompanyAdMob.ThemeOverlay.Native"
+    tools:ignore="Overdraw">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingEnd="@dimen/company_admob_native_adchoices_space">
+
+        <TextView
+            android:id="@+id/company_admob_native_attribution"
+            style="@style/CompanyAdMob.Native.Attribution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/company_admob_native_media"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/company_admob_native_spacing"
+        android:contentDescription="@string/company_admob_native_media_description"
+        android:minHeight="@dimen/company_admob_native_media_min_height_large" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/company_admob_native_spacing"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/company_admob_native_icon"
+            android:layout_width="@dimen/company_admob_native_icon_size_large"
+            android:layout_height="@dimen/company_admob_native_icon_size_large"
+            android:layout_marginEnd="@dimen/company_admob_native_spacing"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/company_admob_native_headline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="?attr/company_admob_nativeTextAppearanceHeadline" />
+
+            <TextView
+                android:id="@+id/company_admob_native_advertiser"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="?attr/company_admob_nativeTextAppearanceCaption" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/company_admob_native_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/company_admob_native_spacing"
+        android:textAppearance="?attr/company_admob_nativeTextAppearanceBody" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/company_admob_native_spacing"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <RatingBar
+            android:id="@+id/company_admob_native_stars"
+            style="?android:attr/ratingBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/company_admob_native_spacing"
+            android:isIndicator="true"
+            android:numStars="5"
+            android:stepSize="0.1" />
+
+        <TextView
+            android:id="@+id/company_admob_native_store"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/company_admob_native_spacing"
+            android:maxLines="1"
+            android:textAppearance="?attr/company_admob_nativeTextAppearanceCaption" />
+
+        <TextView
+            android:id="@+id/company_admob_native_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textAppearance="?attr/company_admob_nativeTextAppearanceCaption" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/company_admob_native_cta"
+        style="@style/CompanyAdMob.Native.Cta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/company_admob_native_spacing" />
+</LinearLayout>

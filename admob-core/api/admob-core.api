@@ -492,6 +492,11 @@ public final class com/company/admob/CompanyAdMob : com/company/admob/AdsClient 
 	public fun start (Landroid/app/Activity;Lkotlin/jvm/functions/Function1;)V
 }
 
+public final class com/company/admob/CompanyAdMobInternal {
+	public static final field INSTANCE Lcom/company/admob/CompanyAdMobInternal;
+	public static final fun detachRenderedView (Lcom/company/admob/NativeAdHandle;)V
+}
+
 public final class com/company/admob/CompanyAdMobVersion {
 	public static final field INSTANCE Lcom/company/admob/CompanyAdMobVersion;
 	public static final field NAME Ljava/lang/String;
@@ -588,6 +593,9 @@ public abstract interface class com/company/admob/GoogleRequestCustomizer {
 }
 
 public abstract interface annotation class com/company/admob/GoogleSdkEscapeHatch : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class com/company/admob/InternalCompanyAdMobApi : java/lang/annotation/Annotation {
 }
 
 public abstract interface class com/company/admob/InterstitialApi : com/company/admob/FullScreenAdApi {

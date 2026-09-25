@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Transparent: the template shows on your screen's own background. -->
+    <color name="company_admob_native_background">@android:color/transparent</color>
+</resources>

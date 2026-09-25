@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="company_admob_banner_inline_max_height">250dp</dimen>
+
+    <dimen name="company_admob_native_spacing_small">4dp</dimen>
+    <dimen name="company_admob_native_spacing">8dp</dimen>
+    <dimen name="company_admob_native_spacing_large">16dp</dimen>
+    <dimen name="company_admob_native_icon_size">40dp</dimen>
+    <dimen name="company_admob_native_icon_size_large">48dp</dimen>
+    <!-- Google's AdChoices icon is added by the SDK in a top corner: keep this much free at the top end. -->
+    <dimen name="company_admob_native_adchoices_space">24dp</dimen>
+    <!-- Google requires an attribution badge at least 15px high and wide; 16dp is at least that at any density. -->
+    <dimen name="company_admob_native_attribution_min_size">16dp</dimen>
+    <dimen name="company_admob_native_cta_min_height">40dp</dimen>
+    <!-- About 16:9 at phone widths, and above Google's 120x120dp minimum for video. -->
+    <dimen name="company_admob_native_media_min_height">180dp</dimen>
+    <dimen name="company_admob_native_media_min_height_large">220dp</dimen>
+    <dimen name="company_admob_native_corner_radius">4dp</dimen>
+</resources>

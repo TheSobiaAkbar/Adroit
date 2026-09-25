@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Small native template: icon, headline and call to action, in one row.
+    The top end is kept free (paddingEnd) for the AdChoices icon the SDK adds.
+-->
+<!-- Overdraw: the template is embedded in your screen, not a window root, and its default background is transparent. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/company_admob_nativeBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/company_admob_native_spacing"
+    android:paddingTop="@dimen/company_admob_native_spacing"
+    android:paddingEnd="@dimen/company_admob_native_adchoices_space"
+    android:paddingBottom="@dimen/company_admob_native_spacing"
+    android:theme="@style/CompanyAdMob.ThemeOverlay.Native"
+    tools:ignore="Overdraw">
+
+    <ImageView
+        android:id="@+id/company_admob_native_icon"
+        android:layout_width="@dimen/company_admob_native_icon_size"
+        android:layout_height="@dimen/company_admob_native_icon_size"
+        android:layout_marginEnd="@dimen/company_admob_native_spacing"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:scaleType="fitCenter" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/company_admob_native_attribution"
+            style="@style/CompanyAdMob.Native.Attribution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/company_admob_native_headline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="?attr/company_admob_nativeTextAppearanceHeadline" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/company_admob_native_cta"
+        style="@style/CompanyAdMob.Native.Cta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/company_admob_native_spacing" />
+</LinearLayout>

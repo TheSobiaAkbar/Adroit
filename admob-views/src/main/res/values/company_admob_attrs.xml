@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared by AdBannerView and AdNativeView: the placement key from your configuration. -->
+    <attr name="company_admob_placement" format="string" />
+
+    <declare-styleable name="CompanyAdmobAdBannerView">
+        <attr name="company_admob_placement" />
+        <attr name="company_admob_bannerSize" format="enum">
+            <enum name="anchoredAdaptive" value="0" />
+            <enum name="inlineAdaptive" value="1" />
+            <enum name="mediumRectangle" value="2" />
+            <enum name="standard" value="3" />
+        </attr>
+        <!-- Maximum height of an inlineAdaptive banner. Defaults to @dimen/company_admob_banner_inline_max_height. -->
+        <attr name="company_admob_inlineMaxHeight" format="dimension" />
+        <!-- GONE while there's no ad (Hidden or Failed). Default true. -->
+        <attr name="company_admob_collapseWhenEmpty" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="CompanyAdmobAdNativeView">
+        <attr name="company_admob_placement" />
+        <attr name="company_admob_template" format="enum">
+            <enum name="small" value="0" />
+            <enum name="medium" value="1" />
+            <enum name="large" value="2" />
+        </attr>
+        <!-- Your own layout. It must use the standard template ids (company_admob_native_headline, ...). -->
+        <attr name="company_admob_layout" format="reference" />
+    </declare-styleable>
+
+    <!--
+        Template styling. Every native template applies CompanyAdMob.ThemeOverlay.Native, which sets all of these.
+        To restyle the templates, override that style (or the colors, dimens and styles it references) in your app.
+    -->
+    <attr name="company_admob_nativeBackground" format="reference|color" />
+    <attr name="company_admob_nativeCtaBackground" format="reference|color" />
+    <attr name="company_admob_nativeCtaTextColor" format="reference|color" />
+    <attr name="company_admob_nativeAttributionBackground" format="reference|color" />
+    <attr name="company_admob_nativeTextAppearanceHeadline" format="reference" />
+    <attr name="company_admob_nativeTextAppearanceBody" format="reference" />
+    <attr name="company_admob_nativeTextAppearanceCaption" format="reference" />
+    <attr name="company_admob_nativeTextAppearanceAttribution" format="reference" />
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.company.admob.views.AdBannerView
+        android:id="@+id/company_admob_test_mrec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:company_admob_bannerSize="mediumRectangle"
+        app:company_admob_placement="home" />
+
+    <com.company.admob.views.AdBannerView
+        android:id="@+id/company_admob_test_inline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:company_admob_bannerSize="inlineAdaptive"
+        app:company_admob_collapseWhenEmpty="false"
+        app:company_admob_inlineMaxHeight="90dp"
+        app:company_admob_placement="home" />
+
+    <com.company.admob.views.AdBannerView
+        android:id="@+id/company_admob_test_unknown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:company_admob_placement="nope" />
+
+    <com.company.admob.views.AdBannerView
+        android:id="@+id/company_admob_test_invalid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:company_admob_placement="Not A Key" />
+</LinearLayout>
