@@ -41,6 +41,15 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
         "androidx\\.compose\\..*:.*",
         "project :admob-compose",
     ),
+    // Compose stays design-system neutral: no Material or Material3, Navigation, Hilt or Firebase (PROMPT 14 §7).
+    ":admob-compose" to listOf(
+        "androidx\\.compose\\.material3?:.*",
+        "com\\.google\\.android\\.material:.*",
+        "androidx\\.navigation:.*",
+        "com\\.google\\.dagger:.*",
+        "com\\.google\\.firebase:.*",
+        "project :admob-firebase",
+    ),
 )
 
 /**
@@ -59,6 +68,10 @@ private val FORBIDDEN_DIRECT_BY_PROJECT = mapOf(
         "androidx\\.appcompat:.*",
         "androidx\\.fragment:.*",
         "com\\.google\\.android\\.material:.*",
+    ),
+    ":admob-compose" to listOf(
+        "androidx\\.appcompat:.*",
+        "androidx\\.fragment:.*",
     ),
 )
 
