@@ -483,6 +483,7 @@ public final class com/company/admob/CompanyAdMob : com/company/admob/AdsClient 
 	public fun getRewarded ()Lcom/company/admob/RewardedApi;
 	public fun getRewardedInterstitial ()Lcom/company/admob/RewardedInterstitialApi;
 	public fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public static final fun initialize (Landroid/app/Application;Lcom/company/admob/config/AdMobConfig;)V
 	public fun isReady ()Z
 	public fun preload ([Lcom/company/admob/AdPlacement;)V
 	public fun setAdFree (Z)V

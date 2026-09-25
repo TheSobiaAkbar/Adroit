@@ -1,10 +1,16 @@
 package com.company.admob
 
 import android.app.Activity
+import android.app.Application
+import androidx.annotation.VisibleForTesting
+import com.company.admob.config.AdMobConfig
 import com.company.admob.events.AdEvent
 import com.company.admob.internal.UninitializedAdsClient
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.logging.AdLog
+import com.company.admob.internal.runtime.AdsRuntime
+import com.company.admob.internal.runtime.RuntimeDeps
+import kotlinx.coroutines.CoroutineScope
 import com.company.admob.logging.AndroidAdLogger
 import com.company.admob.logging.LogLevel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,8 +45,60 @@ public object CompanyAdMob : AdsClient {
     @Volatile
     internal var requestedAdFree: Boolean? = null
 
-    // TODO(PROMPT-06): public fun initialize(application: Application, config: AdMobConfig), once PROMPT 03
-    //  provides AdMobConfig.
+    private val lock = Any()
+
+    /** The object graph built by `initialize()`, or null before it. */
+    @Volatile
+    internal var runtime: AdsRuntime? = null
+        private set
+
+    /**
+     * Sets up the library. Call it once, in `Application.onCreate()`. Cheap and synchronous: it validates [config]
+     * and attaches lifecycle observers, with no network and no Google SDK calls. Consent and SDK initialization
+     * happen in [start]. Callable from any thread.
+     *
+     * Later calls are ignored: with an equal configuration silently, with a different one with an error log and a
+     * [AdEvent.ConfigurationWarning]; the first configuration is kept.
+     *
+     * An invalid configuration throws [IllegalStateException] listing every problem when `failFast` is in effect
+     * (the default outside PRODUCTION). Otherwise [state] becomes [AdsState.Failed] with
+     * [AdError.InvalidConfiguration], ads stay off, and the app keeps running.
+     */
+    @JvmStatic
+    public fun initialize(application: Application, config: AdMobConfig) {
+        initialize(application, config) { log, scope -> RuntimeDeps.production(application, log, scope) }
+    }
+
+    internal fun initialize(
+        application: Application,
+        config: AdMobConfig,
+        depsFactory: (AdLog, CoroutineScope) -> RuntimeDeps,
+    ) {
+        synchronized(lock) {
+            runtime?.let {
+                it.onInitializeAgain(config)
+                return
+            }
+            val created = AdsRuntime(application, config, sharedState, eventBus, depsFactory)
+            runtime = created
+            delegate = created.client
+        }
+        // setAdFree() before initialize() was remembered; apply it now. Reading after publishing the delegate means
+        // a concurrent setAdFree() is applied by one side or the other.
+        requestedAdFree?.let { delegate.setAdFree(it) }
+    }
+
+    /** Returns the facade to its uninitialized state, for tests that initialize it. Not thread-safe. */
+    @VisibleForTesting
+    internal fun resetForTests() {
+        synchronized(lock) {
+            runtime?.close()
+            runtime = null
+            requestedAdFree = null
+            sharedState.value = AdsState.NotInitialized
+            delegate = UninitializedAdsClient(sharedState.asStateFlow(), eventBus.events, bootstrapLog)
+        }
+    }
 
     /** This facade as an [AdsClient], for dependency injection. Stable across initialization. */
     @JvmStatic

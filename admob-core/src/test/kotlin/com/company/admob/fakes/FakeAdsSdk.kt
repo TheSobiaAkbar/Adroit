@@ -61,6 +61,9 @@ internal class FakeAdsSdk(private val scope: CoroutineScope) : AdsSdk {
     var adInspectorResult: AdError? = null
 
     val initializeCalls = mutableListOf<InitializeCall>()
+
+    /** The thread each [initialize] call was made on. The port is called on main; the adapter moves off it. */
+    val initializeThreads = mutableListOf<Thread>()
     val requestConfigUpdates = mutableListOf<SdkRequestConfig>()
     val loadCalls = mutableListOf<LoadCall>()
     val fullScreenAds = mutableListOf<FakeLoadedFullScreenAd>()
@@ -85,6 +88,7 @@ internal class FakeAdsSdk(private val scope: CoroutineScope) : AdsSdk {
         onComplete: (SdkInitResult) -> Unit,
     ) {
         initializeCalls += InitializeCall(appId, request, disableCrashReporting)
+        initializeThreads += Thread.currentThread()
         val result = initResult
         scope.launch {
             delay(initDelayMs)
