@@ -18,7 +18,7 @@ Privacy and consent:
 9. The documentation covers Play data safety, the `AD_ID` permission for child-directed apps, and Consent Mode ordering.
 
 Security:
-10. No secrets in the repo or history: `git log -p | grep -Ei "(password|secret|token|api[_-]?key)"`, reviewed; `git grep 2838681778929171` is empty.
+10. No secrets in the repo or history: `git log -p | grep -Ei "(password|secret|token|api[_-]?key)"`, reviewed; `git grep -n "$(git show 2f76e72:app/src/main/AndroidManifest.xml | grep -o 'ca-app-pub-[0-9]*')"` finds nothing.
 11. CI secrets are used only via `secrets.*`, least-privilege workflow permissions, and actions pinned by SHA.
 12. Logging: PRODUCTION defaults to WARN, ad unit IDs are redacted in PRODUCTION, and there's no `println` and no stray `Log.`.
 13. The escape hatch (`@GoogleSdkEscapeHatch`) is opt-in at ERROR level, and the customizer failures are contained.

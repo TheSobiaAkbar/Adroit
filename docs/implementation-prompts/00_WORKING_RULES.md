@@ -40,7 +40,7 @@ The phase is **DONE** only when every acceptance criterion is ✅. If any item i
 
 ## Toolchain facts at design time (2026-09-25). Re-verify each time.
 - Gradle 9.3.1, AGP 9.1.1 (latest 9.4.1) with built-in Kotlin. The repo's `:app` compiles Kotlin with no `kotlin-android` plugin.
-- compileSdk 36 (minor 1) in `:app`, minSdk 24, targetSdk 36, Java 11.
-- Kotlin latest stable 2.4.20. Compose BOM 2026.09.00. lifecycle 2.11.0. coroutines 1.11.0.
+- compileSdk 37 (from Prompt 01; API 37 is installed), minSdk 24, targetSdk 36 (samples), Java 11 bytecode. Kotlin Gradle plugin 2.4.20 pinned via build-logic; library languageVersion/apiVersion 2.2, coreLibrariesVersion 2.2.0.
+- Kotlin latest stable 2.4.20. Compose BOM 2026.09.00. lifecycle 2.11.0. coroutines 1.10.2 in libraries (1.11.0 is built with Kotlin 2.2.20 and would raise the consumer minimum).
 - `ads-mobile-sdk` 1.4.0 documented (1.5.0 on Maven since 2026-09-24). UMP 4.0.0.
-- BCV 0.18.2. Robolectric 4.17 (check the latest). LeakCanary 2.x stable (don't use the 3.0 alpha).
+- API dumps: `apiDump`/`apiCheck` tasks from build-logic (BCV 0.18.2 dump engine; the BCV plugin itself does not work with AGP built-in Kotlin). Dependency guard: `checkModuleDependencies`. Robolectric 4.17 (check the latest). LeakCanary 2.x stable (don't use the 3.0 alpha).

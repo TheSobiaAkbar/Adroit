@@ -1,26 +1,91 @@
 [versions]
+# Build toolchain
 agp = "9.1.1"
+kotlin = "2.4.20"
+compileSdk = "37"
+minSdk = "24"
+targetSdk = "36"
+# Public API dumps (ADR-007): BCV's JVM dump engine, driven by build-logic tasks
+binaryCompatibilityValidator = "0.18.2"
+asm = "9.10.1"
+
+# Library runtime (keep conservative: library dependency versions become consumer minimums)
+adsMobileSdk = "1.4.0"
+ump = "4.0.0"
+androidxLifecycle = "2.11.0"
+androidxAnnotation = "1.11.0"
+kotlinxCoroutines = "1.10.2"
+composeBom = "2026.09.00"
+
+# Samples only
 coreKtx = "1.19.0"
-junit = "4.13.2"
-junitVersion = "1.3.0"
-espressoCore = "3.7.0"
 appcompat = "1.8.0"
 material = "1.14.0"
 activity = "1.13.0"
 constraintlayout = "2.2.2"
-playServicesAds = "25.5.0"
+
+# Tests
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+androidxTestCore = "1.7.0"
+robolectric = "4.17"
+turbine = "1.2.1"
 
 [libraries]
+# Google Mobile Ads Next-Gen + UMP (admob-core only)
+ads-mobile-sdk = { module = "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk", version.ref = "adsMobileSdk" }
+ump = { module = "com.google.android.ump:user-messaging-platform", version.ref = "ump" }
+
+androidx-lifecycle-common = { module = "androidx.lifecycle:lifecycle-common", version.ref = "androidxLifecycle" }
+androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "androidxLifecycle" }
+androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version.ref = "androidxLifecycle" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
+androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+compose-runtime = { module = "androidx.compose.runtime:runtime" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-foundation = { module = "androidx.compose.foundation:foundation" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+
+# Samples
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
-play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
+
+# Tests
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTestCore" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+
+# Build logic (convention plugins)
+android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
+binaryCompatibilityValidator = { module = "org.jetbrains.kotlinx:binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
+asm-tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
+kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+# Convention plugins (build-logic)
+companyadmob-android-library = { id = "companyadmob.android.library" }
+companyadmob-android-library-compose = { id = "companyadmob.android.library.compose" }
+companyadmob-android-sample = { id = "companyadmob.android.sample" }
+companyadmob-android-sample-compose = { id = "companyadmob.android.sample.compose" }
+companyadmob-publishing = { id = "companyadmob.publishing" }

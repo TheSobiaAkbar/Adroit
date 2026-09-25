@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -22,6 +23,15 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AdsPlugin"
-include(":app")
- 
+rootProject.name = "CompanyAdMob"
+
+// Published libraries (docs/architecture/02_ARCHITECTURE.md §7)
+include(":admob-core")
+include(":admob-views")
+include(":admob-compose")
+include(":admob-testing")
+
+// Samples (never published)
+include(":sample-xml")
+include(":sample-compose")
+include(":sample-mixed")

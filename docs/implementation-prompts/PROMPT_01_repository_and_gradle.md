@@ -6,7 +6,7 @@ You are working in the CompanyAdMob repository (an Android AdMob library). First
 Turn the single-module Android Studio template into the multi-module library workspace defined in the architecture. The result is empty but compiling library modules, a convention-plugin build, and API/dependency guards. **Write no ad logic.**
 
 ## 2. Context
-- The repo today: `:app` (package `com.shark.adplugin`, AppCompat + XML template), `gradle/libs.versions.toml` (AGP 9.1.1, legacy `play-services-ads` 25.5.0), Gradle 9.3.1, and AGP built-in Kotlin (there is no `kotlin-android` plugin, but Kotlin compiles). `app/src/main/AndroidManifest.xml` contains a **real** AdMob app ID (`ca-app-pub-2838681778929171~7468960276`).
+- The repo today: `:app` (package `com.shark.adplugin`, AppCompat + XML template), `gradle/libs.versions.toml` (AGP 9.1.1, legacy `play-services-ads` 25.5.0), Gradle 9.3.1, and AGP built-in Kotlin (there is no `kotlin-android` plugin, but Kotlin compiles). `app/src/main/AndroidManifest.xml` contains the company's **real** AdMob app ID.
 - ADR-001: the library uses the **GMA Next-Gen SDK** (`com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk`). The legacy `play-services-ads` must be removed from the project entirely.
 - Modules (ADR-003): `admob-core`, `admob-views`, `admob-compose`, `admob-testing`, `admob-firebase` (created later in Prompt 24, **not now**), `sample-xml` (the renamed `:app`), `sample-compose`, `sample-mixed`.
 - Library settings: minSdk 24, compileSdk 36, JVM target 11, Kotlin `languageVersion`/`apiVersion` 2.1 (ADR-010), explicit API mode, `allWarningsAsErrors`, and `resourcePrefix = "company_admob_"`.
@@ -85,7 +85,7 @@ Only those listed in §5.4–5.5 plus test libraries. Verify each version's late
 - [ ] Explicit API mode, `allWarningsAsErrors`, JVM 11, and `resourcePrefix` are active in every library module.
 - [ ] `checkModuleDependencies` runs in `check` and fails on a forbidden edge (demonstrated).
 - [ ] The `.api` dumps are committed, and `apiCheck` passes.
-- [ ] No real AdMob app ID remains in the repo (`git grep "2838681778929171"` is empty).
+- [ ] No real AdMob app ID remains in the repo (`git grep -n "$(git show 2f76e72:app/src/main/AndroidManifest.xml | grep -o 'ca-app-pub-[0-9]*')"` finds nothing).
 - [ ] The minified `:sample-xml:assembleRelease` builds.
 - [ ] `docs/architecture/NAMING.md` exists.
 

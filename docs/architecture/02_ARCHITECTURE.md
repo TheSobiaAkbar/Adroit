@@ -43,7 +43,7 @@ Priority order for every decision: **correctness > maintainability > API stabili
 | Preload / cache / expiry / retry | `FullScreenAdEngine` + `AdCache` + `RetryPolicy` (§12, §25) |
 | Frequency / cooldown | `FrequencyGate` (§20.6) |
 | Analytics / logging / diagnostics | `AdEvent` stream, `AdEventListener`, `AdLogger`, `AdDiagnostics` (§22–23) |
-| API stability | explicit API mode, BCV `apiCheck`, `@ExperimentalCompanyAdMobApi`, `@GoogleSdkEscapeHatch` (§31) |
+| API stability | explicit API mode, `apiCheck` (BCV dump engine), `@ExperimentalCompanyAdMobApi`, `@GoogleSdkEscapeHatch` (§31) |
 
 ## 4. SDK research (summary)
 
@@ -57,7 +57,7 @@ See 01. The key facts:
 
 - `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.4.0`, pinned in `gradle/libs.versions.toml`. It's declared as an **`implementation`** dependency of `admob-core` (never `api`). It still ends up on the consumer's runtime classpath, which it must, but its classes aren't on the consumer's compile classpath. That keeps Google types from leaking into host code by accident.
 - UMP comes in transitively through Next-Gen. `admob-core` also declares `com.google.android.ump:user-messaging-platform:4.0.0` directly, because the library calls its API and relying on another artifact's transitive dependency for a direct call would be fragile.
-- Toolchain: AGP 9.x with built-in Kotlin (as the repo already does). compileSdk 36. **Library minSdk 24**, which Next-Gen requires. The library itself has **no targetSdk**; samples target 36. **JVM target 11**, the lowest Next-Gen supports, which maximises host compatibility and avoids the "cannot inline JVM 17 bytecode into 11" error in older hosts. Kotlin compiler: whatever AGP bundles, or 2.4.x. **`languageVersion`/`apiVersion` = 2.1**, so hosts on Kotlin 2.1+ can consume the library (Prompt 01 verifies this).
+- Toolchain (verified in Prompt 01): AGP 9.1.1 with built-in Kotlin. The Kotlin Gradle plugin is pinned to 2.4.20 through `build-logic`, overriding AGP's bundled 2.2.10. compileSdk 37 (installed, and required by the samples' `androidx.core` 1.19). **Library minSdk 24**, which Next-Gen requires. The library itself has **no targetSdk**; samples target 36. **JVM target 11**, the lowest Next-Gen supports, which maximises host compatibility and avoids the "cannot inline JVM 17 bytecode into 11" error in older hosts. **`languageVersion`/`apiVersion` = 2.2** and **`coreLibrariesVersion` = 2.2.0** (ADR-010). Kotlin 2.4 deprecates language version 2.1, and Kotlin compilers read metadata one version ahead, so hosts on Kotlin 2.1+ can still consume the library. Library dependency versions stay conservative because they become consumer minimums: for example, coroutines 1.10.2 (built with Kotlin 2.1), not 1.11.0 (built with 2.2.20).
 
 ## 6. Next-Gen SDK decision
 
@@ -568,7 +568,7 @@ Rules:
 | Robolectric | Robolectric + `androidx.test:core`, `ActivityScenario`, `lifecycle-runtime-testing` | ActivityTracker, Activity validation, banner handle lifecycle (attach/destroy/Fragment view lifecycle), native binder (views found/hidden), AdBannerView XML inflation, ProcessLifecycle app-open triggers |
 | Compose UI | `ui-test-junit4` on Robolectric | AdBanner/AdNative: no reload on recomposition, single AdView, dispose → destroy, `StateRestorationTester` rotation → no native reload |
 | Instrumented (emulator) | `sample-*` androidTest + LeakCanary `leakcanary-android-instrumentation` | Real test ads end to end (nightly, needs network), leak detection across rotation and navigation, minified release smoke |
-| API | BCV `apiCheck` | Public surface diff on every PR |
+| API | `apiCheck` (BCV dump engine, ADR-007) | Public surface diff on every PR |
 | Contract | `GoogleDemoAdUnitsTest`, `NoGoogleTypesInPublicApiTest` (parses `.api` dumps for `com/google/android/libraries/ads` outside the escape-hatch file) | Safety invariants |
 
 ## 27. Publishing
@@ -616,7 +616,7 @@ GitHub Actions (the remote is GitHub):
 - Pre-1.0 (`0.x`) while the API stabilises inside the company. `1.0.0` comes after the final production audit passes.
 - **Stability tools:**
   - Kotlin explicit API mode in all library modules.
-  - BCV (`org.jetbrains.kotlinx.binary-compatibility-validator`, latest 0.18.x) with `.api` dumps committed and `apiCheck` in CI. BCV was chosen over KGP's built-in `abiValidation`, which is still experimental and gated behind opt-in. Migration is tracked as ADR-007.
+  - `.api` dumps committed (`./gradlew apiDump`), and `apiCheck` wired into `check` and CI. **Neither the BCV plugin nor KGP's `abiValidation` works with AGP 9 built-in Kotlin**: both rely on `kotlin-android` extension points that AGP doesn't register ([KT-83410](https://youtrack.jetbrains.com/issue/KT-83410)). BCV registers no tasks, and KGP produces empty dumps (both verified in Prompt 01). So `build-logic/.../ApiValidation.kt` feeds the release variant's classes (AGP `ScopedArtifacts`) into **BCV 0.18.2's own JVM dump engine** in an isolated worker. The output is the standard BCV `.api` format. Switch to KGP `abiValidation` once KT-83410 is fixed (ADR-007).
   - `@ExperimentalCompanyAdMobApi` (`RequiresOptIn`) for new surfaces.
   - `@GoogleSdkEscapeHatch` (`RequiresOptIn`, level ERROR) for anything that exposes Google types.
 - Google upgrades follow the checklist in RELEASE.md: read the release notes, check deprecations, update 01_SDK_RESEARCH, run the full CI plus nightly instrumentation, check the API dump for no public change, and add a CHANGELOG "Google SDK" section.
@@ -632,10 +632,11 @@ GitHub Actions (the remote is GitHub):
 | 004 | Two-phase start (`initialize` in Application, `start(activity)` for consent) | Accepted |
 | 005 | Typed placement classes per format | Accepted |
 | 006 | Main-thread confinement for all engine state (no locks in engines) | Accepted |
-| 007 | BCV for API dumps; migrate to KGP `abiValidation` once it's stable | Accepted |
+| 007 | API dumps with the BCV JVM dump engine, driven by build-logic tasks (`apiDump`/`apiCheck`), because the BCV plugin and KGP `abiValidation` don't support AGP 9 built-in Kotlin (KT-83410). Migrate to KGP `abiValidation` once it's fixed. | Accepted (revised in Prompt 01) |
 | 008 | Native rendering through host layout + id map, wrapped in a programmatic `NativeAdView`, bridged to Compose via `AndroidView` | Accepted |
 | 009 | Suspend rewarded API with an unclaimed-results channel for cancellation safety | Accepted |
-| 010 | JVM 11 bytecode, Kotlin language/API version 2.1 | Accepted, verified in Prompt 01 |
+| 010 | JVM 11 bytecode; Kotlin language/API version 2.2 with `coreLibrariesVersion` 2.2.0 (2.1 is deprecated by the Kotlin 2.4 compiler); consumers need Kotlin 2.1+ | Accepted (revised in Prompt 01) |
+| 014 | The dependency guard checks AppCompat/Fragment against **direct** dependencies only, because Next-Gen's `play-services-basement` pulls `androidx.fragment` and `appcompat-resources` transitively. The legacy SDK, Compose, Material, Firebase, Dagger, and project edges are checked transitively. | Accepted (Prompt 01) |
 
 ## 33. Concurrency (cross-cutting)
 

@@ -13,7 +13,7 @@ Automate build, lint, unit tests, API compatibility, dependency guards, minified
 - `.github/workflows/ci.yml`: on `pull_request` and `push` to `master`/`main`:
   - `actions/checkout`, `actions/setup-java` (temurin 17), `gradle/actions/setup-gradle` (with the cache). Pin all actions to a major version, and **also pin third-party actions by commit SHA**.
   - `./gradlew build lint apiCheck checkModuleDependencies testDebugUnitTest verifyPublication :sample-xml:assembleRelease :sample-compose:assembleRelease :sample-mixed:assembleRelease :sample-mixed:assembleRelease -PwithMediation=true --stacktrace`
-  - A "forbidden patterns" step: fail on `println(` in library sources, `android.util.Log` outside `AndroidAdLogger`, Google imports outside `internal/google`, and `2838681778929171` (the old real app ID) anywhere.
+  - A "forbidden patterns" step: fail on `println(` in library sources, `android.util.Log` outside `AndroidAdLogger`, Google imports outside `internal/google`, and the old real publisher ID anywhere (derive it rather than hard-coding it: `git grep -n "$(git show 2f76e72:app/src/main/AndroidManifest.xml | grep -o 'ca-app-pub-[0-9]*')"`).
   - Upload lint HTML/SARIF reports and test reports as artifacts.
   - `concurrency` to cancel superseded runs.
   - `permissions: contents: read`

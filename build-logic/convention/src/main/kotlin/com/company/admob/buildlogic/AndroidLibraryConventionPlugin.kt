@@ -1,0 +1,47 @@
+package com.company.admob.buildlogic
+
+import com.android.build.api.dsl.LibraryExtension
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
+
+/**
+ * `companyadmob.android.library`: settings shared by every published library module
+ * (see docs/architecture/02_ARCHITECTURE.md §5 and §7).
+ */
+class AndroidLibraryConventionPlugin : Plugin<Project> {
+    override fun apply(target: Project): Unit = with(target) {
+        pluginManager.apply("com.android.library")
+
+        group = requiredProperty("companyAdmob.group")
+        version = requiredProperty("companyAdmob.version")
+
+        extensions.configure<LibraryExtension> {
+            compileSdk = libs.intVersion("compileSdk")
+            resourcePrefix = requiredProperty("companyAdmob.resourcePrefix")
+
+            defaultConfig {
+                minSdk = libs.intVersion("minSdk")
+                consumerProguardFiles("consumer-rules.pro")
+                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            }
+            compileOptions {
+                sourceCompatibility = JAVA_TARGET
+                targetCompatibility = JAVA_TARGET
+            }
+            testOptions {
+                unitTests.isIncludeAndroidResources = true
+            }
+            lint {
+                abortOnError = true
+                warningsAsErrors = false
+                checkDependencies = false
+                baseline = file("lint-baseline.xml")
+            }
+        }
+
+        configureKotlin(library = true)
+        registerDependencyGuard()
+        registerApiValidation()
+    }
+}
