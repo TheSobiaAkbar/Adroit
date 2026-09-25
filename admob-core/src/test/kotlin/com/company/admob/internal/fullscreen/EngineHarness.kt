@@ -2,9 +2,13 @@ package com.company.admob.internal.fullscreen
 
 import android.app.Activity
 import android.os.Looper
+import com.company.admob.AdPlacement
 import com.company.admob.AdsState
 import com.company.admob.FullScreenResult
 import com.company.admob.InterstitialPlacement
+import com.company.admob.RewardResult
+import com.company.admob.RewardedInterstitialPlacement
+import com.company.admob.RewardedPlacement
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AdMobConfig
 import com.company.admob.config.FrequencyRule
@@ -35,6 +39,8 @@ import kotlin.time.Duration.Companion.seconds
 
 internal val LEVEL_END = InterstitialPlacement("level_end")
 internal val MENU = InterstitialPlacement("menu")
+internal val EXTRA_LIFE = RewardedPlacement("extra_life")
+internal val BONUS = RewardedInterstitialPlacement("bonus")
 
 /** Jitter-free full-screen retry defaults, so delays are exact. */
 internal val EXACT_RETRY = RetryPolicy(5.seconds, 2.0, 120.seconds, maxAttempts = 5, jitterRatio = 0.0)
@@ -59,6 +65,7 @@ internal class EngineHarness(
             interstitial(MENU, TestIds.unit(2)) { retry = EXACT_RETRY }
         }
     },
+    strategy: FullScreenFormatStrategy = FullScreenFormatStrategy.Interstitial,
 ) {
     val effective = EffectiveConfig.from(config)
     val adsSdk = FakeAdsSdk(scope)
@@ -78,8 +85,11 @@ internal class EngineHarness(
         { effective.placement(it)?.frequency ?: FrequencyRule() },
         config.frequency.minIntervalBetweenFullScreenAds,
     )
-    val engine = FullScreenAdEngine(
-        strategy = FullScreenFormatStrategy.Interstitial,
+    val engine = engine(strategy)
+
+    /** An engine for [strategy] sharing this harness's readiness, frequency gate and full-screen coordinator. */
+    fun engine(strategy: FullScreenFormatStrategy): FullScreenAdEngine = FullScreenAdEngine(
+        strategy = strategy,
         config = effective,
         adsSdk = adsSdk,
         readiness = readiness,
@@ -92,9 +102,13 @@ internal class EngineHarness(
         clock = clock,
         scope = scope.backgroundScope,
         log = log,
-    ).also { it.start() }
+    ).also {
+        it.start()
+        run()
+    }
 
     val results = mutableListOf<FullScreenResult>()
+    val rewardResults = mutableListOf<RewardResult>()
 
     fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
 
@@ -112,10 +126,13 @@ internal class EngineHarness(
         run()
     }
 
-    fun show(placement: InterstitialPlacement = LEVEL_END, activity: Activity = activity()) =
+    fun show(placement: AdPlacement = LEVEL_END, activity: Activity = activity()) =
         engine.show(activity, placement) { results += it }
 
-    fun adUnit(placement: InterstitialPlacement): String = effective.placement(placement)!!.adUnitId
+    fun showRewarded(placement: AdPlacement, customData: String? = null, activity: Activity = activity()) =
+        engine.showRewarded(activity, placement, customData) { rewardResults += it }
+
+    fun adUnit(placement: AdPlacement): String = effective.placement(placement)!!.adUnitId
 
     /** The most recent fake ad loaded. */
     fun lastAd(): FakeLoadedFullScreenAd = adsSdk.fullScreenAds.last()

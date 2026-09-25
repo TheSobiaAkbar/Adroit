@@ -57,6 +57,11 @@ public interface RewardedApi : FullScreenAdApi<RewardedPlacement> {
     /**
      * Shows a rewarded ad for [placement]. [onResult] is called exactly once, on the main thread, after the ad is
      * dismissed, or without showing an ad if none can be shown. A reward is never delivered twice.
+     *
+     * Grant the reward in a ViewModel or repository, not in the Activity, and use [RewardResult.Earned.rewardId] to
+     * make the grant idempotent. For valuable rewards, prefer server-side verification
+     * ([RewardedShowOptions.serverSideVerificationCustomData]). If the process dies while the ad is showing, the
+     * client-side reward is lost; server-side verification covers that case.
      */
     public fun show(
         activity: Activity,
@@ -90,7 +95,11 @@ public interface RewardedApi : FullScreenAdApi<RewardedPlacement> {
  * [RewardedApi] apply.
  */
 public interface RewardedInterstitialApi : FullScreenAdApi<RewardedInterstitialPlacement> {
-    /** See [RewardedApi.show]. Call only after your intro screen with an opt-out. */
+    /**
+     * You must show an intro screen announcing the reward with an option to opt out before calling this
+     * (https://developers.google.com/admob/android/next-gen/rewarded-interstitial). Otherwise the same as
+     * [RewardedApi.show]: [onResult] is called exactly once, on the main thread, and a reward is never delivered twice.
+     */
     public fun show(
         activity: Activity,
         placement: RewardedInterstitialPlacement,

@@ -157,6 +157,10 @@ internal class FakeLoadedFullScreenAd(
     var serverSideVerificationData: String? = null
         private set
     val shownIn = mutableListOf<Activity>()
+
+    /** The server-side verification data at the moment [show] was called. */
+    var serverSideVerificationDataAtShow: String? = null
+        private set
     var listener: FullScreenAdListener? = null
         private set
     var released: Boolean = false
@@ -169,6 +173,7 @@ internal class FakeLoadedFullScreenAd(
     }
 
     override fun show(activity: Activity, listener: FullScreenAdListener) {
+        serverSideVerificationDataAtShow = serverSideVerificationData
         shownIn += activity
         this.listener = listener
     }

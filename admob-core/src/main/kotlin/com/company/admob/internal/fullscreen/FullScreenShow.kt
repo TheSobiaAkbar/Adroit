@@ -15,12 +15,17 @@ import com.company.admob.internal.reliability.FrequencyGate
 import com.company.admob.internal.reliability.FullScreenCoordinator
 import com.company.admob.internal.reliability.ShowSession
 import com.company.admob.internal.time.Clock
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration
 
 /**
  * One show of a full-screen ad: turns the SDK's listener calls into events, a frequency record on impression, and
  * exactly one result through [session]. The show ends on dismiss, on a show failure, or when the watchdog times out;
  * ending releases the [FullScreenCoordinator] token and the ad, then calls [onEnded] (the engine reloads). Callbacks
- * that arrive after the end are logged and ignored. Main thread only.
+ * that arrive after the end are logged and ignored. For reward formats a dismissal waits [dismissGrace] before
+ * ending, so a reward reported just after dismissal still counts. Main thread only.
  */
 internal class FullScreenShow(
     private val placement: EffectivePlacement,
@@ -33,10 +38,13 @@ internal class FullScreenShow(
     private val clock: Clock,
     private val log: AdLog,
     private val onReward: (Reward) -> Unit,
+    private val scope: CoroutineScope,
+    private val dismissGrace: Duration,
     private val onEnded: () -> Unit,
 ) : FullScreenAdListener {
     lateinit var session: ShowSession<FullScreenResult>
     private var clicked = false
+    private var dismissing = false
     private val key get() = placement.placement.key
     private val adUnitId get() = placement.adUnitId
 
@@ -71,6 +79,22 @@ internal class FullScreenShow(
     override fun onRewardEarned(reward: Reward) = onReward(reward)
 
     override fun onDismissed() {
+        if (dismissing) return
+        dismissing = true
+        // A dismissal means the ad showed, even if onShown was lost: the watchdog is no longer needed.
+        session.markShown()
+        if (dismissGrace.isPositive()) {
+            // Keep the ad and its listener for a late reward callback (see FullScreenFormatStrategy.dismissGrace).
+            scope.launch {
+                delay(dismissGrace)
+                finishDismiss()
+            }
+        } else {
+            finishDismiss()
+        }
+    }
+
+    private fun finishDismiss() {
         if (session.resolve(FullScreenResult.Dismissed(clicked))) {
             end(AdEvent.Dismissed(key, format, adUnitId, now()))
         } else {

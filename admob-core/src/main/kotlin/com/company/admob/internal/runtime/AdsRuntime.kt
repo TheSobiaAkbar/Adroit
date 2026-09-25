@@ -18,6 +18,9 @@ import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.fullscreen.FullScreenAdEngine
 import com.company.admob.internal.fullscreen.FullScreenFormatStrategy
 import com.company.admob.internal.fullscreen.InterstitialApiImpl
+import com.company.admob.internal.fullscreen.RewardedApiImpl
+import com.company.admob.internal.fullscreen.RewardedInterstitialApiImpl
+import com.company.admob.internal.fullscreen.UnclaimedRewards
 import com.company.admob.internal.init.InitCoordinator
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.reliability.FrequencyGate
@@ -87,8 +90,8 @@ internal class AdsRuntime(
 
     val fullScreenCoordinator: FullScreenCoordinator = FullScreenCoordinator(deps.clock)
 
-    val interstitialEngine: FullScreenAdEngine = FullScreenAdEngine(
-        strategy = FullScreenFormatStrategy.Interstitial,
+    private fun fullScreenEngine(strategy: FullScreenFormatStrategy) = FullScreenAdEngine(
+        strategy = strategy,
         config = effectiveConfig,
         adsSdk = deps.adsSdk,
         readiness = init,
@@ -103,12 +106,20 @@ internal class AdsRuntime(
         log = log,
     )
 
+    val interstitialEngine: FullScreenAdEngine = fullScreenEngine(FullScreenFormatStrategy.Interstitial)
+    val rewardedEngine: FullScreenAdEngine = fullScreenEngine(FullScreenFormatStrategy.Rewarded())
+    val rewardedInterstitialEngine: FullScreenAdEngine =
+        fullScreenEngine(FullScreenFormatStrategy.RewardedInterstitial())
+    private val fullScreenEngines = listOf(interstitialEngine, rewardedEngine, rewardedInterstitialEngine)
+
     val client: AdsClient = AdsClientImpl(
         state = init.state,
         eventBus = events,
         init = init,
         privacy = PrivacyApiImpl(init.consent, config.environment, log),
         interstitial = InterstitialApiImpl(interstitialEngine, log),
+        rewarded = RewardedApiImpl(rewardedEngine, UnclaimedRewards(log)),
+        rewardedInterstitial = RewardedInterstitialApiImpl(rewardedInterstitialEngine, UnclaimedRewards(log)),
         runtime = this,
     )
 
@@ -129,8 +140,10 @@ internal class AdsRuntime(
         }
         if (validation.isValid) {
             deps.register()
-            adFree.addListener(interstitialEngine)
-            interstitialEngine.start()
+            fullScreenEngines.forEach {
+                adFree.addListener(it)
+                it.start()
+            }
             val store = deps.keyValueStore
             launchCount = store.getInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, 0) + 1
             store.putInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, launchCount)

@@ -18,6 +18,7 @@ import com.company.admob.PrivacyApi
 import com.company.admob.RewardResult
 import com.company.admob.RewardedApi
 import com.company.admob.RewardedInterstitialApi
+import com.company.admob.RewardedInterstitialPlacement
 import com.company.admob.RewardedPlacement
 import com.company.admob.RewardedShowOptions
 import com.company.admob.TestModeInfo
@@ -42,6 +43,8 @@ internal class AdsClientImpl(
     private val init: InitCoordinator,
     override val privacy: PrivacyApi,
     override val interstitial: InterstitialApi,
+    override val rewarded: RewardedApi,
+    override val rewardedInterstitial: RewardedInterstitialApi,
     private val runtime: AdsRuntime,
 ) : AdsClient {
     private val log get() = runtime.log
@@ -65,12 +68,6 @@ internal class AdsClientImpl(
     override fun setAdFree(adFree: Boolean) {
         runOnMain { init.setAdFree(adFree) }
     }
-
-    // TODO(PROMPT-09): the rewarded engine.
-    override val rewarded: RewardedApi get() = notYetAvailable.rewarded
-
-    // TODO(PROMPT-09): the rewarded interstitial engine.
-    override val rewardedInterstitial: RewardedInterstitialApi get() = notYetAvailable.rewardedInterstitial
 
     // TODO(PROMPT-10): the app open controller.
     override val appOpen: AppOpenApi get() = notYetAvailable.appOpen
@@ -97,7 +94,9 @@ internal class AdsClientImpl(
         for (placement in placements) {
             when (placement) {
                 is InterstitialPlacement -> interstitial.preload(placement)
-                // TODO(PROMPT-09, PROMPT-12): rewarded, rewarded interstitial and native placements.
+                is RewardedPlacement -> rewarded.preload(placement)
+                is RewardedInterstitialPlacement -> rewardedInterstitial.preload(placement)
+                // TODO(PROMPT-12): native placements.
                 else -> log.d { "preload(): ${placement.format} placements are ignored here" }
             }
         }

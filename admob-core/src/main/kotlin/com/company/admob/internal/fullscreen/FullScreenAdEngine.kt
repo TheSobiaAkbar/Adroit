@@ -8,6 +8,7 @@ import com.company.admob.AdsState
 import com.company.admob.FullScreenResult
 import com.company.admob.GoogleSdkEscapeHatch
 import com.company.admob.Reward
+import com.company.admob.RewardResult
 import com.company.admob.UnavailableReason
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.PreloadStrategy
@@ -158,7 +159,9 @@ internal class FullScreenAdEngine(
         val ad = checkNotNull(slot.take())
         val token = checkNotNull(coordinator.tryAcquire("$format:${placement.key}"))
         slot.availability.value = AdAvailability.Unavailable
-        val show = FullScreenShow(p!!, ad, token, format, frequency, coordinator, events, clock, log, onRewardEarned) {
+        val show = FullScreenShow(
+            p!!, ad, token, format, frequency, coordinator, events, clock, log, onRewardEarned, scope, strategy.dismissGrace,
+        ) {
             reloadAfterShow(p)
         }
         show.session = ShowSession(callback, scope, config.source.advanced.showTimeout, { show.timeoutResult() }) {
@@ -167,6 +170,24 @@ internal class FullScreenAdEngine(
         prepare(ad)
         log.i { "Showing $format ${placement.key} (${logId(slot.adUnitId)})" }
         ad.show(activity, show)
+    }
+
+    /**
+     * [show] for the rewarded formats: sets the server-side verification [customData] on the ad right before it's
+     * shown, tracks the reward in a [RewardSession], and delivers the final [RewardResult] exactly once, posted to
+     * the main thread. The callback reference is dropped once delivered.
+     */
+    fun showRewarded(activity: Activity, placement: AdPlacement, customData: String?, onResult: (RewardResult) -> Unit) {
+        val p = placements[placement]
+        val session = p?.let { RewardSession(it, format, events, clock, log) }
+        show(
+            activity,
+            placement,
+            prepare = { it.setServerSideVerification(customData) },
+            onRewardEarned = { reward -> session?.onRewardEarned(reward) },
+        ) { result ->
+            onResult(session?.resolve(result) ?: RewardResult.Failed((result as FullScreenResult.NotShown).error))
+        }
     }
 
     private fun gateError(activity: Activity, placement: AdPlacement, p: EffectivePlacement?): AdError? {
