@@ -101,7 +101,7 @@ CompanyAdMob.showRewarded(activity, Placements.ExtraLife) { result ->
 }
 
 // Or with coroutines (safe across rotation: see unclaimedResults)
-lifecycleScope.launch { val result = CompanyAdMob.rewarded.show(this@GameActivity, Placements.ExtraLife) }
+lifecycleScope.launch { val result = CompanyAdMob.rewarded.showAndAwait(this@GameActivity, Placements.ExtraLife) }
 ```
 
 ## 7. Banner and native

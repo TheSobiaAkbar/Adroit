@@ -1,6 +1,14 @@
 # Part 3: Public API proposal
 
 This is the contract the implementation prompts build. Signatures are normative. KDoc wording is illustrative.
+
+> **Implemented in PROMPT 02; the source and `admob-core/api/admob-core.api` are authoritative where they differ from this summary.** Decisions made during implementation:
+> - **Packages:** everyday types live in `com.company.admob` (facade, `AdsClient`, sub-APIs, states, results, errors, placements, opt-in annotations). Only `com.company.admob.events`, `com.company.admob.logging`, and `com.company.admob.config` are separate.
+> - **Suspend shows are named `showAndAwait`,** not overloads of `show`. `show(activity, placement)` with a defaulted callback and a same-named `suspend` overload would make the fire-and-forget call fail to compile outside coroutines ("suspend function should be called only from a coroutine"). `NativeApi.load` keeps its overload because the callback form has no default.
+> - `CompanyAdMob.initialize(application, config)` arrives in PROMPT 06, after PROMPT 03 adds `AdMobConfig`.
+> - `AdEvent.PlacementEvent` groups placement events, with non-null `placementKey`/`format` and the effective `adUnitId`.
+> - `AdError.NoFill/NetworkError/Timeout/LoadFailed/ShowFailed/SdkInitFailed` are classes carrying optional `sdkDetails`. `AdError.Internal(detail, cause)`. `SdkErrorDetails` adds `codeName`.
+> - `ConsentState.Unknown` constant. `DiagnosticsReport.environment`/`testMode` are nullable (null before initialization). `AdEnvironment` lives in `com.company.admob.config`.
 All public declarations use explicit API mode. **No `com.google.*` type appears in any signature here**, except in `@GoogleSdkEscapeHatch` declarations.
 
 ## 3.1 Entry point (`admob-core`, package `com.company.admob`)
@@ -108,12 +116,12 @@ public interface FullScreenAdApi<P : AdPlacement> {
 }
 public interface InterstitialApi : FullScreenAdApi<InterstitialPlacement> {
   public fun show(activity: Activity, placement: InterstitialPlacement, onResult: (FullScreenResult) -> Unit = {})
-  public suspend fun show(activity: Activity, placement: InterstitialPlacement): FullScreenResult
+  public suspend fun showAndAwait(activity: Activity, placement: InterstitialPlacement): FullScreenResult
 }
 public interface RewardedApi : FullScreenAdApi<RewardedPlacement> {
   public fun show(activity: Activity, placement: RewardedPlacement, options: RewardedShowOptions = RewardedShowOptions(),
                   onResult: (RewardResult) -> Unit)
-  public suspend fun show(activity: Activity, placement: RewardedPlacement,
+  public suspend fun showAndAwait(activity: Activity, placement: RewardedPlacement,
                           options: RewardedShowOptions = RewardedShowOptions()): RewardResult
   /** Earned results whose suspend caller was cancelled. Single consumer. */
   public val unclaimedResults: Flow<RewardResult.Earned>

@@ -25,7 +25,7 @@ Implement one generic `FullScreenAdEngine` (cache + load + retry + expiry + show
   - `clear(placement)`: drop the cache and cancel the retry for that slot.
   - `availability(placement): StateFlow<AdAvailability>`: one `MutableStateFlow` per slot, exposed per placement (a placement maps to its slot's flow, combined with the placement `enabled` flag).
 - `FullScreenFormatStrategy.kt`: a small interface for per-format differences (`format`, `defaultTtl`, `defaultRetry`, `participatesInGlobalFrequency`, `resultOnDismiss(...)`). Keep it minimal; the rewarded extension comes in Prompt 09.
-- `InterstitialApiImpl.kt`: implements `InterstitialApi` (callback + suspend `show`, `preload`, `availability`, `isReady`, `clear`). The suspend `show` uses `suspendCancellableCoroutine`. **Cancellation doesn't cancel an ad that's already showing**; the result is dropped and logged at debug. The interstitial has no reward, so dropping it is safe.
+- `InterstitialApiImpl.kt`: implements `InterstitialApi` (callback `show` + suspend `showAndAwait`, `preload`, `availability`, `isReady`, `clear`). The suspend `showAndAwait` uses `suspendCancellableCoroutine`. **Cancellation doesn't cancel an ad that's already showing**; the result is dropped and logged at debug. The interstitial has no reward, so dropping it is safe.
 
 ## 4. Files to modify
 - `internal/runtime/AdsClientImpl.kt`: wire `interstitial` and `showInterstitial`, and `preload(vararg)` for interstitial placements. Remove the `TODO(PROMPT-08)` placeholder.
@@ -60,7 +60,7 @@ None new.
 - Activity destroyed or finishing → `ActivityUnavailable`, and the ad stays cached.
 - The callback is never synchronous (assert a flag set after `show` returns, before the callback).
 - Ad-free toggled while cached → the cache is released and availability is Disabled. Toggled back → reload.
-- Suspend `show`: returns the result. Cancelling the caller while showing → the ad continues and the coordinator is still released on dismiss.
+- Suspend `showAndAwait`: returns the result. Cancelling the caller while showing → the ad continues and the coordinator is still released on dismiss.
 - Events: the exact event sequence for a full success path (Turbine).
 
 ## 10. Validation commands

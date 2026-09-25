@@ -636,6 +636,7 @@ GitHub Actions (the remote is GitHub):
 | 008 | Native rendering through host layout + id map, wrapped in a programmatic `NativeAdView`, bridged to Compose via `AndroidView` | Accepted |
 | 009 | Suspend rewarded API with an unclaimed-results channel for cancellation safety | Accepted |
 | 010 | JVM 11 bytecode; Kotlin language/API version 2.2 with `coreLibrariesVersion` 2.2.0 (2.1 is deprecated by the Kotlin 2.4 compiler); consumers need Kotlin 2.1+ | Accepted (revised in Prompt 01) |
+| 011 | Data-class policy: `data class`/`data object` only for small value types whose fields are frozen by design (`Reward`, `AdRevenue`, `SdkErrorDetails`, single-field states, results, and errors). Types likely to gain properties (`ConsentState`, `BannerOptions`, `RewardedShowOptions`, `NativeAdLayout`, `NativeAdAssets`, `AdSourceInfo`, `DiagnosticsReport`, all `AdEvent`s) are regular classes with hand-written `toString` (and `equals`/`hashCode` where value comparison matters), so no `copy`/`componentN` becomes binary API. Library modules compile with `jvmDefault = NO_COMPATIBILITY`, so interfaces don't emit legacy `DefaultImpls` classes. | Accepted (Prompt 02) |
 | 014 | The dependency guard checks AppCompat/Fragment against **direct** dependencies only, because Next-Gen's `play-services-basement` pulls `androidx.fragment` and `appcompat-resources` transitively. The legacy SDK, Compose, Material, Firebase, Dagger, and project edges are checked transitively. | Accepted (Prompt 01) |
 
 ## 33. Concurrency (cross-cutting)

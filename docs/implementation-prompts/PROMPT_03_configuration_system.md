@@ -12,7 +12,7 @@ Implement the strongly typed, immutable `AdMobConfig` with a Kotlin DSL (and a J
 
 ## 3. Files to create (`admob-core/src/main/kotlin/com/company/admob/config/`)
 - `AdMobConfig.kt`: an immutable class (private constructor), `adMobConfig {}` DSL, and a nested `Builder` with Java-friendly setters. Nested option groups: `TestingOptions`, `PrivacyOptions`, `FrequencyOptions`, `LoggingOptions`, `AdvancedOptions` (holds the `@GoogleSdkEscapeHatch GoogleRequestCustomizer?`, `showTimeout`, `failFast` override, `disableSdkCrashReporting`).
-- `AdEnvironment.kt`, `AgeTreatment.kt`, `MaxAdContentRating.kt`, `DebugGeography.kt`, `PreloadStrategy.kt`
+- `AgeTreatment.kt` (`AdEnvironment.kt` already exists in `config/` since PROMPT 02; reuse it), `MaxAdContentRating.kt`, `DebugGeography.kt`, `PreloadStrategy.kt`
 - `AdUnitId.kt`: a `@JvmInline value class` with an `isWellFormed` check (`^ca-app-pub-\d{16}/\d{10}$`) and `AdMobAppId` (`^ca-app-pub-\d{16}~\d{10}$`)
 - `PlacementConfig.kt`: a sealed family per format (`BannerPlacementConfig(size default)`, `InterstitialPlacementConfig`, `RewardedPlacementConfig`, `RewardedInterstitialPlacementConfig`, `AppOpenPlacementConfig(cooldown, minLaunchesBeforeFirstShow, excludedActivityClassNames, showOnColdStartAllowed, suppressAfterFullScreenAd)`, `NativePlacementConfig(poolSize 1..3)`). The common fields are `adUnitId`, `enabled`, `frequency: FrequencyRule`, `preload: PreloadStrategy`, `retry: RetryPolicy?` (null means the format default), and `expiry: Duration?`.
 - `PlacementsBuilder.kt`: `banner(placement, adUnitId) {}`, `interstitial(...)`, `rewarded(...)`, `rewardedInterstitial(...)`, `appOpen(...)`, `native(...)`. A duplicate placement key is a validation error.

@@ -6,6 +6,7 @@ import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -48,6 +49,9 @@ internal fun Project.configureKotlin(library: Boolean) {
                 languageVersion.set(LIBRARY_KOTLIN_VERSION)
                 apiVersion.set(LIBRARY_KOTLIN_VERSION)
                 allWarningsAsErrors.set(true)
+                // New library: interface default members compile to JVM default methods only, without the
+                // legacy `DefaultImpls` compatibility classes that would otherwise become part of the binary API.
+                jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
             }
         }
         if (library) {
