@@ -73,6 +73,13 @@ private val FORBIDDEN_DIRECT_BY_PROJECT = mapOf(
         "androidx\\.appcompat:.*",
         "androidx\\.fragment:.*",
     ),
+    // Fakes for host tests: never Google's SDKs directly (they arrive only through admob-core), and JUnit only as
+    // compileOnly, so it isn't forced on consumers. Source references are checked by NoGoogleReferencesTest.
+    ":admob-testing" to listOf(
+        "com\\.google\\.android\\.libraries\\.ads\\.mobile\\.sdk:.*",
+        "com\\.google\\.android\\.ump:.*",
+        "junit:junit",
+    ),
 )
 
 internal fun Project.registerDependencyGuard() {

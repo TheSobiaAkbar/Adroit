@@ -14,4 +14,12 @@ public object CompanyAdMobInternal {
     public fun detachRenderedView(handle: NativeAdHandle) {
         (handle as? NativeAdHandleImpl)?.detachView()
     }
+
+    /**
+     * Makes the [CompanyAdMob] facade behave as [client] (its state, events and every API) until the returned
+     * function is called, which restores the previous facade. For admob-testing's `CompanyAdMobTestRule`, so hosts
+     * that call `CompanyAdMob` directly can still test with a fake. Test code only: never call it in an app.
+     */
+    @JvmStatic
+    public fun installForTesting(client: AdsClient): () -> Unit = CompanyAdMob.installForTesting(client)
 }

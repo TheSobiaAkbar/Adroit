@@ -297,7 +297,7 @@ public interface FullScreenAdLauncher {
 ## 3.11 `admob-testing`
 
 ```kotlin
-public class FakeAdsClient(initialState: AdsState = AdsState.Ready) : AdsClient {
+public class FakeAdsClient(initialState: AdsState = AdsState.Ready, callbackExecutor: Executor = direct) : AdsClient {
   public fun setState(state: AdsState)
   public fun enqueueInterstitialResult(placement: InterstitialPlacement, result: FullScreenResult)
   public fun enqueueRewardResult(placement: RewardedPlacement, result: RewardResult)
@@ -305,7 +305,10 @@ public class FakeAdsClient(initialState: AdsState = AdsState.Ready) : AdsClient 
   public val recordedCalls: List<FakeCall>
   public fun emit(event: AdEvent)
 }
+public class CompanyAdMobTestRule(val client: FakeAdsClient = FakeAdsClient()) : TestWatcher
 ```
+
+> **Implemented in PROMPT 16** (source and `admob-testing.api` are authoritative). Beyond the lines above, `FakeAdsClient` also has `enqueueRewardedInterstitialResult`, `enqueueAppOpenResult`, `enqueueNativeResult`, `emitUnclaimedReward` (and the rewarded interstitial variant), `setConsentState`, `clearRecordedCalls`, and read-only `emittedEvents`, `createdBanners`, `loadedNativeAds`, `isAdFree`, plus the settable `initialBannerState` and `nativeAssets`. `FakeCall` is a sealed class of data classes/objects (ADR-011: small frozen value types). `FakeBannerAdHandle` and `FakeNativeAdHandle` are public so tests can drive them (`setState`, `block`, `destroyCount`). Callbacks run synchronously on the calling thread by default, **unlike production**, unless a `callbackExecutor` is passed. JUnit is `compileOnly`. `CompanyAdMobTestRule` swaps the `CompanyAdMob` facade through `CompanyAdMobInternal.installForTesting` (ADR-012 opt-in, not `@RestrictTo`: the opt-in is enforced by the compiler, while `@RestrictTo` is only a lint check and `LIBRARY_GROUP` would also admit every module of the host's own group if it shared ours).
 
 ## 3.12 Threading and callback contract (documented on every API)
 

@@ -47,6 +47,13 @@ public object CompanyAdMob : AdsClient {
 
     private val lock = Any()
 
+    /**
+     * A test double installed by [installForTesting] (admob-testing's `CompanyAdMobTestRule`). While set, the whole
+     * facade, [state] and [events] included, is that client.
+     */
+    @Volatile
+    private var testClient: AdsClient? = null
+
     /** The object graph built by `initialize()`, or null before it. */
     @Volatile
     internal var runtime: AdsRuntime? = null
@@ -94,9 +101,29 @@ public object CompanyAdMob : AdsClient {
         synchronized(lock) {
             runtime?.close()
             runtime = null
+            testClient = null
             requestedAdFree = null
             sharedState.value = AdsState.NotInitialized
             delegate = UninitializedAdsClient(sharedState.asStateFlow(), eventBus.events, bootstrapLog)
+        }
+    }
+
+    /**
+     * Makes the facade [client] until the returned function is called, which restores what was there before
+     * (including an earlier installation). For admob-testing only (ADR-012).
+     */
+    internal fun installForTesting(client: AdsClient): () -> Unit = synchronized(lock) {
+        val previousDelegate = delegate
+        val previousTestClient = testClient
+        val previousAdFree = requestedAdFree
+        delegate = client
+        testClient = client
+        return {
+            synchronized(lock) {
+                delegate = previousDelegate
+                testClient = previousTestClient
+                requestedAdFree = previousAdFree
+            }
         }
     }
 
@@ -105,7 +132,9 @@ public object CompanyAdMob : AdsClient {
     public val client: AdsClient
         get() = this
 
-    override val state: StateFlow<AdsState> = sharedState.asStateFlow()
+    private val publicState: StateFlow<AdsState> = sharedState.asStateFlow()
+
+    override val state: StateFlow<AdsState> get() = testClient?.state ?: publicState
 
     override val isReady: Boolean get() = state.value == AdsState.Ready
 
@@ -130,7 +159,7 @@ public object CompanyAdMob : AdsClient {
 
     override val diagnostics: DiagnosticsApi get() = delegate.diagnostics
 
-    override val events: SharedFlow<AdEvent> = eventBus.events
+    override val events: SharedFlow<AdEvent> get() = testClient?.events ?: eventBus.events
 
     override fun setAdFree(adFree: Boolean) {
         requestedAdFree = adFree
