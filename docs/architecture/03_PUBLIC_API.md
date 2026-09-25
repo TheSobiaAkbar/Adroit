@@ -197,6 +197,7 @@ public enum class ConsentStatus { UNKNOWN, REQUIRED, NOT_REQUIRED, OBTAINED }
 > - Environment-dependent defaults are nullable and resolved internally: `testing.useDemoAdUnits` (null → true in STAGING), `logging.level` (null → DEBUG/WARN), `advanced.failFast` (null → true outside PRODUCTION).
 > - Per ADR-011, option groups (`TestingOptions`, `PrivacyOptions`, `FrequencyOptions`, `LoggingOptions`, `AdvancedOptions`), `PlacementConfig` subclasses, `AdOverrides` and `PlacementOverride` are regular classes with `equals`/`hashCode`. `RetryPolicy` and `FrequencyRule` stay data classes. `PlacementConfig` constructors are internal; placements are created only through `placements { }`.
 > - `frequency.includeRewardedInGlobalInterval` (default false) makes the rewarded exclusion configurable, as PROMPT 09 requires.
+> - `privacy.consentSyncId: String?` (default null; blank is treated as null) passes UMP's consent sync ID through. Added in PROMPT 05. `toString` reports it only as set or unset, because it identifies a user.
 > - `GoogleRequestCustomizer` lives in the root package next to `GoogleSdkEscapeHatch`. Remote types live in `com.company.admob.config.remote`. `@AdMobConfigDsl` is the DSL marker.
 > - Duplicate placement keys (across all formats) build fine and are reported by validation, never thrown.
 > - `AdMobConfig`'s constructor is `internal` (not `private`) so the nested `Builder` can call it without a public synthetic accessor in the binary API; externally it's equally inaccessible.

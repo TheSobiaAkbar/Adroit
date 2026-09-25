@@ -424,6 +424,7 @@ val adsConfig = adMobConfig {
     maxAdContentRating = MaxAdContentRating.T
     restrictedDataProcessing = false                  // writes gad_rdp
     debugGeography = DebugGeography.EEA               // ignored (and warned) in PRODUCTION
+    consentSyncId = null                              // UMP consent sync across your apps
   }
   frequency { minIntervalBetweenFullScreenAds = 30.seconds }
   placements {
@@ -605,7 +606,7 @@ GitHub Actions (the remote is GitHub):
 - `privacy.showPrivacyOptions(activity, onDismissed)` checks `privacyOptionsRequired` and shows the form. Afterwards, `canRequestAds()` is re-evaluated. If it's true and the SDK isn't initialized, the SDK initializes. If it's false, the state becomes `Unavailable(CONSENT_NOT_OBTAINED)`, all cached ads are destroyed, and banners and native ads hide.
 - `privacy.isPrivacyOptionsRequired: StateFlow<Boolean>` lets the host show or hide its settings entry, which is required when `REQUIRED`.
 - Age: `AgeTreatment` maps to `setAgeRestrictedTreatment`. The deprecated TFCD/TFUA are not used. `maxAdContentRating`. RDP writes `gad_rdp` to default SharedPreferences **before** SDK init, and removes it when false. GPP is handled by UMP when configured in the AdMob UI.
-- UMP-specific parameters: `ConsentRequestParameters` includes the under-age tag only when `ageTreatment == CHILD`. Prompt 04 must verify the current UMP 4.0.0 API for this. UMP debug settings and `consentSyncId` pass through.
+- UMP-specific parameters: `ConsentRequestParameters` includes the under-age tag (`setTagForUnderAgeOfConsent`, verified in UMP 4.0.0 in Prompt 05) only when `ageTreatment == CHILD`. UMP debug settings and `consentSyncId` pass through.
 - Debug-only APIs (`privacy.resetConsentForTesting()`, `debugGeography`) are rejected in PRODUCTION.
 - Consent Mode: no library code. The Firebase ordering requirement is documented.
 - Play data safety, the `AD_ID` permission for child-directed apps, and hardware acceleration are covered in CONSENT.md and TROUBLESHOOTING.md. They're the host's responsibility.

@@ -9,10 +9,12 @@ import com.company.admob.internal.port.ConsentUpdateResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 /**
  * Scriptable [ConsentSdk]. Results are delivered through [scope], never synchronously. [onFormShown] lets a test
- * change the consent state when the form is shown, as a real user would.
+ * change the consent state when the form is shown, as a real user would. Activities are only held weakly, so leak
+ * tests stay meaningful.
  */
 internal class FakeConsentSdk(private val scope: CoroutineScope) : ConsentSdk {
     var updateResult: ConsentUpdateResult = ConsentUpdateResult.Success
@@ -23,9 +25,12 @@ internal class FakeConsentSdk(private val scope: CoroutineScope) : ConsentSdk {
     var status: ConsentStatus = ConsentStatus.NOT_REQUIRED
     var privacyOptionsRequired: Boolean = false
     var onFormShown: (FakeConsentSdk.() -> Unit)? = null
+    var onPrivacyOptionsFormShown: (FakeConsentSdk.() -> Unit)? = null
 
     val updateRequests = mutableListOf<ConsentParams>()
     var formShowCount: Int = 0
+        private set
+    var formActivity: WeakReference<Activity>? = null
         private set
     var privacyOptionsFormShowCount: Int = 0
         private set
@@ -43,6 +48,7 @@ internal class FakeConsentSdk(private val scope: CoroutineScope) : ConsentSdk {
 
     override fun loadAndShowFormIfRequired(activity: Activity, onDone: (AdError?) -> Unit) {
         formShowCount++
+        formActivity = WeakReference(activity)
         onFormShown?.invoke(this)
         val result = formResult
         scope.launch { onDone(result) }
@@ -56,6 +62,7 @@ internal class FakeConsentSdk(private val scope: CoroutineScope) : ConsentSdk {
 
     override fun showPrivacyOptionsForm(activity: Activity, onDone: (AdError?) -> Unit) {
         privacyOptionsFormShowCount++
+        onPrivacyOptionsFormShown?.invoke(this)
         val result = privacyOptionsFormResult
         scope.launch { onDone(result) }
     }

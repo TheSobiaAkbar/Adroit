@@ -48,28 +48,35 @@ public class TestingOptions internal constructor(
  * @property maxAdContentRating the maximum ad content rating, or null to leave it unset.
  * @property restrictedDataProcessing enables restricted data processing (`gad_rdp`) for US state privacy laws.
  * @property debugGeography forces UMP's geography on test devices. Must be DISABLED in PRODUCTION.
+ * @property consentSyncId an ID that syncs the user's consent choices across your apps (UMP's consent sync ID), or
+ *   null. Use the same value for the same user in every app that shares consent. A blank value is ignored.
  */
 public class PrivacyOptions internal constructor(
     public val ageTreatment: AgeTreatment,
     public val maxAdContentRating: MaxAdContentRating?,
     public val restrictedDataProcessing: Boolean,
     public val debugGeography: DebugGeography,
+    public val consentSyncId: String?,
 ) {
     override fun equals(other: Any?): Boolean =
         other is PrivacyOptions && other.ageTreatment == ageTreatment &&
             other.maxAdContentRating == maxAdContentRating &&
-            other.restrictedDataProcessing == restrictedDataProcessing && other.debugGeography == debugGeography
+            other.restrictedDataProcessing == restrictedDataProcessing && other.debugGeography == debugGeography &&
+            other.consentSyncId == consentSyncId
 
     override fun hashCode(): Int {
         var result = ageTreatment.hashCode()
         result = 31 * result + maxAdContentRating.hashCode()
         result = 31 * result + restrictedDataProcessing.hashCode()
-        return 31 * result + debugGeography.hashCode()
+        result = 31 * result + debugGeography.hashCode()
+        return 31 * result + consentSyncId.hashCode()
     }
 
+    // The sync ID identifies a user, so it's only reported as set or unset.
     override fun toString(): String =
         "PrivacyOptions(ageTreatment=$ageTreatment, maxAdContentRating=$maxAdContentRating, " +
-            "restrictedDataProcessing=$restrictedDataProcessing, debugGeography=$debugGeography)"
+            "restrictedDataProcessing=$restrictedDataProcessing, debugGeography=$debugGeography, " +
+            "consentSyncId=${if (consentSyncId == null) "null" else "<set>"})"
 
     /** Mutable builder for [PrivacyOptions]. */
     @AdMobConfigDsl
@@ -86,8 +93,16 @@ public class PrivacyOptions internal constructor(
         /** See [PrivacyOptions.debugGeography]. */
         public var debugGeography: DebugGeography = DebugGeography.DISABLED
 
-        internal fun build(): PrivacyOptions =
-            PrivacyOptions(ageTreatment, maxAdContentRating, restrictedDataProcessing, debugGeography)
+        /** See [PrivacyOptions.consentSyncId]. */
+        public var consentSyncId: String? = null
+
+        internal fun build(): PrivacyOptions = PrivacyOptions(
+            ageTreatment,
+            maxAdContentRating,
+            restrictedDataProcessing,
+            debugGeography,
+            consentSyncId?.takeIf { it.isNotBlank() },
+        )
     }
 }
 

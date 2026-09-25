@@ -15,6 +15,7 @@ import com.company.admob.internal.config.ConfigValidator
 import com.company.admob.logging.AndroidAdLogger
 import com.company.admob.logging.LogLevel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
@@ -36,6 +37,7 @@ class AdMobConfigDslTest {
         privacy {
             ageTreatment = AgeTreatment.TEEN
             maxAdContentRating = MaxAdContentRating.T
+            consentSyncId = "sync-user-42"
         }
         logging { level = LogLevel.INFO }
         advanced { failFast = false }
@@ -91,6 +93,14 @@ class AdMobConfigDslTest {
     }
 
     @Test
+    fun `the consent sync ID identifies a user, so toString only says it's set`() {
+        val config = kotlinConfig()
+        assertEquals("sync-user-42", config.privacy.consentSyncId)
+        assertFalse(config.toString().contains("sync-user-42"))
+        assertTrue(config.privacy.toString().contains("consentSyncId=<set>"))
+    }
+
+    @Test
     fun `defaults match the architecture`() {
         val config = adMobConfig { }
         assertEquals(AdEnvironment.DEVELOPMENT, config.environment)
@@ -101,6 +111,7 @@ class AdMobConfigDslTest {
         assertNull(config.privacy.maxAdContentRating)
         assertEquals(false, config.privacy.restrictedDataProcessing)
         assertEquals(DebugGeography.DISABLED, config.privacy.debugGeography)
+        assertNull(config.privacy.consentSyncId)
         assertEquals(30.seconds, config.frequency.minIntervalBetweenFullScreenAds)
         assertEquals(false, config.frequency.includeRewardedInGlobalInterval)
         assertNull(config.logging.level)

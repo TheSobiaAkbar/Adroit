@@ -30,6 +30,7 @@ final class JavaConfigBuilder {
         builder.getTesting().setUseDemoAdUnits(false);
         builder.getPrivacy().setAgeTreatment(AgeTreatment.TEEN);
         builder.getPrivacy().setMaxAdContentRating(MaxAdContentRating.T);
+        builder.getPrivacy().setConsentSyncId("sync-user-42");
         builder.getLogging().setLevel(LogLevel.INFO);
         builder.getAdvanced().setFailFast(false);
         return builder.build();
