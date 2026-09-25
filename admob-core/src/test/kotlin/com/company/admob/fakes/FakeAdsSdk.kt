@@ -259,18 +259,23 @@ internal class FakeSdkBannerView(override val view: View) : SdkBannerView {
     val loadCalls = mutableListOf<LoadCall>()
     var listener: BannerListener? = null
         private set
-    var destroyed: Boolean = false
+    var destroyCount: Int = 0
         private set
+    val destroyed: Boolean get() = destroyCount > 0
+
+    /** The parent container's minimum height when each load started, to check space is reserved first. */
+    val parentMinHeightAtLoad = mutableListOf<Int>()
 
     override fun load(adUnitId: String, size: BannerSize, widthDp: Int, extras: RequestExtras, listener: BannerListener) {
         loadCalls += LoadCall(adUnitId, size, widthDp, extras)
+        parentMinHeightAtLoad += (view.parent as? View)?.minimumHeight ?: -1
         this.listener = listener
     }
 
     override fun expectedHeightPx(size: BannerSize, widthDp: Int): Int = heightPx
 
     override fun destroy() {
-        destroyed = true
+        destroyCount++
         listener = null
     }
 
@@ -280,4 +285,8 @@ internal class FakeSdkBannerView(override val view: View) : SdkBannerView {
         listener?.onFailedToLoad(error, retryable, isRefresh)
 
     fun simulateImpression() = listener?.onImpression()
+
+    fun simulateClicked() = listener?.onClicked()
+
+    fun simulatePaid(revenue: AdRevenue = AdRevenue(1_000, "USD", RevenuePrecision.PRECISE)) = listener?.onPaid(revenue)
 }

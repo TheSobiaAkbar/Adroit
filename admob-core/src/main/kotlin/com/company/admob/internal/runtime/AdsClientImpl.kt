@@ -47,6 +47,7 @@ internal class AdsClientImpl(
     override val rewarded: RewardedApi,
     override val rewardedInterstitial: RewardedInterstitialApi,
     override val appOpen: AppOpenApi,
+    override val banner: BannerApi,
     private val runtime: AdsRuntime,
 ) : AdsClient {
     private val log get() = runtime.log
@@ -70,9 +71,6 @@ internal class AdsClientImpl(
     override fun setAdFree(adFree: Boolean) {
         runOnMain { init.setAdFree(adFree) }
     }
-
-    // TODO(PROMPT-11): the banner controller.
-    override val banner: BannerApi get() = notYetAvailable.banner
 
     // TODO(PROMPT-12): the native loader.
     override val native: NativeApi get() = notYetAvailable.native

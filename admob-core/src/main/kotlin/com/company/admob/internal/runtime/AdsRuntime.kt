@@ -14,6 +14,7 @@ import com.company.admob.internal.AdFreeController
 import com.company.admob.internal.appopen.AppOpenApiImpl
 import com.company.admob.internal.appopen.AppOpenController
 import com.company.admob.internal.appopen.AppOpenSuppression
+import com.company.admob.internal.banner.BannerApiImpl
 import com.company.admob.internal.config.ConfigIssueCode
 import com.company.admob.internal.config.ConfigValidator
 import com.company.admob.internal.config.EffectiveConfig
@@ -162,6 +163,7 @@ internal class AdsRuntime(
         rewarded = RewardedApiImpl(rewardedEngine, UnclaimedRewards(log)),
         rewardedInterstitial = RewardedInterstitialApiImpl(rewardedInterstitialEngine, UnclaimedRewards(log)),
         appOpen = AppOpenApiImpl(appOpenController),
+        banner = BannerApiImpl(effectiveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log),
         runtime = this,
     )
 
