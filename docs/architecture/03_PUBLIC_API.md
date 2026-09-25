@@ -233,8 +233,13 @@ public interface DiagnosticsApi {
 }
 public data class DiagnosticsReport(val libraryVersion: String, val googleSdkVersion: String?, val environment: AdEnvironment,
   val state: AdsState, val consent: ConsentState, val testMode: TestModeInfo, val placements: List<PlacementDiagnostics>,
-  val activeFullScreen: String?, val currentActivity: String?, val lastError: AdError?)
+  val activeFullScreen: String?, val currentActivity: String?, val lastError: AdError?, val activeOverrides: String)
+public class PlacementDiagnostics(val key: String, val format: AdFormat, val adUnitId: String, val availability: AdAvailability,
+  val cachedAdAge: Duration?, val retryAttempt: Int, val nextRetryIn: Duration?, val enabled: Boolean, val showsThisSession: Int)
+public class TestModeInfo(val demoAdUnitsSubstituted: Boolean, val testDeviceCount: Int)
 ```
+
+> **Added in PROMPT 15** (source and `admob-core.api` are authoritative): `DiagnosticsReport.activeOverrides` (a readable summary of the remote overrides in force, ad unit IDs shortened in PRODUCTION, or "none"), and `PlacementDiagnostics.enabled` and `showsThisSession` (frequency counters). Per ADR-011 these are regular classes, not data classes; `environment` and `testMode` are nullable because the uninitialized facade reports them as null. `toString()` never contains consent strings or advertising IDs, and in PRODUCTION every full ad unit ID in it (including inside error messages) is shortened to its last 4 digits. `openAdInspector` maps to `MobileAds.openAdInspector(OnAdInspectorClosedListener)`, which in SDK 1.4.0 takes no Context.
 
 ## 3.8 Opt-in markers
 

@@ -80,7 +80,8 @@ class FullScreenLoadTest {
         h.run(1_000)
 
         assertEquals(1, h.adsSdk.loadCalls.size)
-        assertSame(h.engine.availability(LEVEL_END), h.engine.availability(MENU))
+        assertEquals(AdAvailability.Ready, h.engine.availability(LEVEL_END).value)
+        assertEquals(AdAvailability.Ready, h.engine.availability(MENU).value)
         assertTrue(h.engine.isReady(MENU))
     }
 

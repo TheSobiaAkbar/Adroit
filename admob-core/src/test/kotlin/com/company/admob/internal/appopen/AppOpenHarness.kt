@@ -62,7 +62,7 @@ internal class AppOpenHarness(
     val suppression = AppOpenSuppression(h.clock)
     val controller = AppOpenController(
         engine = h.engine,
-        config = h.effective,
+        config = h.live,
         readiness = h.readiness,
         activityTracker = h.tracker,
         foreground = h.foreground,

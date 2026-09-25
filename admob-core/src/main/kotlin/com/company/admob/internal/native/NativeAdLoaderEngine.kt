@@ -13,7 +13,9 @@ import com.company.admob.config.PreloadStrategy
 import com.company.admob.events.AdEvent
 import com.company.admob.internal.AdsBlockedListener
 import com.company.admob.internal.callbacks.OnceCallback
+import com.company.admob.internal.config.ConfigChangeListener
 import com.company.admob.internal.config.EffectiveConfig
+import com.company.admob.internal.config.LiveConfig
 import com.company.admob.internal.config.EffectivePlacement
 import com.company.admob.internal.config.FormatDefaults
 import com.company.admob.internal.events.EventBus
@@ -54,7 +56,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * Main thread only (ADR-006).
  */
 internal class NativeAdLoaderEngine(
-    private val config: EffectiveConfig,
+    private val config: LiveConfig,
     private val adsSdk: AdsSdk,
     private val readiness: Readiness,
     private val foreground: AppForegroundSource,
@@ -64,13 +66,15 @@ internal class NativeAdLoaderEngine(
     private val scope: CoroutineScope,
     private val log: AdLog,
     private val stagger: Duration = STAGGER,
-) : AdsBlockedListener {
+) : AdsBlockedListener, ConfigChangeListener {
     private class Waiter(val placement: EffectivePlacement, val onResult: OnceCallback<NativeAdResult>)
 
     private inner class Pool(val adUnitId: String, placements: List<EffectivePlacement>) {
-        val owner: EffectivePlacement = placements.first()
-        val size: Int = placements.maxOf { (it.config as? NativePlacementConfig)?.poolSize ?: FormatDefaults.NATIVE_POOL_SIZE }
-        val strategy: PreloadStrategy = placements.minOf { it.preload }
+        /** The placements sharing this pool; replaced when a remote override changes them. */
+        var placements: List<EffectivePlacement> = placements
+        val owner: EffectivePlacement get() = placements.first()
+        val size: Int get() = placements.maxOf { (it.config as? NativePlacementConfig)?.poolSize ?: FormatDefaults.NATIVE_POOL_SIZE }
+        val strategy: PreloadStrategy get() = placements.minOf { it.preload }
         val ttl: Duration = owner.expiry ?: FormatDefaults.NATIVE_TTL
         val key = "NATIVE:$adUnitId"
         val items = ArrayDeque<Cached<LoadedNativeAd>>()
@@ -83,19 +87,19 @@ internal class NativeAdLoaderEngine(
         var expiryJob: Job? = null
     }
 
-    private val placements: Map<AdPlacement, EffectivePlacement> =
-        config.allPlacements.filter { it.format == AdFormat.NATIVE && it.enabled }.associateBy { it.placement }
-    private val allNative: Set<AdPlacement> =
-        config.allPlacements.filter { it.format == AdFormat.NATIVE }.map { it.placement }.toSet()
-    private val pools: Map<AdPlacement, Pool>
+    /** Enabled native placements in the current effective configuration. Rebuilt with [pools] on every change. */
+    private var placements: Map<AdPlacement, EffectivePlacement> = emptyMap()
+
+    /** The pool of each enabled placement. Placements sharing an effective ad unit share a pool. */
+    private var pools: Map<AdPlacement, Pool> = emptyMap()
 
     /** Handed-out handles that are still active, to block them. Weak: a handle the host dropped isn't kept alive. */
     private val liveHandles: MutableSet<NativeAdHandleImpl> = Collections.newSetFromMap(WeakHashMap())
     private var readyJob: Job? = null
 
     init {
-        val byUnit = placements.values.groupBy { it.adUnitId }.mapValues { (unit, sharing) -> Pool(unit, sharing) }
-        pools = placements.values.associate { it.placement to byUnit.getValue(it.adUnitId) }
+        rebuild(config.current)
+        config.addListener(this)
     }
 
     /** The number of fresh ads pooled for [placement], for tests and diagnostics. */
@@ -128,11 +132,8 @@ internal class NativeAdLoaderEngine(
         }
         readiness.state.value.toShowError()?.let { return fail(it) }
         val p = placements[placement] ?: return fail(
-            if (placement in allNative) {
-                AdError.Disabled(UnavailableReason.DISABLED_BY_CONFIG)
-            } else {
-                AdError.InvalidConfiguration("${placement.key} isn't a configured native placement")
-            },
+            config.current.placement(placement)?.disabledReason?.let { AdError.Disabled(it) }
+                ?: AdError.InvalidConfiguration("${placement.key} isn't a configured native placement"),
         )
         val pool = pools.getValue(placement)
         if (pool.strategy == PreloadStrategy.ON_DEMAND && !pool.autoRefill) {
@@ -159,16 +160,63 @@ internal class NativeAdLoaderEngine(
         log.d { "Native: ads blocked ($reason); destroying pooled ads and live handles" }
         readyJob?.cancel()
         val error = if (reason == UnavailableReason.CONSENT_NOT_OBTAINED) AdError.ConsentRequired else AdError.Disabled(reason)
-        for (pool in pools.values.toSet()) {
-            pool.generation++
-            pool.loading = false
-            pool.failedAttempts = 0
-            retry.cancel(pool.key)
-            pool.expiryJob?.cancel()
-            while (pool.items.isNotEmpty()) pool.items.removeFirst().value.destroy()
-            while (pool.waiters.isNotEmpty()) pool.waiters.removeFirst().onResult(NativeAdResult.Failed(error))
-        }
+        pools.values.toSet().forEach { release(it, error) }
         liveHandles.toList().forEach { it.block(reason) }
+    }
+
+    /**
+     * A remote override changed the configuration: pools whose ad unit is no longer used are released, live handles
+     * of placements that are now disabled are blocked (their views removed), and new pools fill per their strategy.
+     */
+    override fun onConfigChanged(previous: EffectiveConfig, current: EffectiveConfig) {
+        val before = pools.values.toSet()
+        rebuild(current)
+        for (handle in liveHandles.toList()) {
+            val reason = current.placement(handle.placement)?.disabledReason ?: continue
+            handle.block(reason)
+        }
+        if (!readiness.canLoad()) return
+        pools.values.toSet().filter { it !in before }.forEach { pump(it) }
+    }
+
+    /** Recomputes [placements] and [pools] for [current], reusing the pool of every ad unit still in use. */
+    private fun rebuild(current: EffectiveConfig) {
+        val enabled = current.allPlacements.filter { it.format == AdFormat.NATIVE && it.enabled }
+        val reusable = pools.values.associateBy { it.adUnitId }
+        val byUnit = enabled.groupBy { it.adUnitId }.mapValues { (unit, sharing) ->
+            reusable[unit]?.also { it.placements = sharing } ?: Pool(unit, sharing)
+        }
+        val newPools = enabled.associate { it.placement to byUnit.getValue(it.adUnitId) }
+        (pools.values.toSet() - newPools.values.toSet()).forEach { pool ->
+            val reason = current.placement(pool.owner.placement)?.disabledReason ?: UnavailableReason.DISABLED_BY_REMOTE
+            log.d { "Native: releasing the pool for ${current.displayAdUnitId(pool.adUnitId)}; no placement uses it any more" }
+            release(pool, AdError.Disabled(reason))
+        }
+        placements = enabled.associateBy { it.placement }
+        pools = newPools
+    }
+
+    /** Destroys [pool]'s ads, stops its loads and retries, and fails its waiters with [error]. */
+    private fun release(pool: Pool, error: AdError) {
+        pool.generation++
+        pool.loading = false
+        pool.failedAttempts = 0
+        retry.cancel(pool.key)
+        pool.expiryJob?.cancel()
+        while (pool.items.isNotEmpty()) pool.items.removeFirst().value.destroy()
+        while (pool.waiters.isNotEmpty()) pool.waiters.removeFirst().onResult(NativeAdResult.Failed(error))
+    }
+
+    /** Pool and retry details of [placement], or null when it has none (disabled or not configured). */
+    fun poolDiagnostics(placement: NativePlacement): PoolDiagnostics? {
+        val pool = pools[placement] ?: return null
+        return PoolDiagnostics(
+            pooled = pool.items.size,
+            oldestAge = pool.items.firstOrNull()?.age(clock),
+            loading = pool.loading,
+            retryAttempt = pool.failedAttempts,
+            nextRetryIn = retry.nextRetryIn(pool.key),
+        )
     }
 
     private fun onReady() {
@@ -201,7 +249,7 @@ internal class NativeAdLoaderEngine(
         val p = pool.waiters.firstOrNull()?.placement ?: pool.owner
         emit(AdEvent.LoadRequested(p.placement.key, AdFormat.NATIVE, pool.adUnitId, now()))
         @OptIn(GoogleSdkEscapeHatch::class)
-        val extras = RequestExtras(p.placement, config.source.advanced.googleRequestCustomizer)
+        val extras = RequestExtras(p.placement, config.current.source.advanced.googleRequestCustomizer)
         adsSdk.loadNative(pool.adUnitId, extras) { result ->
             if (generation != pool.generation) {
                 (result as? SdkLoadResult.Success)?.ad?.destroy()
@@ -290,3 +338,12 @@ internal class NativeAdLoaderEngine(
         val STAGGER: Duration = 250.milliseconds
     }
 }
+
+/** What diagnostics report about one native placement's pool. */
+internal class PoolDiagnostics(
+    val pooled: Int,
+    val oldestAge: Duration?,
+    val loading: Boolean,
+    val retryAttempt: Int,
+    val nextRetryIn: Duration?,
+)

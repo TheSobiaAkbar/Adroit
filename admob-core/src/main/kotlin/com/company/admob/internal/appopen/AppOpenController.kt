@@ -12,7 +12,7 @@ import com.company.admob.config.AppOpenPlacementConfig
 import com.company.admob.config.PreloadStrategy
 import com.company.admob.internal.AdsBlockedListener
 import com.company.admob.internal.callbacks.OnceCallback
-import com.company.admob.internal.config.EffectiveConfig
+import com.company.admob.internal.config.LiveConfig
 import com.company.admob.internal.config.EffectivePlacement
 import com.company.admob.internal.fullscreen.FullScreenAdEngine
 import com.company.admob.internal.fullscreen.toShowError
@@ -50,7 +50,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 internal class AppOpenController(
     private val engine: FullScreenAdEngine,
-    config: EffectiveConfig,
+    private val config: LiveConfig,
     private val readiness: Readiness,
     private val activityTracker: ActivityTracker,
     private val foreground: AppForegroundSource,
@@ -71,8 +71,12 @@ internal class AppOpenController(
         var showing = false
     }
 
+    /** The app open placement in the current effective configuration: read at every decision, never kept. */
     private val placement: EffectivePlacement?
-    private val settings: AppOpenPlacementConfig?
+        get() = config.current.allPlacements.firstOrNull { it.format == AdFormat.APP_OPEN }
+
+    /** Local-only settings (overrides don't change them). */
+    private val settings: AppOpenPlacementConfig? get() = placement?.config as? AppOpenPlacementConfig
     private val noPlacement: StateFlow<AdAvailability> = MutableStateFlow(AdAvailability.Disabled).asStateFlow()
     private var enabled = true
     private var warmCheck: Job? = null
@@ -80,12 +84,10 @@ internal class AppOpenController(
     private var lastShownAtElapsed: Long? = null
 
     init {
-        val appOpen = config.allPlacements.filter { it.format == AdFormat.APP_OPEN }
+        val appOpen = config.current.allPlacements.filter { it.format == AdFormat.APP_OPEN }
         if (appOpen.size > 1) {
             log.w { "${appOpen.size} app open placements are configured; only ${appOpen.first().placement.key} is used" }
         }
-        placement = appOpen.firstOrNull()
-        settings = placement?.config as? AppOpenPlacementConfig
     }
 
     fun start() {
@@ -128,11 +130,12 @@ internal class AppOpenController(
      */
     fun showOnColdStart(activity: Activity, maxWait: Duration, onComplete: (FullScreenResult) -> Unit) {
         val callback = OnceCallback(onComplete)
+        val current = placement
         val staticBlock = when {
             coldStart != null -> Blocked(AdError.AlreadyShowing, "showOnColdStart() is already in progress")
-            placement == null -> noPlacementBlock()
-            !placement.enabled || settings?.showOnColdStartAllowed == false || !enabled ->
-                Blocked(AdError.Disabled(UnavailableReason.DISABLED_BY_CONFIG), "app open on cold start is disabled")
+            current == null -> noPlacementBlock()
+            !current.enabled || settings?.showOnColdStartAllowed == false || !enabled ->
+                Blocked(AdError.Disabled(current.disabledReason ?: UnavailableReason.DISABLED_BY_CONFIG), "app open on cold start is disabled")
             else -> launchCountGate()
         }
         if (staticBlock != null) {
@@ -202,7 +205,7 @@ internal class AppOpenController(
         readiness.state.value.toShowError()?.let { return Blocked(it, "ads aren't ready (${readiness.state.value})") }
         val p = placement ?: return noPlacementBlock()
         if (!p.enabled || !enabled) {
-            return Blocked(AdError.Disabled(UnavailableReason.DISABLED_BY_CONFIG), "app open is disabled")
+            return Blocked(AdError.Disabled(p.disabledReason ?: UnavailableReason.DISABLED_BY_CONFIG), "app open is disabled")
         }
         // Gate 2: never on the first launches.
         launchCountGate()?.let { return it }

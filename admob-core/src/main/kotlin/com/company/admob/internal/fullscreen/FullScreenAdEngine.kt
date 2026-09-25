@@ -3,6 +3,7 @@ package com.company.admob.internal.fullscreen
 import android.app.Activity
 import com.company.admob.AdAvailability
 import com.company.admob.AdError
+import com.company.admob.AdFormat
 import com.company.admob.AdPlacement
 import com.company.admob.AdsState
 import com.company.admob.FullScreenResult
@@ -10,13 +11,13 @@ import com.company.admob.GoogleSdkEscapeHatch
 import com.company.admob.Reward
 import com.company.admob.RewardResult
 import com.company.admob.UnavailableReason
-import com.company.admob.config.AdEnvironment
 import com.company.admob.config.PreloadStrategy
 import com.company.admob.events.AdEvent
-import com.company.admob.events.redactAdUnitId
 import com.company.admob.internal.AdsBlockedListener
 import com.company.admob.internal.callbacks.OnceCallback
+import com.company.admob.internal.config.ConfigChangeListener
 import com.company.admob.internal.config.EffectiveConfig
+import com.company.admob.internal.config.LiveConfig
 import com.company.admob.internal.config.EffectivePlacement
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.init.Readiness
@@ -56,7 +57,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 internal class FullScreenAdEngine(
     private val strategy: FullScreenFormatStrategy,
-    private val config: EffectiveConfig,
+    private val config: LiveConfig,
     private val adsSdk: AdsSdk,
     private val readiness: Readiness,
     private val activityTracker: ActivityTracker,
@@ -70,23 +71,33 @@ internal class FullScreenAdEngine(
     private val log: AdLog,
     private val stagger: Duration = STAGGER,
     private val readyDelay: Duration = Duration.ZERO,
-) : AdsBlockedListener {
-    private val format = strategy.format
-    private val placements: Map<AdPlacement, EffectivePlacement> =
-        config.allPlacements.filter { it.format == format }.associateBy { it.placement }
-    private val slots: Map<AdPlacement, FullScreenSlot>
-    private val disabled: StateFlow<AdAvailability> = MutableStateFlow(AdAvailability.Disabled).asStateFlow()
+) : AdsBlockedListener, ConfigChangeListener {
+    val format: AdFormat = strategy.format
+
+    /** This format's placements in the current effective configuration. Rebuilt with [slots] on every change. */
+    private var placements: Map<AdPlacement, EffectivePlacement> = emptyMap()
+
+    /** The slot of each enabled placement. Placements sharing an effective ad unit share a slot. */
+    private var slots: Map<AdPlacement, FullScreenSlot> = emptyMap()
+
+    /**
+     * One availability flow per configured placement, handed to the host. The set of placements is fixed by the local
+     * configuration (overrides can't add any), so these flows live as long as the engine.
+     */
+    private val placementAvailability: Map<AdPlacement, MutableStateFlow<AdAvailability>> =
+        config.current.allPlacements.filter { it.format == format }
+            .associate { it.placement to MutableStateFlow<AdAvailability>(AdAvailability.Disabled) }
+
+    /** Read-only views of [placementAvailability], created once so every call returns the same instance. */
+    private val publicAvailability: Map<AdPlacement, StateFlow<AdAvailability>> =
+        placementAvailability.mapValues { it.value.asStateFlow() }
     private val unknown: StateFlow<AdAvailability> = MutableStateFlow(AdAvailability.Unavailable).asStateFlow()
     private val pendingPreloads = linkedSetOf<AdPlacement>()
     private var readyJob: Job? = null
 
     init {
-        val byUnit = mutableMapOf<String, FullScreenSlot>()
-        slots = placements.values.filter { it.enabled }.associate { p ->
-            p.placement to byUnit.getOrPut(p.adUnitId) {
-                FullScreenSlot(format, p.adUnitId, p.retry, p.expiry ?: error("$format has no TTL"))
-            }
-        }
+        rebuild(config.current)
+        config.addListener(this)
     }
 
     /** Starts following [Readiness]: loads `AFTER_READY` placements and pending intents each time it's Ready. */
@@ -97,10 +108,22 @@ internal class FullScreenAdEngine(
     }
 
     fun availability(placement: AdPlacement): StateFlow<AdAvailability> {
-        val p = placements[placement] ?: return unknown
-        val slot = slots[placement] ?: return disabled
-        checkExpiry(slot, p)
-        return slot.availability
+        val flow = publicAvailability[placement] ?: return unknown
+        val p = placements[placement]
+        val slot = slots[placement]
+        if (p != null && slot != null) checkExpiry(slot, p)
+        return flow
+    }
+
+    /** Cache and retry details of [placement]'s slot, or null when it has none (disabled or not configured). */
+    fun slotDiagnostics(placement: AdPlacement): SlotDiagnostics? {
+        val slot = slots[placement] ?: return null
+        return SlotDiagnostics(
+            availability = slot.availability.value,
+            cachedAdAge = slot.cached?.age(clock),
+            retryAttempt = slot.failedAttempts,
+            nextRetryIn = retry.nextRetryIn(slot.key),
+        )
     }
 
     /** Thread-safe: a fresh ad is cached for [placement]. */
@@ -168,7 +191,7 @@ internal class FullScreenAdEngine(
         ) {
             reloadAfterShow(p)
         }
-        show.session = ShowSession(callback, scope, config.source.advanced.showTimeout, { show.timeoutResult() }) {
+        show.session = ShowSession(callback, scope, config.current.source.advanced.showTimeout, { show.timeoutResult() }) {
             show.onTimeout()
         }
         prepare(ad)
@@ -197,7 +220,7 @@ internal class FullScreenAdEngine(
     private fun gateError(activity: Activity, placement: AdPlacement, p: EffectivePlacement?): AdError? {
         readiness.state.value.toShowError()?.let { return it }
         if (p == null) return AdError.InvalidConfiguration("${placement.key} isn't a configured $format placement")
-        val slot = slots[placement] ?: return AdError.Disabled(UnavailableReason.DISABLED_BY_CONFIG)
+        val slot = slots[placement] ?: return AdError.Disabled(p.disabledReason ?: UnavailableReason.DISABLED_BY_CONFIG)
         if (!activityTracker.isValidForShow(activity)) return AdError.ActivityUnavailable
         if (coordinator.isShowing) return AdError.AlreadyShowing
         (frequency.check(placement) as? FrequencyDecision.Capped)?.let { return AdError.FrequencyCapped(it.retryAfter) }
@@ -240,7 +263,7 @@ internal class FullScreenAdEngine(
         emit(AdEvent.LoadRequested(p.placement.key, format, slot.adUnitId, now()))
         log.d { "Loading $format ${p.placement.key} (${logId(slot.adUnitId)})" }
         @OptIn(GoogleSdkEscapeHatch::class)
-        val extras = RequestExtras(p.placement, config.source.advanced.googleRequestCustomizer)
+        val extras = RequestExtras(p.placement, config.current.source.advanced.googleRequestCustomizer)
         adsSdk.loadFullScreen(format, slot.adUnitId, extras) { result ->
             if (generation != slot.generation) {
                 (result as? SdkLoadResult.Success)?.ad?.release()
@@ -305,12 +328,52 @@ internal class FullScreenAdEngine(
         }
     }
 
+    /**
+     * A remote override changed the configuration: slots whose ad unit is no longer used are released (their cached
+     * ad and retries dropped), placements are re-attached to their new slot or marked Disabled, and new slots load
+     * per their placements' preload strategy.
+     */
+    override fun onConfigChanged(previous: EffectiveConfig, current: EffectiveConfig) {
+        val before = slots.values.toSet()
+        rebuild(current)
+        pendingPreloads.retainAll(slots.keys)
+        if (!readiness.canLoad()) return
+        slots.entries.filter { (_, slot) -> slot !in before }
+            .map { (placement, _) -> placements.getValue(placement) }
+            .filter { it.preload == PreloadStrategy.AFTER_READY }
+            .distinctBy { slots[it.placement] }
+            .forEach { preload(it.placement) }
+    }
+
+    /** Recomputes [placements] and [slots] for [current], reusing the slot of every ad unit still in use. */
+    private fun rebuild(current: EffectiveConfig) {
+        val newPlacements = current.allPlacements.filter { it.format == format }.associateBy { it.placement }
+        val reusable = slots.values.associateBy { it.adUnitId }
+        val byUnit = mutableMapOf<String, FullScreenSlot>()
+        val newSlots = newPlacements.values.filter { it.enabled }.associate { p ->
+            p.placement to byUnit.getOrPut(p.adUnitId) {
+                reusable[p.adUnitId] ?: FullScreenSlot(format, p.adUnitId, p.retry, p.expiry ?: error("$format has no TTL"))
+            }
+        }
+        val dropped = slots.values.toSet() - newSlots.values.toSet()
+        dropped.forEach {
+            log.d { "$format: releasing the slot for ${logId(it.adUnitId)}; no placement uses it any more" }
+            reset(it, AdAvailability.Disabled)
+        }
+        for ((placement, flow) in placementAvailability) {
+            slots[placement]?.availability?.detach(flow)
+            val slot = newSlots[placement]
+            if (slot != null) slot.availability.attach(flow) else flow.value = AdAvailability.Disabled
+        }
+        placements = newPlacements
+        slots = newSlots
+    }
+
     private fun now(): Long = clock.currentTimeMillis()
 
     private fun emit(event: AdEvent) = events.emit(event)
 
-    private fun logId(adUnitId: String): String =
-        if (config.environment == AdEnvironment.PRODUCTION) redactAdUnitId(adUnitId) else adUnitId
+    private fun logId(adUnitId: String): String = config.current.displayAdUnitId(adUnitId)
 
     companion object {
         /** Spacing between the loads started when the library becomes ready, to avoid a burst at startup. */
@@ -326,3 +389,11 @@ internal fun AdsState.toShowError(): AdError? = when (this) {
     is AdsState.Failed -> error
     else -> AdError.NotInitialized
 }
+
+/** What diagnostics report about one placement's cache. */
+internal class SlotDiagnostics(
+    val availability: AdAvailability,
+    val cachedAdAge: Duration?,
+    val retryAttempt: Int,
+    val nextRetryIn: Duration?,
+)

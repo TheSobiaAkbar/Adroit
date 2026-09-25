@@ -5,6 +5,7 @@ import com.company.admob.AdError
 import com.company.admob.AdFormat
 import com.company.admob.AdsClient
 import com.company.admob.AdsState
+import com.company.admob.CompanyAdMobVersion
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AdMobConfig
 import com.company.admob.config.AppOpenPlacementConfig
@@ -19,7 +20,11 @@ import com.company.admob.internal.banner.BannerApiImpl
 import com.company.admob.internal.config.ConfigIssueCode
 import com.company.admob.internal.config.ConfigValidator
 import com.company.admob.internal.config.EffectiveConfig
+import com.company.admob.internal.config.LiveConfig
+import com.company.admob.internal.config.OverridesApplier
 import com.company.admob.internal.consent.PrivacyApiImpl
+import com.company.admob.internal.diagnostics.DiagnosticsApiImpl
+import com.company.admob.internal.diagnostics.DiagnosticsReportBuilder
 import com.company.admob.internal.consent.RdpWriter
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.fullscreen.FullScreenAdEngine
@@ -77,6 +82,9 @@ internal class AdsRuntime(
 
     val adFree: AdFreeController = AdFreeController(log)
 
+    /** The effective configuration in force: [effectiveConfig] plus the latest valid remote overrides. */
+    val liveConfig: LiveConfig = LiveConfig(effectiveConfig, log)
+
     val init: InitCoordinator = InitCoordinator(
         mutableState = state,
         appContext = app.applicationContext,
@@ -91,12 +99,12 @@ internal class AdsRuntime(
         log = log,
     )
 
-    private val retryScheduler = RetryScheduler(scope, deps.foregroundSource, log)
+    private val retryScheduler = RetryScheduler(scope, deps.foregroundSource, log, clock = deps.clock)
 
     val frequency: FrequencyGate = FrequencyGate(
         clock = deps.clock,
-        ruleFor = { effectiveConfig.placement(it)?.frequency ?: FrequencyRule() },
-        globalInterval = config.frequency.minIntervalBetweenFullScreenAds,
+        ruleFor = { liveConfig.current.placement(it)?.frequency ?: FrequencyRule() },
+        globalInterval = { liveConfig.current.minIntervalBetweenFullScreenAds },
         globalFormats = FrequencyGate.globalFormats(config.frequency.includeRewardedInGlobalInterval),
     )
 
@@ -112,7 +120,7 @@ internal class AdsRuntime(
 
     private fun fullScreenEngine(strategy: FullScreenFormatStrategy) = FullScreenAdEngine(
         strategy = strategy,
-        config = effectiveConfig,
+        config = liveConfig,
         adsSdk = deps.adsSdk,
         readiness = init,
         activityTracker = deps.activityTracker,
@@ -145,7 +153,7 @@ internal class AdsRuntime(
 
     val appOpenController: AppOpenController = AppOpenController(
         engine = appOpenEngine,
-        config = effectiveConfig,
+        config = liveConfig,
         readiness = init,
         activityTracker = deps.activityTracker,
         foreground = deps.foregroundSource,
@@ -161,7 +169,7 @@ internal class AdsRuntime(
     private val hardwareAcceleration = HardwareAccelerationCheck(log)
 
     val nativeEngine: NativeAdLoaderEngine = NativeAdLoaderEngine(
-        config = effectiveConfig,
+        config = liveConfig,
         adsSdk = deps.adsSdk,
         readiness = init,
         foreground = deps.foregroundSource,
@@ -182,11 +190,32 @@ internal class AdsRuntime(
         rewardedInterstitial = RewardedInterstitialApiImpl(rewardedInterstitialEngine, UnclaimedRewards(log)),
         appOpen = AppOpenApiImpl(appOpenController),
         banner = BannerApiImpl(
-            effectiveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log, hardwareAcceleration,
+            liveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log, hardwareAcceleration,
         ),
         native = NativeApiImpl(nativeEngine, NativeAdBinder(deps.nativeRenderPort, log), hardwareAcceleration),
+        diagnostics = DiagnosticsApiImpl(
+            builder = DiagnosticsReportBuilder(
+                libraryVersion = CompanyAdMobVersion.NAME,
+                googleSdkVersion = { deps.adsSdk.sdkVersion },
+                config = liveConfig,
+                state = { init.state.value },
+                consent = { init.consent.state.value },
+                fullScreenEngines = fullScreenEngines.associateBy { it.format },
+                nativeEngine = nativeEngine,
+                frequency = frequency,
+                coordinator = fullScreenCoordinator,
+                activityTracker = deps.activityTracker,
+                events = events,
+            ),
+            adsSdk = deps.adsSdk,
+            events = events,
+            environment = config.environment,
+            log = log,
+        ),
         runtime = this,
     )
+
+    private val overrides = OverridesApplier(liveConfig, config.remoteConfig, events, deps.clock, scope, log)
 
     init {
         events.setListeners(config.eventListeners)
@@ -212,8 +241,11 @@ internal class AdsRuntime(
             val store = deps.keyValueStore
             launchCount = store.getInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, 0) + 1
             store.putInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, launchCount)
-            // TODO(PROMPT-15): collect config.remoteConfig overrides in the library scope.
-            runOnMain { init.onConfigValid() }
+            liveConfig.addListener(init)
+            runOnMain {
+                init.onConfigValid()
+                overrides.start()
+            }
         } else {
             val reason = validation.errors.joinToString("; ") { it.message }
             log.e { "Invalid configuration; ads stay off. $reason" }

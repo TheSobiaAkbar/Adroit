@@ -18,6 +18,7 @@ import com.company.admob.fakes.FakeReadiness
 import com.company.admob.fakes.FakeSdkBannerView
 import com.company.admob.fakes.TestClock
 import com.company.admob.internal.config.EffectiveConfig
+import com.company.admob.internal.config.LiveConfig
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.reliability.RetryScheduler
@@ -53,7 +54,8 @@ internal fun bannerConfig(extra: AdMobConfig.Builder.() -> Unit = {}): AdMobConf
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class BannerHarness(val scope: TestScope, config: AdMobConfig = bannerConfig()) {
-    val effective = EffectiveConfig.from(config)
+    val live = LiveConfig(EffectiveConfig.from(config))
+    val effective: EffectiveConfig get() = live.current
     val adsSdk = FakeAdsSdk(scope)
     val readiness = FakeReadiness()
     val foreground = FakeAppForegroundSource(isInForeground = true)
@@ -61,7 +63,7 @@ internal class BannerHarness(val scope: TestScope, config: AdMobConfig = bannerC
     val log = AdLog({ _, _, _, _ -> }, LogLevel.NONE)
     val events = EventBus(AdLog({ _, _, _, _ -> }, LogLevel.NONE))
     val api = BannerApiImpl(
-        effective,
+        live,
         adsSdk,
         readiness,
         RetryScheduler(scope.backgroundScope, foreground, log, Random(0)),

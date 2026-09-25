@@ -1,5 +1,7 @@
 package com.company.admob.internal.events
 
+import com.company.admob.AdError
+import com.company.admob.AdsState
 import com.company.admob.events.AdEvent
 import com.company.admob.events.AdEventListener
 import com.company.admob.internal.logging.AdLog
@@ -50,7 +52,18 @@ internal class EventBus(
     /** The last [recentCapacity] recorded events, oldest first. Thread-safe. */
     fun recent(): List<AdEvent> = synchronized(recent) { recent.toList() }
 
+    /** The error of the most recent failed load, refused show, or failed state, for diagnostics. */
+    @Volatile
+    var lastError: AdError? = null
+        private set
+
     private fun deliver(event: AdEvent) {
+        when (event) {
+            is AdEvent.LoadFailed -> lastError = event.error
+            is AdEvent.NotShown -> lastError = event.error
+            is AdEvent.StateChanged -> (event.state as? AdsState.Failed)?.let { lastError = it.error }
+            else -> Unit
+        }
         if (recordRecent) {
             synchronized(recent) {
                 if (recent.size == recentCapacity) recent.removeFirst()

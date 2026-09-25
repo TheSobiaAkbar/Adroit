@@ -16,13 +16,14 @@ import com.company.admob.BannerAdHandle
 import com.company.admob.BannerOptions
 import com.company.admob.BannerState
 import com.company.admob.GoogleSdkEscapeHatch
-import com.company.admob.config.AdEnvironment
+import com.company.admob.UnavailableReason
 import com.company.admob.events.AdEvent
 import com.company.admob.events.AdRevenue
 import com.company.admob.events.AdSourceInfo
-import com.company.admob.events.redactAdUnitId
 import com.company.admob.internal.config.EffectiveConfig
 import com.company.admob.internal.config.EffectivePlacement
+import com.company.admob.internal.config.LiveConfig
+import com.company.admob.internal.config.bannerAdUnitId
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.init.Readiness
 import com.company.admob.internal.logging.AdLog
@@ -38,6 +39,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -51,10 +53,10 @@ import kotlinx.coroutines.launch
  */
 internal class BannerAdHandleImpl(
     activity: Activity,
-    private val placement: EffectivePlacement,
-    private val adUnitId: String,
+    placement: EffectivePlacement,
+    private var adUnitId: String,
     private val options: BannerOptions,
-    private val config: EffectiveConfig,
+    private val config: LiveConfig,
     private val adsSdk: AdsSdk,
     private val readiness: Readiness,
     private val retry: RetryScheduler,
@@ -65,8 +67,10 @@ internal class BannerAdHandleImpl(
 ) : BannerAdHandle {
     private val container = BannerContainer(activity, this)
     private val mutableState = MutableStateFlow<BannerState>(BannerState.Loading)
-    private val key = "BANNER:${placement.placement.key}@${System.identityHashCode(this)}"
-    private val placementKey get() = placement.placement.key
+    private val bannerPlacement = placement.placement
+    private val retryPolicy = placement.retry
+    private val key = "BANNER:${bannerPlacement.key}@${System.identityHashCode(this)}"
+    private val placementKey get() = bannerPlacement.key
 
     private var sdkView: SdkBannerView? = null
     private var loadedSpec: BannerSizeSpec? = null
@@ -93,7 +97,7 @@ internal class BannerAdHandleImpl(
     fun start() {
         if (destroyed || collector != null) return
         collector = scope.launch {
-            readiness.state.collect(::onReadiness)
+            combine(readiness.state, config.flow, ::Pair).collect { (state, current) -> onChange(state, current) }
         }
     }
 
@@ -125,6 +129,29 @@ internal class BannerAdHandleImpl(
         ownerObserver?.let { owner.lifecycle.removeObserver(it) }
         boundOwner = null
         ownerObserver = null
+    }
+
+    /**
+     * Readiness or the effective configuration changed. A placement disabled remotely hides the banner
+     * (`Hidden(DISABLED_BY_REMOTE)`) and destroys its ad; a new ad unit replaces the ad at the next load.
+     */
+    private fun onChange(state: AdsState, current: EffectiveConfig) {
+        val p = current.placement(bannerPlacement)
+        val disabledReason = if (p == null) UnavailableReason.DISABLED_BY_REMOTE else p.disabledReason
+        if (p == null || disabledReason != null) {
+            if (sdkView != null) log.i { "Banner $placementKey hidden: $disabledReason" }
+            tearDownAd()
+            mutableState.value = BannerState.Hidden(disabledReason)
+            return
+        }
+        val unit = current.bannerAdUnitId(p, options.size)
+        if (unit != adUnitId) {
+            log.i { "Banner $placementKey: ad unit changed to ${current.displayAdUnitId(unit)}" }
+            tearDownAd()
+            adUnitId = unit
+        }
+        if (mutableState.value is BannerState.Hidden && state !is AdsState.Unavailable) mutableState.value = BannerState.Loading
+        onReadiness(state)
     }
 
     private fun onReadiness(state: AdsState) {
@@ -178,7 +205,7 @@ internal class BannerAdHandleImpl(
         emit(AdEvent.LoadRequested(placementKey, AdFormat.BANNER, adUnitId, now()))
         log.d { "Loading banner $placementKey (${logId()}) at ${spec.widthDp} dp, ${spec.size}" }
         @OptIn(GoogleSdkEscapeHatch::class)
-        val extras = RequestExtras(placement.placement, config.source.advanced.googleRequestCustomizer)
+        val extras = RequestExtras(bannerPlacement, config.current.source.advanced.googleRequestCustomizer)
         bannerView.load(adUnitId, spec.size, spec.widthDp, extras, Listener(loadGeneration))
     }
 
@@ -223,7 +250,7 @@ internal class BannerAdHandleImpl(
             val attempt = ++failedAttempts
             lastError = error
             mutableState.value = BannerState.Failed(error)
-            val willRetry = retryable && attempt <= placement.retry.maxAttempts
+            val willRetry = retryable && attempt <= retryPolicy.maxAttempts
             if (willRetry) scheduleRetry(error)
             emit(AdEvent.LoadFailed(placementKey, AdFormat.BANNER, adUnitId, now(), error, attempt, willRetry))
             log.w { "Banner $placementKey failed to load: ${error.code}, attempt $attempt, will retry: $willRetry" }
@@ -249,7 +276,7 @@ internal class BannerAdHandleImpl(
             log.d { "Banner $placementKey: retry paused while not attached and shown" }
             return
         }
-        retry.schedule(key, failedAttempts, placement.retry, error, retryable = true) {
+        retry.schedule(key, failedAttempts, retryPolicy, error, retryable = true) {
             val bannerView = sdkView
             val spec = loadedSpec
             when {
@@ -296,7 +323,7 @@ internal class BannerAdHandleImpl(
 
     private fun emit(event: AdEvent) = events.emit(event)
 
-    private fun logId(): String = if (config.environment == AdEnvironment.PRODUCTION) redactAdUnitId(adUnitId) else adUnitId
+    private fun logId(): String = config.current.displayAdUnitId(adUnitId)
 }
 
 /** The host-facing container: reports layout, size and attach changes to its handle until the handle is destroyed. */

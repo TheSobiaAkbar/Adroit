@@ -9,6 +9,7 @@ import com.company.admob.UnavailableReason
 import com.company.admob.events.AdEvent
 import com.company.admob.internal.AdFreeController
 import com.company.admob.internal.callbacks.OnceCallback
+import com.company.admob.internal.config.ConfigChangeListener
 import com.company.admob.internal.config.EffectiveConfig
 import com.company.admob.internal.consent.ConsentCoordinator
 import com.company.admob.internal.consent.RdpWriter
@@ -30,7 +31,8 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Owns [AdsState] (architecture §11): runs `start()` through consent and SDK initialization, and re-evaluates the
- * state when the ad-free flag or consent changes. Every transition goes through [AdsStateTransitions].
+ * state when the ad-free flag, consent, or the remote `adsEnabled` override changes. Precedence (§21): ad-free, then
+ * remote disable, then consent. Every transition goes through [AdsStateTransitions].
  *
  * The SDK is initialized at most once at a time ([initStarted]); after a failure, a later `start()` retries, at
  * least [RETRY_INTERVAL] after the previous attempt began. `gad_rdp` is written before each attempt.
@@ -49,7 +51,7 @@ internal class InitCoordinator(
     private val clock: Clock,
     private val events: EventBus,
     private val log: AdLog,
-) : Readiness {
+) : Readiness, ConfigChangeListener {
     override val state: StateFlow<AdsState> = mutableState.asStateFlow()
 
     val consent: ConsentCoordinator = ConsentCoordinator(
@@ -66,6 +68,9 @@ internal class InitCoordinator(
     private val initStarted = AtomicBoolean(false)
     private var sdkInitialized = false
     private var lastInitAttemptMillis: Long? = null
+
+    /** The remote configuration turned every ad off (`AdOverrides.adsEnabled = false`). */
+    private var remoteDisabled = false
 
     /** `start()` callbacks waiting for the state to settle. */
     private val waiters = mutableListOf<OnceCallback<AdsState>>()
@@ -157,6 +162,16 @@ internal class InitCoordinator(
         settleIfDone()
     }
 
+    /** A remote `adsEnabled` change: off blocks ads like ad-free does (with its own reason); on re-evaluates. */
+    override fun onConfigChanged(previous: EffectiveConfig, current: EffectiveConfig) {
+        val disabled = !current.adsEnabled
+        if (disabled == remoteDisabled) return
+        remoteDisabled = disabled
+        log.i { "Remote configuration: ads ${if (disabled) "disabled" else "enabled again"}" }
+        if (disabled) adFree.notifyBlocked(UnavailableReason.DISABLED_BY_REMOTE)
+        reevaluate()
+    }
+
     /** Called by [consent] only while UMP allows ads. */
     private fun initSdkOnce() {
         if (!consentSdk.canRequestAds()) return
@@ -198,6 +213,7 @@ internal class InitCoordinator(
                 transition(
                     when {
                         adFree.isAdFree -> AdsState.Unavailable(UnavailableReason.AD_FREE_USER)
+                        remoteDisabled -> AdsState.Unavailable(UnavailableReason.DISABLED_BY_REMOTE)
                         !consentSdk.canRequestAds() -> AdsState.Unavailable(UnavailableReason.CONSENT_NOT_OBTAINED)
                         else -> AdsState.Ready
                     },
@@ -221,17 +237,20 @@ internal class InitCoordinator(
     private fun reevaluate() {
         val current = state.value
         if (current != AdsState.Ready && current !is AdsState.Unavailable) return
-        // TODO(PROMPT-15): DISABLED_BY_REMOTE and DISABLED_BY_CONFIG take part here.
         when {
             adFree.isAdFree -> transition(AdsState.Unavailable(UnavailableReason.AD_FREE_USER))
+            remoteDisabled -> transition(AdsState.Unavailable(UnavailableReason.DISABLED_BY_REMOTE))
             !consentSdk.canRequestAds() -> transition(AdsState.Unavailable(UnavailableReason.CONSENT_NOT_OBTAINED))
             sdkInitialized -> transition(AdsState.Ready)
             else -> initSdkOnce()
         }
     }
 
-    private fun blockedReason(): UnavailableReason =
-        if (adFree.isAdFree) UnavailableReason.AD_FREE_USER else UnavailableReason.CONSENT_NOT_OBTAINED
+    private fun blockedReason(): UnavailableReason = when {
+        adFree.isAdFree -> UnavailableReason.AD_FREE_USER
+        remoteDisabled -> UnavailableReason.DISABLED_BY_REMOTE
+        else -> UnavailableReason.CONSENT_NOT_OBTAINED
+    }
 
     private fun retryAllowed(): Boolean {
         val last = lastInitAttemptMillis ?: return true

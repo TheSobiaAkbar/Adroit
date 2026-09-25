@@ -5,6 +5,7 @@ import com.company.admob.config.RetryPolicy
 import com.company.admob.internal.config.FormatDefaults
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.port.AppForegroundSource
+import com.company.admob.internal.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Schedules load retries with [Backoff], one pending retry per key (for example `"INTERSTITIAL:<adUnitId>"`).
@@ -27,8 +29,13 @@ internal class RetryScheduler(
     private val log: AdLog,
     private val random: Random = Random.Default,
     private val noFillFloor: Duration = FormatDefaults.NO_FILL_MIN_RETRY_DELAY,
+    /** For [nextRetryIn] only; without one, diagnostics report no retry time. */
+    private val clock: Clock? = null,
 ) {
     private val jobs = mutableMapOf<String, Job>()
+
+    /** When each pending retry comes due ([Clock.elapsedRealtimeMillis]), for diagnostics. */
+    private val dueAt = mutableMapOf<String, Long>()
 
     /**
      * Schedules retry [attempt] (1-based) of [block] for [key], replacing any pending retry for that key. Nothing is
@@ -65,22 +72,33 @@ internal class RetryScheduler(
             }
             // Unregister before running, so a block that schedules the next retry doesn't cancel itself.
             jobs.remove(key)
+            dueAt.remove(key)
             block()
         }
         jobs[key] = job
+        clock?.let { dueAt[key] = it.elapsedRealtimeMillis() + delay.inWholeMilliseconds }
         job.start()
         return delay
     }
 
     fun isScheduled(key: String): Boolean = jobs.containsKey(key)
 
+    /** Time until the pending retry for [key] is due (zero once due, while it waits for the foreground), or null. */
+    fun nextRetryIn(key: String): Duration? {
+        val due = dueAt[key] ?: return null
+        val now = clock?.elapsedRealtimeMillis() ?: return null
+        return (due - now).coerceAtLeast(0).milliseconds
+    }
+
     fun cancel(key: String) {
+        dueAt.remove(key)
         jobs.remove(key)?.cancel()
     }
 
     fun cancelAll() {
         val pending = jobs.values.toList()
         jobs.clear()
+        dueAt.clear()
         pending.forEach { it.cancel() }
     }
 }

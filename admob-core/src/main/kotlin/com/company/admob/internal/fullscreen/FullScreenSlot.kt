@@ -23,7 +23,7 @@ internal class FullScreenSlot(
     /** Retry-scheduler key, for example `INTERSTITIAL:ca-app-pub-…`. */
     val key: String = "$format:$adUnitId"
 
-    val availability = MutableStateFlow<AdAvailability>(AdAvailability.Unavailable)
+    val availability = SlotAvailability()
 
     var cached: Cached<LoadedFullScreenAd>? = null
         private set
@@ -54,5 +54,31 @@ internal class FullScreenSlot(
         expiryJob = null
         expiresAtElapsed = Long.MAX_VALUE
         return cached?.value.also { cached = null }
+    }
+}
+
+/**
+ * A slot's availability, mirrored into the per-placement flows attached to it. The engine hands the host those
+ * placement flows, which outlive slots: when a remote override moves a placement to another ad unit or disables it,
+ * the flow is re-attached (or set to Disabled) instead of being replaced. [value] is written on the main thread and
+ * readable from any thread.
+ */
+internal class SlotAvailability {
+    private val mirrors = mutableListOf<MutableStateFlow<AdAvailability>>()
+
+    @Volatile
+    var value: AdAvailability = AdAvailability.Unavailable
+        set(value) {
+            field = value
+            mirrors.forEach { it.value = value }
+        }
+
+    fun attach(flow: MutableStateFlow<AdAvailability>) {
+        if (flow !in mirrors) mirrors += flow
+        flow.value = value
+    }
+
+    fun detach(flow: MutableStateFlow<AdAvailability>) {
+        mirrors -= flow
     }
 }

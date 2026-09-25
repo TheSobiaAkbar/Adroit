@@ -22,6 +22,7 @@ import com.company.admob.fakes.FakeLoadedFullScreenAd
 import com.company.admob.fakes.FakeReadiness
 import com.company.admob.fakes.TestClock
 import com.company.admob.internal.config.EffectiveConfig
+import com.company.admob.internal.config.LiveConfig
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.reliability.FrequencyGate
@@ -67,7 +68,8 @@ internal class EngineHarness(
     },
     strategy: FullScreenFormatStrategy = FullScreenFormatStrategy.Interstitial,
 ) {
-    val effective = EffectiveConfig.from(config)
+    val live = LiveConfig(EffectiveConfig.from(config))
+    val effective: EffectiveConfig get() = live.current
     val adsSdk = FakeAdsSdk(scope)
     val readiness = FakeReadiness()
     val tracker = FakeActivityTracker()
@@ -83,19 +85,19 @@ internal class EngineHarness(
     val frequency = FrequencyGate(
         clock,
         { effective.placement(it)?.frequency ?: FrequencyRule() },
-        config.frequency.minIntervalBetweenFullScreenAds,
+        { effective.minIntervalBetweenFullScreenAds },
     )
     val engine = engine(strategy)
 
     /** An engine for [strategy] sharing this harness's readiness, frequency gate and full-screen coordinator. */
     fun engine(strategy: FullScreenFormatStrategy): FullScreenAdEngine = FullScreenAdEngine(
         strategy = strategy,
-        config = effective,
+        config = live,
         adsSdk = adsSdk,
         readiness = readiness,
         activityTracker = tracker,
         foreground = foreground,
-        retry = RetryScheduler(scope.backgroundScope, foreground, log, Random(0)),
+        retry = RetryScheduler(scope.backgroundScope, foreground, log, Random(0), clock = clock),
         frequency = frequency,
         coordinator = coordinator,
         events = events,

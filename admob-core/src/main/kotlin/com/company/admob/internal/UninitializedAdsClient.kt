@@ -118,6 +118,7 @@ internal class UninitializedAdsClient(
             activeFullScreen = null,
             currentActivity = null,
             lastError = AdError.NotInitialized,
+            activeOverrides = "none",
         )
 
         override fun openAdInspector(activity: Activity, onClosed: (AdError?) -> Unit) {

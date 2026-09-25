@@ -27,7 +27,7 @@ class FrequencyGateTest {
         rules: Map<AdPlacement, FrequencyRule> = emptyMap(),
         global: Duration = Duration.ZERO,
         includeRewarded: Boolean = false,
-    ) = FrequencyGate(clock, { rules[it] ?: FrequencyRule() }, global, FrequencyGate.globalFormats(includeRewarded))
+    ) = FrequencyGate(clock, { rules[it] ?: FrequencyRule() }, { global }, FrequencyGate.globalFormats(includeRewarded))
 
     @Test
     fun `per-placement interval, with the remaining time as retryAfter`() {
@@ -98,7 +98,7 @@ class FrequencyGateTest {
             setOf(AdFormat.INTERSTITIAL, AdFormat.REWARDED_INTERSTITIAL, AdFormat.APP_OPEN),
             FrequencyGate.globalFormats(includeRewarded = false),
         )
-        val defaultGate = FrequencyGate(clock, { FrequencyRule() }, 30.seconds)
+        val defaultGate = FrequencyGate(clock, { FrequencyRule() }, { 30.seconds })
         defaultGate.recordShown(extraLife)
         assertEquals(Allowed, defaultGate.check(levelEnd))
     }

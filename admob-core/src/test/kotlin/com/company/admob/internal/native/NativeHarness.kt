@@ -20,6 +20,7 @@ import com.company.admob.fakes.FakeReadiness
 import com.company.admob.fakes.TestClock
 import com.company.admob.internal.HardwareAccelerationCheck
 import com.company.admob.internal.config.EffectiveConfig
+import com.company.admob.internal.config.LiveConfig
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.reliability.RetryScheduler
@@ -69,7 +70,8 @@ internal class NativeHarness(
     val scope: TestScope,
     config: AdMobConfig = nativeConfig { placements { native(FEED, TestIds.unit(9)) { retry = EXACT_NATIVE_RETRY } } },
 ) {
-    val effective = EffectiveConfig.from(config)
+    val live = LiveConfig(EffectiveConfig.from(config))
+    val effective: EffectiveConfig get() = live.current
     val adsSdk = FakeAdsSdk(scope)
     val readiness = FakeReadiness()
     val foreground = FakeAppForegroundSource(isInForeground = true)
@@ -78,7 +80,7 @@ internal class NativeHarness(
     val log = AdLog({ level, _, message, _ -> if (level.ordinal >= LogLevel.INFO.ordinal) infoLogs += message }, LogLevel.VERBOSE)
     val events = EventBus(AdLog({ _, _, _, _ -> }, LogLevel.NONE))
     val engine = NativeAdLoaderEngine(
-        effective, adsSdk, readiness, foreground, RetryScheduler(scope.backgroundScope, foreground, log, Random(0)),
+        live, adsSdk, readiness, foreground, RetryScheduler(scope.backgroundScope, foreground, log, Random(0)),
         events, clock, scope.backgroundScope, log,
     ).also { it.start() }
     val port = FakeNativeRenderPort()

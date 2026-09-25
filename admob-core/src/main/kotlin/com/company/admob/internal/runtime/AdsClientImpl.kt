@@ -1,16 +1,13 @@
 package com.company.admob.internal.runtime
 
 import android.app.Activity
-import com.company.admob.AdError
 import com.company.admob.AdPlacement
 import com.company.admob.AdsClient
 import com.company.admob.AdsState
 import com.company.admob.AppOpenApi
 import com.company.admob.AppOpenPlacement
 import com.company.admob.BannerApi
-import com.company.admob.CompanyAdMobVersion
 import com.company.admob.DiagnosticsApi
-import com.company.admob.DiagnosticsReport
 import com.company.admob.FullScreenResult
 import com.company.admob.InterstitialApi
 import com.company.admob.InterstitialPlacement
@@ -23,9 +20,7 @@ import com.company.admob.RewardedInterstitialApi
 import com.company.admob.RewardedInterstitialPlacement
 import com.company.admob.RewardedPlacement
 import com.company.admob.RewardedShowOptions
-import com.company.admob.TestModeInfo
 import com.company.admob.events.AdEvent
-import com.company.admob.internal.callbacks.OnceCallback
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.init.InitCoordinator
 import com.company.admob.internal.threading.postToMain
@@ -49,6 +44,7 @@ internal class AdsClientImpl(
     override val appOpen: AppOpenApi,
     override val banner: BannerApi,
     override val native: NativeApi,
+    override val diagnostics: DiagnosticsApi,
     private val runtime: AdsRuntime,
 ) : AdsClient {
     private val log get() = runtime.log
@@ -91,32 +87,5 @@ internal class AdsClientImpl(
                 else -> log.d { "preload(): ${placement.format} placements are ignored here" }
             }
         }
-    }
-
-    // TODO(PROMPT-15): full diagnostics (placements, active full-screen ad, Ad Inspector).
-    override val diagnostics: DiagnosticsApi = object : DiagnosticsApi {
-        override fun snapshot(): DiagnosticsReport {
-            val effective = runtime.effectiveConfig
-            val consent = privacy.consentState.value
-            return DiagnosticsReport(
-                libraryVersion = CompanyAdMobVersion.NAME,
-                googleSdkVersion = runtime.deps.adsSdk.sdkVersion,
-                environment = effective.environment,
-                state = state.value,
-                consent = consent,
-                testMode = TestModeInfo(effective.usesDemoAdUnits, effective.testDeviceIds.size),
-                placements = emptyList(),
-                activeFullScreen = null,
-                currentActivity = null,
-                lastError = (state.value as? AdsState.Failed)?.error ?: consent.lastError,
-            )
-        }
-
-        override fun openAdInspector(activity: Activity, onClosed: (AdError?) -> Unit) {
-            log.w { "diagnostics.openAdInspector() is not implemented yet" }
-            OnceCallback(onClosed).invoke(AdError.Internal("not implemented"))
-        }
-
-        override val recentEvents: List<AdEvent> get() = eventBus.recent()
     }
 }

@@ -3,10 +3,13 @@ package com.company.admob.internal.config
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AdMobAppId
 import com.company.admob.config.AdMobConfig
+import com.company.admob.config.AdUnitId
 import com.company.admob.config.AppOpenPlacementConfig
 import com.company.admob.config.DebugGeography
 import com.company.admob.config.NativePlacementConfig
 import com.company.admob.config.RetryPolicy
+import com.company.admob.config.remote.AdOverrides
+import com.company.admob.config.remote.PlacementOverride
 import kotlin.time.Duration
 
 /** Identifies a configuration problem, so callers and tests don't depend on message wording. */
@@ -22,6 +25,7 @@ internal enum class ConfigIssueCode {
     INVALID_DURATION,
     INVALID_COUNT,
     INVALID_RETRY_POLICY,
+    UNKNOWN_PLACEMENT_OVERRIDE,
 
     // Errors in PRODUCTION.
     DEMO_ID_IN_PRODUCTION,
@@ -47,6 +51,9 @@ internal class ValidationResult(val errors: List<ConfigIssue>, val warnings: Lis
 
     override fun toString(): String = "ValidationResult(errors=$errors, warnings=$warnings)"
 }
+
+/** The outcome of [ConfigValidator.validateOverrides]: what may be applied, and what was dropped and why. */
+internal class OverridesValidation(val accepted: AdOverrides, val issues: List<ConfigIssue>)
 
 /**
  * Checks an [AdMobConfig] against the rules in docs/architecture/02_ARCHITECTURE.md §20.3. Never throws: the
@@ -211,6 +218,51 @@ internal object ConfigValidator {
                 else -> Unit
             }
         }
+    }
+
+    /**
+     * Checks remote [overrides] against the local [config] with the same rules (§21). Returns the overrides that may
+     * be applied and the problems found: an invalid placement override is dropped as a whole, never applied in part,
+     * as is an override for a key that isn't configured; an invalid global interval is dropped on its own.
+     */
+    fun validateOverrides(overrides: AdOverrides, config: AdMobConfig): OverridesValidation {
+        val issues = mutableListOf<ConfigIssue>()
+        val production = config.environment == AdEnvironment.PRODUCTION
+        val configured = config.placements.map { it.placement.key }.toSet()
+        val accepted = LinkedHashMap<String, PlacementOverride>()
+        for ((key, override) in overrides.placements) {
+            val problems = mutableListOf<ConfigIssue>()
+            fun problem(code: ConfigIssueCode, message: String) {
+                problems += ConfigIssue(code, "Remote override for placement '$key' ignored: $message", key)
+            }
+            if (key !in configured) problem(ConfigIssueCode.UNKNOWN_PLACEMENT_OVERRIDE, "no such placement is configured.")
+            override.adUnitId?.let { id ->
+                if (!AdUnitId(id).isWellFormed) {
+                    problem(
+                        ConfigIssueCode.AD_UNIT_ID_MALFORMED,
+                        "ad unit ID '$id' is not of the form ca-app-pub-<16 digits>/<10 digits>.",
+                    )
+                } else if (production && GoogleDemoAdUnits.isDemo(id)) {
+                    problem(
+                        ConfigIssueCode.DEMO_ID_IN_PRODUCTION,
+                        "ad unit ID '$id' is a Google demo ad unit, which is not allowed in PRODUCTION.",
+                    )
+                }
+            }
+            override.minInterval?.let { checkNotNegative(it, "minInterval", ::problem) }
+            if ((override.maxPerSession ?: 0) < 0) problem(ConfigIssueCode.INVALID_COUNT, "maxPerSession must not be negative.")
+            if (problems.isEmpty()) accepted[key] = override else issues += problems
+        }
+        var globalInterval = overrides.minIntervalBetweenFullScreenAds
+        if (globalInterval != null && globalInterval.isNegative()) {
+            issues += ConfigIssue(
+                ConfigIssueCode.INVALID_DURATION,
+                "Remote minIntervalBetweenFullScreenAds ignored: it must not be negative.",
+            )
+            globalInterval = null
+        }
+        val result = AdOverrides(overrides.adsEnabled, overrides.disabledFormats, accepted, globalInterval)
+        return OverridesValidation(result, issues.toList())
     }
 
     private fun checkGlobalOptions(config: AdMobConfig, errors: MutableList<ConfigIssue>) {

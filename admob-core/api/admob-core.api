@@ -536,8 +536,9 @@ public abstract interface class com/company/admob/DiagnosticsApi {
 }
 
 public final class com/company/admob/DiagnosticsReport {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/company/admob/config/AdEnvironment;Lcom/company/admob/AdsState;Lcom/company/admob/ConsentState;Lcom/company/admob/TestModeInfo;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lcom/company/admob/AdError;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/company/admob/config/AdEnvironment;Lcom/company/admob/AdsState;Lcom/company/admob/ConsentState;Lcom/company/admob/TestModeInfo;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lcom/company/admob/AdError;Ljava/lang/String;)V
 	public final fun getActiveFullScreen ()Ljava/lang/String;
+	public final fun getActiveOverrides ()Ljava/lang/String;
 	public final fun getConsent ()Lcom/company/admob/ConsentState;
 	public final fun getCurrentActivity ()Ljava/lang/String;
 	public final fun getEnvironment ()Lcom/company/admob/config/AdEnvironment;
@@ -716,14 +717,16 @@ public final class com/company/admob/NativePlacement : com/company/admob/AdPlace
 }
 
 public final class com/company/admob/PlacementDiagnostics {
-	public synthetic fun <init> (Ljava/lang/String;Lcom/company/admob/AdFormat;Ljava/lang/String;Lcom/company/admob/AdAvailability;Lkotlin/time/Duration;ILkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/company/admob/AdFormat;Ljava/lang/String;Lcom/company/admob/AdAvailability;Lkotlin/time/Duration;ILkotlin/time/Duration;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getAdUnitId ()Ljava/lang/String;
 	public final fun getAvailability ()Lcom/company/admob/AdAvailability;
 	public final fun getCachedAdAge-FghU774 ()Lkotlin/time/Duration;
+	public final fun getEnabled ()Z
 	public final fun getFormat ()Lcom/company/admob/AdFormat;
 	public final fun getKey ()Ljava/lang/String;
 	public final fun getNextRetryIn-FghU774 ()Lkotlin/time/Duration;
 	public final fun getRetryAttempt ()I
+	public final fun getShowsThisSession ()I
 	public fun toString ()Ljava/lang/String;
 }
 

@@ -16,7 +16,8 @@ internal sealed interface FrequencyDecision {
 
 /**
  * Client-side frequency limits (architecture §20.6): per placement ([ruleFor]: minimum interval and session cap), and
- * a global minimum interval across [globalFormats]. In memory, per process, on the monotonic clock. A UX safeguard,
+ * a global minimum interval across [globalFormats]. Both are read at every [check], so remote overrides apply to
+ * the next decision. In memory, per process, on the monotonic clock. A UX safeguard,
  * not policy enforcement. Main thread only.
  *
  * Shows are counted with [recordShown] when the ad is actually shown, never when it's requested.
@@ -24,7 +25,7 @@ internal sealed interface FrequencyDecision {
 internal class FrequencyGate(
     private val clock: Clock,
     private val ruleFor: (AdPlacement) -> FrequencyRule,
-    private val globalInterval: Duration,
+    private val globalInterval: () -> Duration,
     private val globalFormats: Set<AdFormat> = globalFormats(includeRewarded = false),
 ) {
     private class Record(var count: Int, var lastShownAtElapsed: Long)
@@ -41,10 +42,13 @@ internal class FrequencyGate(
         if (record != null) wait = maxOf(wait, remaining(rule.minInterval, record.lastShownAtElapsed))
         val lastGlobal = lastGlobalShownAtElapsed
         if (lastGlobal != null && placement.format in globalFormats) {
-            wait = maxOf(wait, remaining(globalInterval, lastGlobal))
+            wait = maxOf(wait, remaining(globalInterval(), lastGlobal))
         }
         return if (wait.isPositive()) FrequencyDecision.Capped(wait) else FrequencyDecision.Allowed
     }
+
+    /** Shows of [placement] counted this session, for diagnostics. */
+    fun showsThisSession(placement: AdPlacement): Int = records[placement]?.count ?: 0
 
     fun recordShown(placement: AdPlacement) {
         val now = clock.elapsedRealtimeMillis()

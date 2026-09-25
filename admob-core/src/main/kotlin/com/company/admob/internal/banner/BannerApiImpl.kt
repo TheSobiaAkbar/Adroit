@@ -14,8 +14,8 @@ import com.company.admob.BannerPlacement
 import com.company.admob.BannerState
 import com.company.admob.UnavailableReason
 import com.company.admob.internal.HardwareAccelerationCheck
-import com.company.admob.internal.config.EffectiveConfig
-import com.company.admob.internal.config.GoogleDemoAdUnits
+import com.company.admob.internal.config.LiveConfig
+import com.company.admob.internal.config.bannerAdUnitId
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.init.Readiness
 import com.company.admob.internal.logging.AdLog
@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /** [BannerApi]: creates [BannerAdHandleImpl]s. Keeps no reference to the handles it creates. */
 internal class BannerApiImpl(
-    private val config: EffectiveConfig,
+    private val config: LiveConfig,
     private val adsSdk: AdsSdk,
     private val readiness: Readiness,
     private val retry: RetryScheduler,
@@ -44,19 +44,19 @@ internal class BannerApiImpl(
     override fun create(activity: Activity, placement: BannerPlacement, options: BannerOptions): BannerAdHandle {
         val onMain = isMainThread()
         if (!onMain) log.e { "banner.create() must be called on the main thread; continuing on it" }
-        val p = config.placement(placement)
+        val current = config.current
+        val p = current.placement(placement)
         if (p == null || p.format != AdFormat.BANNER) {
             log.e { "banner.create(): ${placement.key} isn't a configured banner placement" }
             return StaticBannerAdHandle(activity, BannerState.Failed(AdError.InvalidConfiguration("${placement.key} isn't a configured banner placement")))
         }
-        if (!p.enabled) {
+        if (p.disabledReason == UnavailableReason.DISABLED_BY_CONFIG) {
             log.d { "banner.create(): ${placement.key} is disabled" }
             return StaticBannerAdHandle(activity, BannerState.Hidden(UnavailableReason.DISABLED_BY_CONFIG))
         }
         if (onMain) hardwareAcceleration.warnIfDisabled(activity)
-        // Demo ad units depend on the size actually requested: Google's fixed-size demo unit for Standard and
-        // MediumRectangle, the adaptive one otherwise.
-        val adUnitId = if (config.usesDemoAdUnits) GoogleDemoAdUnits.forFormat(AdFormat.BANNER, options.size) else p.adUnitId
+        // A remotely disabled placement still gets a live handle: it's Hidden until the override is lifted.
+        val adUnitId = current.bannerAdUnitId(p, options.size)
         val handle = BannerAdHandleImpl(
             activity, p, adUnitId, options, config, adsSdk, readiness, retry, events, clock, scope, log,
         )
