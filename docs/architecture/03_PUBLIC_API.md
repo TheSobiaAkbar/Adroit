@@ -163,8 +163,10 @@ public interface NativeAdHandle : Closeable {
   public val placement: NativePlacement
   public val assets: NativeAdAssets
   public val isDestroyed: Boolean
+  public val state: StateFlow<NativeAdHandleState>                  // Active → Destroyed | Blocked(reason)
   public fun destroy(); override fun close() = destroy()
 }
+public sealed interface NativeAdHandleState { Active; Destroyed; Blocked(reason: UnavailableReason) }
 public data class NativeAdAssets(val headline: String, val body: String?, val callToAction: String?,
   val advertiser: String?, val starRating: Double?, val price: String?, val store: String?,
   val icon: Drawable?, val hasVideo: Boolean, val mediaAspectRatio: Float?)

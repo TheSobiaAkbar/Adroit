@@ -3,7 +3,6 @@ package com.company.admob.internal.banner
 import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.lifecycle.LifecycleOwner
 import com.company.admob.AdError
@@ -14,6 +13,7 @@ import com.company.admob.BannerOptions
 import com.company.admob.BannerPlacement
 import com.company.admob.BannerState
 import com.company.admob.UnavailableReason
+import com.company.admob.internal.HardwareAccelerationCheck
 import com.company.admob.internal.config.EffectiveConfig
 import com.company.admob.internal.config.GoogleDemoAdUnits
 import com.company.admob.internal.events.EventBus
@@ -39,9 +39,8 @@ internal class BannerApiImpl(
     private val clock: Clock,
     private val scope: CoroutineScope,
     private val log: AdLog,
+    private val hardwareAcceleration: HardwareAccelerationCheck = HardwareAccelerationCheck(log),
 ) : BannerApi {
-    private var warnedHardwareAcceleration = false
-
     override fun create(activity: Activity, placement: BannerPlacement, options: BannerOptions): BannerAdHandle {
         val onMain = isMainThread()
         if (!onMain) log.e { "banner.create() must be called on the main thread; continuing on it" }
@@ -54,7 +53,7 @@ internal class BannerApiImpl(
             log.d { "banner.create(): ${placement.key} is disabled" }
             return StaticBannerAdHandle(activity, BannerState.Hidden(UnavailableReason.DISABLED_BY_CONFIG))
         }
-        if (onMain) warnIfNoHardwareAcceleration(activity)
+        if (onMain) hardwareAcceleration.warnIfDisabled(activity)
         // Demo ad units depend on the size actually requested: Google's fixed-size demo unit for Standard and
         // MediumRectangle, the adaptive one otherwise.
         val adUnitId = if (config.usesDemoAdUnits) GoogleDemoAdUnits.forFormat(AdFormat.BANNER, options.size) else p.adUnitId
@@ -63,16 +62,6 @@ internal class BannerApiImpl(
         )
         if (onMain) handle.start() else postToMain { handle.start() }
         return handle
-    }
-
-    /** Video ads need a hardware-accelerated window. Warned once per process run. */
-    private fun warnIfNoHardwareAcceleration(activity: Activity) {
-        if (warnedHardwareAcceleration) return
-        val flags = activity.window?.attributes?.flags ?: return
-        if (flags and WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED == 0) {
-            warnedHardwareAcceleration = true
-            log.w { "${activity.javaClass.simpleName} isn't hardware accelerated: video banner ads won't play" }
-        }
     }
 }
 

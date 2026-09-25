@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import com.company.admob.internal.config.ManifestAppIdReader
 import com.company.admob.internal.google.NextGenAdsSdk
+import com.company.admob.internal.google.NextGenNativeAdBinder
 import com.company.admob.internal.google.UmpConsentSdk
 import com.company.admob.internal.lifecycle.LifecycleActivityTracker
 import com.company.admob.internal.lifecycle.ProcessLifecycleForegroundSource
@@ -13,6 +14,7 @@ import com.company.admob.internal.port.AdsSdk
 import com.company.admob.internal.port.AppForegroundSource
 import com.company.admob.internal.port.ConsentSdk
 import com.company.admob.internal.port.KeyValueStore
+import com.company.admob.internal.port.NativeRenderPort
 import com.company.admob.internal.storage.SharedPrefsKeyValueStore
 import com.company.admob.internal.time.Clock
 import com.company.admob.internal.time.SystemClockImpl
@@ -32,6 +34,7 @@ internal class RuntimeDeps(
     val foregroundSource: AppForegroundSource,
     val clock: Clock,
     val keyValueStore: KeyValueStore,
+    val nativeRenderPort: NativeRenderPort,
     val manifestAppId: String?,
     val isDebuggable: Boolean,
     private val onRegister: () -> Unit = {},
@@ -53,6 +56,7 @@ internal class RuntimeDeps(
                 foregroundSource = foreground,
                 clock = SystemClockImpl,
                 keyValueStore = SharedPrefsKeyValueStore(app),
+                nativeRenderPort = NextGenNativeAdBinder(log),
                 manifestAppId = ManifestAppIdReader.read(app),
                 isDebuggable = app.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
                 onRegister = {

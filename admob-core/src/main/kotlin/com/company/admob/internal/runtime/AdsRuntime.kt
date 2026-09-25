@@ -11,6 +11,7 @@ import com.company.admob.config.AppOpenPlacementConfig
 import com.company.admob.config.FrequencyRule
 import com.company.admob.events.AdEvent
 import com.company.admob.internal.AdFreeController
+import com.company.admob.internal.HardwareAccelerationCheck
 import com.company.admob.internal.appopen.AppOpenApiImpl
 import com.company.admob.internal.appopen.AppOpenController
 import com.company.admob.internal.appopen.AppOpenSuppression
@@ -29,6 +30,9 @@ import com.company.admob.internal.fullscreen.RewardedInterstitialApiImpl
 import com.company.admob.internal.fullscreen.UnclaimedRewards
 import com.company.admob.internal.init.InitCoordinator
 import com.company.admob.internal.logging.AdLog
+import com.company.admob.internal.native.NativeAdBinder
+import com.company.admob.internal.native.NativeAdLoaderEngine
+import com.company.admob.internal.native.NativeApiImpl
 import com.company.admob.internal.reliability.FrequencyGate
 import com.company.admob.internal.reliability.FullScreenCoordinator
 import com.company.admob.internal.reliability.RetryScheduler
@@ -154,6 +158,20 @@ internal class AdsRuntime(
         log = log,
     )
 
+    private val hardwareAcceleration = HardwareAccelerationCheck(log)
+
+    val nativeEngine: NativeAdLoaderEngine = NativeAdLoaderEngine(
+        config = effectiveConfig,
+        adsSdk = deps.adsSdk,
+        readiness = init,
+        foreground = deps.foregroundSource,
+        retry = retryScheduler,
+        events = events,
+        clock = deps.clock,
+        scope = scope,
+        log = log,
+    )
+
     val client: AdsClient = AdsClientImpl(
         state = init.state,
         eventBus = events,
@@ -163,7 +181,10 @@ internal class AdsRuntime(
         rewarded = RewardedApiImpl(rewardedEngine, UnclaimedRewards(log)),
         rewardedInterstitial = RewardedInterstitialApiImpl(rewardedInterstitialEngine, UnclaimedRewards(log)),
         appOpen = AppOpenApiImpl(appOpenController),
-        banner = BannerApiImpl(effectiveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log),
+        banner = BannerApiImpl(
+            effectiveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log, hardwareAcceleration,
+        ),
+        native = NativeApiImpl(nativeEngine, NativeAdBinder(deps.nativeRenderPort, log), hardwareAcceleration),
         runtime = this,
     )
 
@@ -185,6 +206,8 @@ internal class AdsRuntime(
                 it.start()
             }
             adFree.addListener(appOpenController)
+            adFree.addListener(nativeEngine)
+            nativeEngine.start()
             appOpenController.start()
             val store = deps.keyValueStore
             launchCount = store.getInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, 0) + 1

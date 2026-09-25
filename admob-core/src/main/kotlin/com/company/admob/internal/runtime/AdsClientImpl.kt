@@ -15,6 +15,7 @@ import com.company.admob.FullScreenResult
 import com.company.admob.InterstitialApi
 import com.company.admob.InterstitialPlacement
 import com.company.admob.NativeApi
+import com.company.admob.NativePlacement
 import com.company.admob.PrivacyApi
 import com.company.admob.RewardResult
 import com.company.admob.RewardedApi
@@ -24,7 +25,6 @@ import com.company.admob.RewardedPlacement
 import com.company.admob.RewardedShowOptions
 import com.company.admob.TestModeInfo
 import com.company.admob.events.AdEvent
-import com.company.admob.internal.InertAdApis
 import com.company.admob.internal.callbacks.OnceCallback
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.init.InitCoordinator
@@ -48,14 +48,10 @@ internal class AdsClientImpl(
     override val rewardedInterstitial: RewardedInterstitialApi,
     override val appOpen: AppOpenApi,
     override val banner: BannerApi,
+    override val native: NativeApi,
     private val runtime: AdsRuntime,
 ) : AdsClient {
     private val log get() = runtime.log
-
-    /** Stand-ins for format engines that don't exist yet. Each one reports `Internal("not implemented")`. */
-    private val notYetAvailable = InertAdApis(AdError.Internal("not implemented")) { call ->
-        log.w { "$call is not implemented yet" }
-    }
 
     override val events: SharedFlow<AdEvent> get() = eventBus.events
 
@@ -71,9 +67,6 @@ internal class AdsClientImpl(
     override fun setAdFree(adFree: Boolean) {
         runOnMain { init.setAdFree(adFree) }
     }
-
-    // TODO(PROMPT-12): the native loader.
-    override val native: NativeApi get() = notYetAvailable.native
 
     override fun showInterstitial(
         activity: Activity,
@@ -94,7 +87,7 @@ internal class AdsClientImpl(
                 is RewardedPlacement -> rewarded.preload(placement)
                 is RewardedInterstitialPlacement -> rewardedInterstitial.preload(placement)
                 is AppOpenPlacement -> runOnMain { runtime.appOpenEngine.preload(placement) }
-                // TODO(PROMPT-12): native placements.
+                is NativePlacement -> native.preload(placement)
                 else -> log.d { "preload(): ${placement.format} placements are ignored here" }
             }
         }

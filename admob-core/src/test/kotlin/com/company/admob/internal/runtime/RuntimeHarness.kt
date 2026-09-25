@@ -12,6 +12,7 @@ import com.company.admob.events.AdEvent
 import com.company.admob.fakes.FakeActivityTracker
 import com.company.admob.fakes.FakeAdsSdk
 import com.company.admob.fakes.FakeAppForegroundSource
+import com.company.admob.fakes.FakeNativeRenderPort
 import com.company.admob.fakes.FakeClock
 import com.company.admob.fakes.FakeConsentSdk
 import com.company.admob.fakes.InMemoryKeyValueStore
@@ -70,7 +71,7 @@ internal class RuntimeHarness(val scope: TestScope) {
     fun deps(): RuntimeDeps {
         depsBuilt++
         return RuntimeDeps(
-            adsSdk, consentSdk, tracker, foreground, clock, store, manifestAppId, isDebuggable,
+            adsSdk, consentSdk, tracker, foreground, clock, store, FakeNativeRenderPort(), manifestAppId, isDebuggable,
             onRegister = { registerCount++ },
         )
     }

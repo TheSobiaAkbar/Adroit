@@ -620,7 +620,36 @@ public abstract interface class com/company/admob/NativeAdHandle : java/io/Close
 	public abstract fun destroy ()V
 	public abstract fun getAssets ()Lcom/company/admob/NativeAdAssets;
 	public abstract fun getPlacement ()Lcom/company/admob/NativePlacement;
+	public abstract fun getState ()Lkotlinx/coroutines/flow/StateFlow;
 	public abstract fun isDestroyed ()Z
+}
+
+public abstract interface class com/company/admob/NativeAdHandleState {
+}
+
+public final class com/company/admob/NativeAdHandleState$Active : com/company/admob/NativeAdHandleState {
+	public static final field INSTANCE Lcom/company/admob/NativeAdHandleState$Active;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/NativeAdHandleState$Blocked : com/company/admob/NativeAdHandleState {
+	public fun <init> (Lcom/company/admob/UnavailableReason;)V
+	public final fun component1 ()Lcom/company/admob/UnavailableReason;
+	public final fun copy (Lcom/company/admob/UnavailableReason;)Lcom/company/admob/NativeAdHandleState$Blocked;
+	public static synthetic fun copy$default (Lcom/company/admob/NativeAdHandleState$Blocked;Lcom/company/admob/UnavailableReason;ILjava/lang/Object;)Lcom/company/admob/NativeAdHandleState$Blocked;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lcom/company/admob/UnavailableReason;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/NativeAdHandleState$Destroyed : com/company/admob/NativeAdHandleState {
+	public static final field INSTANCE Lcom/company/admob/NativeAdHandleState$Destroyed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/company/admob/NativeAdLayout {
