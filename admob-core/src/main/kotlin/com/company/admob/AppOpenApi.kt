@@ -15,6 +15,12 @@ public interface AppOpenApi {
      * Shows an app open ad from a loading/splash screen during a cold start, if one becomes available within
      * [maxWait]. [onComplete] is called exactly once, on the main thread: after the ad is dismissed, or with
      * [FullScreenResult.NotShown] if no ad could be shown in time. Continue to your main screen in both cases.
+     *
+     * If the content becomes ready before the ad, don't keep the user waiting: keep [maxWait] short. An ad that
+     * loads too late is kept for a later foreground. If [activity] is paused or destroyed during the wait (for
+     * example on rotation), the result is `NotShown(ActivityUnavailable)`, and the recreated screen may call again.
+     * A call made while another is still waiting or showing completes at once with `NotShown(AlreadyShowing)`.
+     * The configured excluded Activities don't apply here: this [activity] is the one you chose to show over.
      */
     public fun showOnColdStart(
         activity: Activity,

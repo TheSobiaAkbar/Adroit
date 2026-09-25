@@ -2,13 +2,18 @@ package com.company.admob.internal.runtime
 
 import android.app.Application
 import com.company.admob.AdError
+import com.company.admob.AdFormat
 import com.company.admob.AdsClient
 import com.company.admob.AdsState
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AdMobConfig
+import com.company.admob.config.AppOpenPlacementConfig
 import com.company.admob.config.FrequencyRule
 import com.company.admob.events.AdEvent
 import com.company.admob.internal.AdFreeController
+import com.company.admob.internal.appopen.AppOpenApiImpl
+import com.company.admob.internal.appopen.AppOpenController
+import com.company.admob.internal.appopen.AppOpenSuppression
 import com.company.admob.internal.config.ConfigIssueCode
 import com.company.admob.internal.config.ConfigValidator
 import com.company.admob.internal.config.EffectiveConfig
@@ -32,6 +37,8 @@ import com.company.admob.internal.threading.runOnMain
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The composition root (architecture §9): builds the object graph by hand from [config] and the ports made by
@@ -90,6 +97,14 @@ internal class AdsRuntime(
 
     val fullScreenCoordinator: FullScreenCoordinator = FullScreenCoordinator(deps.clock)
 
+    /**
+     * Startup load order (§15): app open first when it may show on cold start, since a loading screen is waiting for
+     * it; otherwise after the other formats.
+     */
+    private val appOpenFirst: Boolean = effectiveConfig.allPlacements
+        .any { it.format == AdFormat.APP_OPEN && it.enabled && (it.config as AppOpenPlacementConfig).showOnColdStartAllowed }
+    private val hasAppOpen: Boolean = effectiveConfig.allPlacements.any { it.format == AdFormat.APP_OPEN && it.enabled }
+
     private fun fullScreenEngine(strategy: FullScreenFormatStrategy) = FullScreenAdEngine(
         strategy = strategy,
         config = effectiveConfig,
@@ -104,13 +119,39 @@ internal class AdsRuntime(
         clock = deps.clock,
         scope = scope,
         log = log,
+        readyDelay = when {
+            !hasAppOpen -> Duration.ZERO
+            strategy == FullScreenFormatStrategy.AppOpen -> if (appOpenFirst) Duration.ZERO else APP_OPEN_AFTER_OTHERS
+            appOpenFirst -> FullScreenAdEngine.STAGGER
+            else -> Duration.ZERO
+        },
     )
 
     val interstitialEngine: FullScreenAdEngine = fullScreenEngine(FullScreenFormatStrategy.Interstitial)
     val rewardedEngine: FullScreenAdEngine = fullScreenEngine(FullScreenFormatStrategy.Rewarded())
     val rewardedInterstitialEngine: FullScreenAdEngine =
         fullScreenEngine(FullScreenFormatStrategy.RewardedInterstitial())
-    private val fullScreenEngines = listOf(interstitialEngine, rewardedEngine, rewardedInterstitialEngine)
+    val appOpenEngine: FullScreenAdEngine = fullScreenEngine(FullScreenFormatStrategy.AppOpen)
+    private val fullScreenEngines = listOf(interstitialEngine, rewardedEngine, rewardedInterstitialEngine, appOpenEngine)
+
+    /** This process's launch number, counting from 1; 0 when the configuration is invalid. */
+    var launchCount: Int = 0
+        private set
+
+    val appOpenController: AppOpenController = AppOpenController(
+        engine = appOpenEngine,
+        config = effectiveConfig,
+        readiness = init,
+        activityTracker = deps.activityTracker,
+        foreground = deps.foregroundSource,
+        frequency = frequency,
+        coordinator = fullScreenCoordinator,
+        suppression = AppOpenSuppression(deps.clock),
+        launchCount = { launchCount },
+        clock = deps.clock,
+        scope = scope,
+        log = log,
+    )
 
     val client: AdsClient = AdsClientImpl(
         state = init.state,
@@ -120,12 +161,9 @@ internal class AdsRuntime(
         interstitial = InterstitialApiImpl(interstitialEngine, log),
         rewarded = RewardedApiImpl(rewardedEngine, UnclaimedRewards(log)),
         rewardedInterstitial = RewardedInterstitialApiImpl(rewardedInterstitialEngine, UnclaimedRewards(log)),
+        appOpen = AppOpenApiImpl(appOpenController),
         runtime = this,
     )
-
-    /** This process's launch number, counting from 1; 0 when the configuration is invalid. */
-    var launchCount: Int = 0
-        private set
 
     init {
         events.setListeners(config.eventListeners)
@@ -144,6 +182,8 @@ internal class AdsRuntime(
                 adFree.addListener(it)
                 it.start()
             }
+            adFree.addListener(appOpenController)
+            appOpenController.start()
             val store = deps.keyValueStore
             launchCount = store.getInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, 0) + 1
             store.putInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, launchCount)
@@ -173,5 +213,10 @@ internal class AdsRuntime(
         deps.unregister()
         events.setListeners(emptyList())
         events.recordRecent = true
+    }
+
+    private companion object {
+        /** When app open loads after the other formats: once their first loads have started. */
+        val APP_OPEN_AFTER_OTHERS: Duration = 1.seconds
     }
 }

@@ -33,6 +33,12 @@ internal sealed interface FullScreenFormatStrategy {
         override val format: AdFormat get() = AdFormat.REWARDED_INTERSTITIAL
     }
 
+    /** App open ads, driven by `AppOpenController` rather than a host `show` call (architecture §15). */
+    data object AppOpen : FullScreenFormatStrategy {
+        override val format: AdFormat get() = AdFormat.APP_OPEN
+        override val dismissGrace: Duration get() = Duration.ZERO
+    }
+
     companion object {
         /** Long enough for adapters that report the reward right after dismissal; short enough to go unnoticed. */
         val DEFAULT_REWARD_GRACE: Duration = 300.milliseconds

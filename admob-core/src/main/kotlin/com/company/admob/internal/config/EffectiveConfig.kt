@@ -4,6 +4,7 @@ import com.company.admob.AdFormat
 import com.company.admob.AdPlacement
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AdMobConfig
+import com.company.admob.config.AppOpenPlacementConfig
 import com.company.admob.config.BannerPlacementConfig
 import com.company.admob.config.FrequencyRule
 import com.company.admob.config.PlacementConfig
@@ -93,7 +94,16 @@ internal class EffectivePlacement(
     val placement: AdPlacement get() = config.placement
     val format: AdFormat get() = config.format
     val enabled: Boolean get() = config.enabled
-    val frequency: FrequencyRule get() = config.frequency
+
+    /** The placement rule; for app open, [AppOpenPlacementConfig.cooldown] raises its minimum interval (§20.6). */
+    val frequency: FrequencyRule = config.frequency.let { rule ->
+        if (config is AppOpenPlacementConfig && config.cooldown > rule.minInterval) {
+            rule.copy(minInterval = config.cooldown)
+        } else {
+            rule
+        }
+    }
+
     val preload: PreloadStrategy get() = config.preload
 
     override fun toString(): String =

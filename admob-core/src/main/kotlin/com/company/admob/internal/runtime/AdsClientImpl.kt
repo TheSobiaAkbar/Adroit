@@ -6,6 +6,7 @@ import com.company.admob.AdPlacement
 import com.company.admob.AdsClient
 import com.company.admob.AdsState
 import com.company.admob.AppOpenApi
+import com.company.admob.AppOpenPlacement
 import com.company.admob.BannerApi
 import com.company.admob.CompanyAdMobVersion
 import com.company.admob.DiagnosticsApi
@@ -45,6 +46,7 @@ internal class AdsClientImpl(
     override val interstitial: InterstitialApi,
     override val rewarded: RewardedApi,
     override val rewardedInterstitial: RewardedInterstitialApi,
+    override val appOpen: AppOpenApi,
     private val runtime: AdsRuntime,
 ) : AdsClient {
     private val log get() = runtime.log
@@ -68,9 +70,6 @@ internal class AdsClientImpl(
     override fun setAdFree(adFree: Boolean) {
         runOnMain { init.setAdFree(adFree) }
     }
-
-    // TODO(PROMPT-10): the app open controller.
-    override val appOpen: AppOpenApi get() = notYetAvailable.appOpen
 
     // TODO(PROMPT-11): the banner controller.
     override val banner: BannerApi get() = notYetAvailable.banner
@@ -96,6 +95,7 @@ internal class AdsClientImpl(
                 is InterstitialPlacement -> interstitial.preload(placement)
                 is RewardedPlacement -> rewarded.preload(placement)
                 is RewardedInterstitialPlacement -> rewardedInterstitial.preload(placement)
+                is AppOpenPlacement -> runOnMain { runtime.appOpenEngine.preload(placement) }
                 // TODO(PROMPT-12): native placements.
                 else -> log.d { "preload(): ${placement.format} placements are ignored here" }
             }

@@ -49,6 +49,9 @@ import kotlin.time.Duration.Companion.milliseconds
  * ad unit share a [FullScreenSlot]. Nothing is requested unless [Readiness.canLoad]; earlier `preload` calls are
  * kept as intent and run when the library becomes ready.
  *
+ * Each time the library becomes ready, loads start after [readyDelay], then [stagger] apart, so the engines don't
+ * all request at once.
+ *
  * Main thread only (ADR-006), except [availability] and [isReady]. No Activity is kept beyond a `show` call.
  */
 internal class FullScreenAdEngine(
@@ -66,6 +69,7 @@ internal class FullScreenAdEngine(
     private val scope: CoroutineScope,
     private val log: AdLog,
     private val stagger: Duration = STAGGER,
+    private val readyDelay: Duration = Duration.ZERO,
 ) : AdsBlockedListener {
     private val format = strategy.format
     private val placements: Map<AdPlacement, EffectivePlacement> =
@@ -191,7 +195,7 @@ internal class FullScreenAdEngine(
     }
 
     private fun gateError(activity: Activity, placement: AdPlacement, p: EffectivePlacement?): AdError? {
-        readinessError(readiness.state.value)?.let { return it }
+        readiness.state.value.toShowError()?.let { return it }
         if (p == null) return AdError.InvalidConfiguration("${placement.key} isn't a configured $format placement")
         val slot = slots[placement] ?: return AdError.Disabled(UnavailableReason.DISABLED_BY_CONFIG)
         if (!activityTracker.isValidForShow(activity)) return AdError.ActivityUnavailable
@@ -209,14 +213,6 @@ internal class FullScreenAdEngine(
         return null
     }
 
-    private fun readinessError(state: AdsState): AdError? = when (state) {
-        AdsState.Ready -> null
-        is AdsState.Unavailable ->
-            if (state.reason == UnavailableReason.CONSENT_NOT_OBTAINED) AdError.ConsentRequired else AdError.Disabled(state.reason)
-        is AdsState.Failed -> state.error
-        else -> AdError.NotInitialized
-    }
-
     private fun onReady() {
         val toLoad = placements.values.filter { it.enabled && it.preload == PreloadStrategy.AFTER_READY }
             .map { it.placement }
@@ -227,6 +223,7 @@ internal class FullScreenAdEngine(
             .forEach { it.availability.value = AdAvailability.Unavailable }
         readyJob?.cancel()
         readyJob = scope.launch {
+            if (toLoad.isNotEmpty()) delay(readyDelay)
             toLoad.forEachIndexed { index, placement ->
                 if (index > 0) delay(stagger)
                 preload(placement)
@@ -319,4 +316,13 @@ internal class FullScreenAdEngine(
         /** Spacing between the loads started when the library becomes ready, to avoid a burst at startup. */
         val STAGGER: Duration = 250.milliseconds
     }
+}
+
+/** Why a show can't proceed in this readiness state, or null when [AdsState.Ready]. */
+internal fun AdsState.toShowError(): AdError? = when (this) {
+    AdsState.Ready -> null
+    is AdsState.Unavailable ->
+        if (reason == UnavailableReason.CONSENT_NOT_OBTAINED) AdError.ConsentRequired else AdError.Disabled(reason)
+    is AdsState.Failed -> error
+    else -> AdError.NotInitialized
 }
