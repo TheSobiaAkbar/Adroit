@@ -6,6 +6,7 @@ import com.company.admob.AdsClient
 import com.company.admob.AdsState
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AdMobConfig
+import com.company.admob.config.FrequencyRule
 import com.company.admob.events.AdEvent
 import com.company.admob.internal.AdFreeController
 import com.company.admob.internal.config.ConfigIssueCode
@@ -14,8 +15,14 @@ import com.company.admob.internal.config.EffectiveConfig
 import com.company.admob.internal.consent.PrivacyApiImpl
 import com.company.admob.internal.consent.RdpWriter
 import com.company.admob.internal.events.EventBus
+import com.company.admob.internal.fullscreen.FullScreenAdEngine
+import com.company.admob.internal.fullscreen.FullScreenFormatStrategy
+import com.company.admob.internal.fullscreen.InterstitialApiImpl
 import com.company.admob.internal.init.InitCoordinator
 import com.company.admob.internal.logging.AdLog
+import com.company.admob.internal.reliability.FrequencyGate
+import com.company.admob.internal.reliability.FullScreenCoordinator
+import com.company.admob.internal.reliability.RetryScheduler
 import com.company.admob.internal.storage.SharedPrefsKeyValueStore
 import com.company.admob.internal.threading.libraryScope
 import com.company.admob.internal.threading.runOnMain
@@ -69,11 +76,39 @@ internal class AdsRuntime(
         log = log,
     )
 
+    private val retryScheduler = RetryScheduler(scope, deps.foregroundSource, log)
+
+    val frequency: FrequencyGate = FrequencyGate(
+        clock = deps.clock,
+        ruleFor = { effectiveConfig.placement(it)?.frequency ?: FrequencyRule() },
+        globalInterval = config.frequency.minIntervalBetweenFullScreenAds,
+        globalFormats = FrequencyGate.globalFormats(config.frequency.includeRewardedInGlobalInterval),
+    )
+
+    val fullScreenCoordinator: FullScreenCoordinator = FullScreenCoordinator(deps.clock)
+
+    val interstitialEngine: FullScreenAdEngine = FullScreenAdEngine(
+        strategy = FullScreenFormatStrategy.Interstitial,
+        config = effectiveConfig,
+        adsSdk = deps.adsSdk,
+        readiness = init,
+        activityTracker = deps.activityTracker,
+        foreground = deps.foregroundSource,
+        retry = retryScheduler,
+        frequency = frequency,
+        coordinator = fullScreenCoordinator,
+        events = events,
+        clock = deps.clock,
+        scope = scope,
+        log = log,
+    )
+
     val client: AdsClient = AdsClientImpl(
         state = init.state,
         eventBus = events,
         init = init,
         privacy = PrivacyApiImpl(init.consent, config.environment, log),
+        interstitial = InterstitialApiImpl(interstitialEngine, log),
         runtime = this,
     )
 
@@ -94,6 +129,8 @@ internal class AdsRuntime(
         }
         if (validation.isValid) {
             deps.register()
+            adFree.addListener(interstitialEngine)
+            interstitialEngine.start()
             val store = deps.keyValueStore
             launchCount = store.getInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, 0) + 1
             store.putInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, launchCount)

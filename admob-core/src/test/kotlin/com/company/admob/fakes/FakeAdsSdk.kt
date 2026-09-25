@@ -60,6 +60,9 @@ internal class FakeAdsSdk(private val scope: CoroutineScope) : AdsSdk {
     var defaultLoad: ScriptedLoad = ScriptedLoad.Success()
     var adInspectorResult: AdError? = null
 
+    /** Called for every load request, before it's scripted. Tests use it to assert when loads may happen. */
+    var onLoad: ((LoadCall) -> Unit)? = null
+
     val initializeCalls = mutableListOf<InitializeCall>()
 
     /** The thread each [initialize] call was made on. The port is called on main; the adapter moves off it. */
@@ -119,7 +122,9 @@ internal class FakeAdsSdk(private val scope: CoroutineScope) : AdsSdk {
         onResult: (SdkLoadResult<T>) -> Unit,
         newAd: (AdSourceInfo?) -> T,
     ) {
-        loadCalls += LoadCall(format, adUnitId, extras)
+        val call = LoadCall(format, adUnitId, extras)
+        onLoad?.invoke(call)
+        loadCalls += call
         val (script, delayMs) = scripts[adUnitId]?.removeFirstOrNull() ?: (defaultLoad to 0L)
         if (script == ScriptedLoad.Pending) return
         scope.launch {

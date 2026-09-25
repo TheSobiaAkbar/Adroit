@@ -41,6 +41,7 @@ internal class AdsClientImpl(
     private val eventBus: EventBus,
     private val init: InitCoordinator,
     override val privacy: PrivacyApi,
+    override val interstitial: InterstitialApi,
     private val runtime: AdsRuntime,
 ) : AdsClient {
     private val log get() = runtime.log
@@ -64,9 +65,6 @@ internal class AdsClientImpl(
     override fun setAdFree(adFree: Boolean) {
         runOnMain { init.setAdFree(adFree) }
     }
-
-    // TODO(PROMPT-08): the interstitial engine.
-    override val interstitial: InterstitialApi get() = notYetAvailable.interstitial
 
     // TODO(PROMPT-09): the rewarded engine.
     override val rewarded: RewardedApi get() = notYetAvailable.rewarded
@@ -95,9 +93,14 @@ internal class AdsClientImpl(
         onResult: (RewardResult) -> Unit,
     ): Unit = rewarded.show(activity, placement, RewardedShowOptions(), onResult)
 
-    // TODO(PROMPT-08): route to the engines' preload.
     override fun preload(vararg placements: AdPlacement) {
-        log.w { "preload() is not implemented yet" }
+        for (placement in placements) {
+            when (placement) {
+                is InterstitialPlacement -> interstitial.preload(placement)
+                // TODO(PROMPT-09, PROMPT-12): rewarded, rewarded interstitial and native placements.
+                else -> log.d { "preload(): ${placement.format} placements are ignored here" }
+            }
+        }
     }
 
     // TODO(PROMPT-15): full diagnostics (placements, active full-screen ad, Ad Inspector).
