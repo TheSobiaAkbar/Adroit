@@ -191,6 +191,16 @@ public enum class ConsentStatus { UNKNOWN, REQUIRED, NOT_REQUIRED, OBTAINED }
 
 ## 3.6 Configuration
 
+> **Implemented in PROMPT 03; the source and `admob-core.api` are authoritative.** Decisions made during implementation:
+> - `AdMobConfig.Builder` exposes each option group both as a property (`testing`, `privacy`, `frequency`, `logging`, `advanced`, `placements`) and as a DSL block function. Java uses the chainable `environment(…)`, `appId(…)`, `addTestDeviceId(…)`, `addEventListener(…)`, `remoteConfig(…)` and `addBanner/addInterstitial/addRewarded/addRewardedInterstitial/addAppOpen/addNative(placement, adUnitId)`, or the group getters (`getPrivacy().setMaxAdContentRating(…)`). `Duration` setters are mangled and not callable from Java (ADR-013).
+> - The default `environment` is **DEVELOPMENT** (fail-safe: a forgotten setting shows test ads, and non-debuggable builds log an error-level warning).
+> - Environment-dependent defaults are nullable and resolved internally: `testing.useDemoAdUnits` (null → true in STAGING), `logging.level` (null → DEBUG/WARN), `advanced.failFast` (null → true outside PRODUCTION).
+> - Per ADR-011, option groups (`TestingOptions`, `PrivacyOptions`, `FrequencyOptions`, `LoggingOptions`, `AdvancedOptions`), `PlacementConfig` subclasses, `AdOverrides` and `PlacementOverride` are regular classes with `equals`/`hashCode`. `RetryPolicy` and `FrequencyRule` stay data classes. `PlacementConfig` constructors are internal; placements are created only through `placements { }`.
+> - `frequency.includeRewardedInGlobalInterval` (default false) makes the rewarded exclusion configurable, as PROMPT 09 requires.
+> - `GoogleRequestCustomizer` lives in the root package next to `GoogleSdkEscapeHatch`. Remote types live in `com.company.admob.config.remote`. `@AdMobConfigDsl` is the DSL marker.
+> - Duplicate placement keys (across all formats) build fine and are reported by validation, never thrown.
+> - `AdMobConfig`'s constructor is `internal` (not `private`) so the nested `Builder` can call it without a public synthetic accessor in the binary API; externally it's equally inaccessible.
+
 ```kotlin
 public fun adMobConfig(block: AdMobConfig.Builder.() -> Unit): AdMobConfig
 public class AdMobConfig private constructor(...) { public class Builder { /* DSL + Java setters */ } }

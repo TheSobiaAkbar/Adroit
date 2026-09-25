@@ -1,0 +1,204 @@
+package com.company.admob.config
+
+import com.company.admob.AppOpenPlacement
+import com.company.admob.BannerPlacement
+import com.company.admob.InterstitialPlacement
+import com.company.admob.NativePlacement
+import com.company.admob.RewardedInterstitialPlacement
+import com.company.admob.RewardedPlacement
+import com.company.admob.config.remote.AdConfigProvider
+import com.company.admob.config.remote.StaticConfigProvider
+import com.company.admob.events.AdEventListener
+import com.company.admob.internal.config.toReadOnlyList
+
+/**
+ * Builds an [AdMobConfig]:
+ *
+ * ```
+ * adMobConfig {
+ *   environment = if (BuildConfig.DEBUG) AdEnvironment.DEVELOPMENT else AdEnvironment.PRODUCTION
+ *   privacy { maxAdContentRating = MaxAdContentRating.T }
+ *   placements {
+ *     interstitial(Placements.LevelComplete, adUnitId = "ca-app-pub-...") { frequency { minInterval = 60.seconds } }
+ *   }
+ * }
+ * ```
+ *
+ * Building never throws. The configuration is validated when it's passed to `CompanyAdMob.initialize`.
+ */
+public fun adMobConfig(block: AdMobConfig.Builder.() -> Unit): AdMobConfig = AdMobConfig.Builder().apply(block).build()
+
+/**
+ * The complete, immutable CompanyAdMob configuration. Create it with [adMobConfig] (Kotlin) or [Builder] (Java).
+ * Two configurations are equal when all their settings are equal; listeners, loggers, providers and customizers
+ * are compared by identity.
+ *
+ * @property environment decides which ad units are used and which mistakes are fatal. See [AdEnvironment].
+ * @property appId the AdMob app ID, or null to use the one in the manifest. If set, it must match the manifest.
+ * @property testing test-ad settings.
+ * @property privacy privacy settings.
+ * @property frequency app-wide frequency settings.
+ * @property logging logging settings.
+ * @property advanced rarely needed settings.
+ * @property placements the configured placements, in declaration order.
+ * @property eventListeners listeners that receive every ad event, in registration order.
+ * @property remoteConfig the source of remote overrides. [StaticConfigProvider] (no overrides) by default.
+ */
+public class AdMobConfig internal constructor(builder: Builder) {
+    public val environment: AdEnvironment = builder.environment
+    public val appId: AdMobAppId? = builder.appId?.let(::AdMobAppId)
+    public val testing: TestingOptions = builder.testing.build()
+    public val privacy: PrivacyOptions = builder.privacy.build()
+    public val frequency: FrequencyOptions = builder.frequency.build()
+    public val logging: LoggingOptions = builder.logging.build()
+    public val advanced: AdvancedOptions = builder.advanced.build()
+    public val placements: List<PlacementConfig> = builder.placements.configs.toReadOnlyList()
+    public val eventListeners: List<AdEventListener> = builder.eventListeners.toReadOnlyList()
+    public val remoteConfig: AdConfigProvider = builder.remoteConfig
+
+    override fun equals(other: Any?): Boolean =
+        other is AdMobConfig && other.environment == environment && other.appId == appId &&
+            other.testing == testing && other.privacy == privacy && other.frequency == frequency &&
+            other.logging == logging && other.advanced == advanced && other.placements == placements &&
+            other.eventListeners == eventListeners && other.remoteConfig == remoteConfig
+
+    override fun hashCode(): Int {
+        var result = environment.hashCode()
+        result = 31 * result + appId.hashCode()
+        result = 31 * result + testing.hashCode()
+        result = 31 * result + privacy.hashCode()
+        result = 31 * result + frequency.hashCode()
+        result = 31 * result + logging.hashCode()
+        result = 31 * result + advanced.hashCode()
+        result = 31 * result + placements.hashCode()
+        result = 31 * result + eventListeners.hashCode()
+        return 31 * result + remoteConfig.hashCode()
+    }
+
+    override fun toString(): String =
+        "AdMobConfig(environment=$environment, appId=$appId, testing=$testing, privacy=$privacy, " +
+            "frequency=$frequency, logging=$logging, advanced=$advanced, placements=$placements, " +
+            "eventListeners=${eventListeners.size}, remoteConfig=${remoteConfig::class.java.name})"
+
+    /**
+     * Mutable builder for [AdMobConfig]. Kotlin code uses it through [adMobConfig]. Java code can chain the
+     * setters without lambdas:
+     *
+     * ```
+     * AdMobConfig config = new AdMobConfig.Builder()
+     *     .environment(AdEnvironment.PRODUCTION)
+     *     .addInterstitial(Placements.LEVEL_COMPLETE, "ca-app-pub-...")
+     *     .build();
+     * ```
+     *
+     * Option groups are also reachable as properties, for example `getPrivacy().setMaxAdContentRating(...)`.
+     * Not thread-safe; [build] copies everything, so later changes to the builder don't affect built configs.
+     */
+    @AdMobConfigDsl
+    public class Builder {
+        /**
+         * The environment. Defaults to [AdEnvironment.DEVELOPMENT], the fail-safe choice: a forgotten setting
+         * shows test ads (and logs an error in non-debuggable builds) instead of requesting live ads in development.
+         */
+        public var environment: AdEnvironment = AdEnvironment.DEVELOPMENT
+
+        /** The AdMob app ID, or null (the default) to use the manifest's `com.google.android.gms.ads.APPLICATION_ID`. */
+        public var appId: String? = null
+
+        /** Test-ad settings. */
+        public val testing: TestingOptions.Builder = TestingOptions.Builder()
+
+        /** Privacy settings. */
+        public val privacy: PrivacyOptions.Builder = PrivacyOptions.Builder()
+
+        /** App-wide frequency settings. */
+        public val frequency: FrequencyOptions.Builder = FrequencyOptions.Builder()
+
+        /** Logging settings. */
+        public val logging: LoggingOptions.Builder = LoggingOptions.Builder()
+
+        /** Rarely needed settings. */
+        public val advanced: AdvancedOptions.Builder = AdvancedOptions.Builder()
+
+        /** Placement declarations. */
+        public val placements: PlacementsBuilder = PlacementsBuilder()
+
+        /** Listeners that receive every ad event. */
+        public val eventListeners: MutableList<AdEventListener> = mutableListOf()
+
+        /** The source of remote overrides. */
+        public var remoteConfig: AdConfigProvider = StaticConfigProvider
+
+        /** Configures [testing]. */
+        public fun testing(block: TestingOptions.Builder.() -> Unit) {
+            testing.apply(block)
+        }
+
+        /** Configures [privacy]. */
+        public fun privacy(block: PrivacyOptions.Builder.() -> Unit) {
+            privacy.apply(block)
+        }
+
+        /** Configures [frequency]. */
+        public fun frequency(block: FrequencyOptions.Builder.() -> Unit) {
+            frequency.apply(block)
+        }
+
+        /** Configures [logging]. */
+        public fun logging(block: LoggingOptions.Builder.() -> Unit) {
+            logging.apply(block)
+        }
+
+        /** Configures [advanced]. */
+        public fun advanced(block: AdvancedOptions.Builder.() -> Unit) {
+            advanced.apply(block)
+        }
+
+        /** Declares placements. */
+        public fun placements(block: PlacementsBuilder.() -> Unit) {
+            placements.apply(block)
+        }
+
+        /** Sets [environment]. For Java chaining. */
+        public fun environment(environment: AdEnvironment): Builder = apply { this.environment = environment }
+
+        /** Sets [appId]. For Java chaining. */
+        public fun appId(appId: String?): Builder = apply { this.appId = appId }
+
+        /** Adds a test device ID. For Java chaining. */
+        public fun addTestDeviceId(deviceId: String): Builder = apply { testing.testDeviceIds += deviceId }
+
+        /** Adds an event listener. For Java chaining. */
+        public fun addEventListener(listener: AdEventListener): Builder = apply { eventListeners += listener }
+
+        /** Sets [remoteConfig]. For Java chaining. */
+        public fun remoteConfig(provider: AdConfigProvider): Builder = apply { remoteConfig = provider }
+
+        /** Adds a banner placement with default settings. For Java chaining. */
+        public fun addBanner(placement: BannerPlacement, adUnitId: String): Builder =
+            apply { placements.banner(placement, adUnitId) }
+
+        /** Adds an interstitial placement with default settings. For Java chaining. */
+        public fun addInterstitial(placement: InterstitialPlacement, adUnitId: String): Builder =
+            apply { placements.interstitial(placement, adUnitId) }
+
+        /** Adds a rewarded placement with default settings. For Java chaining. */
+        public fun addRewarded(placement: RewardedPlacement, adUnitId: String): Builder =
+            apply { placements.rewarded(placement, adUnitId) }
+
+        /** Adds a rewarded interstitial placement with default settings. For Java chaining. */
+        public fun addRewardedInterstitial(placement: RewardedInterstitialPlacement, adUnitId: String): Builder =
+            apply { placements.rewardedInterstitial(placement, adUnitId) }
+
+        /** Adds an app open placement with default settings. For Java chaining. */
+        public fun addAppOpen(placement: AppOpenPlacement, adUnitId: String): Builder =
+            apply { placements.appOpen(placement, adUnitId) }
+
+        /** Adds a native ad placement with default settings. For Java chaining. */
+        public fun addNative(placement: NativePlacement, adUnitId: String): Builder =
+            apply { placements.native(placement, adUnitId) }
+
+        /** Creates the immutable configuration. Never throws; validation happens at initialization. */
+        public fun build(): AdMobConfig = AdMobConfig(this)
+    }
+}

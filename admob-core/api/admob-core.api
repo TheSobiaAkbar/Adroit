@@ -582,6 +582,10 @@ public final class com/company/admob/FullScreenResult$NotShown : com/company/adm
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class com/company/admob/GoogleRequestCustomizer {
+	public abstract fun customize (Lcom/company/admob/AdPlacement;Ljava/lang/Object;)V
+}
+
 public abstract interface annotation class com/company/admob/GoogleSdkEscapeHatch : java/lang/annotation/Annotation {
 }
 
@@ -817,6 +821,397 @@ public final class com/company/admob/config/AdEnvironment : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/config/AdEnvironment;
 	public static fun values ()[Lcom/company/admob/config/AdEnvironment;
+}
+
+public final class com/company/admob/config/AdMobAppId {
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lcom/company/admob/config/AdMobAppId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public static final fun isWellFormed-impl (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/AdMobConfig {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdvanced ()Lcom/company/admob/config/AdvancedOptions;
+	public final fun getAppId-VyopnGc ()Ljava/lang/String;
+	public final fun getEnvironment ()Lcom/company/admob/config/AdEnvironment;
+	public final fun getEventListeners ()Ljava/util/List;
+	public final fun getFrequency ()Lcom/company/admob/config/FrequencyOptions;
+	public final fun getLogging ()Lcom/company/admob/config/LoggingOptions;
+	public final fun getPlacements ()Ljava/util/List;
+	public final fun getPrivacy ()Lcom/company/admob/config/PrivacyOptions;
+	public final fun getRemoteConfig ()Lcom/company/admob/config/remote/AdConfigProvider;
+	public final fun getTesting ()Lcom/company/admob/config/TestingOptions;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/AdMobConfig$Builder {
+	public fun <init> ()V
+	public final fun addAppOpen (Lcom/company/admob/AppOpenPlacement;Ljava/lang/String;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun addBanner (Lcom/company/admob/BannerPlacement;Ljava/lang/String;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun addEventListener (Lcom/company/admob/events/AdEventListener;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun addInterstitial (Lcom/company/admob/InterstitialPlacement;Ljava/lang/String;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun addNative (Lcom/company/admob/NativePlacement;Ljava/lang/String;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun addRewarded (Lcom/company/admob/RewardedPlacement;Ljava/lang/String;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun addRewardedInterstitial (Lcom/company/admob/RewardedInterstitialPlacement;Ljava/lang/String;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun addTestDeviceId (Ljava/lang/String;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun advanced (Lkotlin/jvm/functions/Function1;)V
+	public final fun appId (Ljava/lang/String;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun build ()Lcom/company/admob/config/AdMobConfig;
+	public final fun environment (Lcom/company/admob/config/AdEnvironment;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun frequency (Lkotlin/jvm/functions/Function1;)V
+	public final fun getAdvanced ()Lcom/company/admob/config/AdvancedOptions$Builder;
+	public final fun getAppId ()Ljava/lang/String;
+	public final fun getEnvironment ()Lcom/company/admob/config/AdEnvironment;
+	public final fun getEventListeners ()Ljava/util/List;
+	public final fun getFrequency ()Lcom/company/admob/config/FrequencyOptions$Builder;
+	public final fun getLogging ()Lcom/company/admob/config/LoggingOptions$Builder;
+	public final fun getPlacements ()Lcom/company/admob/config/PlacementsBuilder;
+	public final fun getPrivacy ()Lcom/company/admob/config/PrivacyOptions$Builder;
+	public final fun getRemoteConfig ()Lcom/company/admob/config/remote/AdConfigProvider;
+	public final fun getTesting ()Lcom/company/admob/config/TestingOptions$Builder;
+	public final fun logging (Lkotlin/jvm/functions/Function1;)V
+	public final fun placements (Lkotlin/jvm/functions/Function1;)V
+	public final fun privacy (Lkotlin/jvm/functions/Function1;)V
+	public final fun remoteConfig (Lcom/company/admob/config/remote/AdConfigProvider;)Lcom/company/admob/config/AdMobConfig$Builder;
+	public final fun setAppId (Ljava/lang/String;)V
+	public final fun setEnvironment (Lcom/company/admob/config/AdEnvironment;)V
+	public final fun setRemoteConfig (Lcom/company/admob/config/remote/AdConfigProvider;)V
+	public final fun testing (Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract interface annotation class com/company/admob/config/AdMobConfigDsl : java/lang/annotation/Annotation {
+}
+
+public final class com/company/admob/config/AdMobConfigKt {
+	public static final fun adMobConfig (Lkotlin/jvm/functions/Function1;)Lcom/company/admob/config/AdMobConfig;
+}
+
+public final class com/company/admob/config/AdUnitId {
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lcom/company/admob/config/AdUnitId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public static final fun isWellFormed-impl (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/AdvancedOptions {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDisableSdkCrashReporting ()Z
+	public final fun getFailFast ()Ljava/lang/Boolean;
+	public final fun getGoogleRequestCustomizer ()Lcom/company/admob/GoogleRequestCustomizer;
+	public final fun getShowTimeout-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/AdvancedOptions$Builder {
+	public final fun getDisableSdkCrashReporting ()Z
+	public final fun getFailFast ()Ljava/lang/Boolean;
+	public final fun getGoogleRequestCustomizer ()Lcom/company/admob/GoogleRequestCustomizer;
+	public final fun getShowTimeout-UwyO8pc ()J
+	public final fun setDisableSdkCrashReporting (Z)V
+	public final fun setFailFast (Ljava/lang/Boolean;)V
+	public final fun setGoogleRequestCustomizer (Lcom/company/admob/GoogleRequestCustomizer;)V
+	public final fun setShowTimeout-LRDsOJo (J)V
+}
+
+public final class com/company/admob/config/AgeTreatment : java/lang/Enum {
+	public static final field CHILD Lcom/company/admob/config/AgeTreatment;
+	public static final field TEEN Lcom/company/admob/config/AgeTreatment;
+	public static final field UNSPECIFIED Lcom/company/admob/config/AgeTreatment;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/config/AgeTreatment;
+	public static fun values ()[Lcom/company/admob/config/AgeTreatment;
+}
+
+public final class com/company/admob/config/AppOpenPlacementBuilder : com/company/admob/config/PlacementConfigBuilder {
+	public final fun excludeActivities ([Ljava/lang/Class;)V
+	public final fun getCooldown-UwyO8pc ()J
+	public final fun getMinLaunchesBeforeFirstShow ()I
+	public final fun getShowOnColdStartAllowed ()Z
+	public final fun getSuppressAfterFullScreenAd-UwyO8pc ()J
+	public final fun setCooldown-LRDsOJo (J)V
+	public final fun setMinLaunchesBeforeFirstShow (I)V
+	public final fun setShowOnColdStartAllowed (Z)V
+	public final fun setSuppressAfterFullScreenAd-LRDsOJo (J)V
+}
+
+public final class com/company/admob/config/AppOpenPlacementConfig : com/company/admob/config/PlacementConfig {
+	public final fun getCooldown-UwyO8pc ()J
+	public final fun getExcludedActivityClassNames ()Ljava/util/Set;
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getMinLaunchesBeforeFirstShow ()I
+	public final fun getShowOnColdStartAllowed ()Z
+	public final fun getSuppressAfterFullScreenAd-UwyO8pc ()J
+}
+
+public final class com/company/admob/config/BannerPlacementBuilder : com/company/admob/config/PlacementConfigBuilder {
+	public final fun getSize ()Lcom/company/admob/BannerSize;
+	public final fun setSize (Lcom/company/admob/BannerSize;)V
+}
+
+public final class com/company/admob/config/BannerPlacementConfig : com/company/admob/config/PlacementConfig {
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getSize ()Lcom/company/admob/BannerSize;
+}
+
+public final class com/company/admob/config/DebugGeography : java/lang/Enum {
+	public static final field DISABLED Lcom/company/admob/config/DebugGeography;
+	public static final field EEA Lcom/company/admob/config/DebugGeography;
+	public static final field OTHER Lcom/company/admob/config/DebugGeography;
+	public static final field REGULATED_US_STATE Lcom/company/admob/config/DebugGeography;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/config/DebugGeography;
+	public static fun values ()[Lcom/company/admob/config/DebugGeography;
+}
+
+public final class com/company/admob/config/FrequencyOptions {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIncludeRewardedInGlobalInterval ()Z
+	public final fun getMinIntervalBetweenFullScreenAds-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/FrequencyOptions$Builder {
+	public final fun getIncludeRewardedInGlobalInterval ()Z
+	public final fun getMinIntervalBetweenFullScreenAds-UwyO8pc ()J
+	public final fun setIncludeRewardedInGlobalInterval (Z)V
+	public final fun setMinIntervalBetweenFullScreenAds-LRDsOJo (J)V
+}
+
+public final class com/company/admob/config/FrequencyRule {
+	public fun <init> ()V
+	public synthetic fun <init> (JIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-UwyO8pc ()J
+	public final fun component2 ()I
+	public final fun copy-VtjQ1oo (JI)Lcom/company/admob/config/FrequencyRule;
+	public static synthetic fun copy-VtjQ1oo$default (Lcom/company/admob/config/FrequencyRule;JIILjava/lang/Object;)Lcom/company/admob/config/FrequencyRule;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxPerSession ()I
+	public final fun getMinInterval-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/FrequencyRuleBuilder {
+	public final fun getMaxPerSession ()I
+	public final fun getMinInterval-UwyO8pc ()J
+	public final fun setMaxPerSession (I)V
+	public final fun setMinInterval-LRDsOJo (J)V
+}
+
+public final class com/company/admob/config/FullScreenPlacementBuilder : com/company/admob/config/PlacementConfigBuilder {
+}
+
+public final class com/company/admob/config/InterstitialPlacementConfig : com/company/admob/config/PlacementConfig {
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+}
+
+public final class com/company/admob/config/LoggingOptions {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLevel ()Lcom/company/admob/logging/LogLevel;
+	public final fun getLogger ()Lcom/company/admob/logging/AdLogger;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/LoggingOptions$Builder {
+	public final fun getLevel ()Lcom/company/admob/logging/LogLevel;
+	public final fun getLogger ()Lcom/company/admob/logging/AdLogger;
+	public final fun setLevel (Lcom/company/admob/logging/LogLevel;)V
+	public final fun setLogger (Lcom/company/admob/logging/AdLogger;)V
+}
+
+public final class com/company/admob/config/MaxAdContentRating : java/lang/Enum {
+	public static final field G Lcom/company/admob/config/MaxAdContentRating;
+	public static final field MA Lcom/company/admob/config/MaxAdContentRating;
+	public static final field PG Lcom/company/admob/config/MaxAdContentRating;
+	public static final field T Lcom/company/admob/config/MaxAdContentRating;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/config/MaxAdContentRating;
+	public static fun values ()[Lcom/company/admob/config/MaxAdContentRating;
+}
+
+public final class com/company/admob/config/NativePlacementBuilder : com/company/admob/config/PlacementConfigBuilder {
+	public final fun getPoolSize ()I
+	public final fun setPoolSize (I)V
+}
+
+public final class com/company/admob/config/NativePlacementConfig : com/company/admob/config/PlacementConfig {
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getPoolSize ()I
+}
+
+public abstract class com/company/admob/config/PlacementConfig {
+	public synthetic fun <init> (Lcom/company/admob/AdPlacement;Ljava/lang/String;ZLcom/company/admob/config/FrequencyRule;Lcom/company/admob/config/PreloadStrategy;Lcom/company/admob/config/RetryPolicy;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdUnitId-9WjuOtE ()Ljava/lang/String;
+	public final fun getEnabled ()Z
+	public final fun getExpiry-FghU774 ()Lkotlin/time/Duration;
+	public abstract fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getFrequency ()Lcom/company/admob/config/FrequencyRule;
+	public final fun getPlacement ()Lcom/company/admob/AdPlacement;
+	public final fun getPreload ()Lcom/company/admob/config/PreloadStrategy;
+	public final fun getRetry ()Lcom/company/admob/config/RetryPolicy;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/company/admob/config/PlacementConfigBuilder {
+	public synthetic fun <init> (Lcom/company/admob/AdPlacement;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun frequency (Lkotlin/jvm/functions/Function1;)V
+	public final fun getEnabled ()Z
+	public final fun getExpiry-FghU774 ()Lkotlin/time/Duration;
+	public final fun getFrequency ()Lcom/company/admob/config/FrequencyRule;
+	public final fun getPreload ()Lcom/company/admob/config/PreloadStrategy;
+	public final fun getRetry ()Lcom/company/admob/config/RetryPolicy;
+	public final fun setEnabled (Z)V
+	public final fun setExpiry-BwNAW2A (Lkotlin/time/Duration;)V
+	public final fun setFrequency (Lcom/company/admob/config/FrequencyRule;)V
+	public final fun setPreload (Lcom/company/admob/config/PreloadStrategy;)V
+	public final fun setRetry (Lcom/company/admob/config/RetryPolicy;)V
+}
+
+public final class com/company/admob/config/PlacementsBuilder {
+	public final fun appOpen (Lcom/company/admob/AppOpenPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun appOpen$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/AppOpenPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun banner (Lcom/company/admob/BannerPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun banner$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/BannerPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun interstitial (Lcom/company/admob/InterstitialPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun interstitial$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/InterstitialPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun native (Lcom/company/admob/NativePlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun native$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/NativePlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun rewarded (Lcom/company/admob/RewardedPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun rewarded$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/RewardedPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun rewardedInterstitial (Lcom/company/admob/RewardedInterstitialPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun rewardedInterstitial$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/RewardedInterstitialPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class com/company/admob/config/PreloadStrategy : java/lang/Enum {
+	public static final field AFTER_READY Lcom/company/admob/config/PreloadStrategy;
+	public static final field NONE Lcom/company/admob/config/PreloadStrategy;
+	public static final field ON_DEMAND Lcom/company/admob/config/PreloadStrategy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/config/PreloadStrategy;
+	public static fun values ()[Lcom/company/admob/config/PreloadStrategy;
+}
+
+public final class com/company/admob/config/PrivacyOptions {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAgeTreatment ()Lcom/company/admob/config/AgeTreatment;
+	public final fun getDebugGeography ()Lcom/company/admob/config/DebugGeography;
+	public final fun getMaxAdContentRating ()Lcom/company/admob/config/MaxAdContentRating;
+	public final fun getRestrictedDataProcessing ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/PrivacyOptions$Builder {
+	public final fun getAgeTreatment ()Lcom/company/admob/config/AgeTreatment;
+	public final fun getDebugGeography ()Lcom/company/admob/config/DebugGeography;
+	public final fun getMaxAdContentRating ()Lcom/company/admob/config/MaxAdContentRating;
+	public final fun getRestrictedDataProcessing ()Z
+	public final fun setAgeTreatment (Lcom/company/admob/config/AgeTreatment;)V
+	public final fun setDebugGeography (Lcom/company/admob/config/DebugGeography;)V
+	public final fun setMaxAdContentRating (Lcom/company/admob/config/MaxAdContentRating;)V
+	public final fun setRestrictedDataProcessing (Z)V
+}
+
+public final class com/company/admob/config/RetryPolicy {
+	public synthetic fun <init> (JDJIDLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-UwyO8pc ()J
+	public final fun component2 ()D
+	public final fun component3-UwyO8pc ()J
+	public final fun component4 ()I
+	public final fun component5 ()D
+	public final fun copy-w6K2E_k (JDJID)Lcom/company/admob/config/RetryPolicy;
+	public static synthetic fun copy-w6K2E_k$default (Lcom/company/admob/config/RetryPolicy;JDJIDILjava/lang/Object;)Lcom/company/admob/config/RetryPolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInitialDelay-UwyO8pc ()J
+	public final fun getJitterRatio ()D
+	public final fun getMaxAttempts ()I
+	public final fun getMaxDelay-UwyO8pc ()J
+	public final fun getMultiplier ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/RewardedInterstitialPlacementConfig : com/company/admob/config/PlacementConfig {
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+}
+
+public final class com/company/admob/config/RewardedPlacementConfig : com/company/admob/config/PlacementConfig {
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+}
+
+public final class com/company/admob/config/TestingOptions {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTestDeviceIds ()Ljava/util/Set;
+	public final fun getUseDemoAdUnits ()Ljava/lang/Boolean;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/TestingOptions$Builder {
+	public final fun getTestDeviceIds ()Ljava/util/Set;
+	public final fun getUseDemoAdUnits ()Ljava/lang/Boolean;
+	public final fun setUseDemoAdUnits (Ljava/lang/Boolean;)V
+}
+
+public abstract interface class com/company/admob/config/remote/AdConfigProvider {
+	public abstract fun overrides ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/company/admob/config/remote/AdOverrides {
+	public fun <init> ()V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/util/Set;Ljava/util/Map;Lkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/util/Set;Ljava/util/Map;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdsEnabled ()Ljava/lang/Boolean;
+	public final fun getDisabledFormats ()Ljava/util/Set;
+	public final fun getMinIntervalBetweenFullScreenAds-FghU774 ()Lkotlin/time/Duration;
+	public final fun getPlacements ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/remote/PlacementOverride {
+	public fun <init> ()V
+	public synthetic fun <init> (Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdUnitId ()Ljava/lang/String;
+	public final fun getEnabled ()Ljava/lang/Boolean;
+	public final fun getMaxPerSession ()Ljava/lang/Integer;
+	public final fun getMinInterval-FghU774 ()Lkotlin/time/Duration;
+	public final fun getPreload ()Lcom/company/admob/config/PreloadStrategy;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/remote/StaticConfigProvider : com/company/admob/config/remote/AdConfigProvider {
+	public static final field INSTANCE Lcom/company/admob/config/remote/StaticConfigProvider;
+	public fun overrides ()Lkotlinx/coroutines/flow/Flow;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/company/admob/events/AdEvent {

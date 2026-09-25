@@ -417,7 +417,7 @@ Gates, all required:
 ```kotlin
 val adsConfig = adMobConfig {
   environment = if (BuildConfig.DEBUG) AdEnvironment.DEVELOPMENT else AdEnvironment.PRODUCTION
-  // appId optional: read from manifest; if set here it must match
+  // environment defaults to DEVELOPMENT; appId optional: read from manifest; if set here it must match
   testing { testDeviceIds += "33BE2250B43518CCDA7DE426D04EE231" }
   privacy {
     ageTreatment = AgeTreatment.UNSPECIFIED          // CHILD / TEEN → setAgeRestrictedTreatment
@@ -430,7 +430,7 @@ val adsConfig = adMobConfig {
     banner(Placements.HomeBanner, adUnitId = "ca-app-pub-xxxxxxxxxxxxxxxx/nnnnnnnnnn")
     interstitial(Placements.LevelComplete, adUnitId = "…") {
       frequency { minInterval = 60.seconds; maxPerSession = 10 }
-      preload = PreloadStrategy.AfterReady
+      preload = PreloadStrategy.AFTER_READY
     }
     rewarded(Placements.ExtraLife, adUnitId = "…")
     appOpen(Placements.AppOpen, adUnitId = "…") {
