@@ -28,6 +28,8 @@ fragmentKtx = "1.9.1"
 # 2.x only: LeakCanary 3.0 is still alpha
 leakcanary = "2.14"
 navigation = "2.10.2"
+# sample-mixed only, behind -PwithMediation=true (PROMPT 19)
+applovinMediationAdapter = "13.6.4.2"
 
 # Tests
 junit = "4.13.2"
@@ -80,6 +82,7 @@ androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-view
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 leakcanary-android-instrumentation = { module = "com.squareup.leakcanary:leakcanary-android-instrumentation", version.ref = "leakcanary" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+applovin-mediation-adapter = { module = "com.google.ads.mediation:applovin", version.ref = "applovinMediationAdapter" }
 
 # Tests
 junit = { group = "junit", name = "junit", version.ref = "junit" }

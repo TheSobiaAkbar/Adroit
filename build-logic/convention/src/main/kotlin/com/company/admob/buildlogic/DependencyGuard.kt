@@ -18,12 +18,20 @@ import org.gradle.kotlin.dsl.register
  * Forbidden dependency edges (docs/architecture/02_ARCHITECTURE.md §8).
  *
  * Coordinates are matched as regular expressions against `group:name` for external modules and against
- * `project :path` for project dependencies, across the whole resolved release runtime classpath.
+ * `project :path` for project dependencies.
+ */
+
+/**
+ * Checked against every resolvable runtime classpath of the module (debug, release, staging, test and androidTest).
+ * An excluded dependency is absent from the resolution result, so these pass only if the module never resolves them.
  */
 private val FORBIDDEN_EVERYWHERE = listOf(
-    // The legacy Google Mobile Ads SDK must never be resolved (ADR-001). Mediation adapters must exclude it.
+    // The legacy Google Mobile Ads SDK must never be resolved (ADR-001). Mediation adapters depend on it, so a host
+    // using one must exclude it globally (see sample-mixed with -PwithMediation=true).
     "com\\.google\\.android\\.gms:play-services-ads",
     "com\\.google\\.android\\.gms:play-services-ads-lite",
+    // Pulled in by play-services-ads: it holds the classes that clash with Next-Gen (sample-mixed/MEDIATION_DEMO.md).
+    "com\\.google\\.android\\.gms:play-services-ads-api",
 )
 
 /** Checked against the whole transitive release runtime classpath. */
@@ -89,18 +97,29 @@ internal fun Project.registerDependencyGuard() {
         group = "verification"
         description = "Fails if this module resolves a forbidden dependency (see 02_ARCHITECTURE.md §8)."
         projectPath.set(modulePath)
-        forbiddenTransitive.set(FORBIDDEN_EVERYWHERE + FORBIDDEN_TRANSITIVE_BY_PROJECT[modulePath].orEmpty())
+        forbiddenEverywhere.set(FORBIDDEN_EVERYWHERE)
+        forbiddenTransitive.set(FORBIDDEN_TRANSITIVE_BY_PROJECT[modulePath].orEmpty())
         forbiddenDirect.set(FORBIDDEN_DIRECT_BY_PROJECT[modulePath].orEmpty())
         report.set(layout.buildDirectory.file("reports/dependency-guard/releaseRuntimeClasspath.txt"))
     }
-    // The release runtime classpath configuration is created by AGP during configuration.
+    // The runtime classpath configurations are created by AGP during configuration.
     afterEvaluate {
         val classpath = configurations.findByName("releaseRuntimeClasspath")
             ?: throw GradleException("$path: releaseRuntimeClasspath not found; dependency guard cannot run.")
         val root = classpath.incoming.resolutionResult.rootComponent
+        // "configuration|coordinate" for every component of every runtime classpath.
+        val everyClasspath = configurations
+            .filter { it.isCanBeResolved && it.name.endsWith("RuntimeClasspath") }
+            .fold(providers.provider { emptyList<String>() }) { acc, configuration ->
+                val name = configuration.name
+                acc.zip(configuration.incoming.resolutionResult.rootComponent) { list, component ->
+                    list + component.allComponentIds().map { "$name|$it" }
+                }
+            }
         guard.configure {
             resolvedComponents.set(root.map { it.allComponentIds() })
             directComponents.set(root.map { it.directComponentIds() })
+            allClasspathComponents.set(everyClasspath)
         }
     }
     tasks.named("check") { dependsOn(guard) }
@@ -143,16 +162,24 @@ private fun List<String>.matching(patterns: List<String>): List<String> {
 
 abstract class DependencyGuardTask : DefaultTask() {
     @get:Input abstract val projectPath: Property<String>
+    @get:Input abstract val forbiddenEverywhere: ListProperty<String>
     @get:Input abstract val forbiddenTransitive: ListProperty<String>
     @get:Input abstract val forbiddenDirect: ListProperty<String>
     @get:Input abstract val resolvedComponents: ListProperty<String>
     @get:Input abstract val directComponents: ListProperty<String>
+    @get:Input abstract val allClasspathComponents: ListProperty<String>
     @get:OutputFile abstract val report: RegularFileProperty
 
     @TaskAction
     fun check() {
         val components = resolvedComponents.get()
-        val violations = components.matching(forbiddenTransitive.get()).map { "$it (transitive rule)" } +
+        // Component → the runtime classpaths it's on.
+        val classpathsByComponent = allClasspathComponents.get()
+            .groupBy({ it.substringAfter('|') }, { it.substringBefore('|') })
+        val everywhere = classpathsByComponent.keys.toList().matching(forbiddenEverywhere.get())
+            .map { "$it (on ${classpathsByComponent.getValue(it).sorted().joinToString()})" }
+        val violations = everywhere +
+            components.matching(forbiddenTransitive.get()).map { "$it (transitive rule)" } +
             directComponents.get().matching(forbiddenDirect.get()).map { "$it (direct dependency rule)" }
         report.get().asFile.writeText(
             "# direct\n" + directComponents.get().sorted().joinToString("\n") +

@@ -1,22 +1,38 @@
 package com.company.admob.sample.mixed
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.ui.platform.ComposeView
-import com.company.admob.CompanyAdMobVersion
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.company.admob.CompanyAdMob
+import com.company.admob.sample.mixed.databinding.ActivityMainBinding
+import kotlinx.coroutines.launch
 
-/** Placeholder: an AppCompat (XML-world) Activity hosting Compose. Built out in PROMPT 19. */
+/** The launcher (XML). Starts CompanyAdMob once for the whole app, then opens either integration style. */
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(
-            ComposeView(this).apply {
-                setContent {
-                    MaterialTheme { Text("CompanyAdMob mixed sample ${CompanyAdMobVersion.NAME}") }
-                }
-            }
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Gathers consent and initializes the SDK. Called again after a rotation, start() joins the work in progress.
+        CompanyAdMob.start(this)
+
+        binding.mediation.text = getString(
+            if (BuildConfig.WITH_MEDIATION) R.string.mediation_on else R.string.mediation_off,
         )
+        binding.openLegacyXml.setOnClickListener { startActivity(Intent(this, LegacyXmlActivity::class.java)) }
+        binding.openComposeHost.setOnClickListener { startActivity(Intent(this, ComposeHostActivity::class.java)) }
+        binding.adInspector.setOnClickListener {
+            // Lists the mediation adapters (AppLovin with -PwithMediation=true) and their initialization status.
+            CompanyAdMob.diagnostics.openAdInspector(this)
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                CompanyAdMob.state.collect { binding.state.text = getString(R.string.ads_state, it.toString()) }
+            }
+        }
     }
 }

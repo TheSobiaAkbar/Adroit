@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">CompanyAdMob Mixed Sample</string>
+    <string name="ads_state">CompanyAdMob: %1$s</string>
+    <string name="mediation_on">Mediation build: AppLovin adapter present (demo ad units still serve Google ads only)</string>
+    <string name="mediation_off">No mediation adapter (build with -PwithMediation=true)</string>
+    <string name="open_legacy_xml">XML screen hosting Compose</string>
+    <string name="open_compose_host">Compose screen hosting XML</string>
+    <string name="ad_inspector">Open Ad Inspector</string>
+    <string name="legacy_xml_title">XML screen</string>
+    <string name="xml_state">XML view sees: %1$s</string>
+    <string name="compose_state">Compose sees: %1$s</string>
+    <string name="show_interstitial">Show interstitial</string>
+    <string name="last_result">Last interstitial: %1$s</string>
+    <string name="compose_host_title">Compose screen</string>
+    <string name="classic_article_body">This paragraph and the native ad below come from a classic XML layout inside AndroidView.</string>
 </resources>
