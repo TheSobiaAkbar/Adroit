@@ -23,6 +23,10 @@ appcompat = "1.8.0"
 material = "1.14.0"
 activity = "1.13.0"
 constraintlayout = "2.2.2"
+recyclerview = "1.4.0"
+fragmentKtx = "1.9.1"
+# 2.x only: LeakCanary 3.0 is still alpha
+leakcanary = "2.14"
 
 # Tests
 junit = "4.13.2"
@@ -33,6 +37,9 @@ robolectric = "4.17"
 # Test only: admob-views must never depend on androidx.fragment at runtime (ADR-014)
 fragmentTesting = "1.9.1"
 turbine = "1.2.1"
+androidxTestRunner = "1.7.0"
+androidxTestRules = "1.7.0"
+uiautomator = "2.4.0"
 
 [libraries]
 # Google Mobile Ads Next-Gen + UMP (admob-core only)
@@ -66,6 +73,11 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
+leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
+leakcanary-android-instrumentation = { module = "com.squareup.leakcanary:leakcanary-android-instrumentation", version.ref = "leakcanary" }
 
 # Tests
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -75,6 +87,9 @@ androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTes
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 androidx-fragment-testing = { module = "androidx.fragment:fragment-testing", version.ref = "fragmentTesting" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
+androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxTestRules" }
+androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 
 # Build logic (convention plugins)
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
