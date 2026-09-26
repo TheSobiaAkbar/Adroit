@@ -3,8 +3,8 @@
 
     <!--
         hardwareAccelerated is the default since API 14; it's explicit because Google requires hardware acceleration
-        for video ads (https://developers.google.com/admob/android/next-gen/native/advanced), so it must never be
-        turned off for a window that shows ads.
+        for video ads, so it must never be turned off for a window that shows ads:
+        https://developers.google.com/admob/android/next-gen/banner#hardware_acceleration_for_video_ads
     -->
     <application
         android:name=".PlaygroundApplication"

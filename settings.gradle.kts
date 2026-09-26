@@ -35,3 +35,8 @@ include(":admob-testing")
 include(":sample-xml")
 include(":sample-compose")
 include(":sample-mixed")
+
+// Compiled documentation snippets (docs/*.md), never published: ./gradlew -PincludeDocsSnippets :docs-snippets:build
+if (providers.gradleProperty("includeDocsSnippets").isPresent) {
+    include(":docs-snippets")
+}

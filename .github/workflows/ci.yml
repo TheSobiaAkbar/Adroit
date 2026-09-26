@@ -48,6 +48,11 @@ jobs:
       - name: Mediation sample and its dependency guard
         run: ./gradlew :sample-mixed:assembleRelease :sample-mixed:checkModuleDependencies -PwithMediation=true --stacktrace
 
+      - name: Documentation snippets and docs check
+        run: |
+          ./gradlew -PincludeDocsSnippets :docs-snippets:compileDebugKotlin :docs-snippets:compileDebugJavaWithJavac :docs-snippets:testDebugUnitTest --stacktrace
+          node .github/scripts/check-docs.mjs
+
       - name: Consumer smoke build against mavenLocal
         run: |
           ./gradlew publishToMavenLocal --stacktrace

@@ -15,10 +15,12 @@ val skipExclusion = providers.gradleProperty("mediationSkipExclusion").map(Strin
 if (withMediation && !skipExclusion) {
     // Required by the Next-Gen SDK for any mediation adapter: it already contains the classes adapters need, and
     // the legacy artifacts would duplicate them. Applies to every configuration, so no classpath can resolve them.
+    // region mediation-exclusion (quoted in docs/MEDIATION.md)
     configurations.configureEach {
         exclude(group = "com.google.android.gms", module = "play-services-ads")
         exclude(group = "com.google.android.gms", module = "play-services-ads-lite")
     }
+    // endregion
 }
 
 android {
