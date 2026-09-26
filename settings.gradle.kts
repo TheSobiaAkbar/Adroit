@@ -30,6 +30,7 @@ include(":admob-core")
 include(":admob-views")
 include(":admob-compose")
 include(":admob-testing")
+include(":admob-firebase")
 
 // Samples (never published)
 include(":sample-xml")

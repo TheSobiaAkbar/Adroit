@@ -47,7 +47,9 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
     ),
     ":admob-views" to listOf(
         "androidx\\.compose\\..*:.*",
+        "com\\.google\\.firebase:.*",
         "project :admob-compose",
+        "project :admob-firebase",
     ),
     // Compose stays design-system neutral: no Material or Material3, Navigation, Hilt or Firebase (PROMPT 14 §7).
     ":admob-compose" to listOf(
@@ -57,6 +59,18 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
         "com\\.google\\.dagger:.*",
         "com\\.google\\.firebase:.*",
         "project :admob-firebase",
+    ),
+    ":admob-testing" to listOf(
+        "com\\.google\\.firebase:.*",
+        "project :admob-firebase",
+    ),
+    // Firebase is allowed only here (PROMPT 24, ADR-017). No UI toolkit, and no dependency on the UI modules.
+    ":admob-firebase" to listOf(
+        "androidx\\.compose\\..*:.*",
+        "com\\.google\\.android\\.material:.*",
+        "com\\.google\\.dagger:.*",
+        "project :admob-views",
+        "project :admob-compose",
     ),
 )
 
@@ -87,6 +101,10 @@ private val FORBIDDEN_DIRECT_BY_PROJECT = mapOf(
         "com\\.google\\.android\\.libraries\\.ads\\.mobile\\.sdk:.*",
         "com\\.google\\.android\\.ump:.*",
         "junit:junit",
+    ),
+    ":admob-firebase" to listOf(
+        "androidx\\.appcompat:.*",
+        "androidx\\.fragment:.*",
     ),
 )
 

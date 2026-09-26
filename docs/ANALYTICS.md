@@ -87,6 +87,25 @@ class RevenueViewModel : ViewModel() {
 `CompanyAdMob.diagnostics.recentEvents` keeps the last events for debugging, and `diagnostics.snapshot()` summarizes
 the state of every placement.
 
+## Google Analytics for Firebase
+
+The optional `com.company:admob-firebase` module provides `FirebaseAnalyticsEventListener`, registered like any
+listener (full setup in [Remote config](REMOTE_CONFIG.md#firebase-remote-config)):
+
+```kotlin
+eventListeners += FirebaseAnalyticsEventListener(context, FirebaseAnalyticsOptions())
+```
+
+- `Paid` becomes Firebase's `ad_impression` event with the standard ad revenue parameters
+  ([Firebase](https://firebase.google.com/docs/analytics/measure-ad-revenue)): `ad_platform` = `admob`, `ad_source`,
+  `ad_format`, `ad_unit_name` (the ad unit ID), `currency`, and `value` in currency units.
+- **Double counting:** when your AdMob app is linked to Firebase, the Firebase SDK logs `ad_impression` for AdMob
+  itself (same page). If those events already appear in Analytics, set
+  `FirebaseAnalyticsOptions(logAdImpressionRevenue = false)`.
+- `customEvents` adds `ad_view` (impression), `ad_click` and `ad_reward` (with `reward_type` and `reward_amount`).
+  None by default.
+- Every event carries `placement`, the placement key. A Firebase failure is logged, and never affects ads.
+
 ## Paid events and ILRD
 
 `Paid` carries `AdRevenue(valueMicros, currencyCode, precision)`: the value in millionths of the currency unit (5,000

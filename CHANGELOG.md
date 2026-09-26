@@ -6,6 +6,14 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Added
+- `admob-firebase` (optional): `FirebaseRemoteConfigProvider`, which maps the `company_admob_*` Remote Config
+  parameters to remote overrides, and `FirebaseAnalyticsEventListener`, which logs paid events as Firebase
+  `ad_impression` events (and optional custom ad events). Firebase BoM 34.19.0.
+
+### Fixed
+- The views and Compose modules log through the host's configured logger and level, like core.
+
 ## [0.1.0] - 2026-09-26
 
 First internal release.

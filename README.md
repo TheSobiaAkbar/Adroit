@@ -17,6 +17,7 @@ exactly once, test-ad safety, analytics events and remote kill switches. No Goog
 | `com.company:admob-views` | XML and View apps: `AdBannerView`, `AdNativeView`, `attachBanner`, `NativeAdHolder`, native templates. |
 | `com.company:admob-compose` | Jetpack Compose: `AdBanner`, `AdNative`, `rememberAdAvailability`, `rememberFullScreenAdLauncher`. |
 | `com.company:admob-testing` | Unit tests without Google: `FakeAdsClient`, `CompanyAdMobTestRule`. Test scope only. |
+| `com.company:admob-firebase` | Optional: remote overrides from Firebase Remote Config, and ad events to Google Analytics for Firebase. |
 
 `admob-views` and `admob-compose` bring `admob-core` with them.
 

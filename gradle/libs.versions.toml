@@ -16,6 +16,8 @@ androidxLifecycle = "2.11.0"
 androidxAnnotation = "1.11.0"
 kotlinxCoroutines = "1.10.2"
 composeBom = "2026.09.00"
+# admob-firebase only (PROMPT 24): the BoM sets firebase-config and firebase-analytics
+firebaseBom = "34.19.0"
 
 # Samples only
 coreKtx = "1.19.0"
@@ -83,6 +85,11 @@ leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", ve
 leakcanary-android-instrumentation = { module = "com.squareup.leakcanary:leakcanary-android-instrumentation", version.ref = "leakcanary" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 applovin-mediation-adapter = { module = "com.google.ads.mediation:applovin", version.ref = "applovinMediationAdapter" }
+
+# admob-firebase only
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-config = { module = "com.google.firebase:firebase-config" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 
 # Tests
 junit = { group = "junit", name = "junit", version.ref = "junit" }

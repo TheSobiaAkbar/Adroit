@@ -16,6 +16,7 @@ dependencies {
     implementation(project(":admob-core"))
     implementation(project(":admob-views"))
     implementation(project(":admob-compose"))
+    implementation(project(":admob-firebase"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

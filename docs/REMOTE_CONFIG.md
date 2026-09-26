@@ -56,7 +56,62 @@ shows what's currently applied.
 
 ## Firebase Remote Config
 
-A Firebase-backed provider is planned as an optional module. Until then, write a provider like the one above: read
-your Remote Config values, map them to `AdOverrides`, and emit again whenever Firebase activates new values.
+The optional `com.company:admob-firebase` module provides `FirebaseRemoteConfigProvider`. Your app keeps initializing
+Firebase itself (the google-services plugin); the module doesn't apply it.
+
+```kotlin
+implementation("com.company:admob-firebase:0.1.0")
+```
+
+<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Firebase.kt#firebase-setup -->
+```kotlin
+class FirebaseApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        // Firebase itself is initialized by the google-services plugin, before this runs.
+        CompanyAdMob.initialize(
+            this,
+            adMobConfig {
+                environment = AdEnvironment.PRODUCTION
+                remoteConfig = FirebaseRemoteConfigProvider() // reads the company_admob_* keys
+                eventListeners += FirebaseAnalyticsEventListener(
+                    context = this@FirebaseApp,
+                    options = FirebaseAnalyticsOptions(
+                        logAdImpressionRevenue = true, // false if AdMob is linked to Firebase (see below)
+                        customEvents = setOf(FirebaseAdEvent.CLICK, FirebaseAdEvent.REWARD),
+                    ),
+                )
+                placements { /* … */ }
+            },
+        )
+    }
+}
+```
+
+Define these parameters in the Firebase console; all are optional, and an unset or empty one leaves the local
+configuration alone:
+
+| Parameter | Type | Example | Maps to |
+|---|---|---|---|
+| `company_admob_enabled` | Boolean | `false` | `adsEnabled` |
+| `company_admob_disabled_formats` | String | `NATIVE,APP_OPEN` | `disabledFormats` (`AdFormat` names, any case) |
+| `company_admob_min_fullscreen_interval_seconds` | Number | `45` | `minIntervalBetweenFullScreenAds` |
+| `company_admob_placements_json` | JSON | see below | `placements` |
+
+```json
+{
+  "level_complete": { "enabled": true, "minIntervalSeconds": 90, "maxPerSession": 5, "preload": "ON_DEMAND" },
+  "feed_native": { "enabled": false },
+  "home_banner": { "adUnitId": "ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy" }
+}
+```
+
+- When collected, the provider emits the currently **activated** values, then again after each real-time update, which
+  it activates.
+- It doesn't fetch unless you pass `FirebaseRemoteConfigProvider(remoteConfig, autoFetch = true)`: your app usually
+  calls `fetchAndActivate()` at startup, on its own schedule.
+- An invalid value is logged and ignored; the other parameters still apply. Invalid JSON ignores
+  `company_admob_placements_json` entirely; an invalid field ignores that field.
+- Pass a `FirebaseRemoteConfig` instance for apps with several Firebase apps.
 
 Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26

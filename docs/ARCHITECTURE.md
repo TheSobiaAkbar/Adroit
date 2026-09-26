@@ -16,6 +16,7 @@ flowchart LR
   core -. runtime only .-> gma[Google Mobile Ads Next-Gen SDK]
   core -. runtime only .-> ump[UMP SDK]
   tests[Your unit tests] --> testing[admob-testing] --> core
+  app -. optional .-> firebase[admob-firebase] --> core
 ```
 
 - **admob-core** holds everything that matters: configuration, consent, initialization, every format's loading,
@@ -23,6 +24,7 @@ flowchart LR
   Google's SDKs, so no Google type appears in the API and a Google SDK upgrade stays inside the library.
 - **admob-views** and **admob-compose** are thin UI adapters on top of core's public API.
 - **admob-testing** replaces core with a fake for your unit tests.
+- **admob-firebase** (optional) connects Firebase Remote Config and Analytics; the only module that depends on Firebase.
 
 ## Two-step startup
 

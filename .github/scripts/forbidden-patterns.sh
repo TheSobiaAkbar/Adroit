@@ -9,7 +9,7 @@ report() {
   failed=1
 }
 
-library_sources=(admob-core/src/main admob-views/src/main admob-compose/src/main admob-testing/src/main)
+library_sources=(admob-core/src/main admob-views/src/main admob-compose/src/main admob-testing/src/main admob-firebase/src/main)
 
 # 1. No println in library code: logging goes through AdLogger.
 if matches=$(git grep -n 'println(' -- "${library_sources[@]}"); then
