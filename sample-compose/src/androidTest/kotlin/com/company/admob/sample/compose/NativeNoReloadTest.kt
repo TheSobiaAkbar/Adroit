@@ -12,7 +12,10 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 
-/** On the Native screen, three rotations re-render the same ads: the native load counter doesn't move. */
+/**
+ * On the Native screen, three rotations re-render the same ads: no new native ad request. Only requests are compared:
+ * a request already in flight when the rotations start may still complete during them.
+ */
 @RequiresNetwork
 @RunWith(AndroidJUnit4::class)
 class NativeNoReloadTest {
@@ -35,10 +38,14 @@ class NativeNoReloadTest {
         }
         SystemClock.sleep(STABLE_MILLIS)
         compose.waitForIdle()
-        assertEquals(before, counter())
+        assertEquals("native ad requests, before and after rotating", requests(before), requests(counter()))
     }
 
     private fun counter(): String = compose.onNodeWithTag(LOAD_COUNTER_TAG).text()
+
+    /** "Native loads: 31 requested, 30 loaded" → 31. */
+    private fun requests(counter: String): Int =
+        checkNotNull(Regex("""(\d+) requested""").find(counter)) { counter }.groupValues[1].toInt()
 
     /** The counter once it hasn't changed for [STABLE_MILLIS], within 30 s. */
     private fun awaitStableCounter(): String {

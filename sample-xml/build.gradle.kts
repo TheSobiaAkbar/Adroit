@@ -29,7 +29,15 @@ android {
         viewBinding = true
         buildConfig = true
     }
+    // Instrumented tests (smoke and leak tests) run against R8-processed code: connectedMinifiedDebugAndroidTest.
+    testBuildType = "minifiedDebug"
     buildTypes {
+        getByName("minifiedDebug") {
+            // R8 also processes the test APK of a minified test build type; see the file for the failure it fixes.
+            testProguardFiles("proguard-test-rules.pro")
+            // What the test APK needs from the app's own classpath; see the file. Not applied to release.
+            proguardFile("proguard-minified-debug-rules.pro")
+        }
         // Like debug (debuggable, not minified), but configured as a tester's build: STAGING (see SampleAdsConfig).
         create("staging") {
             initWith(getByName("debug"))

@@ -3,6 +3,7 @@ package com.company.admob.config
 import com.company.admob.AdFormat
 import com.company.admob.AdPlacement
 import com.company.admob.BannerSize
+import com.company.admob.placementTypeName
 import kotlin.time.Duration
 
 /**
@@ -45,7 +46,8 @@ public sealed class PlacementConfig(
     }
 
     override fun toString(): String =
-        "${this::class.simpleName}(placement=${placement.key}, adUnitId=$adUnitId, enabled=$enabled, " +
+        // Not `this::class.simpleName`, which R8 renames in minified apps.
+        "${format.placementTypeName}Config(placement=${placement.key}, adUnitId=$adUnitId, enabled=$enabled, " +
             "frequency=$frequency, preload=$preload, retry=$retry, expiry=$expiry${extrasToString()})"
 
     internal open fun extrasEqual(other: PlacementConfig): Boolean = true

@@ -53,6 +53,13 @@ class AdMobConfigDslTest {
     }
 
     @Test
+    fun `placement configs name their public type without reflection, which R8 would rename`() {
+        kotlinConfig().placements.forEach { config ->
+            assertTrue(config.toString(), config.toString().startsWith("${config::class.simpleName}(placement="))
+        }
+    }
+
+    @Test
     fun `DSL and Java builder produce equal configs`() {
         val fromKotlin = kotlinConfig()
         val fromJava = JavaConfigBuilder.build(listener)

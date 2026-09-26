@@ -71,6 +71,7 @@ fun NativeScreen(container: AppContainer) {
 }
 
 const val LOAD_COUNTER_TAG = "native_load_counter"
+const val FEED_TAG = "native_feed"
 
 private enum class NativeTab(val title: String) { Templates("Templates"), Feed("Feed"), Custom("Custom") }
 
@@ -93,7 +94,10 @@ private fun TemplatesTab() {
 @Composable
 private fun FeedTab() {
     val rows = rememberSaveable { feedRows() }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) {
+    LazyColumn(
+        Modifier.fillMaxSize().testTag(FEED_TAG),
+        contentPadding = PaddingValues(vertical = 8.dp),
+    ) {
         items(rows, key = { it }) { key ->
             if (key.startsWith(AD_PREFIX)) {
                 AdNative(

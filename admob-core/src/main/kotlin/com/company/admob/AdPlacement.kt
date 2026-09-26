@@ -56,9 +56,21 @@ public sealed class AdPlacementBase(
 
     final override fun hashCode(): Int = 31 * format.hashCode() + key.hashCode()
 
-    final override fun toString(): String = "${this::class.simpleName}($key)"
+    // Spelled out rather than `this::class.simpleName`, which R8 renames in minified apps.
+    final override fun toString(): String = "${format.placementTypeName}($key)"
 
     private companion object {
         val KEY_PATTERN = Regex("[a-z0-9_]{1,40}")
     }
 }
+
+/** The public class name of this format's placement type, for `toString`s that must survive R8 renaming. */
+internal val AdFormat.placementTypeName: String
+    get() = when (this) {
+        AdFormat.BANNER -> "BannerPlacement"
+        AdFormat.INTERSTITIAL -> "InterstitialPlacement"
+        AdFormat.REWARDED -> "RewardedPlacement"
+        AdFormat.REWARDED_INTERSTITIAL -> "RewardedInterstitialPlacement"
+        AdFormat.APP_OPEN -> "AppOpenPlacement"
+        AdFormat.NATIVE -> "NativePlacement"
+    }

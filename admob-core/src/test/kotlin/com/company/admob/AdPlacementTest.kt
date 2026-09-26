@@ -43,4 +43,12 @@ class AdPlacementTest {
     fun `toString names the type and key`() {
         assertEquals("RewardedPlacement(extra_life)", RewardedPlacement("extra_life").toString())
     }
+
+    @Test
+    fun `toString spells out every type name, so R8 renaming doesn't change it`() {
+        listOf(
+            BannerPlacement("p"), InterstitialPlacement("p"), RewardedPlacement("p"),
+            RewardedInterstitialPlacement("p"), AppOpenPlacement("p"), NativePlacement("p"),
+        ).forEach { assertEquals("${it::class.simpleName}(p)", it.toString()) }
+    }
 }

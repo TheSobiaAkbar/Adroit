@@ -36,6 +36,13 @@ class SampleAppConventionPlugin : Plugin<Project> {
                     // Samples only: debug-sign release builds so minified builds can be installed locally.
                     signingConfig = signingConfigs.getByName("debug")
                 }
+                // The release build (R8 minification and resource shrinking) made debuggable, so instrumented tests
+                // can run against R8-processed code (PROMPT 20). Libraries fall back to their release variant.
+                create("minifiedDebug") {
+                    initWith(getByName("release"))
+                    isDebuggable = true
+                    matchingFallbacks += "release"
+                }
             }
             compileOptions {
                 sourceCompatibility = JAVA_TARGET
