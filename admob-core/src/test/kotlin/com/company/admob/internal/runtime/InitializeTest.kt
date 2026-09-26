@@ -4,10 +4,14 @@ import android.os.Looper
 import com.company.admob.AdError
 import com.company.admob.AdsState
 import com.company.admob.CompanyAdMob
+import com.company.admob.CompanyAdMobInternal
+import com.company.admob.InternalCompanyAdMobApi
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AdMobConfig
 import com.company.admob.events.AdEvent
 import com.company.admob.internal.storage.SharedPrefsKeyValueStore
+import com.company.admob.logging.AdLogger
+import com.company.admob.logging.LogLevel
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -48,6 +52,24 @@ class InitializeTest {
         assertTrue(h.consentSdk.updateRequests.isEmpty())
         assertEquals(0, h.consentSdk.formShowCount)
         assertEquals(1, h.registerCount)
+    }
+
+    @OptIn(InternalCompanyAdMobApi::class)
+    @Test
+    fun `the internal log hook writes through the host's logger and level`() = runTest {
+        val lines = mutableListOf<String>()
+        val h = RuntimeHarness(this)
+        h.initialize(
+            testConfig {
+                logging {
+                    level = LogLevel.WARN
+                    logger = AdLogger { level, _, message, _ -> lines += "$level $message" }
+                }
+            },
+        )
+        CompanyAdMobInternal.log(LogLevel.DEBUG, "below the configured level")
+        CompanyAdMobInternal.log(LogLevel.ERROR, "from the views module")
+        assertEquals(listOf("ERROR from the views module"), lines)
     }
 
     @Test

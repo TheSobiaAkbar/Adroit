@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Verify, publish and create the GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write # create the GitHub Release
+      packages: write # publish to GitHub Packages
+    env:
+      # Empty when the secrets aren't configured: the company repository and signing are then skipped.
+      COMPANY_MAVEN_URL: ${{ secrets.COMPANY_MAVEN_URL }}
+      SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+      SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+    steps:
+      - name: Check out (full history, for the forbidden-patterns check)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verify the tag, version and CHANGELOG
+        run: bash .github/scripts/verify-release.sh "$GITHUB_REF_NAME" "$RUNNER_TEMP/release-notes.md"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-read-only: true
+
+      - name: Forbidden patterns
+        run: bash .github/scripts/forbidden-patterns.sh
+
+      - name: Full CI checks
+        run: >-
+          ./gradlew build lint apiCheck checkModuleDependencies testDebugUnitTest verifyPublication
+          :sample-xml:assembleRelease :sample-compose:assembleRelease :sample-mixed:assembleRelease
+          --stacktrace
+
+      - name: Mediation sample and its dependency guard
+        run: ./gradlew :sample-mixed:assembleRelease :sample-mixed:checkModuleDependencies -PwithMediation=true --stacktrace
+
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew publishAllPublicationsToGitHubPackagesRepository --stacktrace
+
+      - name: Publish to the company repository
+        if: ${{ env.COMPANY_MAVEN_URL != '' }}
+        env:
+          COMPANY_MAVEN_USER: ${{ secrets.COMPANY_MAVEN_USER }}
+          COMPANY_MAVEN_PASSWORD: ${{ secrets.COMPANY_MAVEN_PASSWORD }}
+        run: ./gradlew publishAllPublicationsToCompanyRepository --stacktrace
+
+      - name: Create the GitHub Release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          name: CompanyAdMob ${{ github.ref_name }}
+          body_path: ${{ runner.temp }}/release-notes.md

@@ -95,6 +95,12 @@ public object CompanyAdMob : AdsClient {
         requestedAdFree?.let { delegate.setAdFree(it) }
     }
 
+    /** Writes to the configured log once initialized, to the bootstrap log (warnings and errors) before. */
+    internal fun log(level: LogLevel, message: String) {
+        val log = runtime?.log ?: bootstrapLog
+        if (log.isEnabled(level)) log.write(level, message, null)
+    }
+
     /** Returns the facade to its uninitialized state, for tests that initialize it. Not thread-safe. */
     @VisibleForTesting
     internal fun resetForTests() {

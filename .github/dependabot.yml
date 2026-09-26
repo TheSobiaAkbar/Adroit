@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+    ignore:
+      # Google Mobile Ads Next-Gen and UMP upgrades follow the manual upgrade checklist (RELEASE.md), never a bot.
+      - dependency-name: "com.google.android.libraries.ads.mobile.sdk:*"
+      - dependency-name: "com.google.android.ump:*"
+
+  # The separate host build pins AGP and the Compose compiler plugin itself; keep it in step with the main build.
+  - package-ecosystem: gradle
+    directory: "/consumer-smoke"
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "com.google.android.libraries.ads.mobile.sdk:*"
+      - dependency-name: "com.google.android.ump:*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

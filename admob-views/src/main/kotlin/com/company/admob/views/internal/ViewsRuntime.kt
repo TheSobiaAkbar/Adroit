@@ -1,30 +1,31 @@
 package com.company.admob.views.internal
 
-import android.util.Log
 import com.company.admob.AdsClient
 import com.company.admob.CompanyAdMob
+import com.company.admob.CompanyAdMobInternal
+import com.company.admob.InternalCompanyAdMobApi
+import com.company.admob.logging.LogLevel
 
 /**
  * Where the views helpers get their [AdsClient]: `CompanyAdMob` itself, or a test double set by this module's tests.
- * Also their log, which goes to Logcat under the library's tag: this module can't reach core's configured logger.
+ * Also their log, which goes through the host's configured logger and level (ADR-012).
  */
+@OptIn(InternalCompanyAdMobApi::class)
 internal object ViewsRuntime {
-    const val TAG: String = "CompanyAdMob"
-
     @Volatile
     var clientOverride: AdsClient? = null
 
     val client: AdsClient get() = clientOverride ?: CompanyAdMob.client
 
     fun error(message: String) {
-        Log.e(TAG, message)
+        CompanyAdMobInternal.log(LogLevel.ERROR, message)
     }
 
     fun warn(message: String) {
-        Log.w(TAG, message)
+        CompanyAdMobInternal.log(LogLevel.WARN, message)
     }
 
     fun debug(message: String) {
-        if (Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG, message)
+        CompanyAdMobInternal.log(LogLevel.DEBUG, message)
     }
 }

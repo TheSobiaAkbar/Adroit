@@ -44,6 +44,10 @@ class SampleAppConventionPlugin : Plugin<Project> {
                     matchingFallbacks += "release"
                 }
             }
+            lint {
+                // SARIF next to the HTML and XML reports, for CI code scanning (PROMPT 22).
+                sarifReport = true
+            }
             compileOptions {
                 sourceCompatibility = JAVA_TARGET
                 targetCompatibility = JAVA_TARGET

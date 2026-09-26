@@ -1,6 +1,7 @@
 package com.company.admob
 
 import com.company.admob.internal.native.NativeAdHandleImpl
+import com.company.admob.logging.LogLevel
 
 /** Hooks for CompanyAdMob's own modules only (ADR-012). See [InternalCompanyAdMobApi]. */
 @InternalCompanyAdMobApi
@@ -22,4 +23,13 @@ public object CompanyAdMobInternal {
      */
     @JvmStatic
     public fun installForTesting(client: AdsClient): () -> Unit = CompanyAdMob.installForTesting(client)
+
+    /**
+     * Logs [message] through the host's configured logger and level (`logging { }`), so the views and Compose
+     * modules honour them too. Before `initialize()`, only warnings and errors are logged, to Logcat. Any thread.
+     */
+    @JvmStatic
+    public fun log(level: LogLevel, message: String) {
+        CompanyAdMob.log(level, message)
+    }
 }

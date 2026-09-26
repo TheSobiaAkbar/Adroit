@@ -37,6 +37,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 warningsAsErrors = false
                 checkDependencies = false
                 baseline = file("lint-baseline.xml")
+                // SARIF next to the HTML and XML reports, for CI code scanning (PROMPT 22).
+                sarifReport = true
             }
         }
 

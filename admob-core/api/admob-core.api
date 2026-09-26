@@ -496,6 +496,7 @@ public final class com/company/admob/CompanyAdMobInternal {
 	public static final field INSTANCE Lcom/company/admob/CompanyAdMobInternal;
 	public static final fun detachRenderedView (Lcom/company/admob/NativeAdHandle;)V
 	public static final fun installForTesting (Lcom/company/admob/AdsClient;)Lkotlin/jvm/functions/Function0;
+	public static final fun log (Lcom/company/admob/logging/LogLevel;Ljava/lang/String;)V
 }
 
 public final class com/company/admob/CompanyAdMobVersion {
