@@ -3,6 +3,12 @@ plugins {
     alias(libs.plugins.companyadmob.publishing)
 }
 
+companyAdmobPublishing {
+    artifactId = "admob-core"
+    description = "CompanyAdMob core: configuration, consent, initialization and every ad format on the " +
+        "Google Mobile Ads Next-Gen SDK, without exposing Google types."
+}
+
 android {
     namespace = "com.company.admob"
     buildFeatures {

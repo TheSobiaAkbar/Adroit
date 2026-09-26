@@ -3,6 +3,12 @@ plugins {
     alias(libs.plugins.companyadmob.publishing)
 }
 
+companyAdmobPublishing {
+    artifactId = "admob-views"
+    description = "CompanyAdMob Android View integration: XML banner and native views, lifecycle " +
+        "extensions and native ad templates."
+}
+
 android {
     namespace = "com.company.admob.views"
 }

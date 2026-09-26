@@ -3,6 +3,12 @@ plugins {
     alias(libs.plugins.companyadmob.publishing)
 }
 
+companyAdmobPublishing {
+    artifactId = "admob-compose"
+    description = "CompanyAdMob Jetpack Compose integration: banner, native, availability and " +
+        "full-screen ad composables."
+}
+
 android {
     namespace = "com.company.admob.compose"
 }

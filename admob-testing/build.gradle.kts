@@ -3,6 +3,12 @@ plugins {
     alias(libs.plugins.companyadmob.publishing)
 }
 
+companyAdmobPublishing {
+    artifactId = "admob-testing"
+    description = "CompanyAdMob test doubles: FakeAdsClient and CompanyAdMobTestRule for host app unit " +
+        "tests, with no Google SDK calls."
+}
+
 android {
     namespace = "com.company.admob.testing"
 }
