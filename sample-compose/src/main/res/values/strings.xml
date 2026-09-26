@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CompanyAdMob Playground</string>
+    <string name="native_attribution">Ad</string>
+    <string name="native_rating">%1$.1f ★</string>
 </resources>

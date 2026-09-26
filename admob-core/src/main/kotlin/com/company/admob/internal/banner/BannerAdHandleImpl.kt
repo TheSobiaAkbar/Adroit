@@ -222,6 +222,7 @@ internal class BannerAdHandleImpl(
         container.removeView(bannerView.view)
         bannerView.destroy()
         container.minimumHeight = 0
+        emit(AdEvent.Destroyed(placementKey, AdFormat.BANNER, adUnitId, now()))
     }
 
     private inner class Listener(private val loadGeneration: Int) : BannerListener {

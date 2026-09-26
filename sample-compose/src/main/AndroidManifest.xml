@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+        hardwareAccelerated is the default since API 14; it's explicit because Google requires hardware acceleration
+        for video ads (https://developers.google.com/admob/android/next-gen/native/advanced), so it must never be
+        turned off for a window that shows ads.
+    -->
     <application
+        android:name=".PlaygroundApplication"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:hardwareAccelerated="true"
+        android:icon="@android:drawable/sym_def_app_icon"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@style/Theme.Playground">
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -16,7 +26,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Required by the UMP SDK. Injected from Gradle: defaults to Google's sample app ID. -->
+        <!-- Required by the Google Mobile Ads and UMP SDKs. Injected from Gradle: Google's sample app ID by default. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />

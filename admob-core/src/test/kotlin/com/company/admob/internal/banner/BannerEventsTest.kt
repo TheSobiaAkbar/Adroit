@@ -73,6 +73,26 @@ class BannerEventsTest {
         handle.destroy()
         listener.onImpression()
         listener.onLoaded(null, isRefresh = true)
-        assertEquals(listOf("LoadRequested"), b.bannerEvents().map { it::class.simpleName })
+        assertEquals(listOf("LoadRequested", "Destroyed"), b.bannerEvents().map { it::class.simpleName })
+    }
+
+    @Test
+    fun `destroy - one Destroyed event for the SDK view, none without one`() = runTest {
+        val b = BannerHarness(this)
+        b.ready()
+        val handle = b.create()
+        b.layout(400)
+        b.views.single().simulateLoaded(null)
+        handle.destroy()
+        handle.destroy()
+        val destroyed = b.bannerEvents().filterIsInstance<AdEvent.Destroyed>()
+        assertEquals(1, destroyed.size)
+        assertEquals(HOME.key, destroyed.single().placementKey)
+        assertEquals(TestIds.unit(7), destroyed.single().adUnitId)
+
+        val neverLaidOut = BannerHarness(this)
+        neverLaidOut.ready()
+        neverLaidOut.create().destroy()
+        assertTrue(neverLaidOut.bannerEvents().none { it is AdEvent.Destroyed })
     }
 }

@@ -1,29 +1,27 @@
 package com.company.admob.sample.compose
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import com.company.admob.CompanyAdMobVersion
+import androidx.activity.enableEdgeToEdge
+import com.company.admob.sample.compose.ui.PlaygroundApp
+import kotlin.system.exitProcess
 
-/** Placeholder launcher; the AdMob Playground screens are built in PROMPT 18. */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                Surface(Modifier.fillMaxSize()) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text("CompanyAdMob Playground ${CompanyAdMobVersion.NAME}")
-                    }
-                }
-            }
-        }
+        val container = appContainer
+        // Gathers consent and initializes the SDK. Called again after a rotation, start() joins the work in progress.
+        container.ads.start(this)
+        setContent { PlaygroundApp(container, onRestart = ::restartApp) }
+    }
+
+    /** Restarts the process, so a new configuration profile is applied by `initialize`. Debug tool only. */
+    private fun restartApp() {
+        val restart = Intent.makeRestartActivityTask(checkNotNull(intent.component))
+        startActivity(restart)
+        exitProcess(0)
     }
 }
