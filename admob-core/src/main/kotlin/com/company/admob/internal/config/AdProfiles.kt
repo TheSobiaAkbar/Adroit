@@ -1,0 +1,296 @@
+package com.company.admob.internal.config
+
+import com.company.admob.AdFormat
+import com.company.admob.AppOpenPlacement
+import com.company.admob.BannerPlacement
+import com.company.admob.BannerSize
+import com.company.admob.CollapsibleBannerPosition
+import com.company.admob.InterstitialPlacement
+import com.company.admob.NativePlacement
+import com.company.admob.NativeStyle
+import com.company.admob.RewardedInterstitialPlacement
+import com.company.admob.RewardedPlacement
+import com.company.admob.config.FrequencyRule
+import com.company.admob.config.PlacementConfig
+import com.company.admob.config.PlacementsBuilder
+import com.company.admob.config.remote.AdOverrides
+import com.company.admob.config.remote.PlacementOverride
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Ad profiles (architecture 05_AD_PROFILES.md): the ads file (`res/raw/ads_config.json`) and the Firebase value of
+ * each ad. The same JSON describes an ad in both places. Pure and thread-safe; never throws. Every problem becomes a
+ * message in the result's `issues`: in the file a bad ad is an error (validation reports it), in a Firebase value a
+ * bad field is dropped and the rest applies.
+ */
+internal object AdProfiles {
+    /** The settings in the file. Null means the file doesn't set it. */
+    class FileSettings(
+        val adsEnabled: Boolean,
+        val maxInterstitialsPerSession: Int?,
+        val minIntervalBetweenFullScreenAds: Duration,
+    )
+
+    class ParsedFile(val placements: List<PlacementConfig>, val settings: FileSettings, val issues: List<String>)
+
+    class ParsedRemote(val overrides: AdOverrides, val issues: List<String>)
+
+    /** The parameter name of the settings object in Firebase. */
+    const val DEFAULT_SETTINGS_KEY: String = "AdSettings"
+
+    /** Default max height of an `inline_adaptive` banner, as in admob-views' `company_admob_banner_inline_max_height`. */
+    const val INLINE_ADAPTIVE_MAX_HEIGHT_DP: Int = 250
+
+    fun parseFile(text: String): ParsedFile {
+        val issues = mutableListOf<String>()
+        val root = try {
+            JSONObject(text)
+        } catch (e: JSONException) {
+            issues += "Ads file: not valid JSON (${e.message})"
+            return ParsedFile(emptyList(), defaultSettings(), issues)
+        }
+        val settings = root.optJSONObject("settings")?.let { parseFileSettings(it, issues) } ?: defaultSettings()
+        val ads = root.optJSONObject("ads")
+        if (ads == null) {
+            issues += "Ads file: no \"ads\" object"
+            return ParsedFile(emptyList(), settings, issues)
+        }
+        val builder = PlacementsBuilder()
+        for (key in ads.keys()) {
+            val ad = ads.optJSONObject(key)
+            if (ad == null) {
+                issues += "Ads file: \"$key\" isn't a JSON object"
+                continue
+            }
+            addPlacement(builder, key, ad) { issues += "Ads file, \"$key\": $it" }
+        }
+        return ParsedFile(builder.configs.toList(), settings, issues)
+    }
+
+    /**
+     * Turns Firebase values into overrides. [values] maps a placement key to its raw JSON value; [formats] gives each
+     * configured key's format (a value for any other key is ignored). [settings] is the raw settings value, or null.
+     */
+    fun parseRemote(formats: Map<String, AdFormat>, values: Map<String, String>, settings: String?): ParsedRemote {
+        val issues = mutableListOf<String>()
+        val placements = LinkedHashMap<String, PlacementOverride>()
+        for ((key, raw) in values) {
+            if (raw.isBlank()) continue
+            val format = formats[key] ?: continue
+            val json = parseObject(raw) { issues += "Firebase \"$key\" ignored: $it" } ?: continue
+            parseOverride(key, format, json) { issues += "Firebase \"$key\": $it" }?.let { placements[key] = it }
+        }
+        var adsEnabled: Boolean? = null
+        var maxInterstitials: Int? = null
+        var minInterval: Duration? = null
+        if (!settings.isNullOrBlank()) {
+            parseObject(settings) { issues += "Firebase settings ignored: $it" }?.let { json ->
+                val fields = Fields(json) { issues += "Firebase settings: $it" }
+                adsEnabled = fields.boolean("adsEnabled")
+                maxInterstitials = fields.count("maxInterstitialsPerSession")?.let(::zeroMeansNoLimit)
+                minInterval = fields.count("minSecondsBetweenFullScreenAds")?.seconds
+            }
+        }
+        return ParsedRemote(
+            AdOverrides(
+                adsEnabled = adsEnabled,
+                placements = placements,
+                minIntervalBetweenFullScreenAds = minInterval,
+                maxInterstitialsPerSession = maxInterstitials,
+            ),
+            issues,
+        )
+    }
+
+    private fun defaultSettings() = FileSettings(adsEnabled = true, maxInterstitialsPerSession = null, Duration.ZERO)
+
+    private fun parseFileSettings(json: JSONObject, issues: MutableList<String>): FileSettings {
+        val fields = Fields(json) { issues += "Ads file settings: $it" }
+        return FileSettings(
+            adsEnabled = fields.boolean("adsEnabled") ?: true,
+            maxInterstitialsPerSession = fields.count("maxInterstitialsPerSession")?.let(::zeroMeansNoLimit),
+            minIntervalBetweenFullScreenAds = (fields.count("minSecondsBetweenFullScreenAds") ?: 0).seconds,
+        )
+    }
+
+    private fun addPlacement(builder: PlacementsBuilder, key: String, ad: JSONObject, issue: (String) -> Unit) {
+        val fields = Fields(ad, issue)
+        val formatName = fields.string("format")
+        val format = formatName?.let(::formatOf)
+        if (format == null) {
+            issue(if (formatName == null) "\"format\" is missing" else "unknown format \"$formatName\"")
+            return
+        }
+        val placementKeyValid = KEY_PATTERN.matches(key)
+        if (!placementKeyValid) {
+            issue("the key must match ${KEY_PATTERN.pattern}")
+            return
+        }
+        val ids = fields.adUnitIds() ?: run {
+            issue("\"adUnitIds\" is missing")
+            emptyList()
+        }
+        val enabled = fields.boolean("enabled") ?: true
+        val maxPerSession = fields.count("maxPerSession")?.let(::zeroMeansNoLimit) ?: Int.MAX_VALUE
+        val timer = (fields.count("timerSeconds") ?: 0).seconds
+        val counter = fields.count("counter") ?: 0
+        when (format) {
+            AdFormat.INTERSTITIAL -> builder.interstitial(InterstitialPlacement(key), ids) {
+                this.enabled = enabled
+                frequency = FrequencyRule(timer, maxPerSession, counter)
+                splash = fields.boolean("splash") ?: false
+                fields.count("splashTimeoutSeconds")?.let { splashTimeout = it.seconds }
+            }
+            AdFormat.REWARDED_INTERSTITIAL -> builder.rewardedInterstitial(RewardedInterstitialPlacement(key), ids) {
+                this.enabled = enabled
+                frequency = FrequencyRule(timer, maxPerSession, counter)
+            }
+            AdFormat.REWARDED -> builder.rewarded(RewardedPlacement(key), ids) {
+                this.enabled = enabled
+                frequency = FrequencyRule(maxPerSession = maxPerSession)
+            }
+            AdFormat.APP_OPEN -> builder.appOpen(AppOpenPlacement(key), ids) {
+                this.enabled = enabled
+                frequency = FrequencyRule(maxPerSession = maxPerSession)
+                if (ad.has("timerSeconds")) cooldown = timer
+                fields.strings("excludedActivities")?.let(::excludeActivityClassNames)
+            }
+            AdFormat.BANNER -> builder.banner(BannerPlacement(key), ids) {
+                this.enabled = enabled
+                fields.bannerSize()?.let { size = it }
+            }
+            AdFormat.NATIVE -> builder.native(NativePlacement(key), ids) {
+                this.enabled = enabled
+                fields.nativeStyle()?.let { style = it }
+                fields.count("poolSize")?.let { poolSize = it }
+            }
+        }
+    }
+
+    private fun parseOverride(key: String, format: AdFormat, json: JSONObject, issue: (String) -> Unit): PlacementOverride? {
+        val fields = Fields(json, issue)
+        val formatName = fields.string("format")
+        if (formatName != null && formatOf(formatName) != format) {
+            issue("ignored: its format \"$formatName\" differs from the app's ${format.name.lowercase()} \"$key\"")
+            return null
+        }
+        for (fileOnly in listOf("splash", "excludedActivities", "poolSize")) {
+            if (json.has(fileOnly)) issue("\"$fileOnly\" can only be set in the ads file; ignored")
+        }
+        val fullScreenFrequency = format == AdFormat.INTERSTITIAL || format == AdFormat.REWARDED_INTERSTITIAL
+        return PlacementOverride(
+            enabled = fields.boolean("enabled"),
+            minInterval = if (fullScreenFrequency || format == AdFormat.APP_OPEN) fields.count("timerSeconds")?.seconds else null,
+            maxPerSession = if (format == AdFormat.BANNER || format == AdFormat.NATIVE) null else {
+                fields.count("maxPerSession")?.let(::zeroMeansNoLimit)
+            },
+            adUnitIds = fields.adUnitIds()?.ifEmpty { null },
+            counter = if (fullScreenFrequency) fields.count("counter") else null,
+            bannerSize = if (format == AdFormat.BANNER) fields.bannerSize() else null,
+            nativeStyle = if (format == AdFormat.NATIVE) fields.nativeStyle() else null,
+            splashTimeout = if (format == AdFormat.INTERSTITIAL) fields.count("splashTimeoutSeconds")?.seconds else null,
+        )
+    }
+
+    private fun parseObject(raw: String, issue: (String) -> Unit): JSONObject? = try {
+        JSONObject(raw)
+    } catch (e: JSONException) {
+        issue("not a valid JSON object (${e.message})")
+        null
+    }
+
+    private fun zeroMeansNoLimit(count: Int): Int = if (count == 0) Int.MAX_VALUE else count
+
+    private fun formatOf(name: String): AdFormat? = when (name.trim().lowercase()) {
+        "interstitial" -> AdFormat.INTERSTITIAL
+        "rewarded" -> AdFormat.REWARDED
+        "rewarded_interstitial" -> AdFormat.REWARDED_INTERSTITIAL
+        "app_open" -> AdFormat.APP_OPEN
+        "banner" -> AdFormat.BANNER
+        "native" -> AdFormat.NATIVE
+        else -> null
+    }
+
+    private val KEY_PATTERN = Regex("[A-Za-z0-9_]{1,40}")
+
+    /** Typed reads of one JSON object; a wrong type is reported through [issue] and read as absent. */
+    private class Fields(private val json: JSONObject, private val issue: (String) -> Unit) {
+        /** The value of [name], with JSON null read as absent. */
+        private fun raw(name: String): Any? = json.opt(name)?.takeUnless { it == JSONObject.NULL }
+
+        fun boolean(name: String): Boolean? = when (val value = raw(name)) {
+            null -> null
+            is Boolean -> value
+            else -> wrong(name, "true or false")
+        }
+
+        /** A whole number, 0 or more. */
+        fun count(name: String): Int? = when (val value = raw(name)) {
+            null -> null
+            is Number -> {
+                val d = value.toDouble()
+                if (d < 0 || d != Math.floor(d) || d > Int.MAX_VALUE) wrong(name, "a whole number, 0 or more") else d.toInt()
+            }
+            else -> wrong(name, "a whole number, 0 or more")
+        }
+
+        fun string(name: String): String? = when (val value = raw(name)) {
+            null -> null
+            is String -> value
+            else -> wrong(name, "a string")
+        }
+
+        /** A list of non-blank strings; other entries are reported and dropped. */
+        fun strings(name: String): List<String>? = when (val value = raw(name)) {
+            null -> null
+            is JSONArray -> (0 until value.length()).mapNotNull { i ->
+                (value.opt(i) as? String)?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: null.also { issue("\"$name\" item ${i + 1} isn't text; ignored") }
+            }
+            else -> wrong(name, "a list of strings")
+        }
+
+        /** `adUnitIds` as a list; a single string is accepted as a one-item list. Blank entries are dropped. */
+        fun adUnitIds(): List<String>? = when (val value = raw("adUnitIds")) {
+            null -> null
+            is String -> listOf(value.trim()).filter { it.isNotEmpty() }
+            is JSONArray -> (0 until value.length()).mapNotNull { i ->
+                (value.opt(i) as? String)?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: null.also { issue("\"adUnitIds\" item ${i + 1} isn't a text ID; ignored") }
+            }
+            else -> wrong("adUnitIds", "a list of ad unit IDs")
+        }
+
+        fun bannerSize(): BannerSize? {
+            val style = string("style") ?: return null
+            return when (style.trim().lowercase()) {
+                "adaptive" -> BannerSize.AnchoredAdaptive
+                "collapsible_bottom" -> BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM)
+                "collapsible_top" -> BannerSize.Collapsible(CollapsibleBannerPosition.TOP)
+                "rectangle" -> BannerSize.MediumRectangle
+                "standard" -> BannerSize.Standard
+                "inline_adaptive" -> BannerSize.InlineAdaptive(INLINE_ADAPTIVE_MAX_HEIGHT_DP)
+                else -> wrong("style", "adaptive, collapsible_bottom, collapsible_top, rectangle, standard or inline_adaptive")
+            }
+        }
+
+        fun nativeStyle(): NativeStyle? {
+            val style = string("style") ?: return null
+            return when (style.trim().lowercase()) {
+                "small" -> NativeStyle.SMALL
+                "medium" -> NativeStyle.MEDIUM
+                "large" -> NativeStyle.LARGE
+                else -> wrong("style", "small, medium or large")
+            }
+        }
+
+        private fun wrong(name: String, expected: String): Nothing? {
+            issue("\"$name\" must be $expected; ignored")
+            return null
+        }
+    }
+}

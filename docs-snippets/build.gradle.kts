@@ -10,6 +10,10 @@ android {
     defaultConfig {
         applicationId = "com.company.admob.docs"
     }
+    // For `BuildConfig.DEBUG`, as apps write it in the ad profiles setup.
+    buildFeatures { buildConfig = true }
+    // AdsFileExampleTest reads res/raw/ads_config.json.
+    testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
 dependencies {

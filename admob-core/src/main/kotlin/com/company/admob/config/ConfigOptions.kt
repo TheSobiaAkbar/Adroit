@@ -114,21 +114,30 @@ public class PrivacyOptions internal constructor(
  *   interstitial, app open). Default 30 seconds.
  * @property includeRewardedInGlobalInterval whether rewarded ads also respect that interval. Default false,
  *   because the user asks for rewarded ads.
+ * @property maxInterstitialsPerSession maximum interstitials shown per process lifetime, across every interstitial
+ *   placement except splash ones. It applies on top of each placement's own [FrequencyRule.maxPerSession], so the
+ *   lower limit wins. Default [Int.MAX_VALUE] (no limit); must not be negative.
  */
 public class FrequencyOptions internal constructor(
     public val minIntervalBetweenFullScreenAds: Duration,
     public val includeRewardedInGlobalInterval: Boolean,
+    public val maxInterstitialsPerSession: Int,
 ) {
     override fun equals(other: Any?): Boolean =
         other is FrequencyOptions && other.minIntervalBetweenFullScreenAds == minIntervalBetweenFullScreenAds &&
-            other.includeRewardedInGlobalInterval == includeRewardedInGlobalInterval
+            other.includeRewardedInGlobalInterval == includeRewardedInGlobalInterval &&
+            other.maxInterstitialsPerSession == maxInterstitialsPerSession
 
-    override fun hashCode(): Int =
-        31 * minIntervalBetweenFullScreenAds.hashCode() + includeRewardedInGlobalInterval.hashCode()
+    override fun hashCode(): Int {
+        var result = minIntervalBetweenFullScreenAds.hashCode()
+        result = 31 * result + includeRewardedInGlobalInterval.hashCode()
+        return 31 * result + maxInterstitialsPerSession
+    }
 
     override fun toString(): String =
         "FrequencyOptions(minIntervalBetweenFullScreenAds=$minIntervalBetweenFullScreenAds, " +
-            "includeRewardedInGlobalInterval=$includeRewardedInGlobalInterval)"
+            "includeRewardedInGlobalInterval=$includeRewardedInGlobalInterval, " +
+            "maxInterstitialsPerSession=$maxInterstitialsPerSession)"
 
     /** Mutable builder for [FrequencyOptions]. */
     @AdMobConfigDsl
@@ -139,8 +148,11 @@ public class FrequencyOptions internal constructor(
         /** See [FrequencyOptions.includeRewardedInGlobalInterval]. */
         public var includeRewardedInGlobalInterval: Boolean = false
 
+        /** See [FrequencyOptions.maxInterstitialsPerSession]. */
+        public var maxInterstitialsPerSession: Int = Int.MAX_VALUE
+
         internal fun build(): FrequencyOptions =
-            FrequencyOptions(minIntervalBetweenFullScreenAds, includeRewardedInGlobalInterval)
+            FrequencyOptions(minIntervalBetweenFullScreenAds, includeRewardedInGlobalInterval, maxInterstitialsPerSession)
     }
 }
 

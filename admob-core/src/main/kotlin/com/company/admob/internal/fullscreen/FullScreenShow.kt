@@ -29,6 +29,8 @@ import kotlin.time.Duration
  */
 internal class FullScreenShow(
     private val placement: EffectivePlacement,
+    /** The ad unit [ad] was loaded from, for events. */
+    private val adUnitId: String,
     private val ad: LoadedFullScreenAd,
     private val token: FullScreenCoordinator.Token,
     private val format: AdFormat,
@@ -46,7 +48,6 @@ internal class FullScreenShow(
     private var clicked = false
     private var dismissing = false
     private val key get() = placement.placement.key
-    private val adUnitId get() = placement.adUnitId
 
     private fun now() = clock.currentTimeMillis()
 

@@ -14,6 +14,7 @@ import com.company.admob.AdFormat
 import com.company.admob.AdsState
 import com.company.admob.BannerAdHandle
 import com.company.admob.BannerOptions
+import com.company.admob.BannerSize
 import com.company.admob.BannerState
 import com.company.admob.GoogleSdkEscapeHatch
 import com.company.admob.UnavailableReason
@@ -23,7 +24,7 @@ import com.company.admob.events.AdSourceInfo
 import com.company.admob.internal.config.EffectiveConfig
 import com.company.admob.internal.config.EffectivePlacement
 import com.company.admob.internal.config.LiveConfig
-import com.company.admob.internal.config.bannerAdUnitId
+import com.company.admob.internal.config.bannerAdUnitIds
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.init.Readiness
 import com.company.admob.internal.logging.AdLog
@@ -31,6 +32,7 @@ import com.company.admob.internal.port.AdsSdk
 import com.company.admob.internal.port.BannerListener
 import com.company.admob.internal.port.RequestExtras
 import com.company.admob.internal.port.SdkBannerView
+import com.company.admob.internal.reliability.AdUnitRotation
 import com.company.admob.internal.reliability.RetryScheduler
 import com.company.admob.internal.threading.postToMain
 import com.company.admob.internal.time.Clock
@@ -49,12 +51,16 @@ import kotlinx.coroutines.launch
  * reloads when they're allowed again. Refresh belongs to the SDK: the library retries only failed first loads, and
  * only while the container is attached and shown.
  *
+ * [size] is fixed at creation (the code's size, else the placement's). Each new load takes the next ad unit from
+ * [rotation]; a collapsible banner asks for the collapsible format only on the first load of each SDK view.
+ *
  * Main thread only. After [destroy] every method is a no-op and the library holds no reference to the handle.
  */
 internal class BannerAdHandleImpl(
     activity: Activity,
     placement: EffectivePlacement,
-    private var adUnitId: String,
+    private var adUnitIds: List<String>,
+    private val size: BannerSize,
     private val options: BannerOptions,
     private val config: LiveConfig,
     private val adsSdk: AdsSdk,
@@ -64,6 +70,7 @@ internal class BannerAdHandleImpl(
     private val clock: Clock,
     private val scope: CoroutineScope,
     private val log: AdLog,
+    private val rotation: AdUnitRotation,
 ) : BannerAdHandle {
     private val container = BannerContainer(activity, this)
     private val mutableState = MutableStateFlow<BannerState>(BannerState.Loading)
@@ -73,6 +80,12 @@ internal class BannerAdHandleImpl(
     private val placementKey get() = bannerPlacement.key
 
     private var sdkView: SdkBannerView? = null
+
+    /** The ad unit of the latest load request. */
+    private var adUnitId: String = adUnitIds.first()
+
+    /** Loads made on the current [sdkView]; only the first may be collapsible. */
+    private var loadsOnView = 0
     private var loadedSpec: BannerSizeSpec? = null
     private var generation = 0
     private var loadStartedAt = 0L
@@ -144,11 +157,11 @@ internal class BannerAdHandleImpl(
             mutableState.value = BannerState.Hidden(disabledReason)
             return
         }
-        val unit = current.bannerAdUnitId(p, options.size)
-        if (unit != adUnitId) {
-            log.i { "Banner $placementKey: ad unit changed to ${current.displayAdUnitId(unit)}" }
+        val units = current.bannerAdUnitIds(p, size)
+        if (units != adUnitIds) {
+            log.i { "Banner $placementKey: ad units changed to ${units.joinToString { current.displayAdUnitId(it) }}" }
             tearDownAd()
-            adUnitId = unit
+            adUnitIds = units
         }
         if (mutableState.value is BannerState.Hidden && state !is AdsState.Unavailable) mutableState.value = BannerState.Loading
         onReadiness(state)
@@ -176,13 +189,14 @@ internal class BannerAdHandleImpl(
         waitingForLayout = false
         val activity = container.context as Activity
         val spec = BannerSizeResolver.resolve(
-            options.size,
+            size,
             container.width,
             container.resources.displayMetrics.density,
             BannerSizeResolver.windowWidthPx(activity),
         )
         val bannerView = sdkView ?: adsSdk.createBannerView(activity).also { created ->
             sdkView = created
+            loadsOnView = 0
             container.addView(
                 created.view,
                 FrameLayout.LayoutParams(
@@ -202,10 +216,14 @@ internal class BannerAdHandleImpl(
         val loadGeneration = ++generation
         loadStartedAt = clock.elapsedRealtimeMillis()
         if (mutableState.value !is BannerState.Loaded) mutableState.value = BannerState.Loading
+        val pick = rotation.next(AdFormat.BANNER, adUnitIds)
+        adUnitId = pick.adUnitId
         emit(AdEvent.LoadRequested(placementKey, AdFormat.BANNER, adUnitId, now()))
-        log.d { "Loading banner $placementKey (${logId()}) at ${spec.widthDp} dp, ${spec.size}" }
+        log.d { "Loading banner $placementKey (${logId()})${pick.describe} at ${spec.widthDp} dp, ${spec.size}" }
+        val collapsible = (spec.size as? BannerSize.Collapsible)?.position?.takeIf { loadsOnView == 0 }
+        loadsOnView++
         @OptIn(GoogleSdkEscapeHatch::class)
-        val extras = RequestExtras(bannerPlacement, config.current.source.advanced.googleRequestCustomizer)
+        val extras = RequestExtras(bannerPlacement, config.current.source.advanced.googleRequestCustomizer, collapsible)
         bannerView.load(adUnitId, spec.size, spec.widthDp, extras, Listener(loadGeneration))
     }
 

@@ -10,6 +10,7 @@ import com.company.admob.BannerAdHandle
 import com.company.admob.BannerOptions
 import com.company.admob.BannerPlacement
 import com.company.admob.BannerSize
+import com.company.admob.CollapsibleBannerPosition
 import com.company.admob.BannerState
 import com.company.admob.views.internal.ViewsRuntime
 import kotlin.math.roundToInt
@@ -20,14 +21,15 @@ import kotlin.math.roundToInt
  * <com.company.admob.views.AdBannerView
  *     android:layout_width="match_parent"
  *     android:layout_height="wrap_content"
- *     app:company_admob_placement="home_banner"
- *     app:company_admob_bannerSize="anchoredAdaptive" />
+ *     app:company_admob_placement="home_banner" />
  * ```
  * When attached to a window, it finds its `LifecycleOwner` (`findViewTreeLifecycleOwner()`, which is the Fragment's
  * view lifecycle inside a Fragment), creates the banner and destroys it when that owner is destroyed.
  *
  * Attributes: `company_admob_placement` (the placement key), `company_admob_bannerSize` (anchoredAdaptive,
- * inlineAdaptive, mediumRectangle or standard), `company_admob_inlineMaxHeight` (for inlineAdaptive), and
+ * inlineAdaptive, mediumRectangle, standard, collapsibleBottom or collapsibleTop; without it, the placement's
+ * configured size decides, so the configuration or Firebase can change it), `company_admob_inlineMaxHeight` (for
+ * inlineAdaptive), and
  * `company_admob_collapseWhenEmpty` (GONE while there's no ad; default true).
  *
  * An invalid or unknown key, or no `LifecycleOwner`, is logged as an error and the view stays GONE; it never
@@ -59,11 +61,14 @@ public class AdBannerView @JvmOverloads constructor(
             val maxHeightDp =
                 a.getDimension(R.styleable.CompanyAdmobAdBannerView_company_admob_inlineMaxHeight, defaultMaxHeightPx) /
                     resources.displayMetrics.density
-            val size = when (a.getInt(R.styleable.CompanyAdmobAdBannerView_company_admob_bannerSize, SIZE_ANCHORED)) {
+            val size = when (a.getInt(R.styleable.CompanyAdmobAdBannerView_company_admob_bannerSize, SIZE_FROM_CONFIG)) {
+                SIZE_ANCHORED -> BannerSize.AnchoredAdaptive
                 SIZE_INLINE -> BannerSize.InlineAdaptive(maxHeightDp.roundToInt())
                 SIZE_MEDIUM_RECTANGLE -> BannerSize.MediumRectangle
                 SIZE_STANDARD -> BannerSize.Standard
-                else -> BannerSize.AnchoredAdaptive
+                SIZE_COLLAPSIBLE_BOTTOM -> BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM)
+                SIZE_COLLAPSIBLE_TOP -> BannerSize.Collapsible(CollapsibleBannerPosition.TOP)
+                else -> null
             }
             options = BannerOptions(size)
             a.getString(R.styleable.CompanyAdmobAdBannerView_company_admob_placement)?.let { key ->
@@ -115,9 +120,13 @@ public class AdBannerView @JvmOverloads constructor(
     }
 
     private companion object {
+        /** No size attribute: the placement's configured size decides. */
+        private const val SIZE_FROM_CONFIG = -1
         private const val SIZE_ANCHORED = 0
         private const val SIZE_INLINE = 1
         private const val SIZE_MEDIUM_RECTANGLE = 2
         private const val SIZE_STANDARD = 3
+        private const val SIZE_COLLAPSIBLE_BOTTOM = 4
+        private const val SIZE_COLLAPSIBLE_TOP = 5
     }
 }

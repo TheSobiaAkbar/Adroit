@@ -2,6 +2,7 @@ package com.company.admob.views
 
 import androidx.annotation.LayoutRes
 import com.company.admob.NativeAdLayout
+import com.company.admob.NativeStyle
 
 /**
  * Ready-made, brand-neutral native ad layouts built from framework widgets only. They follow the light/dark theme,
@@ -28,6 +29,13 @@ public object NativeTemplates {
 
     /** Full-width media first, then every asset and a full-width call to action. */
     public val Large: NativeAdLayout = forLayout(R.layout.company_admob_native_large)
+
+    /** The template for [style]: [Small], [Medium] or [Large]. */
+    public fun forStyle(style: NativeStyle): NativeAdLayout = when (style) {
+        NativeStyle.SMALL -> Small
+        NativeStyle.MEDIUM -> Medium
+        NativeStyle.LARGE -> Large
+    }
 
     /** A [NativeAdLayout] for [layoutRes] using the standard template IDs; missing views are skipped (logged once). */
     internal fun forLayout(@LayoutRes layoutRes: Int): NativeAdLayout = NativeAdLayout(

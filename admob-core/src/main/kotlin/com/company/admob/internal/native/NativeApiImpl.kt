@@ -8,6 +8,7 @@ import com.company.admob.NativeAdRenderer
 import com.company.admob.NativeAdResult
 import com.company.admob.NativeApi
 import com.company.admob.NativePlacement
+import com.company.admob.NativeStyle
 import com.company.admob.internal.HardwareAccelerationCheck
 import com.company.admob.internal.threading.MainDispatcher
 import com.company.admob.internal.threading.isMainThread
@@ -20,7 +21,10 @@ internal class NativeApiImpl(
     private val engine: NativeAdLoaderEngine,
     private val binder: NativeAdBinder,
     private val hardwareAcceleration: HardwareAccelerationCheck,
+    private val styleOf: (NativePlacement) -> NativeStyle? = { null },
 ) : NativeApi {
+    override fun style(placement: NativePlacement): NativeStyle = styleOf(placement) ?: NativeStyle.MEDIUM
+
     override fun preload(placement: NativePlacement) = runOnMain { engine.preload(placement) }
 
     override fun load(placement: NativePlacement, onResult: (NativeAdResult) -> Unit) =

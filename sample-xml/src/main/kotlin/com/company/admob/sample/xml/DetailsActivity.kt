@@ -10,8 +10,9 @@ import com.company.admob.views.attachBanner
 import com.company.admob.sample.xml.databinding.ActivityDetailsBinding
 
 /**
- * A banner attached from code (`attachBanner`, destroyed with this Activity) and a large native template declared
- * in XML (`AdNativeView`, `app:company_admob_placement="article_native"`).
+ * A banner attached from code (`attachBanner`, destroyed with this Activity) and a native ad declared in XML
+ * (`AdNativeView`, `app:company_admob_placement="article_native"`). Their looks come from the ads file: a collapsible
+ * banner and the large native template.
  */
 class DetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -24,6 +24,7 @@ class AdErrorTest {
         AdError.ActivityUnavailable,
         AdError.AlreadyShowing,
         AdError.FrequencyCapped(5.seconds),
+        AdError.CounterNotReached(2),
         AdError.SdkInitFailed(),
         AdError.Internal("detail"),
     )
@@ -39,7 +40,8 @@ class AdErrorTest {
         val expected = listOf(
             "not_initialized", "consent_required", "invalid_configuration", "disabled", "no_fill",
             "network_error", "timeout", "load_failed", "not_ready", "expired", "show_failed",
-            "activity_unavailable", "already_showing", "frequency_capped", "sdk_init_failed", "internal",
+            "activity_unavailable", "already_showing", "frequency_capped", "counter_not_reached", "sdk_init_failed",
+            "internal",
         )
         assertEquals(expected, allErrors.map { it.code })
         assertEquals(allErrors.size, allErrors.map { it.code }.toSet().size)

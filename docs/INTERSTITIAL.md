@@ -91,6 +91,19 @@ Fragment, pass `requireActivity()`.
 - A cached ad expires after 55 minutes, a few minutes before Google's one-hour limit.
 - `frequency { minInterval; maxPerSession }` per placement, plus the global
   `minIntervalBetweenFullScreenAds` (30 s by default).
+- `frequency { counter = 3 }`: an ad shows at most on every 3rd `show` call (the 3rd, 6th, 9th…); the others return
+  `NotShown(CounterNotReached)` at once. A due counter stays due until an ad shows, and `minInterval` is ignored
+  while a counter is set.
+- `frequency { maxInterstitialsPerSession = 4 }` in the app-wide options: at most 4 interstitials per session across
+  all placements, splash ones not counted.
+- Several ad unit IDs per placement rotate: each load uses the next one.
+
+## Splash screen
+
+Mark the splash placement with `splash = true` and show it with
+`CompanyAdMob.interstitial.showOnSplash(activity, placement) { … }`. It waits up to `splashTimeout` (8 s by default) for
+consent, initialization and an ad, then shows it or gives up with `NotShown(Timeout)`; continue to your main screen
+in both cases. See [Ad profiles](AD_PROFILES.md#showing-the-ads).
 
 ## Policy notes
 

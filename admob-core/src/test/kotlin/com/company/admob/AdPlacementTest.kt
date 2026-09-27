@@ -9,14 +9,14 @@ class AdPlacementTest {
 
     @Test
     fun `valid keys are accepted`() {
-        listOf("a", "home_banner", "level_2_complete", "x".repeat(40)).forEach { key ->
+        listOf("a", "home_banner", "level_2_complete", "HistoryAd", "Home", "x".repeat(40)).forEach { key ->
             assertEquals(key, InterstitialPlacement(key).key)
         }
     }
 
     @Test
     fun `invalid keys are rejected`() {
-        listOf("", "Home", "home-banner", "home banner", "x".repeat(41), "ümlaut").forEach { key ->
+        listOf("", "home-banner", "home banner", "x".repeat(41), "ümlaut").forEach { key ->
             assertThrows("key '$key'", IllegalArgumentException::class.java) { BannerPlacement(key) }
         }
     }

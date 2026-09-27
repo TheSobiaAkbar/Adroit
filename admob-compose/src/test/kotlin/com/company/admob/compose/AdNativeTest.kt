@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.company.admob.AdError
+import com.company.admob.NativeStyle
 import com.company.admob.views.NativeTemplates
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -72,6 +73,14 @@ class AdNativeTest {
         rule.onNodeWithText("tick 10").assertExists()
         assertEquals(1, client.native.loadCount)
         assertEquals(1, client.native.renders.size)
+        assertEquals(NativeTemplates.Small, client.native.renders.single().layout)
+    }
+
+    @Test
+    fun `without a layout, the template follows the placement's configured style`() {
+        client.native.style = NativeStyle.SMALL
+        rule.setContent { AdNative(FEED) }
+        rule.waitForIdle()
         assertEquals(NativeTemplates.Small, client.native.renders.single().layout)
     }
 

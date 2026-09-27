@@ -128,7 +128,7 @@ class DiagnosticsReportTest {
         assertEquals(AdEnvironment.PRODUCTION, report.environment)
         assertFalse(report.testMode!!.demoAdUnitsSubstituted)
         assertEquals("…0005", report.placements.single().adUnitId)
-        assertTrue("adUnitId=…0005" in report.activeOverrides)
+        assertTrue("adUnitIds=[…0005]" in report.activeOverrides)
         assertTrue((report.lastError as AdError.Internal).detail.contains(fullId))
         assertFalse(fullId in text)
         assertFalse(TestIds.unit(5) in text)

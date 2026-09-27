@@ -25,7 +25,8 @@ import com.company.admob.views.internal.ViewsRuntime
  * When attached to a window, it loads and renders the ad for its view tree's `LifecycleOwner` (the Fragment's view
  * lifecycle inside a Fragment) and destroys it with that owner. It's GONE if the load fails.
  *
- * Attributes: `company_admob_placement` (the placement key), `company_admob_template` (small, medium or large), or
+ * Attributes: `company_admob_placement` (the placement key), `company_admob_template` (small, medium or large;
+ * without it, the placement's configured style decides, so the configuration or Firebase can change it), or
  * `company_admob_layout`: your own layout, which must use the standard template IDs (see [NativeTemplates]).
  *
  * An invalid key or no `LifecycleOwner` is logged as an error and the view stays GONE; it never crashes. For ads
@@ -36,7 +37,8 @@ public class AdNativeView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
 ) : FrameLayout(context, attrs) {
     private var placement: NativePlacement? = null
-    private var layout: NativeAdLayout = NativeTemplates.Medium
+    /** The layout from the attributes or [setPlacement]; null uses the placement's configured style. */
+    private var layout: NativeAdLayout? = null
 
     /** The owner the current ad is bound to; null until attached, and again once that owner is destroyed. */
     private var boundOwner: LifecycleOwner? = null
@@ -55,10 +57,11 @@ public class AdNativeView @JvmOverloads constructor(
             layout = if (customLayout != 0) {
                 NativeTemplates.forLayout(customLayout)
             } else {
-                when (a.getInt(R.styleable.CompanyAdmobAdNativeView_company_admob_template, TEMPLATE_MEDIUM)) {
+                when (a.getInt(R.styleable.CompanyAdmobAdNativeView_company_admob_template, TEMPLATE_FROM_STYLE)) {
                     TEMPLATE_SMALL -> NativeTemplates.Small
+                    TEMPLATE_MEDIUM -> NativeTemplates.Medium
                     TEMPLATE_LARGE -> NativeTemplates.Large
-                    else -> NativeTemplates.Medium
+                    else -> null
                 }
             }
             a.getString(R.styleable.CompanyAdmobAdNativeView_company_admob_placement)?.let { key ->
@@ -75,9 +78,12 @@ public class AdNativeView @JvmOverloads constructor(
         if (placement == null) visibility = GONE
     }
 
-    /** Shows [placement] with [layout] instead of the XML attributes. Loads now if attached, otherwise on attach. */
+    /**
+     * Shows [placement] with [layout] instead of the XML attributes (null: the placement's configured style). Loads
+     * now if attached, otherwise on attach.
+     */
     @JvmOverloads
-    public fun setPlacement(placement: NativePlacement, layout: NativeAdLayout = this.layout) {
+    public fun setPlacement(placement: NativePlacement, layout: NativeAdLayout? = this.layout) {
         this.placement = placement
         this.layout = layout
         boundOwner = null
@@ -110,5 +116,8 @@ public class AdNativeView @JvmOverloads constructor(
         private const val TEMPLATE_SMALL = 0
         private const val TEMPLATE_MEDIUM = 1
         private const val TEMPLATE_LARGE = 2
+
+        /** No template attribute: the placement's configured style decides. */
+        private const val TEMPLATE_FROM_STYLE = -1
     }
 }

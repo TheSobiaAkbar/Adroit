@@ -25,11 +25,12 @@ public interface BannerApi {
 /**
  * Options for a banner. Immutable.
  *
- * @property size the banner size. Defaults to Google's (large) anchored adaptive size.
+ * @property size the banner size, or null (the default) for the placement's configured size, which an ad profile
+ *   or a remote override can change. Pass a size only when the code, not the configuration, should decide it.
  * @property reserveSpace reserve the banner's expected height before it loads, to avoid layout shifts.
  */
 public class BannerOptions(
-    public val size: BannerSize = BannerSize.AnchoredAdaptive,
+    public val size: BannerSize? = null,
     public val reserveSpace: Boolean = true,
 ) {
     override fun equals(other: Any?): Boolean =
@@ -53,6 +54,22 @@ public sealed interface BannerSize {
 
     /** 320x50 standard banner. */
     public data object Standard : BannerSize
+
+    /**
+     * A full-width anchored adaptive banner that opens expanded and collapses to its normal size. Put it at the
+     * [position] edge of the screen. Only the first load of each banner is collapsible: Google's automatic refreshes
+     * aren't, and mediated ads show as normal banners.
+     */
+    public data class Collapsible(public val position: CollapsibleBannerPosition) : BannerSize
+}
+
+/** Where a [BannerSize.Collapsible] banner is placed, and so which way it expands. */
+public enum class CollapsibleBannerPosition {
+    /** At the top of the screen; the expanded ad aligns to the top. */
+    TOP,
+
+    /** At the bottom of the screen; the expanded ad aligns to the bottom. */
+    BOTTOM,
 }
 
 /** A banner created by [BannerApi.create]. Main thread only. */

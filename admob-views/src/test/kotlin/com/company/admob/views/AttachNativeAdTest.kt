@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentActivity
 import com.company.admob.AdError
 import com.company.admob.NativeAdLayout
 import com.company.admob.NativeAdResult
+import com.company.admob.NativeStyle
 import com.company.admob.views.test.R
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -52,6 +53,14 @@ class AttachNativeAdTest {
 
         controller.pause().stop().destroy()
         assertEquals(1, client.native.handles.single().destroyCount)
+    }
+
+    @Test
+    fun `without a layout, the template follows the placement's configured style`() {
+        client.native.style = NativeStyle.LARGE
+        container.attachNativeAd(controller.get(), FEED) { results += it }
+        idle()
+        assertEquals(NativeTemplates.Large, client.native.renders.single().layout)
     }
 
     @Test

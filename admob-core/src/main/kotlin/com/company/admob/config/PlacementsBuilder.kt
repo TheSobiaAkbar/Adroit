@@ -7,6 +7,7 @@ import com.company.admob.BannerPlacement
 import com.company.admob.BannerSize
 import com.company.admob.InterstitialPlacement
 import com.company.admob.NativePlacement
+import com.company.admob.NativeStyle
 import com.company.admob.RewardedInterstitialPlacement
 import com.company.admob.RewardedPlacement
 import com.company.admob.internal.config.FormatDefaults
@@ -22,24 +23,47 @@ public annotation class AdMobConfigDsl
  * be configured once; validation reports duplicates.
  *
  * Pass your real ad unit IDs. In [AdEnvironment.DEVELOPMENT] (and STAGING by default) the library substitutes
- * Google's demo ad units for the format, so real ads aren't requested during development.
+ * Google's demo ad units for the format, so real ads aren't requested during development. Every format also takes a
+ * list of ad unit IDs, used in rotation: each load request uses the next one, and after the last one the first again.
  */
 @AdMobConfigDsl
 public class PlacementsBuilder internal constructor() {
     internal val configs: MutableList<PlacementConfig> = mutableListOf()
 
     /** Configures a banner placement. */
-    public fun banner(placement: BannerPlacement, adUnitId: String, configure: BannerPlacementBuilder.() -> Unit = {}) {
-        configs += BannerPlacementBuilder(placement, adUnitId).apply(configure).build()
+    public fun banner(
+        placement: BannerPlacement,
+        adUnitId: String,
+        configure: BannerPlacementBuilder.() -> Unit = {},
+    ) {
+        banner(placement, listOf(adUnitId), configure)
+    }
+
+    /** Configures a banner placement whose loads rotate through [adUnitIds]. */
+    public fun banner(
+        placement: BannerPlacement,
+        adUnitIds: List<String>,
+        configure: BannerPlacementBuilder.() -> Unit = {},
+    ) {
+        configs += BannerPlacementBuilder(placement, adUnitIds).apply(configure).build()
     }
 
     /** Configures an interstitial placement. */
     public fun interstitial(
         placement: InterstitialPlacement,
         adUnitId: String,
-        configure: FullScreenPlacementBuilder.() -> Unit = {},
+        configure: InterstitialPlacementBuilder.() -> Unit = {},
     ) {
-        configs += FullScreenPlacementBuilder(placement, adUnitId).apply(configure).build(::InterstitialPlacementConfig)
+        interstitial(placement, listOf(adUnitId), configure)
+    }
+
+    /** Configures an interstitial placement whose loads rotate through [adUnitIds]. */
+    public fun interstitial(
+        placement: InterstitialPlacement,
+        adUnitIds: List<String>,
+        configure: InterstitialPlacementBuilder.() -> Unit = {},
+    ) {
+        configs += InterstitialPlacementBuilder(placement, adUnitIds).apply(configure).build()
     }
 
     /** Configures a rewarded placement. */
@@ -48,36 +72,81 @@ public class PlacementsBuilder internal constructor() {
         adUnitId: String,
         configure: FullScreenPlacementBuilder.() -> Unit = {},
     ) {
-        configs += FullScreenPlacementBuilder(placement, adUnitId).apply(configure).build(::RewardedPlacementConfig)
+        rewarded(placement, listOf(adUnitId), configure)
     }
 
-    /**
-     * Configures a rewarded interstitial placement. You must show your own intro screen, announcing the reward
-     * and letting the user opt out, before showing this format.
-     */
+    /** Configures a rewarded placement whose loads rotate through [adUnitIds]. */
+    public fun rewarded(
+        placement: RewardedPlacement,
+        adUnitIds: List<String>,
+        configure: FullScreenPlacementBuilder.() -> Unit = {},
+    ) {
+        configs += FullScreenPlacementBuilder(placement, adUnitIds).apply(configure).build(::RewardedPlacementConfig)
+    }
+
+    /** Configures a rewarded interstitial placement. You must show your own intro screen, announcing the reward
+     * and letting the user opt out, before showing this format. */
     public fun rewardedInterstitial(
         placement: RewardedInterstitialPlacement,
         adUnitId: String,
         configure: FullScreenPlacementBuilder.() -> Unit = {},
     ) {
-        configs += FullScreenPlacementBuilder(placement, adUnitId).apply(configure)
+        rewardedInterstitial(placement, listOf(adUnitId), configure)
+    }
+
+    /** Configures a rewarded interstitial placement whose loads rotate through [adUnitIds]. See the overload. */
+    public fun rewardedInterstitial(
+        placement: RewardedInterstitialPlacement,
+        adUnitIds: List<String>,
+        configure: FullScreenPlacementBuilder.() -> Unit = {},
+    ) {
+        configs += FullScreenPlacementBuilder(placement, adUnitIds).apply(configure)
             .build(::RewardedInterstitialPlacementConfig)
     }
 
     /** Configures an app open placement. */
-    public fun appOpen(placement: AppOpenPlacement, adUnitId: String, configure: AppOpenPlacementBuilder.() -> Unit = {}) {
-        configs += AppOpenPlacementBuilder(placement, adUnitId).apply(configure).build()
+    public fun appOpen(
+        placement: AppOpenPlacement,
+        adUnitId: String,
+        configure: AppOpenPlacementBuilder.() -> Unit = {},
+    ) {
+        appOpen(placement, listOf(adUnitId), configure)
+    }
+
+    /** Configures an app open placement whose loads rotate through [adUnitIds]. */
+    public fun appOpen(
+        placement: AppOpenPlacement,
+        adUnitIds: List<String>,
+        configure: AppOpenPlacementBuilder.() -> Unit = {},
+    ) {
+        configs += AppOpenPlacementBuilder(placement, adUnitIds).apply(configure).build()
     }
 
     /** Configures a native ad placement. */
-    public fun native(placement: NativePlacement, adUnitId: String, configure: NativePlacementBuilder.() -> Unit = {}) {
-        configs += NativePlacementBuilder(placement, adUnitId).apply(configure).build()
+    public fun native(
+        placement: NativePlacement,
+        adUnitId: String,
+        configure: NativePlacementBuilder.() -> Unit = {},
+    ) {
+        native(placement, listOf(adUnitId), configure)
+    }
+
+    /** Configures a native ad placement whose loads rotate through [adUnitIds]. */
+    public fun native(
+        placement: NativePlacement,
+        adUnitIds: List<String>,
+        configure: NativePlacementBuilder.() -> Unit = {},
+    ) {
+        configs += NativePlacementBuilder(placement, adUnitIds).apply(configure).build()
     }
 }
 
 /** Settings shared by every placement format. Defaults: enabled, no frequency limit, [PreloadStrategy.AFTER_READY]. */
 @AdMobConfigDsl
-public sealed class PlacementConfigBuilder(internal val placement: AdPlacement, internal val adUnitId: String) {
+public sealed class PlacementConfigBuilder(internal val placement: AdPlacement, adUnitIds: List<String>) {
+    // Copied, and never empty: an empty list becomes one blank ID, which validation reports as malformed.
+    internal val adUnitIds: List<AdUnitId> = adUnitIds.ifEmpty { listOf("") }.map(::AdUnitId)
+
     /** False turns the placement off without removing it. */
     public var enabled: Boolean = true
 
@@ -108,30 +177,49 @@ public class FrequencyRuleBuilder internal constructor(initial: FrequencyRule) {
     /** See [FrequencyRule.maxPerSession]. */
     public var maxPerSession: Int = initial.maxPerSession
 
-    internal fun build(): FrequencyRule = FrequencyRule(minInterval, maxPerSession)
+    /** See [FrequencyRule.counter]. */
+    public var counter: Int = initial.counter
+
+    internal fun build(): FrequencyRule = FrequencyRule(minInterval, maxPerSession, counter)
 }
 
-/** Settings for an interstitial, rewarded, or rewarded interstitial placement. */
-public class FullScreenPlacementBuilder internal constructor(placement: AdPlacement, adUnitId: String) :
-    PlacementConfigBuilder(placement, adUnitId) {
+/** Settings for a rewarded or rewarded interstitial placement, and the base of [InterstitialPlacementBuilder]. */
+public open class FullScreenPlacementBuilder internal constructor(placement: AdPlacement, adUnitIds: List<String>) :
+    PlacementConfigBuilder(placement, adUnitIds) {
     internal fun <T : PlacementConfig> build(
-        factory: (AdPlacement, AdUnitId, Boolean, FrequencyRule, PreloadStrategy, RetryPolicy?, Duration?) -> T,
-    ): T = factory(placement, AdUnitId(adUnitId), enabled, frequency, preload, retry, expiry)
+        factory: (AdPlacement, List<AdUnitId>, Boolean, FrequencyRule, PreloadStrategy, RetryPolicy?, Duration?) -> T,
+    ): T = factory(placement, adUnitIds, enabled, frequency, preload, retry, expiry)
+}
+
+/** Settings for an interstitial placement. See [InterstitialPlacementConfig] for [splash] and [splashTimeout]. */
+public class InterstitialPlacementBuilder internal constructor(
+    placement: InterstitialPlacement,
+    adUnitIds: List<String>,
+) : FullScreenPlacementBuilder(placement, adUnitIds) {
+    /** See [InterstitialPlacementConfig.splash]. */
+    public var splash: Boolean = false
+
+    /** See [InterstitialPlacementConfig.splashTimeout]. */
+    public var splashTimeout: Duration = FormatDefaults.SPLASH_TIMEOUT
+
+    internal fun build(): InterstitialPlacementConfig = InterstitialPlacementConfig(
+        placement, adUnitIds, enabled, frequency, preload, retry, expiry, splash, splashTimeout,
+    )
 }
 
 /** Settings for a banner placement. */
-public class BannerPlacementBuilder internal constructor(placement: BannerPlacement, adUnitId: String) :
-    PlacementConfigBuilder(placement, adUnitId) {
-    /** The default size for this placement's banners. */
+public class BannerPlacementBuilder internal constructor(placement: BannerPlacement, adUnitIds: List<String>) :
+    PlacementConfigBuilder(placement, adUnitIds) {
+    /** The size of this placement's banners, unless the code passes one in `BannerOptions`. */
     public var size: BannerSize = BannerSize.AnchoredAdaptive
 
     internal fun build(): BannerPlacementConfig =
-        BannerPlacementConfig(placement, AdUnitId(adUnitId), enabled, frequency, preload, retry, expiry, size)
+        BannerPlacementConfig(placement, adUnitIds, enabled, frequency, preload, retry, expiry, size)
 }
 
 /** Settings for an app open placement. See [AppOpenPlacementConfig] for their meaning. */
-public class AppOpenPlacementBuilder internal constructor(placement: AppOpenPlacement, adUnitId: String) :
-    PlacementConfigBuilder(placement, adUnitId) {
+public class AppOpenPlacementBuilder internal constructor(placement: AppOpenPlacement, adUnitIds: List<String>) :
+    PlacementConfigBuilder(placement, adUnitIds) {
     /** See [AppOpenPlacementConfig.cooldown]. */
     public var cooldown: Duration = FormatDefaults.APP_OPEN_COOLDOWN
 
@@ -154,8 +242,13 @@ public class AppOpenPlacementBuilder internal constructor(placement: AppOpenPlac
         activities.mapTo(excludedActivityClassNames) { it.name }
     }
 
+    /** [excludeActivities] by fully qualified class name, for the ads file. */
+    internal fun excludeActivityClassNames(names: Collection<String>) {
+        excludedActivityClassNames += names
+    }
+
     internal fun build(): AppOpenPlacementConfig = AppOpenPlacementConfig(
-        placement, AdUnitId(adUnitId), enabled, frequency, preload, retry, expiry,
+        placement, adUnitIds, enabled, frequency, preload, retry, expiry,
         cooldown = cooldown,
         minLaunchesBeforeFirstShow = minLaunchesBeforeFirstShow,
         excludedActivityClassNames = excludedActivityClassNames.toReadOnlySet(),
@@ -165,11 +258,15 @@ public class AppOpenPlacementBuilder internal constructor(placement: AppOpenPlac
 }
 
 /** Settings for a native ad placement. */
-public class NativePlacementBuilder internal constructor(placement: NativePlacement, adUnitId: String) :
-    PlacementConfigBuilder(placement, adUnitId) {
+public class NativePlacementBuilder internal constructor(placement: NativePlacement, adUnitIds: List<String>) :
+    PlacementConfigBuilder(placement, adUnitIds) {
     /** How many ads to keep loaded, in 1..3. */
     public var poolSize: Int = FormatDefaults.NATIVE_POOL_SIZE
 
-    internal fun build(): NativePlacementConfig =
-        NativePlacementConfig(placement, AdUnitId(adUnitId), enabled, frequency, preload, retry, expiry, poolSize)
+    /** See [NativePlacementConfig.style]. */
+    public var style: NativeStyle = NativeStyle.MEDIUM
+
+    internal fun build(): NativePlacementConfig = NativePlacementConfig(
+        placement, adUnitIds, enabled, frequency, preload, retry, expiry, poolSize, style,
+    )
 }

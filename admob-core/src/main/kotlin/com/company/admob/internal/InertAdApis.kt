@@ -21,6 +21,7 @@ import com.company.admob.NativeAdLayout
 import com.company.admob.NativeAdRenderer
 import com.company.admob.NativeAdResult
 import com.company.admob.NativeApi
+import com.company.admob.NativeStyle
 import com.company.admob.NativePlacement
 import com.company.admob.RewardResult
 import com.company.admob.RewardedApi
@@ -67,6 +68,15 @@ internal class InertAdApis(private val error: AdError, private val warn: (String
         override suspend fun showAndAwait(activity: Activity, placement: InterstitialPlacement): FullScreenResult {
             warn("interstitial.showAndAwait()")
             return FullScreenResult.NotShown(error)
+        }
+
+        override fun showOnSplash(
+            activity: Activity,
+            placement: InterstitialPlacement,
+            onResult: (FullScreenResult) -> Unit,
+        ) {
+            warn("interstitial.showOnSplash()")
+            deliver(onResult, FullScreenResult.NotShown(error))
         }
     }
 
@@ -167,6 +177,8 @@ internal class InertAdApis(private val error: AdError, private val warn: (String
             layout: NativeAdLayout,
             renderer: NativeAdRenderer?,
         ): View = throw IllegalStateException("No native ad can exist here (${error.message})")
+
+        override fun style(placement: NativePlacement): NativeStyle = NativeStyle.MEDIUM
     }
 }
 

@@ -85,7 +85,7 @@ internal class NativeHarness(
     ).also { it.start() }
     val port = FakeNativeRenderPort()
     val binder = NativeAdBinder(port, log)
-    val api = NativeApiImpl(engine, binder, HardwareAccelerationCheck(log))
+    val api = NativeApiImpl(engine, binder, HardwareAccelerationCheck(log)) { effective.placement(it)?.nativeStyle }
     val results = mutableListOf<NativeAdResult>()
 
     val activity: Activity by lazy { Robolectric.buildActivity(Activity::class.java).setup().get() }

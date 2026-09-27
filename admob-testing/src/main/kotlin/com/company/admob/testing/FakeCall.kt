@@ -20,6 +20,9 @@ public sealed class FakeCall {
     /** An interstitial `show` or `showAndAwait`. */
     public data class ShowInterstitial(val placementKey: String) : FakeCall()
 
+    /** An interstitial `showOnSplash`. It takes the next queued interstitial result, like a show. */
+    public data class ShowInterstitialOnSplash(val placementKey: String) : FakeCall()
+
     /** A rewarded `show` or `showAndAwait`, with its server-side verification data. */
     public data class ShowRewarded(val placementKey: String, val customData: String? = null) : FakeCall()
 

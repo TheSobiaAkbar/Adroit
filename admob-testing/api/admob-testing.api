@@ -46,6 +46,7 @@ public final class com/company/admob/testing/FakeAdsClient : com/company/admob/A
 	public final fun setConsentState (Lcom/company/admob/ConsentState;)V
 	public final fun setInitialBannerState (Lcom/company/admob/BannerState;)V
 	public final fun setNativeAssets (Lcom/company/admob/NativeAdAssets;)V
+	public final fun setNativeStyle (Lcom/company/admob/NativePlacement;Lcom/company/admob/NativeStyle;)V
 	public final fun setState (Lcom/company/admob/AdsState;)V
 	public fun showInterstitial (Landroid/app/Activity;Lcom/company/admob/InterstitialPlacement;Lkotlin/jvm/functions/Function1;)V
 	public fun showRewarded (Landroid/app/Activity;Lcom/company/admob/RewardedPlacement;Lkotlin/jvm/functions/Function1;)V
@@ -175,6 +176,17 @@ public final class com/company/admob/testing/FakeCall$ShowInterstitial : com/com
 	public final fun component1 ()Ljava/lang/String;
 	public final fun copy (Ljava/lang/String;)Lcom/company/admob/testing/FakeCall$ShowInterstitial;
 	public static synthetic fun copy$default (Lcom/company/admob/testing/FakeCall$ShowInterstitial;Ljava/lang/String;ILjava/lang/Object;)Lcom/company/admob/testing/FakeCall$ShowInterstitial;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/testing/FakeCall$ShowInterstitialOnSplash : com/company/admob/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/company/admob/testing/FakeCall$ShowInterstitialOnSplash;
+	public static synthetic fun copy$default (Lcom/company/admob/testing/FakeCall$ShowInterstitialOnSplash;Ljava/lang/String;ILjava/lang/Object;)Lcom/company/admob/testing/FakeCall$ShowInterstitialOnSplash;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getPlacementKey ()Ljava/lang/String;
 	public fun hashCode ()I

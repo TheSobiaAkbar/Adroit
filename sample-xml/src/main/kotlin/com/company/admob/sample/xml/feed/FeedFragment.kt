@@ -13,7 +13,6 @@ import com.company.admob.sample.xml.R
 import com.company.admob.sample.xml.databinding.FragmentFeedBinding
 import com.company.admob.sample.xml.databinding.ItemFeedAdBinding
 import com.company.admob.sample.xml.databinding.ItemFeedArticleBinding
-import com.company.admob.views.NativeTemplates
 
 /**
  * The list pattern for native ads: ad rows bind their position's [com.company.admob.views.NativeAdHolder] (owned by
@@ -61,11 +60,8 @@ private class FeedAdapter(
         when (val row = viewModel.rows[position]) {
             is FeedRow.Article -> (holder as ArticleHolder).binding.title.text =
                 holder.itemView.context.getString(R.string.feed_article, row.index + 1)
-            is FeedRow.Ad -> viewModel.adHolder(row.slot).bindTo(
-                (holder as AdHolder).binding.adContainer,
-                viewLifecycleOwner,
-                NativeTemplates.Small,
-            )
+            // No layout: the ads file's style for feed_native (small) picks the template.
+            is FeedRow.Ad -> viewModel.adHolder(row.slot).bindTo((holder as AdHolder).binding.adContainer, viewLifecycleOwner)
         }
     }
 

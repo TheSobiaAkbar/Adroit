@@ -31,8 +31,9 @@ The provider must not throw. The default, `StaticConfigProvider`, emits nothing.
 |---|---|
 | `adsEnabled` | `false` turns every ad off: `AdsState.Unavailable(DISABLED_BY_REMOTE)`. `null` leaves ads as configured. |
 | `disabledFormats` | Formats to turn off, for example `setOf(AdFormat.NATIVE)`. |
-| `placements` | Per placement key, a `PlacementOverride(enabled, minInterval, maxPerSession, preload, adUnitId)`; `null` fields keep the local value. |
+| `placements` | Per placement key, a `PlacementOverride`: `enabled`, `minInterval`, `maxPerSession`, `preload`, `adUnitIds` (a rotation list; `adUnitId` for one), `counter`, `bannerSize`, `nativeStyle` and `splashTimeout`. `null` fields keep the local value. |
 | `minIntervalBetweenFullScreenAds` | Replaces the global full-screen interval. |
+| `maxInterstitialsPerSession` | Replaces the overall interstitial limit per session. |
 
 When a placement or format is turned off, its cached ads are destroyed, its banners hide
 (`Hidden(DISABLED_BY_REMOTE)`), and shows return `NotShown(Disabled(DISABLED_BY_REMOTE))`. When it's turned back on,
@@ -73,7 +74,7 @@ class FirebaseApp : Application() {
             this,
             adMobConfig {
                 environment = AdEnvironment.PRODUCTION
-                remoteConfig = FirebaseRemoteConfigProvider() // reads the company_admob_* keys
+                remoteConfig = FirebaseRemoteConfigProvider() // one parameter per ad, plus AdSettings
                 eventListeners += FirebaseAnalyticsEventListener(
                     context = this@FirebaseApp,
                     options = FirebaseAnalyticsOptions(
@@ -88,30 +89,22 @@ class FirebaseApp : Application() {
 }
 ```
 
-Define these parameters in the Firebase console; all are optional, and an unset or empty one leaves the local
-configuration alone:
-
-| Parameter | Type | Example | Maps to |
-|---|---|---|---|
-| `company_admob_enabled` | Boolean | `false` | `adsEnabled` |
-| `company_admob_disabled_formats` | String | `NATIVE,APP_OPEN` | `disabledFormats` (`AdFormat` names, any case) |
-| `company_admob_min_fullscreen_interval_seconds` | Number | `45` | `minIntervalBetweenFullScreenAds` |
-| `company_admob_placements_json` | JSON | see below | `placements` |
+The provider reads **one JSON parameter per ad**, named like the placement key (for example `HistoryAd`), plus a
+settings parameter named `AdSettings`. The values use the same JSON as the ads file: every field and rule is in
+[Ad profiles](AD_PROFILES.md#firebase). All parameters are optional; an unset or empty one leaves that ad as
+configured, and a field left out of a value keeps its configured value.
 
 ```json
-{
-  "level_complete": { "enabled": true, "minIntervalSeconds": 90, "maxPerSession": 5, "preload": "ON_DEMAND" },
-  "feed_native": { "enabled": false },
-  "home_banner": { "adUnitId": "ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy" }
-}
+{ "enabled": true, "counter": 3, "timerSeconds": 0, "maxPerSession": 5,
+  "adUnitIds": ["ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy", "ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz"] }
 ```
 
 - When collected, the provider emits the currently **activated** values, then again after each real-time update, which
   it activates.
 - It doesn't fetch unless you pass `FirebaseRemoteConfigProvider(remoteConfig, autoFetch = true)`: your app usually
   calls `fetchAndActivate()` at startup, on its own schedule.
-- An invalid value is logged and ignored; the other parameters still apply. Invalid JSON ignores
-  `company_admob_placements_json` entirely; an invalid field ignores that field.
-- Pass a `FirebaseRemoteConfig` instance for apps with several Firebase apps.
+- An invalid value is logged and ignored; the other parameters still apply. An invalid field ignores just that field.
+- Pass a `FirebaseRemoteConfig` instance for apps with several Firebase apps, and `settingsKey` to rename
+  `AdSettings`.
 
 Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26

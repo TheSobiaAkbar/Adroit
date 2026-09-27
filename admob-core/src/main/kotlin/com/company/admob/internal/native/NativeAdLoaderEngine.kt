@@ -27,6 +27,7 @@ import com.company.admob.internal.port.AppForegroundSource
 import com.company.admob.internal.port.LoadedNativeAd
 import com.company.admob.internal.port.RequestExtras
 import com.company.admob.internal.port.SdkLoadResult
+import com.company.admob.internal.reliability.AdUnitRotation
 import com.company.admob.internal.reliability.Cached
 import com.company.admob.internal.reliability.RetryScheduler
 import com.company.admob.internal.time.Clock
@@ -40,7 +41,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Loads native ads (architecture §17) through a small pool per ad unit, shared by the placements that use it.
+ * Loads native ads (architecture §17) through a small pool per ad unit list, shared by the placements that use it.
+ * Each load takes the next ad unit of the list from [rotation].
  *
  * - The pool's target is its size (1..3) once preloading is on: from Ready for [PreloadStrategy.AFTER_READY], from
  *   the first `preload`/`load` for [PreloadStrategy.ON_DEMAND]. With [PreloadStrategy.NONE] only an explicit
@@ -66,18 +68,25 @@ internal class NativeAdLoaderEngine(
     private val scope: CoroutineScope,
     private val log: AdLog,
     private val stagger: Duration = STAGGER,
+    private val rotation: AdUnitRotation = AdUnitRotation(),
 ) : AdsBlockedListener, ConfigChangeListener {
     private class Waiter(val placement: EffectivePlacement, val onResult: OnceCallback<NativeAdResult>)
 
-    private inner class Pool(val adUnitId: String, placements: List<EffectivePlacement>) {
+    /** A pooled ad and the ad unit it was loaded from. */
+    private class Pooled(val ad: LoadedNativeAd, val adUnitId: String)
+
+    private inner class Pool(val adUnitIds: List<String>, placements: List<EffectivePlacement>) {
         /** The placements sharing this pool; replaced when a remote override changes them. */
         var placements: List<EffectivePlacement> = placements
         val owner: EffectivePlacement get() = placements.first()
         val size: Int get() = placements.maxOf { (it.config as? NativePlacementConfig)?.poolSize ?: FormatDefaults.NATIVE_POOL_SIZE }
         val strategy: PreloadStrategy get() = placements.minOf { it.preload }
         val ttl: Duration = owner.expiry ?: FormatDefaults.NATIVE_TTL
-        val key = "NATIVE:$adUnitId"
-        val items = ArrayDeque<Cached<LoadedNativeAd>>()
+        val key = "NATIVE:" + adUnitIds.joinToString(",")
+
+        /** The ad unit of the latest load request. */
+        var adUnitId: String = adUnitIds.first()
+        val items = ArrayDeque<Cached<Pooled>>()
         val waiters = ArrayDeque<Waiter>()
         var target = if (strategy == PreloadStrategy.AFTER_READY) size else 0
         var autoRefill = strategy == PreloadStrategy.AFTER_READY
@@ -145,7 +154,7 @@ internal class NativeAdLoaderEngine(
         if (pooled != null) {
             if (!pool.autoRefill) pool.target = (pool.target - 1).coerceAtLeast(0)
             log.d { "Native ${placement.key}: served from the pool" }
-            handOut(p, pooled.value, callback)
+            handOut(p, pooled.value.ad, pooled.value.adUnitId, callback)
             rescheduleExpiry(pool)
             pump(pool)
             return {}
@@ -182,14 +191,14 @@ internal class NativeAdLoaderEngine(
     /** Recomputes [placements] and [pools] for [current], reusing the pool of every ad unit still in use. */
     private fun rebuild(current: EffectiveConfig) {
         val enabled = current.allPlacements.filter { it.format == AdFormat.NATIVE && it.enabled }
-        val reusable = pools.values.associateBy { it.adUnitId }
-        val byUnit = enabled.groupBy { it.adUnitId }.mapValues { (unit, sharing) ->
-            reusable[unit]?.also { it.placements = sharing } ?: Pool(unit, sharing)
+        val reusable = pools.values.associateBy { it.adUnitIds }
+        val byUnits = enabled.groupBy { it.adUnitIds }.mapValues { (units, sharing) ->
+            reusable[units]?.also { it.placements = sharing } ?: Pool(units, sharing)
         }
-        val newPools = enabled.associate { it.placement to byUnit.getValue(it.adUnitId) }
+        val newPools = enabled.associate { it.placement to byUnits.getValue(it.adUnitIds) }
         (pools.values.toSet() - newPools.values.toSet()).forEach { pool ->
             val reason = current.placement(pool.owner.placement)?.disabledReason ?: UnavailableReason.DISABLED_BY_REMOTE
-            log.d { "Native: releasing the pool for ${current.displayAdUnitId(pool.adUnitId)}; no placement uses it any more" }
+            log.d { "Native: releasing the pool for ${pool.adUnitIds.joinToString { current.displayAdUnitId(it) }}; no placement uses it any more" }
             release(pool, AdError.Disabled(reason))
         }
         placements = enabled.associateBy { it.placement }
@@ -203,7 +212,7 @@ internal class NativeAdLoaderEngine(
         pool.failedAttempts = 0
         retry.cancel(pool.key)
         pool.expiryJob?.cancel()
-        while (pool.items.isNotEmpty()) pool.items.removeFirst().value.destroy()
+        while (pool.items.isNotEmpty()) pool.items.removeFirst().value.ad.destroy()
         while (pool.waiters.isNotEmpty()) pool.waiters.removeFirst().onResult(NativeAdResult.Failed(error))
     }
 
@@ -247,33 +256,43 @@ internal class NativeAdLoaderEngine(
         val generation = pool.generation
         val startedAt = clock.elapsedRealtimeMillis()
         val p = pool.waiters.firstOrNull()?.placement ?: pool.owner
-        emit(AdEvent.LoadRequested(p.placement.key, AdFormat.NATIVE, pool.adUnitId, now()))
+        val pick = rotation.next(AdFormat.NATIVE, pool.adUnitIds)
+        pool.adUnitId = pick.adUnitId
+        val adUnitId = pick.adUnitId
+        emit(AdEvent.LoadRequested(p.placement.key, AdFormat.NATIVE, adUnitId, now()))
+        log.d { "Loading native ${p.placement.key} (${config.current.displayAdUnitId(adUnitId)})${pick.describe}" }
         @OptIn(GoogleSdkEscapeHatch::class)
         val extras = RequestExtras(p.placement, config.current.source.advanced.googleRequestCustomizer)
-        adsSdk.loadNative(pool.adUnitId, extras) { result ->
+        adsSdk.loadNative(adUnitId, extras) { result ->
             if (generation != pool.generation) {
                 (result as? SdkLoadResult.Success)?.ad?.destroy()
                 return@loadNative
             }
             pool.loading = false
             when (result) {
-                is SdkLoadResult.Success -> onLoaded(pool, p, result, startedAt)
-                is SdkLoadResult.Failure -> onLoadFailed(pool, p, result)
+                is SdkLoadResult.Success -> onLoaded(pool, p, adUnitId, result, startedAt)
+                is SdkLoadResult.Failure -> onLoadFailed(pool, p, adUnitId, result)
             }
             pump(pool)
         }
     }
 
-    private fun onLoaded(pool: Pool, p: EffectivePlacement, result: SdkLoadResult.Success<LoadedNativeAd>, startedAt: Long) {
+    private fun onLoaded(
+        pool: Pool,
+        p: EffectivePlacement,
+        adUnitId: String,
+        result: SdkLoadResult.Success<LoadedNativeAd>,
+        startedAt: Long,
+    ) {
         pool.failedAttempts = 0
         val latency = clock.elapsedRealtimeMillis() - startedAt
-        emit(AdEvent.Loaded(p.placement.key, AdFormat.NATIVE, pool.adUnitId, now(), latency, result.source))
+        emit(AdEvent.Loaded(p.placement.key, AdFormat.NATIVE, adUnitId, now(), latency, result.source))
         log.i { "Native ${p.placement.key} loaded in $latency ms" }
         val waiter = pool.waiters.removeFirstOrNull()
         when {
-            waiter != null -> handOut(waiter.placement, result.ad, waiter.onResult)
+            waiter != null -> handOut(waiter.placement, result.ad, adUnitId, waiter.onResult)
             pool.items.size < pool.target -> {
-                pool.items.addLast(Cached(result.ad, clock.elapsedRealtimeMillis(), pool.ttl))
+                pool.items.addLast(Cached(Pooled(result.ad, adUnitId), clock.elapsedRealtimeMillis(), pool.ttl))
                 rescheduleExpiry(pool)
             }
             else -> {
@@ -283,7 +302,7 @@ internal class NativeAdLoaderEngine(
         }
     }
 
-    private fun onLoadFailed(pool: Pool, p: EffectivePlacement, result: SdkLoadResult.Failure) {
+    private fun onLoadFailed(pool: Pool, p: EffectivePlacement, adUnitId: String, result: SdkLoadResult.Failure) {
         val attempt = ++pool.failedAttempts
         while (pool.waiters.isNotEmpty()) pool.waiters.removeFirst().onResult(NativeAdResult.Failed(result.error))
         val delay = if (pool.items.size < pool.target) {
@@ -291,12 +310,12 @@ internal class NativeAdLoaderEngine(
         } else {
             null
         }
-        emit(AdEvent.LoadFailed(p.placement.key, AdFormat.NATIVE, pool.adUnitId, now(), result.error, attempt, delay != null))
+        emit(AdEvent.LoadFailed(p.placement.key, AdFormat.NATIVE, adUnitId, now(), result.error, attempt, delay != null))
         log.w { "Native ${p.placement.key} failed to load: ${result.error.code}, attempt $attempt, retry in $delay" }
     }
 
-    private fun handOut(p: EffectivePlacement, ad: LoadedNativeAd, onResult: OnceCallback<NativeAdResult>) {
-        val handle = NativeAdHandleImpl(p.placement as NativePlacement, ad, p.adUnitId, events, clock, log) {
+    private fun handOut(p: EffectivePlacement, ad: LoadedNativeAd, adUnitId: String, onResult: OnceCallback<NativeAdResult>) {
+        val handle = NativeAdHandleImpl(p.placement as NativePlacement, ad, adUnitId, events, clock, log) {
             liveHandles.remove(it)
         }
         liveHandles += handle
@@ -310,8 +329,8 @@ internal class NativeAdLoaderEngine(
             val cached = iterator.next()
             if (!cached.isExpired(clock)) continue
             iterator.remove()
-            cached.value.destroy()
-            emit(AdEvent.Expired(pool.owner.placement.key, AdFormat.NATIVE, pool.adUnitId, now()))
+            cached.value.ad.destroy()
+            emit(AdEvent.Expired(pool.owner.placement.key, AdFormat.NATIVE, cached.value.adUnitId, now()))
             log.i { "Native ${pool.owner.placement.key}: a pooled ad expired" }
         }
     }

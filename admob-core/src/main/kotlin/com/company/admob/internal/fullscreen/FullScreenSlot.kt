@@ -10,18 +10,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.time.Duration
 
 /**
- * The cache for one (format, effective ad unit ID). Placements that resolve to the same ad unit share a slot, so
- * they share one cached ad and one load. Main thread only, except [availability] and [expiresAtElapsed], which are
+ * The cache for one (format, effective ad unit list). Placements that resolve to the same list share a slot, so they
+ * share one cached ad, one load and one rotation position. Main thread only, except [availability] and [expiresAtElapsed], which are
  * safe to read from any thread.
  */
 internal class FullScreenSlot(
     val format: AdFormat,
-    val adUnitId: String,
+    val adUnitIds: List<String>,
     val retryPolicy: RetryPolicy,
     val ttl: Duration,
 ) {
     /** Retry-scheduler key, for example `INTERSTITIAL:ca-app-pub-…`. */
-    val key: String = "$format:$adUnitId"
+    val key: String = "$format:" + adUnitIds.joinToString(",")
+
+    /** The ad unit of the latest load request, and so of the cached ad. The first ID until the first load. */
+    var adUnitId: String = adUnitIds.first()
 
     val availability = SlotAvailability()
 

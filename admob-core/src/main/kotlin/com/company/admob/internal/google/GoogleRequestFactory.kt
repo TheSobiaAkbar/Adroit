@@ -1,7 +1,9 @@
 package com.company.admob.internal.google
 
 import android.content.Context
+import android.os.Bundle
 import com.company.admob.BannerSize
+import com.company.admob.CollapsibleBannerPosition
 import com.company.admob.GoogleSdkEscapeHatch
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.port.RequestExtras
@@ -22,8 +24,20 @@ internal class GoogleRequestFactory(private val log: AdLog) {
     fun nativeAdRequest(adUnitId: String, extras: RequestExtras): NativeAdRequest =
         customized(extras, { NativeAdRequest.Builder(adUnitId, listOf(NativeAd.NativeAdType.NATIVE)) }, { it.build() })
 
+    /**
+     * A banner request. [RequestExtras.collapsible] adds Google's `collapsible` extra
+     * (https://developers.google.com/admob/android/next-gen/banner/collapsible) before the host's customizer runs.
+     */
     fun bannerAdRequest(adUnitId: String, adSize: AdSize, extras: RequestExtras): BannerAdRequest =
-        customized(extras, { BannerAdRequest.Builder(adUnitId, adSize) }, { it.build() })
+        customized(
+            extras,
+            {
+                BannerAdRequest.Builder(adUnitId, adSize).apply {
+                    extras.collapsible?.let { setGoogleExtrasBundle(collapsibleExtras(it)) }
+                }
+            },
+            { it.build() },
+        )
 
     @OptIn(GoogleSdkEscapeHatch::class)
     private inline fun <B : Any, R> customized(extras: RequestExtras, newBuilder: () -> B, build: (B) -> R): R {
@@ -53,10 +67,24 @@ internal class GoogleRequestFactory(private val log: AdLog) {
     companion object {
         /** Google's size for [size] at [widthDp]. Anchored adaptive uses the current, non-deprecated "large" API. */
         fun adSize(context: Context, size: BannerSize, widthDp: Int): AdSize = when (size) {
-            BannerSize.AnchoredAdaptive -> AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, widthDp)
+            BannerSize.AnchoredAdaptive, is BannerSize.Collapsible ->
+                AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, widthDp)
             is BannerSize.InlineAdaptive -> AdSize.getInlineAdaptiveBannerAdSize(widthDp, size.maxHeightDp)
             BannerSize.MediumRectangle -> AdSize.MEDIUM_RECTANGLE
             BannerSize.Standard -> AdSize.BANNER
         }
+
+        /** Google's extras for a collapsible banner; the value names the edge the expanded ad aligns to. */
+        fun collapsibleExtras(position: CollapsibleBannerPosition): Bundle = Bundle().apply {
+            putString(
+                COLLAPSIBLE_KEY,
+                when (position) {
+                    CollapsibleBannerPosition.TOP -> "top"
+                    CollapsibleBannerPosition.BOTTOM -> "bottom"
+                },
+            )
+        }
+
+        const val COLLAPSIBLE_KEY: String = "collapsible"
     }
 }

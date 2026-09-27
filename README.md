@@ -17,7 +17,7 @@ exactly once, test-ad safety, analytics events and remote kill switches. No Goog
 | `com.company:admob-views` | XML and View apps: `AdBannerView`, `AdNativeView`, `attachBanner`, `NativeAdHolder`, native templates. |
 | `com.company:admob-compose` | Jetpack Compose: `AdBanner`, `AdNative`, `rememberAdAvailability`, `rememberFullScreenAdLauncher`. |
 | `com.company:admob-testing` | Unit tests without Google: `FakeAdsClient`, `CompanyAdMobTestRule`. Test scope only. |
-| `com.company:admob-firebase` | Optional: remote overrides from Firebase Remote Config, and ad events to Google Analytics for Firebase. |
+| `com.company:admob-firebase` | Optional: each ad controlled by its own Firebase Remote Config parameter, and ad events to Google Analytics for Firebase. |
 
 `admob-views` and `admob-compose` bring `admob-core` with them.
 
@@ -43,6 +43,9 @@ AdBanner(BannerPlacement("home_banner"))
 Add your AdMob app ID to the manifest too: the Google SDKs require it. See
 [Getting started](docs/GETTING_STARTED.md) for the full setup.
 
+To define every ad in one JSON file and change each one from Firebase without a release (ad unit ID rotation,
+counters, timers, limits, banner and native styles), see [Ad profiles](docs/AD_PROFILES.md).
+
 ## Supported versions
 
 | | |
@@ -63,7 +66,8 @@ Apps using AdMob Mediation must exclude the legacy `play-services-ads`: see [Med
 - Formats: [Banner](docs/BANNER.md) · [Interstitial](docs/INTERSTITIAL.md) · [Rewarded](docs/REWARDED.md) ·
   [Rewarded interstitial](docs/REWARDED_INTERSTITIAL.md) · [App open](docs/APP_OPEN.md) · [Native](docs/NATIVE.md)
 - UI toolkits: [Compose](docs/COMPOSE.md) · [XML and Views](docs/XML.md)
-- [Mediation](docs/MEDIATION.md) · [Analytics](docs/ANALYTICS.md) · [Remote config](docs/REMOTE_CONFIG.md) ·
+- [Ad profiles](docs/AD_PROFILES.md) · [Mediation](docs/MEDIATION.md) · [Analytics](docs/ANALYTICS.md) ·
+  [Remote config](docs/REMOTE_CONFIG.md) ·
   [Testing](docs/TESTING.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Migration](docs/MIGRATION.md) ·
   [Releasing](docs/RELEASE.md) · [Changelog](CHANGELOG.md)
 - Samples: `sample-xml` (Views and Fragments), `sample-compose` (the AdMob Playground), `sample-mixed` (both, plus

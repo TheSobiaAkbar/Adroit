@@ -104,6 +104,15 @@ public sealed interface AdError {
         override val message: String get() = "Blocked by frequency rules; retry after $retryAfter"
     }
 
+    /**
+     * The placement's counter (`FrequencyRule.counter`) isn't due yet: [remaining] more `show` calls are needed.
+     * Expected and frequent: continue the app flow.
+     */
+    public data class CounterNotReached(public val remaining: Int) : AdError {
+        override val code: String get() = "counter_not_reached"
+        override val message: String get() = "The placement's counter needs $remaining more show calls"
+    }
+
     /** The Google Mobile Ads SDK failed to initialize; see [sdkDetails]. */
     public data class SdkInitFailed(override val sdkDetails: SdkErrorDetails? = null) : AdError {
         override val code: String get() = "sdk_init_failed"

@@ -7,8 +7,12 @@ import com.company.admob.NativePlacement
 import com.company.admob.RewardedInterstitialPlacement
 import com.company.admob.RewardedPlacement
 
-/** Every place this app shows an ad. Declared once; the keys match XML attributes and remote overrides. */
+/**
+ * Every place this app shows an ad. Declared once; the keys match `res/raw/ads_config.json`, the XML attributes and
+ * remote overrides.
+ */
 object Placements {
+    val SplashInterstitial = InterstitialPlacement("splash_interstitial")
     val HomeBanner = BannerPlacement("home_banner")
     val DetailsBanner = BannerPlacement("details_banner")
     val LevelCompleteInterstitial = InterstitialPlacement("level_complete")

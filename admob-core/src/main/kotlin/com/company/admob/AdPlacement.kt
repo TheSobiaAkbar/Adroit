@@ -7,7 +7,8 @@ package com.company.admob
  * configuration. There is one final class per format, so a banner placement can't be passed where an
  * interstitial is expected.
  *
- * Keys must match `[a-z0-9_]{1,40}`. Constructors throw [IllegalArgumentException] for an invalid key; that is a
+ * Keys must match `[A-Za-z0-9_]{1,40}`, so they can be used as Firebase Remote Config parameter names (for example
+ * `"HistoryAd"`). Constructors throw [IllegalArgumentException] for an invalid key; that is a
  * programmer error at declaration time.
  *
  * Two placements are equal when they have the same format and key. Instances are immutable and thread-safe.
@@ -60,7 +61,7 @@ public sealed class AdPlacementBase(
     final override fun toString(): String = "${format.placementTypeName}($key)"
 
     private companion object {
-        val KEY_PATTERN = Regex("[a-z0-9_]{1,40}")
+        val KEY_PATTERN = Regex("[A-Za-z0-9_]{1,40}")
     }
 }
 

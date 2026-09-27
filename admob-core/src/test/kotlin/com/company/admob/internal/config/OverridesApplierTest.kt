@@ -109,12 +109,13 @@ class OverridesApplierTest {
     }
 
     @Test
-    fun `an invalid placement override is dropped whole, the rest applies, and it's reported`() = runTest {
+    fun `an invalid placement override is dropped whole, except for bad ad unit IDs, and it's reported`() = runTest {
         val s = Setup(config(), this)
         s.applier.apply(
             AdOverrides(
                 placements = mapOf(
-                    // Malformed ad unit: the valid minInterval in the same override must not apply either.
+                    // A malformed ad unit is skipped on its own (05_AD_PROFILES.md §3.3): the valid minInterval in
+                    // the same override still applies, and the configured ad unit stays.
                     "level" to PlacementOverride(minInterval = 5.minutes, adUnitId = "not-an-ad-unit"),
                     "menu" to PlacementOverride(maxPerSession = -1),
                     "unknown_key" to PlacementOverride(enabled = false),
@@ -124,12 +125,12 @@ class OverridesApplierTest {
             ),
         )
         val current = s.live.current
-        assertEquals(10.seconds, current.placement(level)!!.frequency.minInterval)
+        assertEquals(5.minutes, current.placement(level)!!.frequency.minInterval)
         assertEquals(TestIds.unit(1), current.placement(level)!!.adUnitId)
         assertEquals(Int.MAX_VALUE, current.placement(menu)!!.frequency.maxPerSession)
         assertFalse(current.placement(feed)!!.enabled)
         assertEquals(30.seconds, current.minIntervalBetweenFullScreenAds)
-        assertEquals(setOf("feed"), current.overrides.placements.keys)
+        assertEquals(setOf("level", "feed"), current.overrides.placements.keys)
         assertEquals(4, s.errors.size)
         assertEquals(s.errors, s.warnings)
         assertTrue(s.errors.any { "'level'" in it && "not-an-ad-unit" in it })

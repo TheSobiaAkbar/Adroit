@@ -12,6 +12,12 @@ scrolled back in creates a new banner. Use [native ads](NATIVE.md) in lists.
 | `InlineAdaptive(maxHeightDp)` | `inlineAdaptive` (+ `company_admob_inlineMaxHeight`) | Inside scrolling content |
 | `MediumRectangle` | `mediumRectangle` | 300×250 inside content |
 | `Standard` | `standard` | 320×50, when you need a fixed size |
+| `Collapsible(BOTTOM or TOP)` | `collapsibleBottom`, `collapsibleTop` | Anchored adaptive that opens expanded, then collapses; at that edge of the screen |
+
+The size comes from the placement (`size` in `placements { }`, or `style` in the [ads file](AD_PROFILES.md)) unless the
+code passes one, so the configuration or Firebase can change it for banners created afterwards. Collapsible banners
+follow Google's rules: only the first load of each banner is collapsible (automatic refreshes aren't), and mediated
+ads show as normal banners ([Google's guide](https://developers.google.com/admob/android/next-gen/banner/collapsible)).
 
 ## Integration
 

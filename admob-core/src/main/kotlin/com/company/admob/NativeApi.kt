@@ -46,6 +46,13 @@ public interface NativeApi {
         layout: NativeAdLayout,
         renderer: NativeAdRenderer? = null,
     ): View
+
+    /**
+     * The style configured for [placement], remote override first: the look the `admob-views` and `admob-compose`
+     * helpers use when the code passes no layout. [NativeStyle.MEDIUM] for a placement that isn't configured.
+     * Callable from any thread.
+     */
+    public fun style(placement: NativePlacement): NativeStyle
 }
 
 /**

@@ -1,5 +1,6 @@
 package com.company.admob.views
 
+import com.company.admob.NativeStyle
 import android.app.Activity
 import android.os.Handler
 import android.os.Looper
@@ -113,9 +114,14 @@ internal class FakeNativeHandle(override val placement: NativePlacement) : Nativ
  * by inflating the layout and setting the headline, keeping no reference to the views.
  */
 internal class FakeNativeApi : NativeApi {
+    override fun style(placement: NativePlacement): NativeStyle = style
+
     class Render(val handle: NativeAdHandle, val layout: NativeAdLayout)
 
     var failWith: AdError? = null
+
+    /** What `style()` reports: the template the helpers pick when the code passes no layout. */
+    var style: NativeStyle = NativeStyle.MEDIUM
     val handles = mutableListOf<FakeNativeHandle>()
     val renders = mutableListOf<Render>()
     var loadCount = 0

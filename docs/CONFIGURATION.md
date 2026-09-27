@@ -5,6 +5,9 @@ Everything is configured once, in `Application.onCreate`, with `adMobConfig { }`
 different configuration is ignored, with an error log and an `AdEvent.ConfigurationWarning`. Change placements,
 formats and intervals at runtime with [remote overrides](REMOTE_CONFIG.md) instead.
 
+To define every ad in one JSON file, and change each one from Firebase, use `profiles(context, R.raw.ads_config)`:
+see [Ad profiles](AD_PROFILES.md). It can be combined with the options below.
+
 ## Full reference
 
 Every option, with a typical value. Only `environment` and `placements` are usually needed.
@@ -83,6 +86,7 @@ fun fullConfig(analytics: AdEventListener): AdMobConfig = adMobConfig {
 | `privacy.consentSyncId` | none | Syncs consent choices across your apps for the same user. |
 | `frequency.minIntervalBetweenFullScreenAds` | 30 s | Between any two interstitial, rewarded interstitial and app open ads. |
 | `frequency.includeRewardedInGlobalInterval` | false | Whether rewarded ads (which users ask for) also respect it. |
+| `frequency.maxInterstitialsPerSession` | no limit | Interstitials per session across every placement, splash ones not counted. Wins over a higher per-placement `maxPerSession`. |
 | `logging.level` | DEBUG, or WARN in PRODUCTION | Minimum level logged. |
 | `logging.logger` | Logcat | Your own `AdLogger`, for example to forward to Timber or a crash reporter. |
 | `advanced.showTimeout` | 5 s | How long a show may wait for the SDK to report that the ad appeared. |
@@ -100,14 +104,20 @@ Every placement takes an optional block:
 |---|---|---|
 | `enabled` | all | true |
 | `preload` | all | `AFTER_READY` (load as soon as ads are ready); `ON_DEMAND` (first `preload()` or show); `NONE` (only on explicit load) |
-| `frequency { minInterval; maxPerSession }` | full-screen | no limit |
+| `frequency { minInterval; maxPerSession; counter }` | full-screen | no limit; `counter` 0 (off). With N, an interstitial or rewarded interstitial shows at most on every Nth `show` call, and `minInterval` is ignored. |
+| `splash`, `splashTimeout` | interstitial | false, 8 s: the ad shown with `showOnSplash`, not counted in `maxInterstitialsPerSession` |
+| `size` | banner | `AnchoredAdaptive`; used when the code passes no size |
+| `style` | native | `MEDIUM`; the template the views and Compose helpers use when the code passes no layout |
 | `retry` | all | see [Defaults](#defaults) |
 | `expiry` | cached formats | see [Defaults](#defaults) |
 | `poolSize` | native | 1 (1 to 3) |
 | `cooldown`, `minLaunchesBeforeFirstShow`, `showOnColdStartAllowed`, `suppressAfterFullScreenAd`, `excludeActivities(...)` | app open | 4 min, 2, true, 5 s, none |
 
-A banner's size is chosen where you show it (`AdBannerView`'s `company_admob_bannerSize`, or `BannerOptions`), not in
-the placement. The placement-level `size` has no effect in 0.1.0.
+Every placement function also takes a list of ad unit IDs, for example `interstitial(placement, listOf(id1, id2))`:
+each load uses the next one, and after the last one the first again.
+
+A size passed where you show a banner (`AdBannerView`'s `company_admob_bannerSize`, or `BannerOptions`) wins over the
+placement's `size`; leave it out when the configuration (or Firebase) should decide.
 
 ## Environments
 

@@ -73,6 +73,19 @@ public final class com/company/admob/AdError$ConsentRequired : com/company/admob
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/company/admob/AdError$CounterNotReached : com/company/admob/AdError {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/company/admob/AdError$CounterNotReached;
+	public static synthetic fun copy$default (Lcom/company/admob/AdError$CounterNotReached;IILjava/lang/Object;)Lcom/company/admob/AdError$CounterNotReached;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+	public final fun getRemaining ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/company/admob/AdError$Disabled : com/company/admob/AdError {
 	public fun <init> (Lcom/company/admob/UnavailableReason;)V
 	public final fun component1 ()Lcom/company/admob/UnavailableReason;
@@ -405,6 +418,17 @@ public final class com/company/admob/BannerSize$AnchoredAdaptive : com/company/a
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/company/admob/BannerSize$Collapsible : com/company/admob/BannerSize {
+	public fun <init> (Lcom/company/admob/CollapsibleBannerPosition;)V
+	public final fun component1 ()Lcom/company/admob/CollapsibleBannerPosition;
+	public final fun copy (Lcom/company/admob/CollapsibleBannerPosition;)Lcom/company/admob/BannerSize$Collapsible;
+	public static synthetic fun copy$default (Lcom/company/admob/BannerSize$Collapsible;Lcom/company/admob/CollapsibleBannerPosition;ILjava/lang/Object;)Lcom/company/admob/BannerSize$Collapsible;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPosition ()Lcom/company/admob/CollapsibleBannerPosition;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/company/admob/BannerSize$InlineAdaptive : com/company/admob/BannerSize {
 	public fun <init> (I)V
 	public final fun component1 ()I
@@ -469,6 +493,14 @@ public final class com/company/admob/BannerState$Loading : com/company/admob/Ban
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/company/admob/CollapsibleBannerPosition : java/lang/Enum {
+	public static final field BOTTOM Lcom/company/admob/CollapsibleBannerPosition;
+	public static final field TOP Lcom/company/admob/CollapsibleBannerPosition;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/CollapsibleBannerPosition;
+	public static fun values ()[Lcom/company/admob/CollapsibleBannerPosition;
+}
+
 public final class com/company/admob/CompanyAdMob : com/company/admob/AdsClient {
 	public static final field INSTANCE Lcom/company/admob/CompanyAdMob;
 	public fun awaitReady-VtjQ1oo (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -494,9 +526,11 @@ public final class com/company/admob/CompanyAdMob : com/company/admob/AdsClient 
 
 public final class com/company/admob/CompanyAdMobInternal {
 	public static final field INSTANCE Lcom/company/admob/CompanyAdMobInternal;
+	public static final fun configuredPlacementFormats ()Ljava/util/Map;
 	public static final fun detachRenderedView (Lcom/company/admob/NativeAdHandle;)V
 	public static final fun installForTesting (Lcom/company/admob/AdsClient;)Lkotlin/jvm/functions/Function0;
 	public static final fun log (Lcom/company/admob/logging/LogLevel;Ljava/lang/String;)V
+	public static final fun parseRemoteProfiles (Ljava/util/Map;Ljava/util/Map;Ljava/lang/String;)Lcom/company/admob/config/remote/AdOverrides;
 }
 
 public final class com/company/admob/CompanyAdMobVersion {
@@ -605,6 +639,7 @@ public abstract interface class com/company/admob/InterstitialApi : com/company/
 	public abstract fun show (Landroid/app/Activity;Lcom/company/admob/InterstitialPlacement;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun show$default (Lcom/company/admob/InterstitialApi;Landroid/app/Activity;Lcom/company/admob/InterstitialPlacement;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public abstract fun showAndAwait (Landroid/app/Activity;Lcom/company/admob/InterstitialPlacement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun showOnSplash (Landroid/app/Activity;Lcom/company/admob/InterstitialPlacement;Lkotlin/jvm/functions/Function1;)V
 }
 
 public final class com/company/admob/InterstitialPlacement : com/company/admob/AdPlacementBase {
@@ -712,10 +747,20 @@ public abstract interface class com/company/admob/NativeApi {
 	public abstract fun preload (Lcom/company/admob/NativePlacement;)V
 	public abstract fun render (Lcom/company/admob/NativeAdHandle;Landroid/view/ViewGroup;Lcom/company/admob/NativeAdLayout;Lcom/company/admob/NativeAdRenderer;)Landroid/view/View;
 	public static synthetic fun render$default (Lcom/company/admob/NativeApi;Lcom/company/admob/NativeAdHandle;Landroid/view/ViewGroup;Lcom/company/admob/NativeAdLayout;Lcom/company/admob/NativeAdRenderer;ILjava/lang/Object;)Landroid/view/View;
+	public abstract fun style (Lcom/company/admob/NativePlacement;)Lcom/company/admob/NativeStyle;
 }
 
 public final class com/company/admob/NativePlacement : com/company/admob/AdPlacementBase {
 	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class com/company/admob/NativeStyle : java/lang/Enum {
+	public static final field LARGE Lcom/company/admob/NativeStyle;
+	public static final field MEDIUM Lcom/company/admob/NativeStyle;
+	public static final field SMALL Lcom/company/admob/NativeStyle;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/NativeStyle;
+	public static fun values ()[Lcom/company/admob/NativeStyle;
 }
 
 public final class com/company/admob/PlacementDiagnostics {
@@ -925,6 +970,8 @@ public final class com/company/admob/config/AdMobConfig$Builder {
 	public final fun logging (Lkotlin/jvm/functions/Function1;)V
 	public final fun placements (Lkotlin/jvm/functions/Function1;)V
 	public final fun privacy (Lkotlin/jvm/functions/Function1;)V
+	public final fun profiles (Landroid/content/Context;I)V
+	public final fun profiles (Ljava/lang/String;)V
 	public final fun remoteConfig (Lcom/company/admob/config/remote/AdConfigProvider;)Lcom/company/admob/config/AdMobConfig$Builder;
 	public final fun setAppId (Ljava/lang/String;)V
 	public final fun setEnvironment (Lcom/company/admob/config/AdEnvironment;)V
@@ -1028,6 +1075,7 @@ public final class com/company/admob/config/DebugGeography : java/lang/Enum {
 public final class com/company/admob/config/FrequencyOptions {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getIncludeRewardedInGlobalInterval ()Z
+	public final fun getMaxInterstitialsPerSession ()I
 	public final fun getMinIntervalBetweenFullScreenAds-UwyO8pc ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -1035,20 +1083,24 @@ public final class com/company/admob/config/FrequencyOptions {
 
 public final class com/company/admob/config/FrequencyOptions$Builder {
 	public final fun getIncludeRewardedInGlobalInterval ()Z
+	public final fun getMaxInterstitialsPerSession ()I
 	public final fun getMinIntervalBetweenFullScreenAds-UwyO8pc ()J
 	public final fun setIncludeRewardedInGlobalInterval (Z)V
+	public final fun setMaxInterstitialsPerSession (I)V
 	public final fun setMinIntervalBetweenFullScreenAds-LRDsOJo (J)V
 }
 
 public final class com/company/admob/config/FrequencyRule {
 	public fun <init> ()V
+	public synthetic fun <init> (JIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (JIILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1-UwyO8pc ()J
 	public final fun component2 ()I
-	public final fun copy-VtjQ1oo (JI)Lcom/company/admob/config/FrequencyRule;
-	public static synthetic fun copy-VtjQ1oo$default (Lcom/company/admob/config/FrequencyRule;JIILjava/lang/Object;)Lcom/company/admob/config/FrequencyRule;
+	public final fun component3 ()I
+	public final fun copy-KLykuaI (JII)Lcom/company/admob/config/FrequencyRule;
+	public static synthetic fun copy-KLykuaI$default (Lcom/company/admob/config/FrequencyRule;JIIILjava/lang/Object;)Lcom/company/admob/config/FrequencyRule;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCounter ()I
 	public final fun getMaxPerSession ()I
 	public final fun getMinInterval-UwyO8pc ()J
 	public fun hashCode ()I
@@ -1056,17 +1108,28 @@ public final class com/company/admob/config/FrequencyRule {
 }
 
 public final class com/company/admob/config/FrequencyRuleBuilder {
+	public final fun getCounter ()I
 	public final fun getMaxPerSession ()I
 	public final fun getMinInterval-UwyO8pc ()J
+	public final fun setCounter (I)V
 	public final fun setMaxPerSession (I)V
 	public final fun setMinInterval-LRDsOJo (J)V
 }
 
-public final class com/company/admob/config/FullScreenPlacementBuilder : com/company/admob/config/PlacementConfigBuilder {
+public class com/company/admob/config/FullScreenPlacementBuilder : com/company/admob/config/PlacementConfigBuilder {
+}
+
+public final class com/company/admob/config/InterstitialPlacementBuilder : com/company/admob/config/FullScreenPlacementBuilder {
+	public final fun getSplash ()Z
+	public final fun getSplashTimeout-UwyO8pc ()J
+	public final fun setSplash (Z)V
+	public final fun setSplashTimeout-LRDsOJo (J)V
 }
 
 public final class com/company/admob/config/InterstitialPlacementConfig : com/company/admob/config/PlacementConfig {
 	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getSplash ()Z
+	public final fun getSplashTimeout-UwyO8pc ()J
 }
 
 public final class com/company/admob/config/LoggingOptions {
@@ -1096,18 +1159,22 @@ public final class com/company/admob/config/MaxAdContentRating : java/lang/Enum 
 
 public final class com/company/admob/config/NativePlacementBuilder : com/company/admob/config/PlacementConfigBuilder {
 	public final fun getPoolSize ()I
+	public final fun getStyle ()Lcom/company/admob/NativeStyle;
 	public final fun setPoolSize (I)V
+	public final fun setStyle (Lcom/company/admob/NativeStyle;)V
 }
 
 public final class com/company/admob/config/NativePlacementConfig : com/company/admob/config/PlacementConfig {
 	public fun getFormat ()Lcom/company/admob/AdFormat;
 	public final fun getPoolSize ()I
+	public final fun getStyle ()Lcom/company/admob/NativeStyle;
 }
 
 public abstract class com/company/admob/config/PlacementConfig {
-	public synthetic fun <init> (Lcom/company/admob/AdPlacement;Ljava/lang/String;ZLcom/company/admob/config/FrequencyRule;Lcom/company/admob/config/PreloadStrategy;Lcom/company/admob/config/RetryPolicy;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/company/admob/AdPlacement;Ljava/util/List;ZLcom/company/admob/config/FrequencyRule;Lcom/company/admob/config/PreloadStrategy;Lcom/company/admob/config/RetryPolicy;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdUnitId-9WjuOtE ()Ljava/lang/String;
+	public final fun getAdUnitIds ()Ljava/util/List;
 	public final fun getEnabled ()Z
 	public final fun getExpiry-FghU774 ()Lkotlin/time/Duration;
 	public abstract fun getFormat ()Lcom/company/admob/AdFormat;
@@ -1120,7 +1187,7 @@ public abstract class com/company/admob/config/PlacementConfig {
 }
 
 public abstract class com/company/admob/config/PlacementConfigBuilder {
-	public synthetic fun <init> (Lcom/company/admob/AdPlacement;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/company/admob/AdPlacement;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun frequency (Lkotlin/jvm/functions/Function1;)V
 	public final fun getEnabled ()Z
 	public final fun getExpiry-FghU774 ()Lkotlin/time/Duration;
@@ -1136,17 +1203,29 @@ public abstract class com/company/admob/config/PlacementConfigBuilder {
 
 public final class com/company/admob/config/PlacementsBuilder {
 	public final fun appOpen (Lcom/company/admob/AppOpenPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun appOpen (Lcom/company/admob/AppOpenPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun appOpen$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/AppOpenPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun appOpen$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/AppOpenPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun banner (Lcom/company/admob/BannerPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun banner (Lcom/company/admob/BannerPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun banner$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/BannerPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun banner$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/BannerPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun interstitial (Lcom/company/admob/InterstitialPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun interstitial (Lcom/company/admob/InterstitialPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun interstitial$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/InterstitialPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun interstitial$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/InterstitialPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun native (Lcom/company/admob/NativePlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun native (Lcom/company/admob/NativePlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun native$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/NativePlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun native$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/NativePlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun rewarded (Lcom/company/admob/RewardedPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun rewarded (Lcom/company/admob/RewardedPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun rewarded$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/RewardedPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun rewarded$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/RewardedPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public final fun rewardedInterstitial (Lcom/company/admob/RewardedInterstitialPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun rewardedInterstitial (Lcom/company/admob/RewardedInterstitialPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun rewardedInterstitial$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/RewardedInterstitialPlacement;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun rewardedInterstitial$default (Lcom/company/admob/config/PlacementsBuilder;Lcom/company/admob/RewardedInterstitialPlacement;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }
 
 public final class com/company/admob/config/PreloadStrategy : java/lang/Enum {
@@ -1229,11 +1308,12 @@ public abstract interface class com/company/admob/config/remote/AdConfigProvider
 
 public final class com/company/admob/config/remote/AdOverrides {
 	public fun <init> ()V
-	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/util/Set;Ljava/util/Map;Lkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/util/Set;Ljava/util/Map;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/util/Set;Ljava/util/Map;Lkotlin/time/Duration;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/util/Set;Ljava/util/Map;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdsEnabled ()Ljava/lang/Boolean;
 	public final fun getDisabledFormats ()Ljava/util/Set;
+	public final fun getMaxInterstitialsPerSession ()Ljava/lang/Integer;
 	public final fun getMinIntervalBetweenFullScreenAds-FghU774 ()Lkotlin/time/Duration;
 	public final fun getPlacements ()Ljava/util/Map;
 	public fun hashCode ()I
@@ -1242,14 +1322,19 @@ public final class com/company/admob/config/remote/AdOverrides {
 
 public final class com/company/admob/config/remote/PlacementOverride {
 	public fun <init> ()V
-	public synthetic fun <init> (Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;Ljava/util/List;Ljava/lang/Integer;Lcom/company/admob/BannerSize;Lcom/company/admob/NativeStyle;Lkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;Ljava/util/List;Ljava/lang/Integer;Lcom/company/admob/BannerSize;Lcom/company/admob/NativeStyle;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdUnitId ()Ljava/lang/String;
+	public final fun getAdUnitIds ()Ljava/util/List;
+	public final fun getBannerSize ()Lcom/company/admob/BannerSize;
+	public final fun getCounter ()Ljava/lang/Integer;
 	public final fun getEnabled ()Ljava/lang/Boolean;
 	public final fun getMaxPerSession ()Ljava/lang/Integer;
 	public final fun getMinInterval-FghU774 ()Lkotlin/time/Duration;
+	public final fun getNativeStyle ()Lcom/company/admob/NativeStyle;
 	public final fun getPreload ()Lcom/company/admob/config/PreloadStrategy;
+	public final fun getSplashTimeout-FghU774 ()Lkotlin/time/Duration;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

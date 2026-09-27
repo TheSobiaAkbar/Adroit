@@ -48,19 +48,19 @@ public class NativeAdHolder(private val placement: NativePlacement) {
 
     /**
      * Renders the held ad into [container], or loads one first if there's none. [container] is GONE while no ad can
-     * be shown.
+     * be shown. With no [layout], the template matching the placement's configured style is used.
      */
     @JvmOverloads
     public fun bindTo(
         container: ViewGroup,
         owner: LifecycleOwner,
-        layout: NativeAdLayout = NativeTemplates.Medium,
+        layout: NativeAdLayout? = null,
         renderer: NativeAdRenderer? = null,
     ) {
         unbind()
         if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) return
         val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_DESTROY) onOwnerDestroyed() }
-        val newTarget = Target(container, owner, layout, renderer, observer)
+        val newTarget = Target(container, owner, layout ?: styledLayout(placement), renderer, observer)
         target = newTarget
         owner.lifecycle.addObserver(observer)
 

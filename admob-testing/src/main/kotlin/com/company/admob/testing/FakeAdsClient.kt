@@ -34,6 +34,7 @@ import com.company.admob.NativeAdRenderer
 import com.company.admob.NativeAdResult
 import com.company.admob.NativeApi
 import com.company.admob.NativePlacement
+import com.company.admob.NativeStyle
 import com.company.admob.PrivacyApi
 import com.company.admob.RewardResult
 import com.company.admob.RewardedApi
@@ -250,6 +251,11 @@ public class FakeAdsClient @JvmOverloads constructor(
 
         override suspend fun showAndAwait(activity: Activity, placement: InterstitialPlacement): FullScreenResult =
             nextInterstitial(placement)
+
+        override fun showOnSplash(activity: Activity, placement: InterstitialPlacement, onResult: (FullScreenResult) -> Unit) {
+            val result = nextInterstitial(placement, FakeCall.ShowInterstitialOnSplash(placement.key))
+            deliver { onResult(result) }
+        }
     }
 
     override val rewarded: RewardedApi = object : RewardedApi, FullScreenFake<RewardedPlacement>() {
@@ -329,6 +335,9 @@ public class FakeAdsClient @JvmOverloads constructor(
 
         override suspend fun load(placement: NativePlacement): NativeAdResult = nextNative(placement)
 
+        override fun style(placement: NativePlacement): NativeStyle =
+            synchronized(lock) { nativeStyles[placement.key] } ?: NativeStyle.MEDIUM
+
         /**
          * Inflates [layout] into [container] (replacing its children) and fills the asset views, hiding those the ad
          * has no asset for, so templates can be screenshot-tested. Throws like the real `render`.
@@ -393,6 +402,11 @@ public class FakeAdsClient @JvmOverloads constructor(
 
     // --- Consent scripting ---
 
+    /** Sets what `native.style(placement)` reports. Every placement starts [NativeStyle.MEDIUM]. */
+    public fun setNativeStyle(placement: NativePlacement, style: NativeStyle) {
+        synchronized(lock) { nativeStyles[placement.key] = style }
+    }
+
     /** Sets `privacy.consentState` (and `isPrivacyOptionsRequired` from it). */
     public fun setConsentState(state: ConsentState) {
         consent.value = state
@@ -400,6 +414,8 @@ public class FakeAdsClient @JvmOverloads constructor(
     }
 
     // --- Internals ---
+
+    private val nativeStyles = mutableMapOf<String, NativeStyle>()
 
     /** The parts shared by the three full-screen fakes. */
     private abstract inner class FullScreenFake<P : AdPlacement> {
@@ -419,8 +435,11 @@ public class FakeAdsClient @JvmOverloads constructor(
             synchronized(lock) { availabilities.getOrPut(placement) { MutableStateFlow(AdAvailability.Unavailable) } }
         }
 
-    private fun nextInterstitial(placement: InterstitialPlacement): FullScreenResult {
-        record(FakeCall.ShowInterstitial(placement.key))
+    private fun nextInterstitial(
+        placement: InterstitialPlacement,
+        call: FakeCall = FakeCall.ShowInterstitial(placement.key),
+    ): FullScreenResult {
+        record(call)
         return synchronized(lock) { interstitialResults[placement.key]?.removeFirstOrNull() } ?: NOT_READY
     }
 

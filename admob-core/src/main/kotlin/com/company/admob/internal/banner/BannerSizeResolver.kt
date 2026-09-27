@@ -7,7 +7,8 @@ import kotlin.math.abs
 
 /** What a banner request needs besides the ad unit: the size kind and the width it's computed for, in dp. */
 internal data class BannerSizeSpec(val size: BannerSize, val widthDp: Int) {
-    val isAdaptive: Boolean get() = size is BannerSize.AnchoredAdaptive || size is BannerSize.InlineAdaptive
+    val isAdaptive: Boolean
+        get() = size is BannerSize.AnchoredAdaptive || size is BannerSize.InlineAdaptive || size is BannerSize.Collapsible
 }
 
 /**
@@ -29,7 +30,7 @@ internal object BannerSizeResolver {
         val widthDp = when (size) {
             BannerSize.Standard -> STANDARD_WIDTH_DP
             BannerSize.MediumRectangle -> MEDIUM_RECTANGLE_WIDTH_DP
-            BannerSize.AnchoredAdaptive, is BannerSize.InlineAdaptive -> {
+            BannerSize.AnchoredAdaptive, is BannerSize.InlineAdaptive, is BannerSize.Collapsible -> {
                 val widthPx = if (containerWidthPx > 0) containerWidthPx else windowWidthPx
                 if (density > 0f) (widthPx.coerceAtLeast(0) / density).toInt() else 0
             }

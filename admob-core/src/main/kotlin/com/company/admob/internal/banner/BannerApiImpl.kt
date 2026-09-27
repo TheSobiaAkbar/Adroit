@@ -15,11 +15,13 @@ import com.company.admob.BannerState
 import com.company.admob.UnavailableReason
 import com.company.admob.internal.HardwareAccelerationCheck
 import com.company.admob.internal.config.LiveConfig
-import com.company.admob.internal.config.bannerAdUnitId
+import com.company.admob.internal.config.bannerAdUnitIds
+import com.company.admob.internal.config.bannerSizeFor
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.init.Readiness
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.port.AdsSdk
+import com.company.admob.internal.reliability.AdUnitRotation
 import com.company.admob.internal.reliability.RetryScheduler
 import com.company.admob.internal.threading.isMainThread
 import com.company.admob.internal.threading.postToMain
@@ -40,6 +42,7 @@ internal class BannerApiImpl(
     private val scope: CoroutineScope,
     private val log: AdLog,
     private val hardwareAcceleration: HardwareAccelerationCheck = HardwareAccelerationCheck(log),
+    private val rotation: AdUnitRotation = AdUnitRotation(),
 ) : BannerApi {
     override fun create(activity: Activity, placement: BannerPlacement, options: BannerOptions): BannerAdHandle {
         val onMain = isMainThread()
@@ -56,9 +59,10 @@ internal class BannerApiImpl(
         }
         if (onMain) hardwareAcceleration.warnIfDisabled(activity)
         // A remotely disabled placement still gets a live handle: it's Hidden until the override is lifted.
-        val adUnitId = current.bannerAdUnitId(p, options.size)
+        val size = p.bannerSizeFor(options.size)
         val handle = BannerAdHandleImpl(
-            activity, p, adUnitId, options, config, adsSdk, readiness, retry, events, clock, scope, log,
+            activity, p, current.bannerAdUnitIds(p, size), size, options, config, adsSdk, readiness, retry, events,
+            clock, scope, log, rotation,
         )
         if (onMain) handle.start() else postToMain { handle.start() }
         return handle

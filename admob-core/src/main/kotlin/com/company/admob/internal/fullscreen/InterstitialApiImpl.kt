@@ -29,6 +29,10 @@ internal class InterstitialApiImpl(
     override fun show(activity: Activity, placement: InterstitialPlacement, onResult: (FullScreenResult) -> Unit) =
         runOnMain { engine.show(activity, placement, onResult = onResult) }
 
+    /** [onResult] is never invoked synchronously inside this call: it's always posted to the main thread. */
+    override fun showOnSplash(activity: Activity, placement: InterstitialPlacement, onResult: (FullScreenResult) -> Unit) =
+        runOnMain { engine.showOnSplash(activity, placement, onResult) }
+
     /**
      * Cancelling the caller doesn't cancel an ad that is already showing: the engine still finishes the show and
      * releases the full-screen slot on dismiss. The result is dropped, which is safe because interstitials carry no

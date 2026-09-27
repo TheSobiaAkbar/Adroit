@@ -10,6 +10,8 @@
             <enum name="inlineAdaptive" value="1" />
             <enum name="mediumRectangle" value="2" />
             <enum name="standard" value="3" />
+            <enum name="collapsibleBottom" value="4" />
+            <enum name="collapsibleTop" value="5" />
         </attr>
         <!-- Maximum height of an inlineAdaptive banner. Defaults to @dimen/company_admob_banner_inline_max_height. -->
         <attr name="company_admob_inlineMaxHeight" format="dimension" />

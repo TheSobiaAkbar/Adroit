@@ -69,8 +69,11 @@ internal class InitCoordinator(
     private var sdkInitialized = false
     private var lastInitAttemptMillis: Long? = null
 
-    /** The remote configuration turned every ad off (`AdOverrides.adsEnabled = false`). */
-    private var remoteDisabled = false
+    /**
+     * Every ad is turned off: by the remote configuration (`AdOverrides.adsEnabled = false`), or from the start by the
+     * ads file (`settings.adsEnabled = false`), until a remote override turns ads on.
+     */
+    private var remoteDisabled = !config.adsEnabled
 
     /** `start()` callbacks waiting for the state to settle. */
     private val waiters = mutableListOf<OnceCallback<AdsState>>()

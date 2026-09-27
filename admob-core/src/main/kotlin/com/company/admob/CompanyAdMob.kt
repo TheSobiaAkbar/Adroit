@@ -101,6 +101,10 @@ public object CompanyAdMob : AdsClient {
         if (log.isEnabled(level)) log.write(level, message, null)
     }
 
+    /** Each configured placement's format, by key; empty before `initialize`. */
+    internal fun configuredPlacementFormats(): Map<String, AdFormat> =
+        runtime?.config?.placements?.associate { it.placement.key to it.format }.orEmpty()
+
     /** Returns the facade to its uninitialized state, for tests that initialize it. Not thread-safe. */
     @VisibleForTesting
     internal fun resetForTests() {

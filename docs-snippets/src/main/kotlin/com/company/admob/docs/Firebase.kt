@@ -20,7 +20,7 @@ class FirebaseApp : Application() {
             this,
             adMobConfig {
                 environment = AdEnvironment.PRODUCTION
-                remoteConfig = FirebaseRemoteConfigProvider() // reads the company_admob_* keys
+                remoteConfig = FirebaseRemoteConfigProvider() // one parameter per ad, plus AdSettings
                 eventListeners += FirebaseAnalyticsEventListener(
                     context = this@FirebaseApp,
                     options = FirebaseAnalyticsOptions(

@@ -109,6 +109,11 @@ fun bindAdRow(viewModel: FeedViewModel, slot: Int, container: ViewGroup, viewLif
 `Large` (full-width media first). They use framework widgets only, follow light and dark themes, and can be
 restyled by overriding the `CompanyAdMob.ThemeOverlay.Native` style and its `company_admob_*` attributes.
 
+When the code passes no layout (`AdNative`, `AdNativeView` without `company_admob_template`, `attachNativeAd`,
+`NativeAdHolder.bindTo`), the template follows the placement's `style` (`SMALL`, `MEDIUM` or `LARGE`), which the
+configuration, the [ads file](AD_PROFILES.md) or Firebase can change. `NativeTemplates.forStyle(style)` maps a style to
+its template, and `CompanyAdMob.native.style(placement)` returns the current one.
+
 For your own layout, map its views with a `NativeAdLayout`, and style them with a `NativeAdRenderer`:
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Native.kt#custom-layout -->

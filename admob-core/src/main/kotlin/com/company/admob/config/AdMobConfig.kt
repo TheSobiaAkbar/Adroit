@@ -1,5 +1,7 @@
 package com.company.admob.config
 
+import android.content.Context
+import androidx.annotation.RawRes
 import com.company.admob.AppOpenPlacement
 import com.company.admob.BannerPlacement
 import com.company.admob.InterstitialPlacement
@@ -9,6 +11,7 @@ import com.company.admob.RewardedPlacement
 import com.company.admob.config.remote.AdConfigProvider
 import com.company.admob.config.remote.StaticConfigProvider
 import com.company.admob.events.AdEventListener
+import com.company.admob.internal.config.AdProfiles
 import com.company.admob.internal.config.toReadOnlyList
 
 /**
@@ -45,22 +48,40 @@ public fun adMobConfig(block: AdMobConfig.Builder.() -> Unit): AdMobConfig = AdM
  * @property remoteConfig the source of remote overrides. [StaticConfigProvider] (no overrides) by default.
  */
 public class AdMobConfig internal constructor(builder: Builder) {
+    // The ads file, if any: its placements follow the DSL's, and its settings replace the frequency options it sets.
+    private val profile: AdProfiles.ParsedFile? = builder.profileText?.let(AdProfiles::parseFile)
+
     public val environment: AdEnvironment = builder.environment
     public val appId: AdMobAppId? = builder.appId?.let(::AdMobAppId)
     public val testing: TestingOptions = builder.testing.build()
     public val privacy: PrivacyOptions = builder.privacy.build()
-    public val frequency: FrequencyOptions = builder.frequency.build()
+    public val frequency: FrequencyOptions = profile?.let { file ->
+        FrequencyOptions(
+            minIntervalBetweenFullScreenAds = file.settings.minIntervalBetweenFullScreenAds,
+            includeRewardedInGlobalInterval = builder.frequency.includeRewardedInGlobalInterval,
+            maxInterstitialsPerSession =
+                file.settings.maxInterstitialsPerSession ?: builder.frequency.maxInterstitialsPerSession,
+        )
+    } ?: builder.frequency.build()
     public val logging: LoggingOptions = builder.logging.build()
     public val advanced: AdvancedOptions = builder.advanced.build()
-    public val placements: List<PlacementConfig> = builder.placements.configs.toReadOnlyList()
+    public val placements: List<PlacementConfig> =
+        (builder.placements.configs + profile?.placements.orEmpty()).toReadOnlyList()
     public val eventListeners: List<AdEventListener> = builder.eventListeners.toReadOnlyList()
     public val remoteConfig: AdConfigProvider = builder.remoteConfig
+
+    /** Whether ads are on before any remote override: the ads file's `settings.adsEnabled`, true without one. */
+    internal val adsEnabledByDefault: Boolean = profile?.settings?.adsEnabled ?: true
+
+    /** Problems in the ads file (reading or parsing). Validation reports them as errors. */
+    internal val profileIssues: List<String> = listOfNotNull(builder.profileReadError) + profile?.issues.orEmpty()
 
     override fun equals(other: Any?): Boolean =
         other is AdMobConfig && other.environment == environment && other.appId == appId &&
             other.testing == testing && other.privacy == privacy && other.frequency == frequency &&
             other.logging == logging && other.advanced == advanced && other.placements == placements &&
-            other.eventListeners == eventListeners && other.remoteConfig == remoteConfig
+            other.eventListeners == eventListeners && other.remoteConfig == remoteConfig &&
+            other.adsEnabledByDefault == adsEnabledByDefault && other.profileIssues == profileIssues
 
     override fun hashCode(): Int {
         var result = environment.hashCode()
@@ -72,7 +93,9 @@ public class AdMobConfig internal constructor(builder: Builder) {
         result = 31 * result + advanced.hashCode()
         result = 31 * result + placements.hashCode()
         result = 31 * result + eventListeners.hashCode()
-        return 31 * result + remoteConfig.hashCode()
+        result = 31 * result + remoteConfig.hashCode()
+        result = 31 * result + adsEnabledByDefault.hashCode()
+        return 31 * result + profileIssues.hashCode()
     }
 
     override fun toString(): String =
@@ -128,6 +151,29 @@ public class AdMobConfig internal constructor(builder: Builder) {
 
         /** The source of remote overrides. */
         public var remoteConfig: AdConfigProvider = StaticConfigProvider
+
+        internal var profileText: String? = null
+        internal var profileReadError: String? = null
+
+        /**
+         * Adds every ad in an ads file (`res/raw/ads_config.json`, see docs/AD_PROFILES.md): each entry becomes a
+         * placement of its format, keyed by its name, and the file's `settings` replace the frequency options they
+         * set. Each ad can then be changed from a Firebase parameter of the same name. A missing or invalid file is
+         * reported when the configuration is validated, never here.
+         */
+        public fun profiles(context: Context, @RawRes resId: Int) {
+            try {
+                profiles(context.resources.openRawResource(resId).bufferedReader().use { it.readText() })
+            } catch (e: Exception) {
+                profileReadError = "Ads file: resource $resId can't be read (${e.javaClass.simpleName}: ${e.message})"
+            }
+        }
+
+        /** Adds every ad in an ads file given as JSON text. See the other overload. */
+        public fun profiles(json: String) {
+            profileText = json
+            profileReadError = null
+        }
 
         /** Configures [testing]. */
         public fun testing(block: TestingOptions.Builder.() -> Unit) {

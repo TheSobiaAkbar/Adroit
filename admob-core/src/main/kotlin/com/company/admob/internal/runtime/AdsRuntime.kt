@@ -38,6 +38,7 @@ import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.native.NativeAdBinder
 import com.company.admob.internal.native.NativeAdLoaderEngine
 import com.company.admob.internal.native.NativeApiImpl
+import com.company.admob.internal.reliability.AdUnitRotation
 import com.company.admob.internal.reliability.FrequencyGate
 import com.company.admob.internal.reliability.FullScreenCoordinator
 import com.company.admob.internal.reliability.RetryScheduler
@@ -110,7 +111,12 @@ internal class AdsRuntime(
         ruleFor = { liveConfig.current.placement(it)?.frequency ?: FrequencyRule() },
         globalInterval = { liveConfig.current.minIntervalBetweenFullScreenAds },
         globalFormats = FrequencyGate.globalFormats(config.frequency.includeRewardedInGlobalInterval),
+        isSplash = { liveConfig.current.placement(it)?.isSplash == true },
+        maxInterstitials = { liveConfig.current.maxInterstitialsPerSession },
     )
+
+    /** Ad unit rotation positions, shared by every engine and banner. */
+    val adUnitRotation: AdUnitRotation = AdUnitRotation()
 
     val fullScreenCoordinator: FullScreenCoordinator = FullScreenCoordinator(deps.clock)
 
@@ -142,6 +148,7 @@ internal class AdsRuntime(
             appOpenFirst -> FullScreenAdEngine.STAGGER
             else -> Duration.ZERO
         },
+        rotation = adUnitRotation,
     )
 
     val interstitialEngine: FullScreenAdEngine = fullScreenEngine(FullScreenFormatStrategy.Interstitial)
@@ -182,6 +189,7 @@ internal class AdsRuntime(
         clock = deps.clock,
         scope = scope,
         log = log,
+        rotation = adUnitRotation,
     )
 
     val client: AdsClient = AdsClientImpl(
@@ -195,8 +203,11 @@ internal class AdsRuntime(
         appOpen = AppOpenApiImpl(appOpenController),
         banner = BannerApiImpl(
             liveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log, hardwareAcceleration,
+            adUnitRotation,
         ),
-        native = NativeApiImpl(nativeEngine, NativeAdBinder(deps.nativeRenderPort, log), hardwareAcceleration),
+        native = NativeApiImpl(nativeEngine, NativeAdBinder(deps.nativeRenderPort, log), hardwareAcceleration) {
+            liveConfig.current.placement(it)?.nativeStyle
+        },
         diagnostics = DiagnosticsApiImpl(
             builder = DiagnosticsReportBuilder(
                 libraryVersion = CompanyAdMobVersion.NAME,

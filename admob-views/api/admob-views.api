@@ -41,6 +41,7 @@ public final class com/company/admob/views/NativeExtensionsKt {
 
 public final class com/company/admob/views/NativeTemplates {
 	public static final field INSTANCE Lcom/company/admob/views/NativeTemplates;
+	public final fun forStyle (Lcom/company/admob/NativeStyle;)Lcom/company/admob/NativeAdLayout;
 	public final fun getLarge ()Lcom/company/admob/NativeAdLayout;
 	public final fun getMedium ()Lcom/company/admob/NativeAdLayout;
 	public final fun getSmall ()Lcom/company/admob/NativeAdLayout;

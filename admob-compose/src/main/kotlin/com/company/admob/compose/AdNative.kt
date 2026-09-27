@@ -19,7 +19,9 @@ import com.company.admob.compose.internal.ComposeRuntime
 import com.company.admob.views.NativeTemplates
 
 /**
- * A native ad for [placement], rendered with [layout] (one of [NativeTemplates], or your own `NativeAdLayout`).
+ * A native ad for [placement], rendered with [layout] (one of [NativeTemplates], or your own `NativeAdLayout`). With no
+ * [layout], the template matching the placement's configured style is used ([NativeTemplates.forStyle]), so the
+ * configuration (or Firebase) can change it.
  *
  * The ad comes from [rememberNativeAd]: it's loaded once per ([placement], [slotKey]) and kept by the screen's
  * ViewModel, so recomposition, rotation and scrolling out of a lazy list don't reload it; after a configuration
@@ -37,7 +39,7 @@ import com.company.admob.views.NativeTemplates
 public fun AdNative(
     placement: NativePlacement,
     modifier: Modifier = Modifier,
-    layout: NativeAdLayout = NativeTemplates.Medium,
+    layout: NativeAdLayout? = null,
     slotKey: Any = Unit,
     renderer: NativeAdRenderer? = null,
     placeholder: (@Composable () -> Unit)? = null,
@@ -45,7 +47,12 @@ public fun AdNative(
     val result by rememberNativeAd(placement, slotKey)
     when (val current = result) {
         null -> if (placeholder != null) Box(modifier) { placeholder() }
-        is NativeAdResult.Loaded -> RenderedNativeAd(current.handle, modifier, layout, renderer)
+        is NativeAdResult.Loaded -> RenderedNativeAd(
+            current.handle,
+            modifier,
+            layout ?: NativeTemplates.forStyle(ComposeRuntime.client.native.style(placement)),
+            renderer,
+        )
         is NativeAdResult.Failed -> Unit
     }
 }

@@ -19,6 +19,8 @@ import java.util.UUID
  */
 internal class RewardSession(
     private val placement: EffectivePlacement,
+    /** The ad unit of the ad being shown, for events. */
+    private val adUnitId: String,
     private val format: AdFormat,
     private val events: EventBus,
     private val clock: Clock,
@@ -38,7 +40,7 @@ internal class RewardSession(
                 log.i { "$format ${placement.placement.key}: reward earned ($reward)" }
                 events.emit(
                     AdEvent.RewardEarned(
-                        placement.placement.key, format, placement.adUnitId, clock.currentTimeMillis(), reward, rewardId,
+                        placement.placement.key, format, adUnitId, clock.currentTimeMillis(), reward, rewardId,
                     ),
                 )
             }

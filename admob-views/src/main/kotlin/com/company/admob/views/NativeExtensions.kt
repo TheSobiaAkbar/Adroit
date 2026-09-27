@@ -17,7 +17,9 @@ import com.company.admob.views.internal.ViewsRuntime
 import kotlinx.coroutines.launch
 
 /**
- * Loads a native ad for [placement] and renders it into this container with [layout], replacing its children. The
+ * Loads a native ad for [placement] and renders it into this container with [layout], replacing its children. With
+ * no [layout], the template matching the placement's configured style is used ([NativeTemplates.forStyle]), so the
+ * configuration (or Firebase) can change it. The
  * ad is destroyed when [owner] is destroyed; if the load fails, or ads become blocked, the container is GONE.
  * [onResult] is called once, on the main thread, after rendering.
  *
@@ -29,18 +31,19 @@ import kotlinx.coroutines.launch
 public fun ViewGroup.attachNativeAd(
     owner: LifecycleOwner,
     placement: NativePlacement,
-    layout: NativeAdLayout = NativeTemplates.Medium,
+    layout: NativeAdLayout? = null,
     renderer: NativeAdRenderer? = null,
     onResult: (NativeAdResult) -> Unit = {},
 ) {
     val container = this
+    val resolvedLayout = layout ?: styledLayout(placement)
     ViewsRuntime.client.native.load(placement) { result ->
         if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
             (result as? NativeAdResult.Loaded)?.handle?.destroy()
             return@load
         }
         val shown = when (result) {
-            is NativeAdResult.Loaded -> renderInto(container, result.handle, owner, layout, renderer)
+            is NativeAdResult.Loaded -> renderInto(container, result.handle, owner, resolvedLayout, renderer)
             is NativeAdResult.Failed -> {
                 container.visibility = View.GONE
                 result
@@ -49,6 +52,10 @@ public fun ViewGroup.attachNativeAd(
         onResult(shown)
     }
 }
+
+/** The template for [placement]'s configured style. */
+internal fun styledLayout(placement: NativePlacement): NativeAdLayout =
+    NativeTemplates.forStyle(ViewsRuntime.client.native.style(placement))
 
 /**
  * Renders [handle] into [container], destroys it on [owner]'s ON_DESTROY, and hides [container] if ads become

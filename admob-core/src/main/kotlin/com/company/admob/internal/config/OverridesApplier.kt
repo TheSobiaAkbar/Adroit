@@ -66,13 +66,18 @@ internal class OverridesApplier(
             overrides.adsEnabled?.let { parts += "adsEnabled=$it" }
             if (overrides.disabledFormats.isNotEmpty()) parts += "disabledFormats=${overrides.disabledFormats.sorted()}"
             overrides.minIntervalBetweenFullScreenAds?.let { parts += "minIntervalBetweenFullScreenAds=$it" }
+            overrides.maxInterstitialsPerSession?.let { parts += "maxInterstitialsPerSession=$it" }
             for ((key, o) in overrides.placements) {
                 val fields = listOfNotNull(
                     o.enabled?.let { "enabled=$it" },
                     o.minInterval?.let { "minInterval=$it" },
                     o.maxPerSession?.let { "maxPerSession=$it" },
                     o.preload?.let { "preload=$it" },
-                    o.adUnitId?.let { "adUnitId=${config.displayAdUnitId(it)}" },
+                    o.effectiveAdUnitIds?.let { ids -> "adUnitIds=${ids.map(config::displayAdUnitId)}" },
+                    o.counter?.let { "counter=$it" },
+                    o.bannerSize?.let { "bannerSize=$it" },
+                    o.nativeStyle?.let { "nativeStyle=$it" },
+                    o.splashTimeout?.let { "splashTimeout=$it" },
                 )
                 parts += "$key(${fields.joinToString(", ")})"
             }

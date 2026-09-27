@@ -29,8 +29,8 @@ public final class com/company/admob/firebase/FirebaseAnalyticsOptions {
 
 public final class com/company/admob/firebase/FirebaseRemoteConfigProvider : com/company/admob/config/remote/AdConfigProvider {
 	public fun <init> ()V
-	public fun <init> (Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;Z)V
-	public synthetic fun <init> (Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;ZLjava/lang/String;)V
+	public synthetic fun <init> (Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun overrides ()Lkotlinx/coroutines/flow/Flow;
 	public fun toString ()Ljava/lang/String;
 }

@@ -31,6 +31,7 @@ internal object FormatDefaults {
     const val APP_OPEN_MIN_LAUNCHES_BEFORE_FIRST_SHOW = 2
     val SUPPRESS_APP_OPEN_AFTER_FULL_SCREEN_AD = 5.seconds
     val SHOW_TIMEOUT = 5.seconds
+    val SPLASH_TIMEOUT = 8.seconds
 
     const val NATIVE_POOL_SIZE = 1
     val NATIVE_POOL_SIZE_RANGE = 1..3

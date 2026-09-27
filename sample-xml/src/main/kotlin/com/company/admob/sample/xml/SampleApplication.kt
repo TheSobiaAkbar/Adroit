@@ -8,6 +8,6 @@ class SampleApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         // Cheap and synchronous: no network, no Google calls. Consent and SDK init happen in SplashActivity.
-        CompanyAdMob.initialize(this, SampleAdsConfig.create(BuildConfig.BUILD_TYPE, BuildConfig.TEST_DEVICE_IDS))
+        CompanyAdMob.initialize(this, SampleAdsConfig.create(this, BuildConfig.BUILD_TYPE, BuildConfig.TEST_DEVICE_IDS))
     }
 }

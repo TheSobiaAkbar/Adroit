@@ -36,8 +36,9 @@
 | 23 | Documentation set | 22 | All 21 docs exist and their code compiles (snippets are verified in samples). |
 | 24 | Optional `admob-firebase` module | 15, 21 | Tested with fakes. The core has no Firebase dependency. |
 | 25 | Security and privacy audit | 23 | Every finding is fixed or tracked. |
-| 26 | Performance audit | 23 | Measurements are recorded and regressions fixed. |
-| 27 | API stability audit | 25, 26 | The public API is frozen for 1.0.0-rc1. |
+| 25A | Ad profiles: one JSON per ad, controlled from Firebase (added 2026-09-27) | 24, 25 | One ads file configures every ad; Firebase changes each ad without a release. |
+| 26 | Performance audit | 25A | Measurements are recorded and regressions fixed. |
+| 27 | API stability audit | 25, 25A, 26 | The public API is frozen for 1.0.0-rc1. |
 | FINAL | Production readiness audit | 27 | PASS/WARN/FAIL scorecard with fixes. |
 
 Prompt 24 is optional. Skip it if the company doesn't use Firebase.

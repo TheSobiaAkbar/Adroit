@@ -7,9 +7,31 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 ## [Unreleased]
 
 ### Added
-- `admob-firebase` (optional): `FirebaseRemoteConfigProvider`, which maps the `company_admob_*` Remote Config
-  parameters to remote overrides, and `FirebaseAnalyticsEventListener`, which logs paid events as Firebase
+- Ad profiles (`docs/AD_PROFILES.md`): `adMobConfig { profiles(context, R.raw.ads_config) }` defines every ad in one
+  JSON file, and each ad can be changed from a Firebase Remote Config parameter of the same name.
+- Several ad unit IDs per placement (`adUnitIds`, and a list overload for every format in `placements { }`), used in
+  rotation: each load request takes the next one.
+- `FrequencyRule.counter`: an interstitial or rewarded interstitial shows at most on every Nth `show` call, and new
+  `AdError.CounterNotReached`.
+- `FrequencyOptions.maxInterstitialsPerSession`: an overall interstitial limit per session, splash ones not counted.
+- `InterstitialApi.showOnSplash`, and `splash`/`splashTimeout` for interstitial placements.
+- `BannerSize.Collapsible` (Google's collapsible banners) and `CollapsibleBannerPosition`; the XML sizes
+  `collapsibleBottom` and `collapsibleTop`.
+- `NativeStyle`, a native placement's `style`, `NativeApi.style(placement)` and `NativeTemplates.forStyle(style)`.
+- `admob-firebase` (optional): `FirebaseRemoteConfigProvider`, which reads one Remote Config parameter per ad (and an
+  `AdSettings` parameter) as remote overrides, and `FirebaseAnalyticsEventListener`, which logs paid events as Firebase
   `ad_impression` events (and optional custom ad events). Firebase BoM 34.19.0.
+
+### Changed
+- A banner's size comes from its placement (or ad profile) unless the code passes one: `BannerOptions.size` and
+  `AdBannerView`'s `company_admob_bannerSize` are now optional. The placement-level `size` had no effect before.
+- A native ad's template comes from its placement's `style` unless the code passes a layout: the `layout` parameters
+  of `AdNative`, `attachNativeAd` and `NativeAdHolder.bindTo`, and `AdNativeView`'s `company_admob_template`, are
+  now optional (the default style is MEDIUM, as the default template was).
+- Placement keys may contain capital letters (`[A-Za-z0-9_]{1,40}`), so they can match Firebase parameter names.
+- Remote overrides drop an invalid ad unit ID on its own, instead of the placement's whole override.
+- **Binary change:** `FrequencyRule` gained `counter`, which changes its constructor and `copy`. Recompile against
+  this version.
 
 ### Fixed
 - The views and Compose modules log through the host's configured logger and level, like core.

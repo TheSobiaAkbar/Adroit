@@ -1,0 +1,36 @@
+{
+  "settings": {
+    "adsEnabled": true,
+    "maxInterstitialsPerSession": 0,
+    "minSecondsBetweenFullScreenAds": 0
+  },
+  "ads": {
+    "SplashAd": {
+      "format": "interstitial",
+      "enabled": true,
+      "splash": true,
+      "splashTimeoutSeconds": 8,
+      "adUnitIds": ["ca-app-pub-0000000000000000/0000000001"]
+    },
+    "HistoryAd": {
+      "format": "interstitial",
+      "enabled": true,
+      "adUnitIds": ["ca-app-pub-0000000000000000/0000000002", "ca-app-pub-0000000000000000/0000000003"],
+      "counter": 3,
+      "timerSeconds": 0,
+      "maxPerSession": 5
+    },
+    "HomeBanner": {
+      "format": "banner",
+      "enabled": true,
+      "style": "collapsible_bottom",
+      "adUnitIds": ["ca-app-pub-0000000000000000/0000000004"]
+    },
+    "FeedNative": {
+      "format": "native",
+      "enabled": true,
+      "style": "large",
+      "adUnitIds": ["ca-app-pub-0000000000000000/0000000005"]
+    }
+  }
+}

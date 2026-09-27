@@ -102,7 +102,7 @@ public class RewardedPlacement(key: String) : AdPlacement
 public class RewardedInterstitialPlacement(key: String) : AdPlacement
 public class AppOpenPlacement(key: String) : AdPlacement
 public class NativePlacement(key: String) : AdPlacement
-// key: [a-z0-9_]{1,40}, validated in init; equals/hashCode by (format,key)
+// key: [A-Za-z0-9_]{1,40} (widened in Prompt 25A), validated in init; equals/hashCode by (format,key)
 ```
 
 ## 3.4 Format APIs

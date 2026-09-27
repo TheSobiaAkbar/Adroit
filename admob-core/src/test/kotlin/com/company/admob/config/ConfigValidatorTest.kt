@@ -141,8 +141,8 @@ class ConfigValidatorTest {
     fun `placement format different from its configuration is an error`() {
         // Unreachable through the typed DSL; the internal constructor simulates a future untyped path.
         val mismatched = InterstitialPlacementConfig(
-            RewardedPlacement("extra_life"), AdUnitId(TestIds.unit(1)), true, FrequencyRule(),
-            PreloadStrategy.AFTER_READY, null, null,
+            RewardedPlacement("extra_life"), listOf(AdUnitId(TestIds.unit(1))), true, FrequencyRule(),
+            PreloadStrategy.AFTER_READY, null, null, splash = false, splashTimeout = 8.seconds,
         )
         val config = adMobConfig { environment = AdEnvironment.PRODUCTION; placements { configs += mismatched } }
         assertOnlyError(FORMAT_MISMATCH, ConfigValidator.validate(config, TestIds.APP_ID, isDebuggable = false))

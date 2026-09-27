@@ -43,6 +43,23 @@ public interface InterstitialApi : FullScreenAdApi<InterstitialPlacement> {
      * Cancelling the caller does not cancel an ad that is already showing.
      */
     public suspend fun showAndAwait(activity: Activity, placement: InterstitialPlacement): FullScreenResult
+
+    /**
+     * Shows an interstitial from a splash screen: waits up to the placement's `splashTimeout` for the library to be
+     * ready (after consent) and for an ad to load, then shows it. [onResult] is called exactly once, on the main
+     * thread: after the ad is dismissed, or with [FullScreenResult.NotShown] if none could be shown in time
+     * (`Timeout`), so continue to your main screen in both cases.
+     *
+     * Use it for a placement configured with `splash = true`: it isn't counted in
+     * `FrequencyOptions.maxInterstitialsPerSession` and ignores the counter. If [activity] is paused or destroyed
+     * during the wait, the result is `NotShown(ActivityUnavailable)`. A call made while another is still waiting
+     * completes at once with `NotShown(AlreadyShowing)`.
+     */
+    public fun showOnSplash(
+        activity: Activity,
+        placement: InterstitialPlacement,
+        onResult: (FullScreenResult) -> Unit,
+    )
 }
 
 /**

@@ -7,6 +7,7 @@ import com.company.admob.AdError
 import com.company.admob.AdFormat
 import com.company.admob.AdPlacement
 import com.company.admob.BannerSize
+import com.company.admob.CollapsibleBannerPosition
 import com.company.admob.GoogleRequestCustomizer
 import com.company.admob.GoogleSdkEscapeHatch
 import com.company.admob.NativeAdAssets
@@ -64,11 +65,15 @@ internal data class SdkRequestConfig(
     val maxAdContentRating: MaxAdContentRating?,
 )
 
-/** Per-request inputs besides the ad unit ID. */
+/**
+ * Per-request inputs besides the ad unit ID. [collapsible] asks for a collapsible banner at that edge (banners only,
+ * first load of a banner view only).
+ */
 @OptIn(GoogleSdkEscapeHatch::class)
 internal data class RequestExtras(
     val placement: AdPlacement,
     val customizer: GoogleRequestCustomizer?,
+    val collapsible: CollapsibleBannerPosition? = null,
 )
 
 internal sealed interface SdkInitResult {

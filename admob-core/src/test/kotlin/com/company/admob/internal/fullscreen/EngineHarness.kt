@@ -86,6 +86,8 @@ internal class EngineHarness(
         clock,
         { effective.placement(it)?.frequency ?: FrequencyRule() },
         { effective.minIntervalBetweenFullScreenAds },
+        isSplash = { effective.placement(it)?.isSplash == true },
+        maxInterstitials = { effective.maxInterstitialsPerSession },
     )
     val engine = engine(strategy)
 

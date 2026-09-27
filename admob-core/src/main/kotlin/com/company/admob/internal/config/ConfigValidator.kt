@@ -5,7 +5,9 @@ import com.company.admob.config.AdMobAppId
 import com.company.admob.config.AdMobConfig
 import com.company.admob.config.AdUnitId
 import com.company.admob.config.AppOpenPlacementConfig
+import com.company.admob.AdFormat
 import com.company.admob.config.DebugGeography
+import com.company.admob.config.InterstitialPlacementConfig
 import com.company.admob.config.NativePlacementConfig
 import com.company.admob.config.RetryPolicy
 import com.company.admob.config.remote.AdOverrides
@@ -26,6 +28,7 @@ internal enum class ConfigIssueCode {
     INVALID_COUNT,
     INVALID_RETRY_POLICY,
     UNKNOWN_PLACEMENT_OVERRIDE,
+    INVALID_AD_PROFILE,
 
     // Errors in PRODUCTION.
     DEMO_ID_IN_PRODUCTION,
@@ -70,6 +73,7 @@ internal object ConfigValidator {
         val production = config.environment == AdEnvironment.PRODUCTION
 
         checkAppId(config, manifestAppId, production, errors)
+        config.profileIssues.forEach { errors += ConfigIssue(ConfigIssueCode.INVALID_AD_PROFILE, it) }
         checkPlacements(config, production, errors)
         checkGlobalOptions(config, errors)
 
@@ -181,22 +185,16 @@ internal object ConfigValidator {
                     "a ${placementConfig.placement.format} placement is configured as ${placementConfig.format}.",
                 )
             }
-            val adUnitId = placementConfig.adUnitId
-            if (!adUnitId.isWellFormed) {
-                error(
-                    ConfigIssueCode.AD_UNIT_ID_MALFORMED,
-                    "ad unit ID '${adUnitId.value}' is not of the form ca-app-pub-<16 digits>/<10 digits>.",
-                )
-            } else if (production && GoogleDemoAdUnits.isDemo(adUnitId.value)) {
-                error(
-                    ConfigIssueCode.DEMO_ID_IN_PRODUCTION,
-                    "ad unit ID '${adUnitId.value}' is a Google demo ad unit, which is not allowed in PRODUCTION.",
-                )
+            for (adUnitId in placementConfig.adUnitIds) {
+                adUnitIdProblem(adUnitId.value, production)?.let { (code, message) -> error(code, message) }
             }
 
             checkNotNegative(placementConfig.frequency.minInterval, "frequency.minInterval", ::error)
             if (placementConfig.frequency.maxPerSession < 0) {
                 error(ConfigIssueCode.INVALID_COUNT, "frequency.maxPerSession must not be negative.")
+            }
+            if (placementConfig.frequency.counter < 0) {
+                error(ConfigIssueCode.INVALID_COUNT, "frequency.counter must not be negative.")
             }
             placementConfig.expiry?.let { checkNotNegative(it, "expiry", ::error) }
             placementConfig.retry?.let { checkRetryPolicy(it, ::error) }
@@ -207,6 +205,9 @@ internal object ConfigValidator {
                         ConfigIssueCode.POOL_SIZE_OUT_OF_RANGE,
                         "poolSize ${placementConfig.poolSize} is outside ${FormatDefaults.NATIVE_POOL_SIZE_RANGE}.",
                     )
+                }
+                is InterstitialPlacementConfig -> if (!placementConfig.splashTimeout.isPositive()) {
+                    error(ConfigIssueCode.INVALID_DURATION, "splashTimeout must be positive.")
                 }
                 is AppOpenPlacementConfig -> {
                     checkNotNegative(placementConfig.cooldown, "cooldown", ::error)
@@ -220,38 +221,58 @@ internal object ConfigValidator {
         }
     }
 
+    /** Why [id] can't be used as an ad unit, or null when it can. */
+    private fun adUnitIdProblem(id: String, production: Boolean): Pair<ConfigIssueCode, String>? = when {
+        !AdUnitId(id).isWellFormed ->
+            ConfigIssueCode.AD_UNIT_ID_MALFORMED to "ad unit ID '$id' is not of the form ca-app-pub-<16 digits>/<10 digits>."
+        production && GoogleDemoAdUnits.isDemo(id) ->
+            ConfigIssueCode.DEMO_ID_IN_PRODUCTION to
+                "ad unit ID '$id' is a Google demo ad unit, which is not allowed in PRODUCTION."
+        else -> null
+    }
+
     /**
      * Checks remote [overrides] against the local [config] with the same rules (§21). Returns the overrides that may
      * be applied and the problems found: an invalid placement override is dropped as a whole, never applied in part,
-     * as is an override for a key that isn't configured; an invalid global interval is dropped on its own.
+     * as is an override for a key that isn't configured; an invalid global setting is dropped on its own. Ad unit
+     * lists are the exception: invalid IDs are dropped one by one, and a list left empty is ignored.
      */
     fun validateOverrides(overrides: AdOverrides, config: AdMobConfig): OverridesValidation {
         val issues = mutableListOf<ConfigIssue>()
         val production = config.environment == AdEnvironment.PRODUCTION
-        val configured = config.placements.map { it.placement.key }.toSet()
+        val formats = config.placements.associate { it.placement.key to it.format }
         val accepted = LinkedHashMap<String, PlacementOverride>()
         for ((key, override) in overrides.placements) {
             val problems = mutableListOf<ConfigIssue>()
             fun problem(code: ConfigIssueCode, message: String) {
                 problems += ConfigIssue(code, "Remote override for placement '$key' ignored: $message", key)
             }
-            if (key !in configured) problem(ConfigIssueCode.UNKNOWN_PLACEMENT_OVERRIDE, "no such placement is configured.")
-            override.adUnitId?.let { id ->
-                if (!AdUnitId(id).isWellFormed) {
-                    problem(
-                        ConfigIssueCode.AD_UNIT_ID_MALFORMED,
-                        "ad unit ID '$id' is not of the form ca-app-pub-<16 digits>/<10 digits>.",
-                    )
-                } else if (production && GoogleDemoAdUnits.isDemo(id)) {
-                    problem(
-                        ConfigIssueCode.DEMO_ID_IN_PRODUCTION,
-                        "ad unit ID '$id' is a Google demo ad unit, which is not allowed in PRODUCTION.",
-                    )
-                }
-            }
+            val format = formats[key]
+            if (format == null) problem(ConfigIssueCode.UNKNOWN_PLACEMENT_OVERRIDE, "no such placement is configured.")
             override.minInterval?.let { checkNotNegative(it, "minInterval", ::problem) }
             if ((override.maxPerSession ?: 0) < 0) problem(ConfigIssueCode.INVALID_COUNT, "maxPerSession must not be negative.")
-            if (problems.isEmpty()) accepted[key] = override else issues += problems
+            if ((override.counter ?: 0) < 0) problem(ConfigIssueCode.INVALID_COUNT, "counter must not be negative.")
+            override.splashTimeout?.let {
+                if (!it.isPositive()) problem(ConfigIssueCode.INVALID_DURATION, "splashTimeout must be positive.")
+            }
+            if (override.bannerSize != null && format != null && format != AdFormat.BANNER) {
+                problem(ConfigIssueCode.FORMAT_MISMATCH, "a banner size is set for a $format placement.")
+            }
+            if (override.nativeStyle != null && format != null && format != AdFormat.NATIVE) {
+                problem(ConfigIssueCode.FORMAT_MISMATCH, "a native style is set for a $format placement.")
+            }
+            var checked = override
+            override.effectiveAdUnitIds?.let { ids ->
+                val rejected = ids.mapNotNull { id -> adUnitIdProblem(id, production) }
+                val valid = ids.filter { adUnitIdProblem(it, production) == null }
+                val keeping = if (valid.isEmpty()) " Keeping the configured ad units." else " It's skipped."
+                rejected.forEach { (code, message) ->
+                    issues += ConfigIssue(code, "Remote override for placement '$key': $message$keeping", key)
+                }
+                if (valid != ids || override.adUnitId != null) checked = override.withAdUnitIds(valid.ifEmpty { null })
+            }
+            // An override left with nothing to change (only unusable ad units) isn't applied at all.
+            if (problems.isEmpty() && checked != PlacementOverride()) accepted[key] = checked else issues += problems
         }
         var globalInterval = overrides.minIntervalBetweenFullScreenAds
         if (globalInterval != null && globalInterval.isNegative()) {
@@ -261,7 +282,15 @@ internal object ConfigValidator {
             )
             globalInterval = null
         }
-        val result = AdOverrides(overrides.adsEnabled, overrides.disabledFormats, accepted, globalInterval)
+        var maxInterstitials = overrides.maxInterstitialsPerSession
+        if (maxInterstitials != null && maxInterstitials < 0) {
+            issues += ConfigIssue(
+                ConfigIssueCode.INVALID_COUNT,
+                "Remote maxInterstitialsPerSession ignored: it must not be negative.",
+            )
+            maxInterstitials = null
+        }
+        val result = AdOverrides(overrides.adsEnabled, overrides.disabledFormats, accepted, globalInterval, maxInterstitials)
         return OverridesValidation(result, issues.toList())
     }
 
@@ -270,6 +299,9 @@ internal object ConfigValidator {
             errors += ConfigIssue(code, message)
         }
         checkNotNegative(config.frequency.minIntervalBetweenFullScreenAds, "frequency.minIntervalBetweenFullScreenAds", ::error)
+        if (config.frequency.maxInterstitialsPerSession < 0) {
+            error(ConfigIssueCode.INVALID_COUNT, "frequency.maxInterstitialsPerSession must not be negative.")
+        }
         if (!config.advanced.showTimeout.isPositive()) {
             error(ConfigIssueCode.INVALID_DURATION, "advanced.showTimeout must be positive.")
         }
