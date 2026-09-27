@@ -20,21 +20,21 @@ jobs:
       contents: write # create the GitHub Release
       packages: write # publish to GitHub Packages
     env:
-      # Empty when the secrets aren't configured: the company repository and signing are then skipped.
+      # Empty when the secret isn't configured: the company repository is then skipped. The signing key reaches only
+      # the publish steps (unsigned when its secrets aren't configured).
       COMPANY_MAVEN_URL: ${{ secrets.COMPANY_MAVEN_URL }}
-      SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-      SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
     steps:
       - name: Check out (full history, for the forbidden-patterns check)
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false # nothing pushes; keeps the write-scoped token out of .git/config
 
       - name: Verify the tag, version and CHANGELOG
         run: bash .github/scripts/verify-release.sh "$GITHUB_REF_NAME" "$RUNNER_TEMP/release-notes.md"
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: "17"
@@ -59,6 +59,8 @@ jobs:
       - name: Publish to GitHub Packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew publishAllPublicationsToGitHubPackagesRepository --stacktrace
 
       - name: Publish to the company repository
@@ -66,6 +68,8 @@ jobs:
         env:
           COMPANY_MAVEN_USER: ${{ secrets.COMPANY_MAVEN_USER }}
           COMPANY_MAVEN_PASSWORD: ${{ secrets.COMPANY_MAVEN_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew publishAllPublicationsToCompanyRepository --stacktrace
 
       - name: Create the GitHub Release

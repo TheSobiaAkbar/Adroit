@@ -66,7 +66,11 @@ internal class AdsRuntime(
     depsFactory: (AdLog, CoroutineScope) -> RuntimeDeps,
 ) {
     val effectiveConfig: EffectiveConfig = EffectiveConfig.from(config)
-    val log: AdLog = AdLog(config.logging.logger, effectiveConfig.logLevel)
+    val log: AdLog = AdLog(
+        config.logging.logger,
+        effectiveConfig.logLevel,
+        redactAdUnitIds = effectiveConfig.environment == AdEnvironment.PRODUCTION,
+    )
     private val scope: CoroutineScope = libraryScope(log)
     val deps: RuntimeDeps = depsFactory(log, scope)
     private val validation = ConfigValidator.validate(config, deps.manifestAppId, deps.isDebuggable)

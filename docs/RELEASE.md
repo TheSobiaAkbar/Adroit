@@ -42,7 +42,9 @@ Upgrades of `ads-mobile-sdk` and `user-messaging-platform` never come from a bot
 4. Run the full CI command set, and the instrumentation workflow (manually, `workflow_dispatch`) on API 24 and 36.
 5. The API dumps must be unchanged: a Google upgrade must never change CompanyAdMob's public API.
 6. Check `docs/architecture/R8_REPORT.md`'s findings still hold (minified samples launch).
-7. Add a "Google SDK" section to the CHANGELOG entry, and update the "Last verified against" lines and the README table.
+7. Check the new resolved runtime classpath against the GitHub Advisory Database, and update the dependency findings
+   in `docs/audits/SECURITY_PRIVACY_AUDIT.md` (check 15).
+8. Add a "Google SDK" section to the CHANGELOG entry, and update the "Last verified against" lines and the README table.
 
 ## Tag and publish
 

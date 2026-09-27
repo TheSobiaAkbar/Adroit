@@ -13,6 +13,14 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ### Fixed
 - The views and Compose modules log through the host's configured logger and level, like core.
+- `docs/CONSENT.md`: the Consent Mode section had the order wrong. Firebase must be initialized before UMP starts,
+  and UMP 3.2.0 or newer applies the consent choices itself.
+
+### Security
+- In PRODUCTION, every log line shortens full ad unit IDs, including retry messages that printed them in full when
+  the log level was lowered.
+- A `GoogleRequestCustomizer` that fails with a linkage error (for example `NoSuchMethodError` after a Google SDK
+  upgrade) is contained like an exception, instead of crashing the load.
 
 ## [0.1.0] - 2026-09-26
 

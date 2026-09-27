@@ -140,10 +140,14 @@ Read Google's page before combining it with a UMP US state regulations message.
 
 ## Consent Mode and Firebase
 
-If the app also uses Firebase Analytics, set its consent mode from the same UMP result, and after `start()` has
-finished, so analytics never runs ahead of consent
-([Consent mode](https://developers.google.com/admob/android/next-gen/privacy/consent-mode)). Collect
-`CompanyAdMob.privacy.consentState` and map `canRequestAds` to your Firebase consent settings.
+If the app also uses Google Analytics for Firebase, UMP 3.2.0 and newer (the library uses 4.0.0) can apply the
+user's GDPR choices to Google Consent Mode for you. The library needs no code for this
+([Consent mode](https://developers.google.com/admob/android/next-gen/privacy/consent-mode)):
+
+1. Turn on consent mode in the AdMob UI.
+2. Initialize Firebase **before** `CompanyAdMob.start()`, which starts UMP. The google-services plugin initializes it
+   before `Application.onCreate`, so this holds unless you initialize Firebase manually later.
+3. Set the default consent state yourself for users outside the EU regulations, as Google's page describes.
 
 ## Play data safety and the advertising ID
 

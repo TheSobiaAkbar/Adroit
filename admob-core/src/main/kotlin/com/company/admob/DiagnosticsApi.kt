@@ -3,7 +3,7 @@ package com.company.admob
 import android.app.Activity
 import com.company.admob.config.AdEnvironment
 import com.company.admob.events.AdEvent
-import com.company.admob.events.redactAdUnitId
+import com.company.admob.events.redactAdUnitIdsIn
 import kotlin.time.Duration
 
 /** Debugging aids. Obtain it from [AdsClient.diagnostics]. */
@@ -72,15 +72,7 @@ public class DiagnosticsReport(
 
     /** In PRODUCTION, shortens any full ad unit ID (for example inside an error message) to its last 4 digits. */
     private fun redact(report: String): String =
-        if (environment != AdEnvironment.PRODUCTION) {
-            report
-        } else {
-            AD_UNIT_ID.replace(report) { redactAdUnitId(it.value) }
-        }
-
-    private companion object {
-        val AD_UNIT_ID = Regex("""ca-app-pub-\d{16}/\d{10}""")
-    }
+        if (environment != AdEnvironment.PRODUCTION) report else redactAdUnitIdsIn(report)
 }
 
 /**

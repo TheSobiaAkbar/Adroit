@@ -63,6 +63,9 @@ internal class FakeAdsSdk(private val scope: CoroutineScope) : AdsSdk {
     /** Called for every load request, before it's scripted. Tests use it to assert when loads may happen. */
     var onLoad: ((LoadCall) -> Unit)? = null
 
+    /** Called at the start of every [initialize] call. Tests use it to check what's in place before the SDK starts. */
+    var onInitialize: ((Context) -> Unit)? = null
+
     val initializeCalls = mutableListOf<InitializeCall>()
 
     /** The thread each [initialize] call was made on. The port is called on main; the adapter moves off it. */
@@ -90,6 +93,7 @@ internal class FakeAdsSdk(private val scope: CoroutineScope) : AdsSdk {
         disableCrashReporting: Boolean,
         onComplete: (SdkInitResult) -> Unit,
     ) {
+        onInitialize?.invoke(appContext)
         initializeCalls += InitializeCall(appId, request, disableCrashReporting)
         initializeThreads += Thread.currentThread()
         val result = initResult

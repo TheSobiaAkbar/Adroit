@@ -1,6 +1,7 @@
 package com.company.admob.internal.runtime
 
 import android.app.Activity
+import android.content.Context
 import android.os.Looper
 import com.company.admob.AdError
 import com.company.admob.AdsState
@@ -8,12 +9,14 @@ import com.company.admob.CompanyAdMob
 import com.company.admob.ConsentStatus
 import com.company.admob.UnavailableReason
 import com.company.admob.config.AgeTreatment
+import com.company.admob.internal.consent.RdpWriter
 import com.company.admob.internal.port.SdkInitResult
 import com.company.admob.internal.port.SdkRequestConfig
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -184,5 +187,29 @@ class StartFlowTest {
         s.h.settle()
         assertEquals(listOf(ready, ready), s.results)
         assertEquals(1, s.h.consentSdk.updateRequests.size)
+    }
+
+    @Test
+    fun `gad_rdp is written before the SDK initializes, and removed before it when turned off`() = runTest {
+        val h = RuntimeHarness(this)
+        val prefs = h.app.getSharedPreferences(RdpWriter.defaultPreferencesName(h.app), Context.MODE_PRIVATE)
+        val seenAtInit = mutableListOf<Int?>()
+        h.adsSdk.onInitialize = { seenAtInit += prefs.getInt(RdpWriter.KEY, -1).takeIf { it != -1 } }
+
+        val first = h.runtime(testConfig(h.logs) { privacy { restrictedDataProcessing = true } })
+        h.settle()
+        first.client.start(newActivity())
+        h.settle()
+        assertEquals(listOf<Int?>(1), seenAtInit)
+
+        CompanyAdMob.resetForTests()
+        val next = RuntimeHarness(this)
+        next.adsSdk.onInitialize = { seenAtInit += prefs.getInt(RdpWriter.KEY, -1).takeIf { it != -1 } }
+        val runtime = next.runtime(testConfig(next.logs) { privacy { restrictedDataProcessing = false } })
+        next.settle()
+        runtime.client.start(newActivity())
+        next.settle()
+        assertEquals(listOf(1, null), seenAtInit)
+        assertFalse(prefs.contains(RdpWriter.KEY))
     }
 }

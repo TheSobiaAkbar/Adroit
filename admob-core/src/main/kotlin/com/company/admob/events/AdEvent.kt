@@ -224,3 +224,8 @@ internal fun AdEvent.toLogString(redactAdUnitIds: Boolean): String {
 /** Shortens an ad unit ID to its last 4 characters, for logs. */
 internal fun redactAdUnitId(adUnitId: String): String =
     if (adUnitId.length <= 4) "…" else "…" + adUnitId.takeLast(4)
+
+private val FULL_AD_UNIT_ID = Regex("""ca-app-pub-\d{16}/\d{10}""")
+
+/** Shortens every full ad unit ID in [text] (for example in an error message or a retry key) with [redactAdUnitId]. */
+internal fun redactAdUnitIdsIn(text: String): String = FULL_AD_UNIT_ID.replace(text) { redactAdUnitId(it.value) }

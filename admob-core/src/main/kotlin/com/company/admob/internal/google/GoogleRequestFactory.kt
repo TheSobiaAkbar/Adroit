@@ -33,9 +33,21 @@ internal class GoogleRequestFactory(private val log: AdLog) {
             customizer.customize(extras.placement, builder)
             build(builder)
         } catch (e: Exception) {
-            log.e(e) { "GoogleRequestCustomizer failed for ${extras.placement}; using the request without it" }
-            build(newBuilder())
+            withoutCustomizer(extras, e, newBuilder, build)
+        } catch (e: LinkageError) {
+            // A customizer compiled against another Google SDK version (NoSuchMethodError, NoClassDefFoundError).
+            withoutCustomizer(extras, e, newBuilder, build)
         }
+    }
+
+    private inline fun <B : Any, R> withoutCustomizer(
+        extras: RequestExtras,
+        error: Throwable,
+        newBuilder: () -> B,
+        build: (B) -> R,
+    ): R {
+        log.e(error) { "GoogleRequestCustomizer failed for ${extras.placement}; using the request without it" }
+        return build(newBuilder())
     }
 
     companion object {

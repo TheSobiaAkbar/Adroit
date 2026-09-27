@@ -33,6 +33,27 @@ class AdLogTest {
     }
 
     @Test
+    fun `with redaction, every full ad unit ID is shortened at every level`() {
+        val log = AdLog(logger, LogLevel.VERBOSE, redactAdUnitIds = true)
+        log.d { "INTERSTITIAL:ca-app-pub-1234567890123456/1234567890: retry 1 in 2s" }
+        log.e { "unit ca-app-pub-1234567890123456/0987654321 and ca-app-pub-1234567890123456/1111122222" }
+        assertEquals(
+            listOf(
+                LogLevel.DEBUG to "INTERSTITIAL:…7890: retry 1 in 2s",
+                LogLevel.ERROR to "unit …4321 and …2222",
+            ),
+            written,
+        )
+    }
+
+    @Test
+    fun `without redaction, ad unit IDs are logged in full`() {
+        val log = AdLog(logger, LogLevel.VERBOSE)
+        log.d { "ca-app-pub-1234567890123456/1234567890" }
+        assertEquals(listOf(LogLevel.DEBUG to "ca-app-pub-1234567890123456/1234567890"), written)
+    }
+
+    @Test
     fun `a throwing logger never propagates`() {
         val log = AdLog({ _, _, _, _ -> throw IllegalStateException("boom") }, LogLevel.VERBOSE)
         log.e { "still fine" }

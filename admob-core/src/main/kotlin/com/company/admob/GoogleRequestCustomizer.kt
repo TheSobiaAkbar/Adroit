@@ -7,7 +7,8 @@ package com.company.admob
  * [builder] is the Next-Gen SDK's request builder for the placement's format (`AdRequest.Builder`,
  * `BannerAdRequest.Builder`, or `NativeAdRequest.Builder`); cast it yourself. It is typed as [Any] so that no
  * Google type appears in CompanyAdMob's binary API. Called on the main thread before each load. Exceptions are
- * caught and logged, and the request continues unmodified.
+ * caught and logged, and the request continues unmodified. So is a linkage error (for example `NoSuchMethodError`
+ * after a Google SDK upgrade).
  */
 @GoogleSdkEscapeHatch
 public fun interface GoogleRequestCustomizer {
