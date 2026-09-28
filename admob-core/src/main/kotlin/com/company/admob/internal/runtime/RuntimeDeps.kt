@@ -18,9 +18,12 @@ import com.company.admob.internal.port.NativeRenderPort
 import com.company.admob.internal.storage.SharedPrefsKeyValueStore
 import com.company.admob.internal.time.Clock
 import com.company.admob.internal.time.SystemClockImpl
+import com.company.admob.network.NetworkMonitor
+import com.company.admob.network.NetworkState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The port instances and host facts [AdsRuntime] is built from. [production] builds the real ones; tests pass fakes.
@@ -29,6 +32,8 @@ import kotlinx.coroutines.Dispatchers
  * @property manifestAppId the manifest's AdMob app ID, or null.
  * @property isDebuggable whether the host app is debuggable.
  * @property ioDispatcher where the library's own disk reads and writes run, never the main thread in production.
+ * @property network the device's network, created on first use (only when a load fails); null in tests that don't
+ *   simulate it.
  */
 internal class RuntimeDeps(
     val adsSdk: AdsSdk,
@@ -41,6 +46,7 @@ internal class RuntimeDeps(
     val manifestAppId: String?,
     val isDebuggable: Boolean,
     val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    val network: Lazy<StateFlow<NetworkState>>? = null,
     private val onRegister: () -> Unit = {},
     private val onUnregister: () -> Unit = {},
 ) {
@@ -63,6 +69,7 @@ internal class RuntimeDeps(
                 nativeRenderPort = NextGenNativeAdBinder(log),
                 manifestAppId = ManifestAppIdReader.read(app),
                 isDebuggable = app.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
+                network = lazy { NetworkMonitor.getInstance(app).state },
                 onRegister = {
                     tracker.register(app)
                     foreground.register()

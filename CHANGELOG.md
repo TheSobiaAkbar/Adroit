@@ -23,6 +23,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdSlots.showOnSplash`, `AdSlotView` (admob-views) and `AdSlot` (admob-compose) show an ad in its current format;
   a swapped app open ad shows its interstitial on returns to the app. `PlacementOverride.format`, through a new
   constructor; the 1.0.0-rc1 constructor is unchanged.
+- Load retries pause without a network, instead of failing again on their backoff, and run as soon as a network
+  returns (after up to 5 seconds for Android to validate it).
 - Integration guide (`docs/INTEGRATION_GUIDE.md`): a step-by-step checklist for a new app, from the library to the
   Firebase parameters and release.
 - Splash screen (`docs/SPLASH.md`): `SplashFlow` runs consent (the form gets `consentTimeoutSeconds`, 8, to appear,

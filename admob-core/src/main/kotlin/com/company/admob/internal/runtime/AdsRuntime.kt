@@ -105,7 +105,7 @@ internal class AdsRuntime(
         log = log,
     )
 
-    private val retryScheduler = RetryScheduler(scope, deps.foregroundSource, log, clock = deps.clock)
+    private val retryScheduler = RetryScheduler(scope, deps.foregroundSource, log, clock = deps.clock, network = deps.network)
 
     val frequency: FrequencyGate = FrequencyGate(
         clock = deps.clock,

@@ -186,7 +186,8 @@ Invalid remote overrides are dropped with a log, and never stop ads. See [Remote
 | Native | 10 s, ×2, 120 s, 3 | 55 min |
 | Banner | 15 s, ×2, 120 s, 4 (only while attached and visible) | none: the SDK refreshes banners |
 
-Every retry has ±20 % jitter, and a no-fill is never retried sooner than 30 seconds. Expiries are a few minutes
+Every retry has ±20 % jitter, and a no-fill is never retried sooner than 30 seconds. Without a network (airplane
+mode, or Wi-Fi and mobile data off) retries pause, and each runs as soon as a network returns. Expiries are a few minutes
 shorter than Google's limits, which are one hour for most formats and four hours for app open
 ([app open guidance](https://developers.google.com/admob/android/next-gen/app-open)).
 
@@ -222,4 +223,4 @@ static AdMobConfig create() {
 }
 ```
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28

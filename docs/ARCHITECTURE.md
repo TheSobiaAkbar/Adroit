@@ -52,7 +52,8 @@ is `Ready`**. Calls made earlier are remembered as intent: a banner created befo
 ## What the library does for every ad
 
 - **Preloading:** full-screen placements load after `Ready` (strategy `AFTER_READY`), and reload after each show.
-- **Retry:** failed loads retry with exponential backoff and jitter; a no-fill waits at least 30 seconds.
+- **Retry:** failed loads retry with exponential backoff and jitter; a no-fill waits at least 30 seconds. Retries
+  pause without a network and run as soon as it returns.
 - **Expiry:** cached ads are dropped a few minutes before Google's limits (55 minutes; 3 h 55 min for app open).
 - **Frequency:** per-placement minimum interval and session cap, a global interval between full-screen ads, and
   app open cooldown. These are a user-experience safeguard, not a replacement for AdMob's own frequency capping.
@@ -70,4 +71,4 @@ is `Ready`**. Calls made earlier are remembered as intent: a banner created befo
 [Getting started](GETTING_STARTED.md) · [Configuration](CONFIGURATION.md) · [Consent](CONSENT.md) ·
 [Troubleshooting](TROUBLESHOOTING.md)
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28

@@ -9,6 +9,7 @@ placement's availability and retry state, and the last error), and watch Logcat 
 - `Unavailable(CONSENT_NOT_OBTAINED)`: consent doesn't allow ads yet ([below](#canrequestads-is-false)).
 - `Unavailable(AD_FREE_USER)`: `setAdFree(true)` was called.
 - Offline, or a first request can simply take a few seconds; look for `LoadFailed` events and their `willRetry`.
+  Offline, retries wait for the network (`retry … when the network returns` in Logcat) and load once it's back.
 - The placement key used in XML or code must match a configured placement.
 
 ## `Failed(InvalidConfiguration)`
@@ -125,4 +126,4 @@ once, in `Application.onCreate`, and use [remote overrides](REMOTE_CONFIG.md) fo
 `setAdFree(true)` isn't persisted, on purpose: your app owns the entitlement (refunds, expired subscriptions, account
 switches). Call it on every launch from your own record of the purchase, before or right after `initialize`.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28
