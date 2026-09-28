@@ -55,7 +55,7 @@ class SplashActivity : AppCompatActivity() {
 }
 ```
 
-`onComplete` is called exactly once: after the ad is dismissed, or right away when there's no ad within `maxWait`
+`onResult` is called exactly once: after the ad is dismissed, or right away when there's no ad within `maxWait`
 (the ad is then kept for the next foreground). If the Activity is paused or destroyed while waiting (for example, on
 rotation), the result is `NotShown(ActivityUnavailable)`; the recreated screen may call again.
 

@@ -166,7 +166,7 @@ internal class EffectivePlacement(
     /** The placement rule; for app open, [AppOpenPlacementConfig.cooldown] raises its minimum interval (§20.6). */
     val frequency: FrequencyRule =
         if (config is AppOpenPlacementConfig && config.cooldown > placementRule.minInterval) {
-            placementRule.copy(minInterval = config.cooldown)
+            FrequencyRule(config.cooldown, placementRule.maxPerSession, placementRule.counter)
         } else {
             placementRule
         }

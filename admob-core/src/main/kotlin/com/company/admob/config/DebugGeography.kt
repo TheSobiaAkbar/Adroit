@@ -3,6 +3,8 @@ package com.company.admob.config
 /**
  * Forces the geography UMP assumes, to test consent flows. Only honoured on test devices, and rejected by
  * validation in [AdEnvironment.PRODUCTION].
+ *
+ * Stability: new values may be added in minor versions; include an `else` branch when matching exhaustively.
  */
 public enum class DebugGeography {
     /** No override: UMP uses the device's real location. */

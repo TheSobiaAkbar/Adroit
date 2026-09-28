@@ -29,7 +29,7 @@ public interface BannerApi {
  *   or a remote override can change. Pass a size only when the code, not the configuration, should decide it.
  * @property reserveSpace reserve the banner's expected height before it loads, to avoid layout shifts.
  */
-public class BannerOptions(
+public class BannerOptions @JvmOverloads constructor(
     public val size: BannerSize? = null,
     public val reserveSpace: Boolean = true,
 ) {
@@ -41,7 +41,11 @@ public class BannerOptions(
     override fun toString(): String = "BannerOptions(size=$size, reserveSpace=$reserveSpace)"
 }
 
-/** Banner sizes. New sizes may be added in minor versions. */
+/**
+ * Banner sizes.
+ *
+ * Stability: new sizes may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
 public sealed interface BannerSize {
     /** Full-width anchored adaptive banner (Google's large anchored adaptive size). Recommended default. */
     public data object AnchoredAdaptive : BannerSize
@@ -63,7 +67,11 @@ public sealed interface BannerSize {
     public data class Collapsible(public val position: CollapsibleBannerPosition) : BannerSize
 }
 
-/** Where a [BannerSize.Collapsible] banner is placed, and so which way it expands. */
+/**
+ * Where a [BannerSize.Collapsible] banner is placed, and so which way it expands.
+ *
+ * Stability: the two positions won't change before the next major version, so an exhaustive `when` is safe.
+ */
 public enum class CollapsibleBannerPosition {
     /** At the top of the screen; the expanded ad aligns to the top. */
     TOP,
@@ -90,7 +98,11 @@ public interface BannerAdHandle {
     public fun destroy()
 }
 
-/** State of a banner. New states may be added in minor versions. */
+/**
+ * State of a banner.
+ *
+ * Stability: new states may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
 public sealed interface BannerState {
     /** Waiting for the library to be ready or for an ad. */
     public data object Loading : BannerState

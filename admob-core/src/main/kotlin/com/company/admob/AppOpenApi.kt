@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -13,7 +14,7 @@ import kotlin.time.Duration.Companion.seconds
 public interface AppOpenApi {
     /**
      * Shows an app open ad from a loading/splash screen during a cold start, if one becomes available within
-     * [maxWait]. [onComplete] is called exactly once, on the main thread: after the ad is dismissed, or with
+     * [maxWait]. [onResult] is called exactly once, on the main thread: after the ad is dismissed, or with
      * [FullScreenResult.NotShown] if no ad could be shown in time. Continue to your main screen in both cases.
      *
      * If the content becomes ready before the ad, don't keep the user waiting: keep [maxWait] short. An ad that
@@ -25,8 +26,16 @@ public interface AppOpenApi {
     public fun showOnColdStart(
         activity: Activity,
         maxWait: Duration = 4.seconds,
-        onComplete: (FullScreenResult) -> Unit,
+        onResult: (FullScreenResult) -> Unit,
     )
+
+    /**
+     * [showOnColdStart] with the wait in milliseconds, for Java callers, who can't pass a [Duration] (ADR-013).
+     * Kotlin code should use the [Duration] form.
+     */
+    public fun showOnColdStart(activity: Activity, maxWaitMillis: Long, onResult: (FullScreenResult) -> Unit) {
+        showOnColdStart(activity, maxWaitMillis.milliseconds, onResult)
+    }
 
     /**
      * Skips the next foreground event. Call it before leaving the app on purpose, for example for a purchase flow,

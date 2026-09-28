@@ -122,6 +122,7 @@ public final class com/company/admob/AdError$FrequencyCapped : com/company/admob
 }
 
 public final class com/company/admob/AdError$Internal : com/company/admob/AdError {
+	public fun <init> (Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
@@ -275,15 +276,6 @@ public abstract interface class com/company/admob/AdPlacement {
 	public abstract fun getKey ()Ljava/lang/String;
 }
 
-public abstract class com/company/admob/AdPlacementBase : com/company/admob/AdPlacement {
-	public synthetic fun <init> (Ljava/lang/String;Lcom/company/admob/AdFormat;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun equals (Ljava/lang/Object;)Z
-	public final fun getFormat ()Lcom/company/admob/AdFormat;
-	public final fun getKey ()Ljava/lang/String;
-	public final fun hashCode ()I
-	public final fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class com/company/admob/AdsClient {
 	public abstract fun awaitReady-VtjQ1oo (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun awaitReady-VtjQ1oo$default (Lcom/company/admob/AdsClient;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -370,14 +362,20 @@ public final class com/company/admob/AdsState$Unavailable : com/company/admob/Ad
 public abstract interface class com/company/admob/AppOpenApi {
 	public abstract fun getAvailability ()Lkotlinx/coroutines/flow/StateFlow;
 	public abstract fun setEnabled (Z)V
+	public fun showOnColdStart (Landroid/app/Activity;JLkotlin/jvm/functions/Function1;)V
 	public abstract fun showOnColdStart-8Mi8wO0 (Landroid/app/Activity;JLkotlin/jvm/functions/Function1;)V
 	public static synthetic fun showOnColdStart-8Mi8wO0$default (Lcom/company/admob/AppOpenApi;Landroid/app/Activity;JLkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public abstract fun skipNextForeground ()V
 	public abstract fun suppressWhile (Landroidx/lifecycle/LifecycleOwner;)V
 }
 
-public final class com/company/admob/AppOpenPlacement : com/company/admob/AdPlacementBase {
+public final class com/company/admob/AppOpenPlacement : com/company/admob/AdPlacement {
 	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public fun getKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/company/admob/BannerAdHandle {
@@ -395,6 +393,7 @@ public abstract interface class com/company/admob/BannerApi {
 
 public final class com/company/admob/BannerOptions {
 	public fun <init> ()V
+	public fun <init> (Lcom/company/admob/BannerSize;)V
 	public fun <init> (Lcom/company/admob/BannerSize;Z)V
 	public synthetic fun <init> (Lcom/company/admob/BannerSize;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -404,8 +403,13 @@ public final class com/company/admob/BannerOptions {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/company/admob/BannerPlacement : com/company/admob/AdPlacementBase {
+public final class com/company/admob/BannerPlacement : com/company/admob/AdPlacement {
 	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public fun getKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/company/admob/BannerSize {
@@ -642,8 +646,13 @@ public abstract interface class com/company/admob/InterstitialApi : com/company/
 	public abstract fun showOnSplash (Landroid/app/Activity;Lcom/company/admob/InterstitialPlacement;Lkotlin/jvm/functions/Function1;)V
 }
 
-public final class com/company/admob/InterstitialPlacement : com/company/admob/AdPlacementBase {
+public final class com/company/admob/InterstitialPlacement : com/company/admob/AdPlacement {
 	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public fun getKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/company/admob/NativeAdAssets {
@@ -750,8 +759,13 @@ public abstract interface class com/company/admob/NativeApi {
 	public abstract fun style (Lcom/company/admob/NativePlacement;)Lcom/company/admob/NativeStyle;
 }
 
-public final class com/company/admob/NativePlacement : com/company/admob/AdPlacementBase {
+public final class com/company/admob/NativePlacement : com/company/admob/AdPlacement {
 	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public fun getKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/company/admob/NativeStyle : java/lang/Enum {
@@ -848,12 +862,22 @@ public abstract interface class com/company/admob/RewardedInterstitialApi : com/
 	public static synthetic fun showAndAwait$default (Lcom/company/admob/RewardedInterstitialApi;Landroid/app/Activity;Lcom/company/admob/RewardedInterstitialPlacement;Lcom/company/admob/RewardedShowOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class com/company/admob/RewardedInterstitialPlacement : com/company/admob/AdPlacementBase {
+public final class com/company/admob/RewardedInterstitialPlacement : com/company/admob/AdPlacement {
 	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public fun getKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/company/admob/RewardedPlacement : com/company/admob/AdPlacementBase {
+public final class com/company/admob/RewardedPlacement : com/company/admob/AdPlacement {
 	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public fun getKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/company/admob/RewardedShowOptions {
@@ -1094,11 +1118,6 @@ public final class com/company/admob/config/FrequencyRule {
 	public fun <init> ()V
 	public synthetic fun <init> (JIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (JIILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1-UwyO8pc ()J
-	public final fun component2 ()I
-	public final fun component3 ()I
-	public final fun copy-KLykuaI (JII)Lcom/company/admob/config/FrequencyRule;
-	public static synthetic fun copy-KLykuaI$default (Lcom/company/admob/config/FrequencyRule;JIIILjava/lang/Object;)Lcom/company/admob/config/FrequencyRule;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCounter ()I
 	public final fun getMaxPerSession ()I

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * A native ad from [FakeAdsClient] with the given [assets]. [destroy] is counted ([destroyCount]) so tests can check
  * that an ad is released exactly once; [block] simulates ads being blocked (ad-free, consent withdrawn).
  */
-public class FakeNativeAdHandle(
+public class FakeNativeAdHandle @JvmOverloads constructor(
     override val placement: NativePlacement,
     override val assets: NativeAdAssets = FakeAdsClient.DEFAULT_NATIVE_ASSETS,
 ) : NativeAdHandle {
@@ -33,6 +33,7 @@ public class FakeNativeAdHandle(
     }
 
     /** Moves the handle to [NativeAdHandleState.Blocked], as the library does when ads get blocked. */
+    @JvmOverloads
     public fun block(reason: UnavailableReason = UnavailableReason.AD_FREE_USER) {
         if (mutableState.value == NativeAdHandleState.Active) mutableState.value = NativeAdHandleState.Blocked(reason)
     }

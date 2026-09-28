@@ -250,8 +250,10 @@ public final class com/company/admob/testing/FakeCall$SuppressAppOpen : com/comp
 }
 
 public final class com/company/admob/testing/FakeNativeAdHandle : com/company/admob/NativeAdHandle {
+	public fun <init> (Lcom/company/admob/NativePlacement;)V
 	public fun <init> (Lcom/company/admob/NativePlacement;Lcom/company/admob/NativeAdAssets;)V
 	public synthetic fun <init> (Lcom/company/admob/NativePlacement;Lcom/company/admob/NativeAdAssets;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun block ()V
 	public final fun block (Lcom/company/admob/UnavailableReason;)V
 	public static synthetic fun block$default (Lcom/company/admob/testing/FakeNativeAdHandle;Lcom/company/admob/UnavailableReason;ILjava/lang/Object;)V
 	public fun destroy ()V

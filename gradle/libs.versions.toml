@@ -4,6 +4,10 @@ agp = "9.1.1"
 kotlin = "2.4.20"
 compileSdk = "37"
 minSdk = "24"
+# The compileSdk the published AARs ask apps for (aar-metadata minCompileSdk). Without it AGP 9 publishes compileSdk
+# (37), forcing every app onto the newest SDK. 34 is what the libraries' own dependencies need (lifecycle 2.11);
+# admob-compose's Compose 1.12 asks for 37 in its own metadata (PROMPT 27, API_STABILITY_AUDIT.md check 10).
+consumerMinCompileSdk = "34"
 targetSdk = "36"
 # Public API dumps (ADR-007): BCV's JVM dump engine, driven by build-logic tasks
 binaryCompatibilityValidator = "0.18.2"

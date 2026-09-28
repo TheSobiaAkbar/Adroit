@@ -24,6 +24,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 minSdk = libs.intVersion("minSdk")
                 consumerProguardFiles("consumer-rules.pro")
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+                aarMetadata {
+                    minCompileSdk = libs.intVersion("consumerMinCompileSdk")
+                }
             }
             compileOptions {
                 sourceCompatibility = JAVA_TARGET

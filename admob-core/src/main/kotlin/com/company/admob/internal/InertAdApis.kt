@@ -140,10 +140,10 @@ internal class InertAdApis(private val error: AdError, private val warn: (String
         override fun showOnColdStart(
             activity: Activity,
             maxWait: Duration,
-            onComplete: (FullScreenResult) -> Unit,
+            onResult: (FullScreenResult) -> Unit,
         ) {
             warn("appOpen.showOnColdStart()")
-            deliver(onComplete, FullScreenResult.NotShown(error))
+            deliver(onResult, FullScreenResult.NotShown(error))
         }
 
         override fun skipNextForeground() = Unit

@@ -13,8 +13,8 @@ import kotlin.time.Duration
 internal class AppOpenApiImpl(private val controller: AppOpenController) : AppOpenApi {
     override val availability: StateFlow<AdAvailability> get() = controller.availability()
 
-    override fun showOnColdStart(activity: Activity, maxWait: Duration, onComplete: (FullScreenResult) -> Unit) =
-        runOnMain { controller.showOnColdStart(activity, maxWait, onComplete) }
+    override fun showOnColdStart(activity: Activity, maxWait: Duration, onResult: (FullScreenResult) -> Unit) =
+        runOnMain { controller.showOnColdStart(activity, maxWait, onResult) }
 
     override fun skipNextForeground() = runOnMain { controller.skipNextForeground() }
 

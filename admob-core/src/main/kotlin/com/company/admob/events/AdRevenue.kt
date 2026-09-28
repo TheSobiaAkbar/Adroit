@@ -13,7 +13,11 @@ public data class AdRevenue(
     public val precision: RevenuePrecision,
 )
 
-/** How exact an [AdRevenue] value is. New values may be added in minor versions. */
+/**
+ * How exact an [AdRevenue] value is.
+ *
+ * Stability: new values may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
 public enum class RevenuePrecision {
     UNKNOWN,
     ESTIMATED,

@@ -54,13 +54,18 @@ public class ConsentState(
         "ConsentState(status=$status, canRequestAds=$canRequestAds, " +
             "privacyOptionsRequired=$privacyOptionsRequired, lastError=${lastError?.code})"
 
+    /** Well-known consent states. */
     public companion object {
         /** Before consent information has been requested. */
         public val Unknown: ConsentState = ConsentState(ConsentStatus.UNKNOWN, false, false, null)
     }
 }
 
-/** Consent status reported by UMP. New values may be added in minor versions. */
+/**
+ * Consent status reported by UMP.
+ *
+ * Stability: new values may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
 public enum class ConsentStatus {
     /** Not known yet; consent information hasn't been requested. */
     UNKNOWN,

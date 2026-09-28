@@ -301,10 +301,10 @@ public class FakeAdsClient @JvmOverloads constructor(
         }
 
     override val appOpen: AppOpenApi = object : AppOpenApi {
-        override fun showOnColdStart(activity: Activity, maxWait: Duration, onComplete: (FullScreenResult) -> Unit) {
+        override fun showOnColdStart(activity: Activity, maxWait: Duration, onResult: (FullScreenResult) -> Unit) {
             record(FakeCall.ShowAppOpenOnColdStart)
             val result = synchronized(lock) { appOpenResults.removeFirstOrNull() } ?: NOT_READY
-            deliver { onComplete(result) }
+            deliver { onResult(result) }
         }
 
         override fun skipNextForeground() = record(FakeCall.SkipNextAppOpen)
@@ -472,6 +472,7 @@ public class FakeAdsClient @JvmOverloads constructor(
         view.visibility = if (value == null) View.GONE else View.VISIBLE
     }
 
+    /** Shared defaults for fakes. */
     public companion object {
         /** Assets of the default native ads: a headline, body, call to action and rating. No icon or media. */
         @JvmField

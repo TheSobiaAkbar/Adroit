@@ -40,6 +40,8 @@ public class FirebaseRemoteConfigProvider internal constructor(
     private val settingsKey: String,
     private val formats: () -> Map<String, AdFormat>,
 ) : AdConfigProvider {
+    /** Reads [remoteConfig]; see the class description for [autoFetch] and [settingsKey]. */
+    @JvmOverloads
     public constructor(
         remoteConfig: FirebaseRemoteConfig,
         autoFetch: Boolean = false,

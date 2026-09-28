@@ -31,7 +31,11 @@ public sealed interface AdsState {
     public data class Failed(public val error: AdError) : AdsState
 }
 
-/** Why ads are [AdsState.Unavailable]. New values may be added in minor versions. */
+/**
+ * Why ads are [AdsState.Unavailable].
+ *
+ * Stability: new reasons may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
 public enum class UnavailableReason {
     /** The user has not given the consent required to request ads (UMP `canRequestAds()` is false). */
     CONSENT_NOT_OBTAINED,

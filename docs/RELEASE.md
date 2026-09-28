@@ -11,9 +11,50 @@ Semantic Versioning, with these rules ([architecture §31](architecture/02_ARCHI
   bytecode level).
 - **MINOR:** new API, or a Google SDK upgrade with no consumer-visible change.
 - **PATCH:** fixes only.
-- `0.x` while the API stabilizes inside the company; `1.0.0` after the final production audit.
+- `0.x` while the API stabilized inside the company. `1.0.0-rc1` froze the API (PROMPT 27); `1.0.0` follows the final
+  production audit. Pre-releases are `x.y.z-rcN`, and the rules below apply to them already.
 
 All modules are released together with one version, `companyAdmob.version` in `gradle.properties`.
+
+## API stability
+
+These rules hold from `1.0.0-rc1` ([audits/API_STABILITY_AUDIT.md](audits/API_STABILITY_AUDIT.md)). The committed
+`api/*.api` dumps are the baseline: `apiCheck` fails on any change to them, so every public change is a reviewed
+`apiDump` diff in the same pull request.
+
+- **Deprecation:** an API is deprecated in a minor version N with `@Deprecated(message, ReplaceWith(...))` at level
+  WARNING, and a CHANGELOG "Deprecated" entry. It stays at least until the next major version, where it may be
+  removed (it may be raised to ERROR in a later minor first). Never remove or change it in a minor or patch version.
+- **Default arguments:** never add a parameter to an existing public function or constructor, even with a default;
+  that changes its JVM signature. Add an overload (or a property on an options class such as `BannerOptions`) and keep
+  the old signature. Public constructors and top-level functions with default arguments carry `@JvmOverloads`;
+  interface members can't, so Java passes every argument there.
+- **Interfaces the library implements** (`AdsClient`, the format APIs, `BannerAdHandle`, `NativeAdHandle`,
+  `FullScreenAdLauncher`): members may be added in minor versions, always with a default implementation. The libraries
+  compile with `jvmDefault = NO_COMPATIBILITY`, so these are real Java default methods and an existing implementation
+  (a host's hand-written fake) still links.
+- **Interfaces hosts implement** (`AdLogger`, `AdEventListener`, `AdConfigProvider`, `NativeAdRenderer`,
+  `GoogleRequestCustomizer`) stay `fun interface`s with one abstract member. New members need a default.
+- **Sealed types and enums** say in their KDoc whether they're closed until the next major version (an exhaustive
+  `when` is safe: `FullScreenResult`, `RewardResult`, `NativeAdResult`, `AdEnvironment`, `LogLevel`,
+  `MaxAdContentRating`, `CollapsibleBannerPosition`) or may gain values in a minor version (include an `else`
+  branch: `AdError`, `AdEvent`, `AdsState`, `AdAvailability`, `AdPlacement`, `BannerSize`, `BannerState`,
+  `NativeAdHandleState`, `AdFormat`, `UnavailableReason`, `ConsentStatus`, `RevenuePrecision`, `AgeTreatment`,
+  `DebugGeography`, `PreloadStrategy`, `NativeStyle`, `FirebaseAdEvent`, admob-testing's `FakeCall`).
+- **Data classes** only for value types that won't gain properties (ADR-011). A class that may grow is a regular
+  class, and a new property comes with a new constructor overload; the old constructor stays.
+- **New surfaces** that aren't settled yet are marked `@ExperimentalCompanyAdMobApi` (opt-in, warning) and are exempt
+  from these rules until the marker is removed. Google-typed escape hatches are `@GoogleSdkEscapeHatch` and may change
+  in any release.
+- **Java** (ADR-013): the facade, `start`, every show, banner and native call, privacy, diagnostics and the
+  configuration builder (including `profiles(context, resId)`) are callable from Java. `kotlin.time.Duration`
+  options are Kotlin-only (Java sets timings in the ads file), except `showOnColdStart(activity, maxWaitMillis, …)`.
+  Callbacks are Kotlin function types: a Java lambda returns `Unit.INSTANCE`. `admob-core`'s
+  `JavaFacadeCalls.java` test source compiles this surface.
+- **Consumer requirements** (a MAJOR change to raise): minSdk 24, Java 11 bytecode, Kotlin 2.1, compileSdk 34 and
+  AGP 8.1.1 (compileSdk 37 and AGP 9.1.0 with `admob-compose`, set by Compose 1.12), as in the README's "Supported
+  versions". `consumerMinCompileSdk` in `gradle/libs.versions.toml` is what the AARs ask for; the consumer-smoke matrix
+  checks the rest.
 
 ## Release checklist
 

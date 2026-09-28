@@ -2,8 +2,20 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.plugin.compose")
 }
+
+/**
+ * The Compose host (admob-compose) by default; `-Psmoke.compose=false` builds a View-based host on admob-views, with
+ * no Compose at all, for the matrix rows on AGP 8: Compose 1.12 (admob-compose's BOM) requires AGP 9.1.
+ */
+val withCompose: Boolean = providers.gradleProperty("smoke.compose").getOrElse("true").toBoolean()
+
+// AGP 9 compiles Kotlin itself; AGP 8 (the matrix rows below 9) needs the Kotlin Android plugin, applied before the
+// Compose compiler plugin.
+if (com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore(".").toInt() < 9) {
+    apply(plugin = "org.jetbrains.kotlin.android")
+}
+if (withCompose) apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 
 /** The version just published by the main build (companyAdmob.version in its gradle.properties). */
 val companyAdmobVersion: String = Properties()
@@ -12,7 +24,7 @@ val companyAdmobVersion: String = Properties()
 
 android {
     namespace = "com.company.admob.consumersmoke"
-    compileSdk = 37
+    compileSdk = providers.gradleProperty("smoke.compileSdk").getOrElse("37").toInt()
     defaultConfig {
         applicationId = "com.company.admob.consumersmoke"
         minSdk = 24
@@ -23,21 +35,32 @@ android {
         manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
     }
     buildFeatures {
-        compose = true
+        compose = withCompose
     }
+    sourceSets.getByName("main").java.srcDir(if (withCompose) "src/compose/kotlin" else "src/views/kotlin")
+    // A Java 11 host: Java 11 bytecode from javac and kotlinc (the lowest the libraries support, ADR-010).
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
-dependencies {
-    // The only CompanyAdMob dependency: admob-core, admob-views and the Google SDKs must arrive transitively.
-    implementation("com.company:admob-compose:$companyAdmobVersion")
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+}
 
-    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.activity:activity-compose:1.13.0")
+dependencies {
+    // The only CompanyAdMob dependency: the other modules and the Google SDKs must arrive transitively.
+    if (withCompose) {
+        implementation("com.company:admob-compose:$companyAdmobVersion")
+        implementation(platform("androidx.compose:compose-bom:2026.09.00"))
+        implementation("androidx.compose.foundation:foundation")
+        implementation("androidx.activity:activity-compose:1.13.0")
+    } else {
+        implementation("com.company:admob-views:$companyAdmobVersion")
+        // The host's own choice, not CompanyAdMob's: activity 1.13 needs AGP 8.9.1, so the oldest rows pass an older one.
+        implementation("androidx.activity:activity:${providers.gradleProperty("smoke.activity").getOrElse("1.13.0")}")
+    }
 }
 
 /**
@@ -59,10 +82,10 @@ val verifyConsumerClasspath by tasks.registering {
         listOf(
             "com.company:admob-core",
             "com.company:admob-views",
-            "com.company:admob-compose",
             "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk",
             "com.google.android.ump:user-messaging-platform",
-        ).filterNot { it in onRuntime }.forEach { problems += "missing from the runtime classpath: $it" }
+        ).plus(listOfNotNull("com.company:admob-compose".takeIf { withCompose }))
+            .filterNot { it in onRuntime }.forEach { problems += "missing from the runtime classpath: $it" }
         listOf(
             "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk",
             "com.google.android.ump:user-messaging-platform",

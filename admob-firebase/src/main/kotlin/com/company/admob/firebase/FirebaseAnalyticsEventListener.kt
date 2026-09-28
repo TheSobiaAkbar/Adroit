@@ -30,6 +30,8 @@ public class FirebaseAnalyticsEventListener internal constructor(
     private val sink: AnalyticsSink,
     private val options: FirebaseAnalyticsOptions,
 ) : AdEventListener {
+    /** Logs to [analytics], with [options] (by default, ad revenue only). */
+    @JvmOverloads
     public constructor(analytics: FirebaseAnalytics, options: FirebaseAnalyticsOptions = FirebaseAnalyticsOptions()) :
         this(FirebaseAnalyticsSink(analytics), options)
 
@@ -40,6 +42,7 @@ public class FirebaseAnalyticsEventListener internal constructor(
      * manifests (play-services-measurement), which merge into the app.
      */
     @SuppressLint("MissingPermission")
+    @JvmOverloads
     public constructor(context: Context, options: FirebaseAnalyticsOptions = FirebaseAnalyticsOptions()) :
         this(FirebaseAnalytics.getInstance(context), options)
 
@@ -96,7 +99,11 @@ private fun AdFormat.analyticsName(): String = when (this) {
     AdFormat.NATIVE -> "native"
 }
 
-/** Custom Analytics events [FirebaseAnalyticsEventListener] can log, besides the ad revenue event. */
+/**
+ * Custom Analytics events [FirebaseAnalyticsEventListener] can log, besides the ad revenue event.
+ *
+ * Stability: new events may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
 public enum class FirebaseAdEvent(public val eventName: String) {
     /** `AdEvent.Impression` → `ad_view`. */
     VIEW("ad_view"),
@@ -114,7 +121,7 @@ public enum class FirebaseAdEvent(public val eventName: String) {
  * @property logAdImpressionRevenue whether paid events become Firebase `ad_impression` events. Default true.
  * @property customEvents which custom ad events to log. Default none.
  */
-public class FirebaseAnalyticsOptions(
+public class FirebaseAnalyticsOptions @JvmOverloads constructor(
     public val logAdImpressionRevenue: Boolean = true,
     public val customEvents: Set<FirebaseAdEvent> = emptySet(),
 ) {

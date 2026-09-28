@@ -6,7 +6,16 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+## [1.0.0-rc1] - 2026-09-28
+
+The public API is frozen for 1.0.0 (`docs/audits/API_STABILITY_AUDIT.md`): from here on, the rules in
+`docs/RELEASE.md` "API stability" apply.
+
 ### Added
+- `AppOpenApi.showOnColdStart(activity, maxWaitMillis, onResult)`, for Java callers (ADR-013).
+- `@JvmOverloads` on the public constructors with default arguments: `BannerOptions`, `AdError.Internal`,
+  `FirebaseAnalyticsOptions`, `FirebaseAnalyticsEventListener`, `FirebaseRemoteConfigProvider`, and admob-testing's
+  `FakeNativeAdHandle` (and its `block`).
 - Ad profiles (`docs/AD_PROFILES.md`): `adMobConfig { profiles(context, R.raw.ads_config) }` defines every ad in one
   JSON file, and each ad can be changed from a Firebase Remote Config parameter of the same name.
 - Several ad unit IDs per placement (`adUnitIds`, and a list overload for every format in `placements { }`), used in
@@ -22,6 +31,14 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdSettings` parameter) as remote overrides, and `FirebaseAnalyticsEventListener`, which logs paid events as Firebase
   `ad_impression` events (and optional custom ad events). Firebase BoM 34.19.0.
 
+### Changed (breaking)
+- The placement classes implement `AdPlacement` directly: the public `AdPlacementBase` superclass is gone. Code
+  that named `AdPlacementBase` must use `AdPlacement`; recompile against this version.
+- `FrequencyRule` is a regular class, no longer a data class (ADR-011): `copy` and `componentN` are gone, so construct
+  a new rule instead. It also gained `counter` (see Added), which changed its constructor.
+- `AppOpenApi.showOnColdStart`'s callback parameter is `onResult` (was `onComplete`), like every other show call.
+  Only calls that name the argument change.
+
 ### Changed
 - A banner's size comes from its placement (or ad profile) unless the code passes one: `BannerOptions.size` and
   `AdBannerView`'s `company_admob_bannerSize` are now optional. The placement-level `size` had no effect before.
@@ -30,10 +47,12 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   now optional (the default style is MEDIUM, as the default template was).
 - Placement keys may contain capital letters (`[A-Za-z0-9_]{1,40}`), so they can match Firebase parameter names.
 - Remote overrides drop an invalid ad unit ID on its own, instead of the placement's whole override.
-- **Binary change:** `FrequencyRule` gained `counter`, which changes its constructor and `copy`. Recompile against
-  this version.
 
 ### Fixed
+- The AARs asked apps to compile against API 37 (AGP 9 publishes the library's compileSdk as `minCompileSdk`). They
+  now ask for 34, what their dependencies need, so apps on compileSdk 34 to 36 and AGP 8.1.1 or newer can use
+  admob-core and admob-views. admob-compose still needs compileSdk 37 and AGP 9.1, from Compose 1.12.
+- Sealed types and enums state in their KDoc whether they may gain values (include an `else` branch) or are closed.
 - No disk I/O from the library on the main thread (`docs/audits/PERFORMANCE_AUDIT.md`): `initialize()` reads and
   updates the launch count and loads UMP's stored consent state on a background thread, and `start()` writes
   `gad_rdp` on the SDK's initialization thread, still before the SDK starts.
@@ -81,5 +100,6 @@ First internal release.
 ### Google SDK
 - Built against Google Mobile Ads Next-Gen SDK `ads-mobile-sdk` 1.4.0 and UMP 4.0.0.
 
-[Unreleased]: https://github.com/TheSobiaAkbar/AdsPlugin/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/TheSobiaAkbar/AdsPlugin/compare/v1.0.0-rc1...HEAD
+[1.0.0-rc1]: https://github.com/TheSobiaAkbar/AdsPlugin/compare/v0.1.0...v1.0.0-rc1
 [0.1.0]: https://github.com/TheSobiaAkbar/AdsPlugin/releases/tag/v0.1.0

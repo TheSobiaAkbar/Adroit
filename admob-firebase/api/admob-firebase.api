@@ -9,8 +9,10 @@ public final class com/company/admob/firebase/FirebaseAdEvent : java/lang/Enum {
 }
 
 public final class com/company/admob/firebase/FirebaseAnalyticsEventListener : com/company/admob/events/AdEventListener {
+	public fun <init> (Landroid/content/Context;)V
 	public fun <init> (Landroid/content/Context;Lcom/company/admob/firebase/FirebaseAnalyticsOptions;)V
 	public synthetic fun <init> (Landroid/content/Context;Lcom/company/admob/firebase/FirebaseAnalyticsOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/google/firebase/analytics/FirebaseAnalytics;)V
 	public fun <init> (Lcom/google/firebase/analytics/FirebaseAnalytics;Lcom/company/admob/firebase/FirebaseAnalyticsOptions;)V
 	public synthetic fun <init> (Lcom/google/firebase/analytics/FirebaseAnalytics;Lcom/company/admob/firebase/FirebaseAnalyticsOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun onEvent (Lcom/company/admob/events/AdEvent;)V
@@ -18,6 +20,7 @@ public final class com/company/admob/firebase/FirebaseAnalyticsEventListener : c
 
 public final class com/company/admob/firebase/FirebaseAnalyticsOptions {
 	public fun <init> ()V
+	public fun <init> (Z)V
 	public fun <init> (ZLjava/util/Set;)V
 	public synthetic fun <init> (ZLjava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -29,6 +32,8 @@ public final class com/company/admob/firebase/FirebaseAnalyticsOptions {
 
 public final class com/company/admob/firebase/FirebaseRemoteConfigProvider : com/company/admob/config/remote/AdConfigProvider {
 	public fun <init> ()V
+	public fun <init> (Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;)V
+	public fun <init> (Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;Z)V
 	public fun <init> (Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;ZLjava/lang/String;)V
 	public synthetic fun <init> (Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun overrides ()Lkotlinx/coroutines/flow/Flow;

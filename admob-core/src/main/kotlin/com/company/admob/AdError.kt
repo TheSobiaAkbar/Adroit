@@ -120,7 +120,10 @@ public sealed interface AdError {
     }
 
     /** An unexpected internal failure. Please report it with [detail] and logs. */
-    public data class Internal(public val detail: String, public val cause: Throwable? = null) : AdError {
+    public data class Internal @JvmOverloads constructor(
+        public val detail: String,
+        public val cause: Throwable? = null,
+    ) : AdError {
         override val code: String get() = "internal"
         override val message: String get() = "Internal error: $detail"
     }

@@ -51,11 +51,12 @@ counters, timers, limits, banner and native styles), see [Ad profiles](docs/AD_P
 | | |
 |---|---|
 | minSdk | 24 |
-| Kotlin (consumers) | 2.1 or newer (the libraries' metadata targets Kotlin 2.2; tested from Kotlin 2.2.10) |
+| Kotlin (consumers) | 2.1 or newer (the libraries' metadata targets Kotlin 2.2; tested with 2.1.20 and 2.2.10) |
 | Java bytecode | 11 |
 | Google Mobile Ads Next-Gen SDK | `ads-mobile-sdk` 1.4.0 (a runtime dependency) |
 | UMP | `user-messaging-platform` 4.0.0 (a runtime dependency) |
-| Android Gradle plugin (consumers) | any version that supports the above; built with AGP 9.1.1 |
+| compileSdk (consumers) | 34 or newer; 37 with `admob-compose` (Compose 1.12 requires it) |
+| Android Gradle plugin (consumers) | 8.1.1 or newer (tested with 8.1.4, 8.7.2, 8.13.2 and 9.1.1); 9.1.0 or newer with `admob-compose` (Compose 1.12 requires it) |
 
 Apps using AdMob Mediation must exclude the legacy `play-services-ads`: see [Mediation](docs/MEDIATION.md).
 

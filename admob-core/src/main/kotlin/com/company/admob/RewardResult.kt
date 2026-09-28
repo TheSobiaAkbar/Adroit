@@ -5,6 +5,8 @@ package com.company.admob
  *
  * Delivered exactly once, on the main thread, after the ad is dismissed (or immediately if it could not be shown).
  * Grant the reward only for [Earned], and use [Earned.rewardId] to make the grant idempotent.
+ *
+ * Stability: the three outcomes won't change before the next major version, so an exhaustive `when` is safe.
  */
 public sealed interface RewardResult {
     /** The user earned [reward]. [rewardId] is a random ID unique to this show, for idempotent granting. */

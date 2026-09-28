@@ -13,6 +13,11 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Threading: every function may be called from any thread. Every callback and flow emission arrives on the main
  * thread. No function throws because of an ad failure; failures are reported through results and [events].
+ *
+ * Stability: this interface, its format APIs ([interstitial], [banner] and the others) and the ad handles are
+ * implemented by the library. Members may be added to them in minor versions, always with a default implementation,
+ * so an existing implementation (such as a hand-written test fake) keeps compiling and linking; prefer the fakes in
+ * `admob-testing`, which implement new members for you.
  */
 public interface AdsClient {
     /** Library-wide readiness. Ads load only in [AdsState.Ready]. */

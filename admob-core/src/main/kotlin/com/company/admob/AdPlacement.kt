@@ -12,6 +12,9 @@ package com.company.admob
  * programmer error at declaration time.
  *
  * Two placements are equal when they have the same format and key. Instances are immutable and thread-safe.
+ *
+ * Stability: a placement type may be added in a minor version, with a new [AdFormat]; include an `else` branch when
+ * matching exhaustively.
  */
 public sealed interface AdPlacement {
     /** Stable identifier used in configuration, remote overrides, events and analytics. */
@@ -22,48 +25,74 @@ public sealed interface AdPlacement {
 }
 
 /** A banner placement. See [AdPlacement]. */
-public class BannerPlacement(key: String) : AdPlacementBase(key, AdFormat.BANNER)
+public class BannerPlacement(key: String) : AdPlacement {
+    override val key: String = checkedPlacementKey(key)
+    override val format: AdFormat get() = AdFormat.BANNER
+    override fun equals(other: Any?): Boolean = placementEquals(other)
+    override fun hashCode(): Int = placementHashCode()
+    override fun toString(): String = placementToString()
+}
 
 /** An interstitial placement. See [AdPlacement]. */
-public class InterstitialPlacement(key: String) : AdPlacementBase(key, AdFormat.INTERSTITIAL)
+public class InterstitialPlacement(key: String) : AdPlacement {
+    override val key: String = checkedPlacementKey(key)
+    override val format: AdFormat get() = AdFormat.INTERSTITIAL
+    override fun equals(other: Any?): Boolean = placementEquals(other)
+    override fun hashCode(): Int = placementHashCode()
+    override fun toString(): String = placementToString()
+}
 
 /** A rewarded placement. See [AdPlacement]. */
-public class RewardedPlacement(key: String) : AdPlacementBase(key, AdFormat.REWARDED)
+public class RewardedPlacement(key: String) : AdPlacement {
+    override val key: String = checkedPlacementKey(key)
+    override val format: AdFormat get() = AdFormat.REWARDED
+    override fun equals(other: Any?): Boolean = placementEquals(other)
+    override fun hashCode(): Int = placementHashCode()
+    override fun toString(): String = placementToString()
+}
 
 /** A rewarded interstitial placement. See [AdPlacement]. */
-public class RewardedInterstitialPlacement(key: String) : AdPlacementBase(key, AdFormat.REWARDED_INTERSTITIAL)
+public class RewardedInterstitialPlacement(key: String) : AdPlacement {
+    override val key: String = checkedPlacementKey(key)
+    override val format: AdFormat get() = AdFormat.REWARDED_INTERSTITIAL
+    override fun equals(other: Any?): Boolean = placementEquals(other)
+    override fun hashCode(): Int = placementHashCode()
+    override fun toString(): String = placementToString()
+}
 
 /** An app open placement. See [AdPlacement]. */
-public class AppOpenPlacement(key: String) : AdPlacementBase(key, AdFormat.APP_OPEN)
+public class AppOpenPlacement(key: String) : AdPlacement {
+    override val key: String = checkedPlacementKey(key)
+    override val format: AdFormat get() = AdFormat.APP_OPEN
+    override fun equals(other: Any?): Boolean = placementEquals(other)
+    override fun hashCode(): Int = placementHashCode()
+    override fun toString(): String = placementToString()
+}
 
 /** A native ad placement. See [AdPlacement]. */
-public class NativePlacement(key: String) : AdPlacementBase(key, AdFormat.NATIVE)
-
-/**
- * Shared implementation of [AdPlacement]. Not intended for direct use; subclasses are the six placement types.
- */
-public sealed class AdPlacementBase(
-    final override val key: String,
-    final override val format: AdFormat,
-) : AdPlacement {
-    init {
-        require(KEY_PATTERN.matches(key)) {
-            "Invalid placement key '$key': keys must match ${KEY_PATTERN.pattern}"
-        }
-    }
-
-    final override fun equals(other: Any?): Boolean =
-        other is AdPlacement && other.format == format && other.key == key
-
-    final override fun hashCode(): Int = 31 * format.hashCode() + key.hashCode()
-
-    // Spelled out rather than `this::class.simpleName`, which R8 renames in minified apps.
-    final override fun toString(): String = "${format.placementTypeName}($key)"
-
-    private companion object {
-        val KEY_PATTERN = Regex("[A-Za-z0-9_]{1,40}")
-    }
+public class NativePlacement(key: String) : AdPlacement {
+    override val key: String = checkedPlacementKey(key)
+    override val format: AdFormat get() = AdFormat.NATIVE
+    override fun equals(other: Any?): Boolean = placementEquals(other)
+    override fun hashCode(): Int = placementHashCode()
+    override fun toString(): String = placementToString()
 }
+
+// The placement classes share these instead of a base class, which would have to be public API (PROMPT 27).
+private val KEY_PATTERN = Regex("[A-Za-z0-9_]{1,40}")
+
+private fun checkedPlacementKey(key: String): String {
+    require(KEY_PATTERN.matches(key)) { "Invalid placement key '$key': keys must match ${KEY_PATTERN.pattern}" }
+    return key
+}
+
+private fun AdPlacement.placementEquals(other: Any?): Boolean =
+    other is AdPlacement && other.format == format && other.key == key
+
+private fun AdPlacement.placementHashCode(): Int = 31 * format.hashCode() + key.hashCode()
+
+// Spelled out rather than `this::class.simpleName`, which R8 renames in minified apps.
+private fun AdPlacement.placementToString(): String = "${format.placementTypeName}($key)"
 
 /** The public class name of this format's placement type, for `toString`s that must survive R8 renaming. */
 internal val AdFormat.placementTypeName: String

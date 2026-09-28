@@ -82,7 +82,11 @@ public interface NativeAdHandle : Closeable {
     override fun close(): Unit = destroy()
 }
 
-/** The life of a [NativeAdHandle]. New states may be added in minor versions. */
+/**
+ * The life of a [NativeAdHandle].
+ *
+ * Stability: new states may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
 public sealed interface NativeAdHandleState {
     /** The ad can be rendered. */
     public data object Active : NativeAdHandleState

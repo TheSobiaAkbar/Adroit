@@ -29,6 +29,7 @@ public sealed interface AdEvent {
     public sealed interface PlacementEvent : AdEvent {
         override val placementKey: String
         override val format: AdFormat
+        /** The effective ad unit ID used for the request. */
         public val adUnitId: String
     }
 

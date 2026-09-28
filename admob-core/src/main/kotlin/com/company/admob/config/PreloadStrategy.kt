@@ -1,6 +1,10 @@
 package com.company.admob.config
 
-/** When the library loads ads for a placement. Ignored for banners, which load when their view is created. */
+/**
+ * When the library loads ads for a placement. Ignored for banners, which load when their view is created.
+ *
+ * Stability: new strategies may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
 public enum class PreloadStrategy {
     /** Load as soon as the library is ready, and reload after each show. The default. */
     AFTER_READY,
