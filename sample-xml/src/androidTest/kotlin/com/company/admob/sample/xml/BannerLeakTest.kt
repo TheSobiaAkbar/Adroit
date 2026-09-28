@@ -30,6 +30,8 @@ class BannerLeakTest {
     fun bannersSurviveRotationAndNavigationWithoutLeaks() {
         ActivityScenario.launch(SplashActivity::class.java).use {
             awaitResumed<MainActivity>()
+            // Rotation stays frozen until the end: unfreezing mid-test rotates the app to the phone's physical
+            // orientation, and a tap that lands while the Activity is recreated is lost.
             try {
                 repeat(5) {
                     device.setOrientationLeft()
@@ -37,15 +39,16 @@ class BannerLeakTest {
                     device.setOrientationNatural()
                     awaitResumed<MainActivity>()
                 }
+                repeat(5) {
+                    // The first may show an interstitial after its loading screen (dismissed by awaitResumed); later
+                    // ones are frequency capped.
+                    onView(withId(R.id.level_complete)).perform(click())
+                    awaitResumed<DetailsActivity>(timeoutMillis = 20_000)
+                    pressBack()
+                    awaitResumed<MainActivity>()
+                }
             } finally {
                 device.unfreezeRotation()
-            }
-            repeat(5) {
-                // The first may show an interstitial (dismissed by awaitResumed); later ones are frequency capped.
-                onView(withId(R.id.level_complete)).perform(click())
-                awaitResumed<DetailsActivity>(timeoutMillis = 15_000)
-                pressBack()
-                awaitResumed<MainActivity>()
             }
         }
     }

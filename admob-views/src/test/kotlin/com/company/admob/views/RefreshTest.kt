@@ -178,6 +178,7 @@ class RefreshTest {
         assertEquals(View.VISIBLE, second.view.visibility)
         assertTrue(first.isDestroyed)
         assertSame(second, view.bannerHandle)
+        assertEquals("the replaced banner's destruction doesn't hide the view", View.VISIBLE, view.visibility)
 
         view.load(refresh = true)
         val third = client.banner.created.last().handle
@@ -186,5 +187,10 @@ class RefreshTest {
         assertTrue(third.isDestroyed)
         assertTrue(!second.isDestroyed)
         assertSame(second, view.bannerHandle)
+        assertEquals(View.VISIBLE, view.visibility)
+
+        second.state.value = BannerState.Failed(AdError.NoFill())
+        idle()
+        assertEquals("the shown banner still decides the view's visibility", View.GONE, view.visibility)
     }
 }

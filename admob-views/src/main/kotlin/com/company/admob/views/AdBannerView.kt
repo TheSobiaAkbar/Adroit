@@ -154,17 +154,36 @@ public class AdBannerView @JvmOverloads constructor(
             visibility = GONE
             return
         }
-        handle = attachBanner(owner, placement, options, collapseWhenEmpty = false) { state ->
-            val invalid = (state as? BannerState.Failed)?.error is AdError.InvalidConfiguration
-            visibility = if (invalid || (collapseWhenEmpty && state.hasNoAd())) GONE else VISIBLE
+        // The collector can emit before attachBanner returns: until then, [created] is null and the state is this banner's.
+        var created: BannerAdHandle? = null
+        created = attachBanner(owner, placement, options, collapseWhenEmpty = false) { state ->
+            onBannerState(created, state, placement)
         }
+        handle = created
     }
 
     /** Loads a new banner under the shown one; swaps them once it's loaded, or drops it if it fails. */
     private fun refreshBanner(placement: BannerPlacement) {
         val owner = findViewTreeLifecycleOwner() ?: return
-        val next = attachBanner(owner, placement, options, collapseWhenEmpty = false, shimmer = false) { state ->
-            val candidate = incoming ?: return@attachBanner
+        var created: BannerAdHandle? = null
+        created = attachBanner(owner, placement, options, collapseWhenEmpty = false, shimmer = false) { state ->
+            // Before attachBanner returns, the state is the new banner's own first one (Loading): nothing to do.
+            created?.let { onBannerState(it, state, placement) }
+        }
+        val next = checkNotNull(created)
+        // Laid out (it needs its width to load) but not seen until it replaces the current banner.
+        next.view.visibility = INVISIBLE
+        incoming = next
+    }
+
+    /**
+     * A state of [from]: the incoming refresh swaps in when loaded or is dropped; the shown banner decides this
+     * view's visibility. A banner this view replaced or dropped is ignored, so its destruction (Hidden) doesn't hide
+     * the view. [from] is null only for the shown banner's states emitted while it's being created.
+     */
+    private fun onBannerState(from: BannerAdHandle?, state: BannerState, placement: BannerPlacement) {
+        val candidate = incoming
+        if (from != null && from === candidate) {
             when (state) {
                 BannerState.Loading -> Unit
                 BannerState.Loaded -> {
@@ -173,6 +192,7 @@ public class AdBannerView @JvmOverloads constructor(
                     incoming = null
                     candidate.view.visibility = VISIBLE
                     old?.destroy()
+                    visibility = VISIBLE
                     ViewsRuntime.debug("AdBannerView(${placement.key}): refreshed")
                 }
                 is BannerState.Failed, is BannerState.Hidden -> {
@@ -180,10 +200,11 @@ public class AdBannerView @JvmOverloads constructor(
                     dropIncoming()
                 }
             }
+            return
         }
-        // Laid out (it needs its width to load) but not seen until it replaces the current banner.
-        next.view.visibility = INVISIBLE
-        incoming = next
+        if (from != null && from !== handle) return
+        val invalid = (state as? BannerState.Failed)?.error is AdError.InvalidConfiguration
+        visibility = if (invalid || (collapseWhenEmpty && state.hasNoAd())) GONE else VISIBLE
     }
 
     private fun dropIncoming() {
