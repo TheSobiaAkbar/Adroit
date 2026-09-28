@@ -1,9 +1,6 @@
 package com.company.admob.sample.xml
 
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,7 +13,7 @@ class InterstitialFlowTest {
     fun levelCompleteAlwaysOpensDetails() {
         ActivityScenario.launch(SplashActivity::class.java).use {
             awaitResumed<MainActivity>()
-            onView(withId(R.id.level_complete)).perform(click())
+            tapOpeningAd(R.id.level_complete)
             awaitResumed<DetailsActivity>(timeoutMillis = 15_000)
         }
     }

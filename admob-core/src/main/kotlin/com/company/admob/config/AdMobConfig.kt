@@ -71,6 +71,9 @@ public class AdMobConfig internal constructor(builder: Builder) {
     public val eventListeners: List<AdEventListener> = builder.eventListeners.toReadOnlyList()
     public val remoteConfig: AdConfigProvider = builder.remoteConfig
 
+    /** The splash timings from the ads file or definitions' settings; defaults without them. */
+    internal val splashTimings: SplashTimings = profile?.settings?.splash ?: SplashTimings()
+
     /** Whether ads are on before any remote override: the ads file's `settings.adsEnabled`, true without one. */
     internal val adsEnabledByDefault: Boolean = profile?.settings?.adsEnabled ?: true
 

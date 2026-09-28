@@ -20,6 +20,7 @@ import com.company.admob.config.PlacementConfig
 import com.company.admob.config.PlacementsBuilder
 import com.company.admob.config.PreloadStrategy
 import com.company.admob.config.RetryPolicy
+import com.company.admob.config.SplashTimings
 import com.company.admob.config.remote.AdOverrides
 import com.company.admob.events.redactAdUnitId
 import com.company.admob.logging.LogLevel
@@ -66,6 +67,10 @@ internal class EffectiveConfig private constructor(
 
     /** Every placement, the swap alternates included (off unless a remote value swaps to them). */
     val allPlacements: Collection<EffectivePlacement> get() = placements.values
+
+    /** The splash timings in force: remote values first, then the app's settings, then the defaults. */
+    val splashTimings: SplashTimings =
+        overrides.splash?.orElse(source.splashTimings) ?: source.splashTimings
 
     /** The placements the app configured, without the swap alternates the library adds. */
     val configuredPlacements: List<EffectivePlacement> get() = placements.values.filter { !it.isAlternate }

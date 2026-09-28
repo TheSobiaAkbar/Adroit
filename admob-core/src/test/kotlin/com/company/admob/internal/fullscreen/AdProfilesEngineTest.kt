@@ -169,6 +169,9 @@ class AdProfilesEngineTest {
         h.show(history)
         h.run()
         assertEquals(FullScreenResult.NotShown(AdError.FrequencyCapped(Duration.INFINITE)), h.results.last())
+        // A splash ad isn't reloaded after its show; load another one explicitly.
+        h.engine.preload(splash)
+        h.run(1_000)
         h.fullShow(splash)
         assertTrue("splash ads don't count and aren't capped", h.results.last() is FullScreenResult.Dismissed)
     }
@@ -196,6 +199,33 @@ class AdProfilesEngineTest {
         h.lastAd().simulateFullShow()
         h.run(1_000)
         assertEquals(listOf(FullScreenResult.Dismissed(clicked = false)), h.results)
+    }
+
+    @Test
+    fun `a shown splash ad isn't reloaded, unless another placement shares its ad unit`() = runTest {
+        val alone = EngineHarness(this, config { interstitial(splash, TestIds.unit(1)) { this.splash = true } })
+        alone.ready()
+        alone.run(1_000)
+        alone.engine.show(alone.activity(), splash) { alone.results += it }
+        alone.run()
+        alone.lastAd().simulateFullShow()
+        alone.run(1_000)
+        assertEquals(1, alone.adsSdk.loadCount(TestIds.unit(1)))
+
+        val shared = EngineHarness(
+            this,
+            config {
+                interstitial(splash, TestIds.unit(1)) { this.splash = true }
+                interstitial(history, TestIds.unit(1))
+            },
+        )
+        shared.ready()
+        shared.run(1_000)
+        shared.engine.show(shared.activity(), splash) { shared.results += it }
+        shared.run()
+        shared.lastAd().simulateFullShow()
+        shared.run(1_000)
+        assertEquals(2, shared.adsSdk.loadCount(TestIds.unit(1)))
     }
 
     @Test

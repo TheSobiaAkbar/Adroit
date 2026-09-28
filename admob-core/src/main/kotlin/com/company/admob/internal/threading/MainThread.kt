@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.SupervisorJob
+import kotlin.time.Duration
 
 // Engine state is confined to the main thread (ADR-006). These helpers are the only way work gets there.
 
@@ -18,6 +19,13 @@ internal fun isMainThread(): Boolean = Looper.myLooper() == Looper.getMainLooper
 /** Always posts [block] to the main thread, even when already on it, so callers never see a synchronous callback. */
 internal fun postToMain(block: () -> Unit) {
     mainHandler.post(block)
+}
+
+/** Runs [block] on the main thread after [delay]. Returns a function that cancels it if it hasn't run yet. */
+internal fun postDelayedOnMain(delay: Duration, block: () -> Unit): () -> Unit {
+    val runnable = Runnable(block)
+    mainHandler.postDelayed(runnable, delay.inWholeMilliseconds)
+    return { mainHandler.removeCallbacks(runnable) }
 }
 
 /** Runs [block] immediately when on the main thread, otherwise posts it. */

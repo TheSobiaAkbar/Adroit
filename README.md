@@ -43,8 +43,9 @@ AdBanner(BannerPlacement("home_banner"))
 Add your AdMob app ID to the manifest too: the Google SDKs require it. See
 [Getting started](docs/GETTING_STARTED.md) for the full setup.
 
-To define every ad in one JSON file and change each one from Firebase without a release (ad unit ID rotation,
-counters, timers, limits, banner and native styles), see [Ad profiles](docs/AD_PROFILES.md).
+To define every ad in one enum and change each one from Firebase without a release (ad unit ID rotation, format swaps,
+counters, timers, limits, banner and native styles), see [Ad profiles](docs/AD_PROFILES.md). For a splash screen with consent, a timer and a splash ad that never gets stuck, see
+[Splash screen](docs/SPLASH.md).
 
 ## Supported versions
 
@@ -67,7 +68,7 @@ Apps using AdMob Mediation must exclude the legacy `play-services-ads`: see [Med
 - Formats: [Banner](docs/BANNER.md) · [Interstitial](docs/INTERSTITIAL.md) · [Rewarded](docs/REWARDED.md) ·
   [Rewarded interstitial](docs/REWARDED_INTERSTITIAL.md) · [App open](docs/APP_OPEN.md) · [Native](docs/NATIVE.md)
 - UI toolkits: [Compose](docs/COMPOSE.md) · [XML and Views](docs/XML.md)
-- [Ad profiles](docs/AD_PROFILES.md) · [Mediation](docs/MEDIATION.md) · [Analytics](docs/ANALYTICS.md) ·
+- [Ad profiles](docs/AD_PROFILES.md) · [Splash screen](docs/SPLASH.md) · [Mediation](docs/MEDIATION.md) · [Analytics](docs/ANALYTICS.md) ·
   [Remote config](docs/REMOTE_CONFIG.md) ·
   [Testing](docs/TESTING.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Migration](docs/MIGRATION.md) ·
   [Releasing](docs/RELEASE.md) · [Changelog](CHANGELOG.md)

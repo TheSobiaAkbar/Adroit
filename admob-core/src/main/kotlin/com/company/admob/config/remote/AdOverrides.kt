@@ -4,6 +4,7 @@ import com.company.admob.AdFormat
 import com.company.admob.BannerSize
 import com.company.admob.NativeStyle
 import com.company.admob.config.PreloadStrategy
+import com.company.admob.config.SplashTimings
 import kotlin.time.Duration
 
 /**
@@ -14,6 +15,7 @@ import kotlin.time.Duration
  * @property placements overrides per placement key.
  * @property minIntervalBetweenFullScreenAds replaces the global full-screen interval.
  * @property maxInterstitialsPerSession replaces `FrequencyOptions.maxInterstitialsPerSession`.
+ * @property splash replaces the splash timings it sets (docs/SPLASH.md); null leaves them all.
  */
 public class AdOverrides(
     public val adsEnabled: Boolean? = null,
@@ -22,24 +24,44 @@ public class AdOverrides(
     public val minIntervalBetweenFullScreenAds: Duration? = null,
     public val maxInterstitialsPerSession: Int? = null,
 ) {
+    /** See the class description. Set only by the constructor that takes it; immutable afterwards. */
+    public var splash: SplashTimings? = null
+        private set
+
+    /**
+     * Overrides that also set [splash]. The other parameters are those of the primary constructor, which is kept
+     * without [splash] so code compiled against 1.0.0-rc1 keeps working.
+     */
+    public constructor(
+        splash: SplashTimings?,
+        adsEnabled: Boolean? = null,
+        disabledFormats: Set<AdFormat> = emptySet(),
+        placements: Map<String, PlacementOverride> = emptyMap(),
+        minIntervalBetweenFullScreenAds: Duration? = null,
+        maxInterstitialsPerSession: Int? = null,
+    ) : this(adsEnabled, disabledFormats, placements, minIntervalBetweenFullScreenAds, maxInterstitialsPerSession) {
+        this.splash = splash
+    }
+
     override fun equals(other: Any?): Boolean =
         other is AdOverrides && other.adsEnabled == adsEnabled && other.disabledFormats == disabledFormats &&
             other.placements == placements &&
             other.minIntervalBetweenFullScreenAds == minIntervalBetweenFullScreenAds &&
-            other.maxInterstitialsPerSession == maxInterstitialsPerSession
+            other.maxInterstitialsPerSession == maxInterstitialsPerSession && other.splash == splash
 
     override fun hashCode(): Int {
         var result = adsEnabled.hashCode()
         result = 31 * result + disabledFormats.hashCode()
         result = 31 * result + placements.hashCode()
         result = 31 * result + minIntervalBetweenFullScreenAds.hashCode()
-        return 31 * result + maxInterstitialsPerSession.hashCode()
+        result = 31 * result + maxInterstitialsPerSession.hashCode()
+        return 31 * result + splash.hashCode()
     }
 
     override fun toString(): String =
         "AdOverrides(adsEnabled=$adsEnabled, disabledFormats=$disabledFormats, placements=$placements, " +
             "minIntervalBetweenFullScreenAds=$minIntervalBetweenFullScreenAds, " +
-            "maxInterstitialsPerSession=$maxInterstitialsPerSession)"
+            "maxInterstitialsPerSession=$maxInterstitialsPerSession, splash=$splash)"
 }
 
 /**

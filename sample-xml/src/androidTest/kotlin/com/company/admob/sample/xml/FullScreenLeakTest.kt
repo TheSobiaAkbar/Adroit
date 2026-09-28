@@ -3,10 +3,7 @@ package com.company.admob.sample.xml
 import android.os.SystemClock
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import leakcanary.DetectLeaksAfterTestSuccess
 import org.junit.Rule
@@ -34,7 +31,7 @@ class FullScreenLeakTest {
 
             repeat(3) { attempt ->
                 if (attempt > 0) SystemClock.sleep(INTERSTITIAL_INTERVAL_MILLIS)
-                onView(withId(R.id.level_complete)).perform(click())
+                tapOpeningAd(R.id.level_complete)
                 val shown = dismissFullScreenAdIfShown()
                 Log.i(TAG, "Interstitial ${attempt + 1}: ${if (shown) "shown and dismissed" else "not shown"}")
                 awaitResumed<DetailsActivity>()
@@ -44,7 +41,7 @@ class FullScreenLeakTest {
 
             repeat(3) { attempt ->
                 SystemClock.sleep(GLOBAL_INTERVAL_MILLIS)
-                onView(withId(R.id.extra_life)).perform(click())
+                tapOpeningAd(R.id.extra_life)
                 val shown = dismissFullScreenAdIfShown()
                 Log.i(TAG, "Rewarded ${attempt + 1}: ${if (shown) "shown and dismissed" else "not shown"}")
                 awaitResumed<MainActivity>()

@@ -107,4 +107,16 @@ configured, and a field left out of a value keeps its configured value.
 - Pass a `FirebaseRemoteConfig` instance for apps with several Firebase apps, and `settingsKey` to rename
   `AdSettings`.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+### Fetching once per session
+
+`RemoteConfigSession.start(application)` in `Application.onCreate` fetches and activates at once, without making
+anything wait. After the first success it never fetches again in that process (`isFetched` turns true). After a
+failure it tries again whenever an Activity is created and whenever the device comes back online, one attempt at a
+time, and skips attempts while offline. Each activation reaches `FirebaseRemoteConfigProvider` at once, so the next ad
+request, and the next splash timer, use the new values. Use it instead of `autoFetch = true`.
+
+Set a short `fetchTimeoutInSeconds` (for example 10) in your `FirebaseRemoteConfigSettings`, so a slow attempt
+doesn't hold off the next screen's retry, and a `minimumFetchIntervalInSeconds` of 0 in debug builds to see console
+changes on the next launch.
+
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28

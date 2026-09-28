@@ -319,7 +319,7 @@ internal object ConfigValidator {
             )
             maxInterstitials = null
         }
-        val result = AdOverrides(overrides.adsEnabled, overrides.disabledFormats, accepted, globalInterval, maxInterstitials)
+        val result = AdOverrides(overrides.splash, overrides.adsEnabled, overrides.disabledFormats, accepted, globalInterval, maxInterstitials)
         return OverridesValidation(result, issues.toList())
     }
 

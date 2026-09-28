@@ -7,6 +7,7 @@ import com.company.admob.ConsentStatus
 import com.company.admob.config.DebugGeography
 import com.company.admob.internal.callbacks.OnceCallback
 import com.company.admob.internal.logging.AdLog
+import com.company.admob.internal.port.ConsentForm
 import com.company.admob.internal.port.ConsentParams
 import com.company.admob.internal.port.ConsentSdk
 import com.company.admob.internal.port.ConsentUpdateResult
@@ -68,6 +69,34 @@ internal class UmpConsentSdk(
         val done = OnceCallback(onDone)
         try {
             UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { error -> done(error?.let(GoogleErrorMapper::map)) }
+        } catch (e: Exception) {
+            log.e(e) { "Showing the consent form failed" }
+            done(AdError.Internal("Showing the consent form failed", e))
+        }
+    }
+
+    override fun loadFormIfRequired(activity: Activity, onLoaded: (ConsentForm?, AdError?) -> Unit) {
+        val done = OnceCallback<Pair<ConsentForm?, AdError?>>(callback = { (form, error) -> onLoaded(form, error) })
+        if (consentStatus() != ConsentStatus.REQUIRED) {
+            done(null to null)
+            return
+        }
+        try {
+            UserMessagingPlatform.loadConsentForm(
+                activity,
+                { form -> done(ConsentForm { showActivity, onDone -> showForm(form, showActivity, onDone) } to null) },
+                { error -> done(null to GoogleErrorMapper.map(error)) },
+            )
+        } catch (e: Exception) {
+            log.e(e) { "Loading the consent form failed" }
+            done(null to AdError.Internal("Loading the consent form failed", e))
+        }
+    }
+
+    private fun showForm(form: com.google.android.ump.ConsentForm, activity: Activity, onDone: (AdError?) -> Unit) {
+        val done = OnceCallback(onDone)
+        try {
+            form.show(activity) { error -> done(error?.let(GoogleErrorMapper::map)) }
         } catch (e: Exception) {
             log.e(e) { "Showing the consent form failed" }
             done(AdError.Internal("Showing the consent form failed", e))

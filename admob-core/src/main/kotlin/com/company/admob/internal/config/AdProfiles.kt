@@ -13,6 +13,7 @@ import com.company.admob.RewardedPlacement
 import com.company.admob.config.FrequencyRule
 import com.company.admob.config.PlacementConfig
 import com.company.admob.config.PlacementsBuilder
+import com.company.admob.config.SplashTimings
 import com.company.admob.config.remote.AdOverrides
 import com.company.admob.config.remote.PlacementOverride
 import org.json.JSONArray
@@ -33,6 +34,7 @@ internal object AdProfiles {
         val adsEnabled: Boolean,
         val maxInterstitialsPerSession: Int?,
         val minIntervalBetweenFullScreenAds: Duration,
+        val splash: SplashTimings = SplashTimings(),
     )
 
     /** [testIdKeys]: ads without ad unit IDs, given Google's test ad unit. */
@@ -94,16 +96,19 @@ internal object AdProfiles {
         var adsEnabled: Boolean? = null
         var maxInterstitials: Int? = null
         var minInterval: Duration? = null
+        var splash: SplashTimings? = null
         if (!settings.isNullOrBlank()) {
             parseObject(settings) { issues += "Firebase settings ignored: $it" }?.let { json ->
                 val fields = Fields(json) { issues += "Firebase settings: $it" }
                 adsEnabled = fields.boolean("adsEnabled")
                 maxInterstitials = fields.count("maxInterstitialsPerSession")?.let(::zeroMeansNoLimit)
                 minInterval = fields.count("minSecondsBetweenFullScreenAds")?.seconds
+                splash = fields.splashTimings()
             }
         }
         return ParsedRemote(
             AdOverrides(
+                splash = splash,
                 adsEnabled = adsEnabled,
                 placements = placements,
                 minIntervalBetweenFullScreenAds = minInterval,
@@ -121,6 +126,7 @@ internal object AdProfiles {
             adsEnabled = fields.boolean("adsEnabled") ?: true,
             maxInterstitialsPerSession = fields.count("maxInterstitialsPerSession")?.let(::zeroMeansNoLimit),
             minIntervalBetweenFullScreenAds = (fields.count("minSecondsBetweenFullScreenAds") ?: 0).seconds,
+            splash = fields.splashTimings() ?: SplashTimings(),
         )
     }
 
@@ -279,6 +285,20 @@ internal object AdProfiles {
                     ?: null.also { issue("\"adUnitIds\" item ${i + 1} isn't a text ID; ignored") }
             }
             else -> wrong("adUnitIds", "a list of ad unit IDs")
+        }
+
+        /** The splash timings set here (each a positive number of seconds), or null when none is. */
+        fun splashTimings(): SplashTimings? {
+            fun seconds(name: String): Int? = count(name)?.let { value ->
+                if (value > 0) value else null.also { issue("\"$name\" must be at least 1; ignored") }
+            }
+            val timings = SplashTimings(
+                seconds("splashSeconds"),
+                seconds("premiumSplashSeconds"),
+                seconds("offlineSplashSeconds"),
+                seconds("consentTimeoutSeconds"),
+            )
+            return timings.takeUnless { it == SplashTimings() }
         }
 
         fun bannerSize(): BannerSize? {

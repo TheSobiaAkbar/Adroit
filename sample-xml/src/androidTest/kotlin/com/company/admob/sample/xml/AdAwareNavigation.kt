@@ -15,7 +15,8 @@ import org.junit.Assert.fail
  * frequency limits, longer than a phone's screen timeout). Whenever the resumed Activity isn't one of the sample's (a
  * full-screen ad from the Google SDK is covering the app), closes it as a user would; see [closeAd].
  */
-inline fun <reified T : Activity> awaitResumed(timeoutMillis: Long = 10_000): T {
+// 25 s: a launch runs consent (at most 8 s for the form) and the splash timer (11 s) before MainActivity (docs/SPLASH.md).
+inline fun <reified T : Activity> awaitResumed(timeoutMillis: Long = 25_000): T {
     val instrumentation = InstrumentationRegistry.getInstrumentation()
     val device = UiDevice.getInstance(instrumentation)
     val deadline = SystemClock.elapsedRealtime() + timeoutMillis
@@ -38,6 +39,20 @@ inline fun <reified T : Activity> awaitResumed(timeoutMillis: Long = 10_000): T 
     }
     fail("${T::class.java.simpleName} wasn't resumed within $timeoutMillis ms")
     error("unreachable")
+}
+
+/**
+ * Taps the view [id] of the resumed sample Activity, for a button that may open a full-screen ad. Espresso's
+ * `perform(click())` fails when an ad covers the app right after the click (`NoActivityResumedException`); this taps
+ * on the main thread and returns, so the caller then handles the ad ([dismissFullScreenAdIfShown]) or the next screen.
+ */
+fun tapOpeningAd(id: Int) {
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    instrumentation.runOnMainSync {
+        val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+            .first { it.javaClass.name.startsWith(SAMPLE_PACKAGE) }
+        activity.findViewById<android.view.View>(id).performClick()
+    }
 }
 
 /**

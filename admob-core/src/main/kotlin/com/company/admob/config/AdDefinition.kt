@@ -231,19 +231,23 @@ public sealed class AdProfile {
  * @property adsEnabled false turns every ad off.
  * @property maxInterstitialsPerSession 0 = no limit; interstitials per session, splash ones not counted.
  * @property minSecondsBetweenFullScreenAds the minimum time between any two full-screen ads.
+ * @property splashSeconds the splash timer after consent (docs/SPLASH.md).
+ * @property premiumSplashSeconds the splash timer for a premium user.
+ * @property offlineSplashSeconds the splash timer without internet.
+ * @property consentTimeoutSeconds how long the consent form may take to appear on the splash screen.
  */
 public class AdSettings @JvmOverloads constructor(
     public val adsEnabled: Boolean = true,
     public val maxInterstitialsPerSession: Int = 0,
     public val minSecondsBetweenFullScreenAds: Int = 0,
+    public val splashSeconds: Int = SplashTimings.DEFAULT_SPLASH_SECONDS,
+    public val premiumSplashSeconds: Int = SplashTimings.DEFAULT_SHORT_SPLASH_SECONDS,
+    public val offlineSplashSeconds: Int = SplashTimings.DEFAULT_SHORT_SPLASH_SECONDS,
+    public val consentTimeoutSeconds: Int = SplashTimings.DEFAULT_CONSENT_TIMEOUT_SECONDS,
 ) {
-    override fun equals(other: Any?): Boolean =
-        other is AdSettings && other.adsEnabled == adsEnabled &&
-            other.maxInterstitialsPerSession == maxInterstitialsPerSession &&
-            other.minSecondsBetweenFullScreenAds == minSecondsBetweenFullScreenAds
+    override fun equals(other: Any?): Boolean = other is AdSettings && other.toJson() == toJson()
 
-    override fun hashCode(): Int =
-        31 * (31 * adsEnabled.hashCode() + maxInterstitialsPerSession) + minSecondsBetweenFullScreenAds
+    override fun hashCode(): Int = toJson().hashCode()
 
     /** The settings as their Firebase JSON value. */
     override fun toString(): String = toJson()

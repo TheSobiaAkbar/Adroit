@@ -344,6 +344,12 @@ internal class FullScreenAdEngine(
 
     private fun reloadAfterShow(p: EffectivePlacement) {
         val slot = slots[p.placement] ?: return
+        // A splash ad shows once per launch: no reload, unless another placement shares its ad unit.
+        val shared = slots.any { (placement, other) -> other === slot && placement != p.placement }
+        if (p.isSplash && !shared) {
+            log.d { "$format ${p.placement.key}: splash ad shown; not reloading it" }
+            return
+        }
         if (p.preload != PreloadStrategy.NONE) {
             slot.failedAttempts = 0
             load(slot, p)

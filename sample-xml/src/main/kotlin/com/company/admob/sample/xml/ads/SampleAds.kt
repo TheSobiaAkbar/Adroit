@@ -15,8 +15,8 @@ import com.company.admob.config.AdSettings
  * sets them in Firebase): `AdProfile.interstitial(ids = listOf("ca-app-pub-…/…"))`.
  */
 enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
-    /** Shown on the splash screen; off by default. */
-    SplashAd(AdProfile.interstitial(enabled = false, splash = true, splashTimeoutSeconds = 8)),
+    /** Shown on the splash screen when it loads before the splash timer ends (docs/SPLASH.md). */
+    SplashAd(AdProfile.interstitial(splash = true)),
 
     /** Home screen: "Level complete". At most one per minute. */
     LevelCompleteAd(AdProfile.interstitial(timerSeconds = 60)),
@@ -47,6 +47,6 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
 
     companion object {
         /** The defaults of the Firebase `AdSettings` parameter. */
-        val settings = AdSettings(minSecondsBetweenFullScreenAds = 30)
+        val settings = AdSettings(minSecondsBetweenFullScreenAds = 30, splashSeconds = 11)
     }
 }

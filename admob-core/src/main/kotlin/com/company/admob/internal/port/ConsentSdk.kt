@@ -22,6 +22,15 @@ internal interface ConsentSdk {
     /** Loads and shows the consent form if one is required. [onDone] receives null on success. */
     fun loadAndShowFormIfRequired(activity: Activity, onDone: (AdError?) -> Unit)
 
+    /**
+     * Loads the consent form without showing it, if one is required, so the caller can still decide not to show it
+     * (a splash that stopped waiting). [onLoaded] receives the form, or null with no error when none is required, or
+     * null with the error. The default loads and shows in one step, for ports that can't split them.
+     */
+    fun loadFormIfRequired(activity: Activity, onLoaded: (ConsentForm?, AdError?) -> Unit) {
+        onLoaded(ConsentForm { showActivity, onDone -> loadAndShowFormIfRequired(showActivity, onDone) }, null)
+    }
+
     /** Whether ads may be requested. Always false before the first [requestUpdate]. */
     fun canRequestAds(): Boolean
 
@@ -34,6 +43,11 @@ internal interface ConsentSdk {
 
     /** Clears consent state. For testing only. */
     fun reset()
+}
+
+/** A loaded consent form. [show] delivers null on success, on the main thread, at most once. */
+internal fun interface ConsentForm {
+    fun show(activity: Activity, onDone: (AdError?) -> Unit)
 }
 
 internal data class ConsentParams(

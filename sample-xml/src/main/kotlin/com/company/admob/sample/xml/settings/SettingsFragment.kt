@@ -13,6 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.company.admob.AdsState
 import com.company.admob.CompanyAdMob
 import com.company.admob.UnavailableReason
+import com.company.admob.sample.xml.PremiumStore
 import com.company.admob.sample.xml.R
 import com.company.admob.sample.xml.databinding.FragmentSettingsBinding
 import kotlinx.coroutines.launch
@@ -20,7 +21,8 @@ import kotlinx.coroutines.launch
 /**
  * - "Privacy options": shown only while UMP requires a privacy options entry point (`isPrivacyOptionsRequired`),
  *   which Google requires apps to offer in that case.
- * - "Ad-free": `setAdFree`, as an app would after a purchase. Not persisted by the library.
+ * - "Ad-free": `setAdFree`, as an app would after a purchase, saved in [PremiumStore] so the next launch's splash
+ *   treats the user as premium (no consent form, no ad, a 3-second splash).
  * - "Ad Inspector": Google's debugging tool; opens on test devices only.
  */
 class SettingsFragment : Fragment() {
@@ -37,7 +39,10 @@ class SettingsFragment : Fragment() {
         // The library doesn't expose the ad-free flag; the state carries it (reported as an API gap in PROMPT 17).
         // Read once, before the listener is attached, so restoring the switch never calls setAdFree.
         binding.adFree.isChecked = CompanyAdMob.state.value == AdsState.Unavailable(UnavailableReason.AD_FREE_USER)
-        binding.adFree.setOnCheckedChangeListener { _, checked -> CompanyAdMob.setAdFree(checked) }
+        binding.adFree.setOnCheckedChangeListener { _, checked ->
+            CompanyAdMob.setAdFree(checked)
+            PremiumStore.setPremium(requireContext(), checked)
+        }
         binding.adInspector.setOnClickListener {
             CompanyAdMob.diagnostics.openAdInspector(requireActivity()) { error ->
                 error?.let { toast(getString(R.string.ad_inspector_error, it.message)) }

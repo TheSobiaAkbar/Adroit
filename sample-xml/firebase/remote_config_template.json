@@ -2,14 +2,14 @@
   "parameters": {
     "AdSettings": {
       "defaultValue": {
-        "value": "{\"adsEnabled\":true,\"maxInterstitialsPerSession\":0,\"minSecondsBetweenFullScreenAds\":30}"
+        "value": "{\"adsEnabled\":true,\"maxInterstitialsPerSession\":0,\"minSecondsBetweenFullScreenAds\":30,\"splashSeconds\":11,\"premiumSplashSeconds\":3,\"offlineSplashSeconds\":3,\"consentTimeoutSeconds\":8}"
       },
       "valueType": "JSON",
       "description": "Settings of every ad (docs\/AD_PROFILES.md)"
     },
     "SplashAd": {
       "defaultValue": {
-        "value": "{\"format\":\"interstitial\",\"enabled\":false,\"adUnitIds\":[],\"counter\":0,\"timerSeconds\":0,\"maxPerSession\":0,\"splashTimeoutSeconds\":8}"
+        "value": "{\"format\":\"interstitial\",\"enabled\":true,\"adUnitIds\":[],\"counter\":0,\"timerSeconds\":0,\"maxPerSession\":0,\"splashTimeoutSeconds\":8}"
       },
       "valueType": "JSON",
       "description": "Ad SplashAd (docs\/AD_PROFILES.md)"

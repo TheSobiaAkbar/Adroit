@@ -99,8 +99,13 @@ internal class InitCoordinator(
 
     fun onConfigInvalid(error: AdError.InvalidConfiguration) = transition(AdsState.Failed(error))
 
-    fun start(activity: Activity, onComplete: ((AdsState) -> Unit)?) {
+    /**
+     * @param consentFormTimeout how long the consent form may take to appear (the splash screen's limit); null waits
+     *   as long as UMP takes. See [ConsentCoordinator.gather].
+     */
+    fun start(activity: Activity, onComplete: ((AdsState) -> Unit)?, consentFormTimeout: Duration? = null) {
         val callback = onComplete?.let { OnceCallback(it) }
+        this.consentFormTimeout = consentFormTimeout
         // A rotation during consent: hand the newer Activity to the in-flight gather for the form step.
         if (consent.isGathering) consent.gather(activity) {}
 
@@ -148,8 +153,11 @@ internal class InitCoordinator(
 
     private fun gather(activity: Activity) {
         transition(AdsState.GatheringConsent)
-        consent.gather(activity, ::onGatherFinished)
+        consent.gather(activity, consentFormTimeout, ::onGatherFinished)
     }
+
+    /** The form timeout of the latest [start] call. */
+    private var consentFormTimeout: Duration? = null
 
     private fun onGatherFinished(consentState: ConsentState) {
         when (state.value) {

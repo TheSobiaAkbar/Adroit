@@ -3,6 +3,7 @@ package com.company.admob.fakes
 import android.app.Activity
 import com.company.admob.AdError
 import com.company.admob.ConsentStatus
+import com.company.admob.internal.port.ConsentForm
 import com.company.admob.internal.port.ConsentParams
 import com.company.admob.internal.port.ConsentSdk
 import com.company.admob.internal.port.ConsentUpdateResult
@@ -59,6 +60,37 @@ internal class FakeConsentSdk(private val scope: CoroutineScope) : ConsentSdk {
         onFormShown?.invoke(this)
         val result = formResult
         scope.launch { onDone(result) }
+    }
+
+    /** How long [loadFormIfRequired] takes to load a required form. */
+    var formLoadDelayMs: Long = 0
+
+    /** How long the user keeps a shown form open (split path). */
+    var formOpenMs: Long = 0
+
+    /** Forms loaded by [loadFormIfRequired]. */
+    var formLoads: Int = 0
+        private set
+
+    override fun loadFormIfRequired(activity: Activity, onLoaded: (ConsentForm?, AdError?) -> Unit) {
+        scope.launch {
+            if (status != ConsentStatus.REQUIRED) return@launch onLoaded(null, null)
+            delay(formLoadDelayMs)
+            formLoads++
+            onLoaded(
+                ConsentForm { showActivity, onDone ->
+                    formShowCount++
+                    formActivity = WeakReference(showActivity)
+                    onFormShown?.invoke(this@FakeConsentSdk)
+                    val result = formResult
+                    scope.launch {
+                        delay(formOpenMs)
+                        onDone(result)
+                    }
+                },
+                null,
+            )
+        }
     }
 
     override fun canRequestAds(): Boolean = canRequestAds

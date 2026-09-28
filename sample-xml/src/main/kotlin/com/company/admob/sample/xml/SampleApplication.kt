@@ -20,6 +20,8 @@ class SampleApplication : Application() {
         val config = SampleAdsConfig.create(this, BuildConfig.BUILD_TYPE, BuildConfig.TEST_DEVICE_IDS)
         val initializeStart = SystemClock.elapsedRealtimeNanos()
         CompanyAdMob.initialize(this, config)
+        // A premium user from an earlier launch: no ads, before any screen asks for one.
+        if (PremiumStore.isPremium(this)) CompanyAdMob.setAdFree(true)
         val end = SystemClock.elapsedRealtimeNanos()
         // The performance audit's measurements (docs/audits/PERFORMANCE_AUDIT.md): building the configuration, which
         // reads and parses the ads file, and initialize(). Logged in every build type: release numbers are the ones

@@ -10,7 +10,6 @@ import com.company.admob.AdFormat
 import com.company.admob.CompanyAdMob
 import com.company.admob.events.AdEvent
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -18,7 +17,7 @@ import org.junit.runner.RunWith
 
 /**
  * The ad definitions (`SampleAds`) on a device: every entry is configured under its name, test builds use Google's
- * demo ad units, the ad turned off by default is off, and the Details banner (style `collapsible_bottom`) loads. Rotation is covered by unit tests; with demo ad units every ID is the same one here.
+ * demo ad units, every ad is on by default, and the Details banner (style `collapsible_bottom`) loads. Rotation is covered by unit tests; with demo ad units every ID is the same one here.
  */
 @RequiresNetwork
 @RunWith(AndroidJUnit4::class)
@@ -26,10 +25,9 @@ class AdProfilesDeviceTest {
     @Test
     fun theAdsFileConfiguresEveryAdAndTheCollapsibleBannerLoads() {
         ActivityScenario.launch(SplashActivity::class.java).use {
-            // 20 s, not the default 10: this class runs first, so it gets the run's only cold start, and with it a
-            // possible cold-start app open ad (up to about 6 s after launch). That ad's close button ("Continue to
-            // app") is web content, exposed to UI Automator only about 5 s after the ad appears (Pixel 7a).
-            awaitResumed<MainActivity>(timeoutMillis = 20_000)
+            // 30 s: the splash (consent, then up to 11 s for the splash ad), plus closing that ad. Its close button
+            // is web content, exposed to UI Automator only a few seconds after the ad appears (Pixel 7a).
+            awaitResumed<MainActivity>(timeoutMillis = 30_000)
             val placements = CompanyAdMob.diagnostics.snapshot().placements.associateBy { it.key }
             assertEquals(
                 setOf(
@@ -39,7 +37,7 @@ class AdProfilesDeviceTest {
                 placements.keys,
             )
             assertTrue(placements.values.all { it.adUnitId.startsWith(GOOGLE_DEMO_PUBLISHER) })
-            assertFalse("SplashAd is off by default", placements.getValue("SplashAd").enabled)
+            assertTrue("every sample ad is on by default", placements.values.all { it.enabled })
 
             onView(withId(R.id.level_complete)).perform(click())
             awaitResumed<DetailsActivity>(timeoutMillis = 15_000)

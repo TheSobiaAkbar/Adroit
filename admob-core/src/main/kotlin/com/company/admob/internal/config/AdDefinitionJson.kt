@@ -25,6 +25,10 @@ internal object AdDefinitionJson {
         .put("adsEnabled", settings.adsEnabled)
         .put("maxInterstitialsPerSession", settings.maxInterstitialsPerSession)
         .put("minSecondsBetweenFullScreenAds", settings.minSecondsBetweenFullScreenAds)
+        .put("splashSeconds", settings.splashSeconds)
+        .put("premiumSplashSeconds", settings.premiumSplashSeconds)
+        .put("offlineSplashSeconds", settings.offlineSplashSeconds)
+        .put("consentTimeoutSeconds", settings.consentTimeoutSeconds)
 
     /**
      * [profile] as JSON. With [firebase], the file-only fields (`splash`, `excludedActivities`, `poolSize`) are left

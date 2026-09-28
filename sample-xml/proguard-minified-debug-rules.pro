@@ -27,3 +27,9 @@
     public *** get*();
     public *** is*();
 }
+
+# Failure fixed (every test, after sample-xml added Firebase in PROMPT 28A):
+#   ClassNotFoundException: Didn't find class "javax.inject.Provider"
+# Firebase brings javax.inject into the app, so the test APK leaves it out and uses the app's copy, which R8 had
+# removed. Four annotation and interface types: keeping them changes nothing else.
+-keep class javax.inject.** { *; }
