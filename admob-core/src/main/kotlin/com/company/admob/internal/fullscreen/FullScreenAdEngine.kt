@@ -315,10 +315,32 @@ internal class FullScreenAdEngine(
 
     private fun onLoadFailed(slot: FullScreenSlot, p: EffectivePlacement, result: SdkLoadResult.Failure) {
         val attempt = ++slot.failedAttempts
-        val delay = retry.schedule(slot.key, attempt, slot.retryPolicy, result.error, result.retryable) { load(slot, p) }
+        // Ads that load only when asked (PreloadStrategy.NONE) never retry by themselves: the next ask is the retry.
+        val delay = if (isManual(slot)) {
+            log.d { "$format ${p.placement.key}: loads only when asked; not retrying" }
+            null
+        } else {
+            retry.schedule(slot.key, attempt, slot.retryPolicy, result.error, result.retryable) { load(slot, p) }
+        }
         slot.availability.value = AdAvailability.Failed(result.error)
         emit(AdEvent.LoadFailed(p.placement.key, format, slot.adUnitId, now(), result.error, attempt, delay != null))
         log.w { "$format ${p.placement.key} failed to load: ${result.error.code}, attempt $attempt, retry in $delay" }
+    }
+
+    /** Whether every placement sharing [slot] loads only on an explicit preload. */
+    private fun isManual(slot: FullScreenSlot): Boolean =
+        slots.filterValues { it === slot }.keys.all { placements[it]?.preload == PreloadStrategy.NONE }
+
+    /**
+     * The splash is over and won't show [placement]'s ad: drops its cached ad, its load in flight and its retries, so
+     * no ad loads that nobody will show. Does nothing when another placement shares its ad unit.
+     */
+    fun abandon(placement: AdPlacement) {
+        val slot = slots[placement] ?: return
+        if (slots.any { (other, s) -> s === slot && other != placement }) return
+        if (slot.cached == null && !slot.loading && !retry.isScheduled(slot.key)) return
+        log.d { "$format ${placement.key}: splash over; dropping its ad, load and retries" }
+        clear(placement)
     }
 
     private fun checkExpiry(slot: FullScreenSlot, p: EffectivePlacement) {
@@ -344,6 +366,13 @@ internal class FullScreenAdEngine(
 
     private fun reloadAfterShow(p: EffectivePlacement) {
         val slot = slots[p.placement] ?: return
+        // An ad profile's loadAgain: the next ad unit now, whatever the preload strategy or retry policy.
+        if (p.loadAgain) {
+            log.d { "$format ${p.placement.key}: shown; loading the next one (loadAgain)" }
+            slot.failedAttempts = 0
+            load(slot, p)
+            return
+        }
         // A splash ad shows once per launch: no reload, unless another placement shares its ad unit.
         val shared = slots.any { (placement, other) -> other === slot && placement != p.placement }
         if (p.isSplash && !shared) {
@@ -366,7 +395,10 @@ internal class FullScreenAdEngine(
         rebuild(current)
         pendingPreloads.retainAll(slots.keys)
         if (!readiness.canLoad()) return
-        slots.entries.filter { (_, slot) -> slot !in before }
+        // New slots, and placements a remote value just switched to "auto", load now.
+        slots.entries.filter { (placement, slot) ->
+            slot !in before || previous.placement(placement)?.preload != PreloadStrategy.AFTER_READY
+        }
             .map { (placement, _) -> placements.getValue(placement) }
             .filter { it.preload == PreloadStrategy.AFTER_READY }
             .distinctBy { slots[it.placement] }

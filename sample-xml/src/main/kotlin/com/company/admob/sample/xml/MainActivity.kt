@@ -3,6 +3,8 @@ package com.company.admob.sample.xml
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.company.admob.AdSlots
+import com.company.admob.sample.xml.ads.SampleAds
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -37,6 +39,9 @@ class MainActivity : AppCompatActivity() {
             true
         }
         if (savedInstanceState == null) show(HomeFragment())
+        // Ads load only when asked: the app open ad now, for the user's first return to the app. It has loadAgain,
+        // so each later return finds a new one. Nothing happens if it's loaded already.
+        AdSlots.load(SampleAds.AppOpenAd)
     }
 
     private fun show(fragment: Fragment) {

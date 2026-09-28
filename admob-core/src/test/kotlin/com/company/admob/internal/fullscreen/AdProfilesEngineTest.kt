@@ -5,7 +5,11 @@ import com.company.admob.AdsState
 import com.company.admob.FullScreenResult
 import com.company.admob.InterstitialPlacement
 import com.company.admob.UnavailableReason
+import com.company.admob.config.AdDefinition
 import com.company.admob.config.AdMobConfig
+import com.company.admob.config.AdProfile
+import com.company.admob.config.AdSettings
+import com.company.admob.config.PreloadStrategy
 import com.company.admob.config.TestIds
 import com.company.admob.config.remote.AdOverrides
 import com.company.admob.config.remote.PlacementOverride
@@ -253,5 +257,144 @@ class AdProfilesEngineTest {
             listOf(FullScreenResult.NotShown(AdError.AlreadyShowing), FullScreenResult.NotShown(AdError.ConsentRequired)),
             h.results,
         )
+    }
+
+    // --- Loading only when asked ---
+
+    @Test
+    fun `a manual ad loads only when asked, and a failed load isn't retried`() = runTest {
+        val h = EngineHarness(this, config { interstitial(history, ids) { preload = PreloadStrategy.NONE; retry = EXACT_RETRY } })
+        h.ready()
+        h.run(60_000)
+        assertEquals("nothing loads at start", emptyList<String>(), h.loadedUnits())
+
+        h.show(history)
+        h.run(60_000)
+        assertEquals(FullScreenResult.NotShown(AdError.NotReady), h.results.single())
+        assertEquals("a show without an ad doesn't load one for later", emptyList<String>(), h.loadedUnits())
+
+        h.adsSdk.enqueueLoad(ids[0], ScriptedLoad.Failure(AdError.NoFill(), retryable = true))
+        h.engine.preload(history)
+        h.run(600_000)
+        assertEquals("no retry", listOf(ids[0]), h.loadedUnits())
+
+        h.engine.preload(history)
+        h.run(1_000)
+        assertEquals("the next preload is the retry", ids.take(2), h.loadedUnits())
+        assertTrue(h.engine.isReady(history))
+    }
+
+    @Test
+    fun `a manual ad isn't reloaded after its show, nor after it expires`() = runTest {
+        val h = harness { interstitial(history, ids) { preload = PreloadStrategy.NONE } }
+        h.engine.preload(history)
+        h.run(1_000)
+        h.fullShow()
+        assertTrue(h.results.last() is FullScreenResult.Dismissed)
+        assertEquals(listOf(ids[0]), h.loadedUnits())
+
+        h.engine.preload(history)
+        h.run(1_000)
+        h.run(2 * 3_600_000L) // past the interstitial TTL
+        assertTrue(!h.engine.isReady(history))
+        assertEquals(ids.take(2), h.loadedUnits())
+    }
+
+    @Test
+    fun `a remote value switching an ad to auto loads it at once`() = runTest {
+        val h = harness { interstitial(history, ids) { preload = PreloadStrategy.NONE } }
+        assertEquals(emptyList<String>(), h.loadedUnits())
+        val auto = PlacementOverride(preload = PreloadStrategy.AFTER_READY)
+        h.live.update(h.live.current.withOverrides(AdOverrides(placements = mapOf("HistoryAd" to auto))))
+        h.run(1_000)
+        assertEquals(listOf(ids[0]), h.loadedUnits())
+    }
+
+    @Test
+    fun `abandoning the splash ad stops its retries and drops a late ad, unless its ad unit is shared`() = runTest {
+        val alone = EngineHarness(this, config { interstitial(splash, TestIds.unit(1)) { this.splash = true; retry = EXACT_RETRY } })
+        alone.adsSdk.enqueueLoad(TestIds.unit(1), ScriptedLoad.Failure(AdError.NoFill(), retryable = true))
+        alone.ready()
+        alone.run(1_000)
+        alone.engine.abandon(splash)
+        alone.run(600_000)
+        assertEquals(1, alone.adsSdk.loadCount(TestIds.unit(1)))
+        assertTrue(!alone.engine.isReady(splash))
+
+        val shared = EngineHarness(
+            this,
+            config {
+                interstitial(splash, TestIds.unit(1)) { this.splash = true; retry = EXACT_RETRY }
+                interstitial(history, TestIds.unit(1)) { retry = EXACT_RETRY }
+            },
+        )
+        shared.adsSdk.enqueueLoad(TestIds.unit(1), ScriptedLoad.Failure(AdError.NoFill(), retryable = true))
+        shared.ready()
+        shared.run(1_000)
+        shared.engine.abandon(splash)
+        shared.run(60_000)
+        assertEquals("HistoryAd still wants it", 2, shared.adsSdk.loadCount(TestIds.unit(1)))
+        assertTrue(shared.engine.isReady(history))
+    }
+
+    // --- loadAgain ---
+
+    private enum class Defs(override val defaults: AdProfile) : AdDefinition {
+        Again(AdProfile.interstitial(ids = listOf(TestIds.unit(1), TestIds.unit(2)), loadAgain = true)),
+        Once(AdProfile.interstitial(ids = listOf(TestIds.unit(5), TestIds.unit(6)))),
+    }
+
+    private val again = InterstitialPlacement("Again")
+    private val once = InterstitialPlacement("Once")
+
+    private fun TestScope.profilesHarness(): EngineHarness = EngineHarness(
+        this,
+        engineConfig {
+            frequency { minIntervalBetweenFullScreenAds = Duration.ZERO }
+            profiles(Defs.entries, AdSettings())
+        },
+    ).apply { ready(); run(60_000) }
+
+    @Test
+    fun `with loadAgain the next ad unit loads right after each show, without it nothing loads`() = runTest {
+        val h = profilesHarness()
+        assertEquals("profiles load only when asked", emptyList<String>(), h.loadedUnits())
+
+        h.engine.preload(again)
+        h.engine.preload(once)
+        h.run(1_000)
+        h.fullShow(again)
+        assertEquals(listOf(TestIds.unit(1), TestIds.unit(5), TestIds.unit(2)), h.loadedUnits())
+        assertTrue(h.engine.isReady(again))
+        h.fullShow(again)
+        assertEquals("back to the first ad unit", TestIds.unit(1), h.loadedUnits().last())
+
+        val before = h.loadedUnits().size
+        h.fullShow(once)
+        h.run(600_000)
+        assertEquals("Once waits for the app to ask", before, h.loadedUnits().size)
+        assertTrue(!h.engine.isReady(once))
+    }
+
+    @Test
+    fun `a loadAgain load that fails isn't retried`() = runTest {
+        val h = profilesHarness()
+        h.engine.preload(again)
+        h.run(1_000)
+        h.adsSdk.enqueueLoad(TestIds.unit(2), ScriptedLoad.Failure(AdError.NoFill(), retryable = true))
+        h.fullShow(again)
+        h.run(600_000)
+        assertEquals(listOf(TestIds.unit(1), TestIds.unit(2)), h.loadedUnits())
+    }
+
+    @Test
+    fun `Firebase can turn loadAgain on`() = runTest {
+        val h = profilesHarness()
+        val on = PlacementOverride().also { it.loadAgain = true }
+        h.live.update(h.live.current.withOverrides(AdOverrides(placements = mapOf("Once" to on))))
+        h.engine.preload(once)
+        h.run(1_000)
+        h.fullShow(once)
+        assertEquals(listOf(TestIds.unit(5), TestIds.unit(6)), h.loadedUnits())
     }
 }

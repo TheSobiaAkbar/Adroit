@@ -101,6 +101,12 @@ public class PlacementOverride(
         private set
 
     /**
+     * An ad profile's `"loadAgain"` from its Firebase value (docs/AD_PROFILES.md): replaces the ad's own. Set only by
+     * the library's parser, right after construction.
+     */
+    internal var loadAgain: Boolean? = null
+
+    /**
      * An override that may swap the placement's [format]. The other parameters are those of the primary constructor,
      * which is kept without [format] so code compiled against 1.0.0-rc1 keeps working.
      */
@@ -124,7 +130,8 @@ public class PlacementOverride(
         other is PlacementOverride && other.enabled == enabled && other.minInterval == minInterval &&
             other.maxPerSession == maxPerSession && other.preload == preload && other.adUnitId == adUnitId &&
             other.adUnitIds == adUnitIds && other.counter == counter && other.bannerSize == bannerSize &&
-            other.nativeStyle == nativeStyle && other.splashTimeout == splashTimeout && other.format == format
+            other.nativeStyle == nativeStyle && other.splashTimeout == splashTimeout && other.format == format &&
+            other.loadAgain == loadAgain
 
     override fun hashCode(): Int {
         var result = enabled.hashCode()
@@ -137,25 +144,26 @@ public class PlacementOverride(
         result = 31 * result + bannerSize.hashCode()
         result = 31 * result + nativeStyle.hashCode()
         result = 31 * result + splashTimeout.hashCode()
-        return 31 * result + format.hashCode()
+        result = 31 * result + format.hashCode()
+        return 31 * result + loadAgain.hashCode()
     }
 
     override fun toString(): String =
         "PlacementOverride(enabled=$enabled, minInterval=$minInterval, maxPerSession=$maxPerSession, " +
             "preload=$preload, adUnitId=$adUnitId, adUnitIds=$adUnitIds, counter=$counter, bannerSize=$bannerSize, " +
-            "nativeStyle=$nativeStyle, splashTimeout=$splashTimeout, format=$format)"
+            "nativeStyle=$nativeStyle, splashTimeout=$splashTimeout, format=$format, loadAgain=$loadAgain)"
 
     /** This override with its ad units replaced by [ids] (null removes them), keeping every other field. */
     internal fun withAdUnitIds(ids: List<String>?): PlacementOverride = PlacementOverride(
         format, enabled, minInterval, maxPerSession, preload, adUnitId = null, adUnitIds = ids, counter, bannerSize,
         nativeStyle, splashTimeout,
-    )
+    ).also { it.loadAgain = loadAgain }
 
     /** This override without its format swap, keeping every other field. */
     internal fun withoutSwap(): PlacementOverride = PlacementOverride(
         format = null, enabled, minInterval, maxPerSession, preload, adUnitId, adUnitIds, counter, bannerSize,
         nativeStyle, splashTimeout,
-    )
+    ).also { it.loadAgain = loadAgain }
 
     /** The ad units this override sets, in rotation order, or null when it sets none. */
     internal val effectiveAdUnitIds: List<String>? get() = adUnitIds ?: adUnitId?.let(::listOf)

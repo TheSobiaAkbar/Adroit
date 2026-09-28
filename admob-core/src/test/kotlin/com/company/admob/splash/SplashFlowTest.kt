@@ -34,6 +34,7 @@ class SplashFlowTest {
         var answerStartAtOnce = true
         val requested = mutableListOf<String>()
         var showCallback: ((FullScreenResult) -> Unit)? = null
+        val abandoned = mutableListOf<String>()
 
         override fun timings() = timings
         override fun isOnline() = online
@@ -50,6 +51,9 @@ class SplashFlowTest {
         override fun isResumed(activity: Activity) = resumed
         override fun showAd(activity: Activity, key: String, onResult: (FullScreenResult) -> Unit) {
             showCallback = onResult
+        }
+        override fun abandonAd(key: String) {
+            abandoned += key
         }
         override fun log(message: String) = Unit
     }
@@ -81,6 +85,7 @@ class SplashFlowTest {
         assertTrue(flow.state.value is SplashState.Loading)
         advance(200)
         assertEquals(SplashState.Finished(adShown = false), flow.state.value)
+        assertEquals("a late splash ad would never show: dropped", listOf("SplashAd"), ports.abandoned)
     }
 
     @Test

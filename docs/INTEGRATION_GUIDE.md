@@ -65,6 +65,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
             ids = listOf("ca-app-pub-0000000000000000/0000000002", "ca-app-pub-0000000000000000/0000000003"),
             counter = 3,
             maxPerSession = 5,
+            loadAgain = true, // the next ad unit loads right after each show
         ),
     ),
     HomeBanner(
@@ -82,6 +83,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
   `native`. The other arguments are optional; each field is described in [Ad profiles](AD_PROFILES.md#the-json).
 - Leave `ids` out while you wait for the real ad units: that ad shows Google's test ads.
 - The splash screen's ad has `splash = true`. There is at most one.
+- An ad loads only when your code asks (step 6). `loadAgain = true` also loads the next one after each show.
 
 ## 4. Start everything in the Application class
 
@@ -165,7 +167,20 @@ test ad shows before the main screen. [Splash screen](SPLASH.md) lists every cas
 
 ## 6. Show the ads
 
-Full-screen ads: call `showFullScreen` where the ad belongs, and continue in its callback, whatever the result.
+Ads load only when you ask, so ask when the screen that shows them opens. For an ad that's shown again and again (a
+level-complete ad, the app open ad), set `loadAgain = true` in its entry, so the next ad loads right after each show.
+
+<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-load -->
+```kotlin
+override fun onResume() {
+    super.onResume()
+    // Ads load only when asked: load HistoryAd now, so it's ready when the user opens the history. After a failed
+    // load, the next resume asks again. Nothing happens if it's loaded or loading already.
+    AdSlots.load(AppAds.HistoryAd)
+}
+```
+
+Then call `showFullScreen` where the ad belongs, and continue in its callback, whatever the result.
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-counter -->
 ```kotlin
@@ -218,6 +233,7 @@ for example:
 | Show a native ad instead of a banner | the banner's | `{ "format": "native", "style": "large", "adUnitIds": ["<a native ad unit>"] }` |
 | Show an app open ad instead of an interstitial | the interstitial's | `{ "format": "app_open", "adUnitIds": ["<an app open ad unit>"] }` |
 | Lengthen the splash to 13 s | `AdSettings` | `{ "splashSeconds": 13 }` |
+| Load the next ad right after each show | the ad's | `{ "loadAgain": true }` |
 | Turn every ad off | `AdSettings` | `{ "adsEnabled": false }` |
 
 Every field is listed in [Ad profiles](AD_PROFILES.md#the-json), and format changes in

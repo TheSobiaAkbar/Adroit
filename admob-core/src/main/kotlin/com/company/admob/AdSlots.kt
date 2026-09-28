@@ -66,6 +66,39 @@ public object AdSlots {
         show(activity, definition.name, splash = true, onResult)
     }
 
+    /**
+     * Loads the ad [definition] now, in its current format, unless it's loaded or loading already. Ad profiles load
+     * only when asked (docs/AD_PROFILES.md#loading): call this when the screen that may show the ad opens (for example
+     * in `onResume`), so it's ready by the time it's shown. A failed load isn't retried; the next call tries again.
+     * After a show, the ad loads again by itself only with `loadAgain`. Nothing happens for banners, which load with
+     * their view, or before `initialize()`. Any thread.
+     */
+    @JvmStatic
+    public fun load(definition: AdDefinition) {
+        load(definition.name)
+    }
+
+    /** [load] by key, for ads not declared as an [AdDefinition]. */
+    @JvmStatic
+    public fun load(key: String) {
+        val runtime = CompanyAdMob.liveRuntime ?: return
+        runOnMain {
+            val p = runtime.liveConfig.current.active(key)
+            if (p == null) {
+                runtime.log.w { "AdSlots.load: no ad \"$key\" is configured" }
+                return@runOnMain
+            }
+            when (p.format) {
+                AdFormat.INTERSTITIAL -> runtime.interstitialEngine.preload(p.placement)
+                AdFormat.APP_OPEN -> runtime.appOpenEngine.preload(p.placement)
+                AdFormat.REWARDED -> runtime.rewardedEngine.preload(p.placement)
+                AdFormat.REWARDED_INTERSTITIAL -> runtime.rewardedInterstitialEngine.preload(p.placement)
+                AdFormat.NATIVE -> runtime.nativeEngine.preload(p.placement as NativePlacement)
+                AdFormat.BANNER -> Unit
+            }
+        }
+    }
+
     private fun show(activity: Activity, key: String, splash: Boolean, onResult: (FullScreenResult) -> Unit) {
         val runtime = CompanyAdMob.liveRuntime
         if (runtime == null) {

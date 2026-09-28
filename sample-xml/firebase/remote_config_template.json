@@ -9,35 +9,35 @@
     },
     "SplashAd": {
       "defaultValue": {
-        "value": "{\"format\":\"interstitial\",\"enabled\":true,\"adUnitIds\":[],\"counter\":0,\"timerSeconds\":0,\"maxPerSession\":0,\"splashTimeoutSeconds\":8}"
+        "value": "{\"format\":\"interstitial\",\"enabled\":true,\"adUnitIds\":[],\"counter\":0,\"timerSeconds\":0,\"maxPerSession\":0,\"splashTimeoutSeconds\":8,\"loadAgain\":false}"
       },
       "valueType": "JSON",
       "description": "Ad SplashAd (docs\/AD_PROFILES.md)"
     },
     "LevelCompleteAd": {
       "defaultValue": {
-        "value": "{\"format\":\"interstitial\",\"enabled\":true,\"adUnitIds\":[],\"counter\":0,\"timerSeconds\":60,\"maxPerSession\":0}"
+        "value": "{\"format\":\"interstitial\",\"enabled\":true,\"adUnitIds\":[],\"counter\":0,\"timerSeconds\":60,\"maxPerSession\":0,\"loadAgain\":true}"
       },
       "valueType": "JSON",
       "description": "Ad LevelCompleteAd (docs\/AD_PROFILES.md)"
     },
     "ExtraLifeRewarded": {
       "defaultValue": {
-        "value": "{\"format\":\"rewarded\",\"enabled\":true,\"adUnitIds\":[],\"maxPerSession\":0}"
+        "value": "{\"format\":\"rewarded\",\"enabled\":true,\"adUnitIds\":[],\"maxPerSession\":0,\"loadAgain\":true}"
       },
       "valueType": "JSON",
       "description": "Ad ExtraLifeRewarded (docs\/AD_PROFILES.md)"
     },
     "BonusRewardedInterstitial": {
       "defaultValue": {
-        "value": "{\"format\":\"rewarded_interstitial\",\"enabled\":true,\"adUnitIds\":[],\"counter\":0,\"timerSeconds\":0,\"maxPerSession\":0}"
+        "value": "{\"format\":\"rewarded_interstitial\",\"enabled\":true,\"adUnitIds\":[],\"counter\":0,\"timerSeconds\":0,\"maxPerSession\":0,\"loadAgain\":true}"
       },
       "valueType": "JSON",
       "description": "Ad BonusRewardedInterstitial (docs\/AD_PROFILES.md)"
     },
     "AppOpenAd": {
       "defaultValue": {
-        "value": "{\"format\":\"app_open\",\"enabled\":true,\"adUnitIds\":[],\"timerSeconds\":240,\"maxPerSession\":0}"
+        "value": "{\"format\":\"app_open\",\"enabled\":true,\"adUnitIds\":[],\"timerSeconds\":240,\"maxPerSession\":0,\"loadAgain\":true}"
       },
       "valueType": "JSON",
       "description": "Ad AppOpenAd (docs\/AD_PROFILES.md)"
@@ -58,14 +58,14 @@
     },
     "FeedNative": {
       "defaultValue": {
-        "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"small\"}"
+        "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"small\",\"loadAgain\":true}"
       },
       "valueType": "JSON",
       "description": "Ad FeedNative (docs\/AD_PROFILES.md)"
     },
     "ArticleNative": {
       "defaultValue": {
-        "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"large\"}"
+        "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"large\",\"loadAgain\":false}"
       },
       "valueType": "JSON",
       "description": "Ad ArticleNative (docs\/AD_PROFILES.md)"

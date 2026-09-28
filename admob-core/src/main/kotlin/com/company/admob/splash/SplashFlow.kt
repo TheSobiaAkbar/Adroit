@@ -116,7 +116,11 @@ public class SplashFlow internal constructor(
         }
         mutableState.value = SplashState.Loading(100)
         val current = activity
-        if (!adReady || current == null) return finish(adShown = false)
+        if (!adReady || current == null) {
+            // An ad that loads after the splash would never be shown: stop its load and retries.
+            if (splashAdKey != null && !isPremium) ports.abandonAd(splashAdKey)
+            return finish(adShown = false)
+        }
         mutableState.value = SplashState.ShowingAd
         val result = suspendCancellableCoroutine { continuation ->
             ports.showAd(current, checkNotNull(splashAdKey)) { if (continuation.isActive) continuation.resume(it) }
@@ -215,6 +219,9 @@ internal interface SplashPorts {
 
     fun showAd(activity: Activity, key: String, onResult: (FullScreenResult) -> Unit)
 
+    /** The splash is over without showing the ad [key]: drop its load, retries and cached ad, unless shared. */
+    fun abandonAd(key: String)
+
     fun log(message: String)
 }
 
@@ -263,6 +270,18 @@ internal class RuntimeSplashPorts(private val network: NetworkMonitor) : SplashP
 
     override fun isResumed(activity: Activity): Boolean =
         runtime?.deps?.activityTracker?.isValidForShow(activity) == true
+
+    override fun abandonAd(key: String) {
+        // Both formats: a swap may have changed it since the request.
+        val runtime = runtime ?: return
+        runtime.liveConfig.current.allPlacements.filter { it.placement.key == key }.forEach { p ->
+            when (p.format) {
+                AdFormat.INTERSTITIAL -> runtime.interstitialEngine.abandon(p.placement)
+                AdFormat.APP_OPEN -> runtime.appOpenEngine.abandon(p.placement)
+                else -> Unit
+            }
+        }
+    }
 
     override fun showAd(activity: Activity, key: String, onResult: (FullScreenResult) -> Unit) {
         val (p, engine) = serving(key) ?: return onResult(FullScreenResult.NotShown(AdError.NotReady))

@@ -81,6 +81,9 @@ internal class NativeAdLoaderEngine(
         val owner: EffectivePlacement get() = placements.first()
         val size: Int get() = placements.maxOf { (it.config as? NativePlacementConfig)?.poolSize ?: FormatDefaults.NATIVE_POOL_SIZE }
         val strategy: PreloadStrategy get() = placements.minOf { it.preload }
+
+        /** An ad profile's loadAgain: each ad handed to a view is replaced by a new load, whatever [strategy]. */
+        val loadAgain: Boolean get() = placements.any { it.loadAgain }
         val ttl: Duration = owner.expiry ?: FormatDefaults.NATIVE_TTL
         val key = "NATIVE:" + adUnitIds.joinToString(",")
 
@@ -152,7 +155,7 @@ internal class NativeAdLoaderEngine(
         dropExpired(pool)
         val pooled = pool.items.removeFirstOrNull()
         if (pooled != null) {
-            if (!pool.autoRefill) pool.target = (pool.target - 1).coerceAtLeast(0)
+            if (!pool.autoRefill && !pool.loadAgain) pool.target = (pool.target - 1).coerceAtLeast(0)
             log.d { "Native ${placement.key}: served from the pool" }
             handOut(p, pooled.value.ad, pooled.value.adUnitId, callback)
             rescheduleExpiry(pool)
@@ -185,7 +188,7 @@ internal class NativeAdLoaderEngine(
             handle.block(reason)
         }
         if (!readiness.canLoad()) return
-        pools.values.toSet().filter { it !in before }.forEach { pump(it) }
+        pools.values.toSet().filter { it !in before || it.target > it.items.size }.forEach { pump(it) }
     }
 
     /** Recomputes [placements] and [pools] for [current], reusing the pool of every ad unit still in use. */
@@ -193,7 +196,15 @@ internal class NativeAdLoaderEngine(
         val enabled = current.allPlacements.filter { it.format == AdFormat.NATIVE && it.enabled }
         val reusable = pools.values.associateBy { it.adUnitIds }
         val byUnits = enabled.groupBy { it.adUnitIds }.mapValues { (units, sharing) ->
-            reusable[units]?.also { it.placements = sharing } ?: Pool(units, sharing)
+            reusable[units]?.also { pool ->
+                val before = pool.strategy
+                pool.placements = sharing
+                // A remote value switched the pool to "auto": fill it from now on.
+                if (before != PreloadStrategy.AFTER_READY && pool.strategy == PreloadStrategy.AFTER_READY) {
+                    pool.target = pool.size
+                    pool.autoRefill = true
+                }
+            } ?: Pool(units, sharing)
         }
         val newPools = enabled.associate { it.placement to byUnits.getValue(it.adUnitIds) }
         (pools.values.toSet() - newPools.values.toSet()).forEach { pool ->
@@ -290,7 +301,11 @@ internal class NativeAdLoaderEngine(
         log.i { "Native ${p.placement.key} loaded in $latency ms" }
         val waiter = pool.waiters.removeFirstOrNull()
         when {
-            waiter != null -> handOut(waiter.placement, result.ad, adUnitId, waiter.onResult)
+            waiter != null -> {
+                handOut(waiter.placement, result.ad, adUnitId, waiter.onResult)
+                // loadAgain: the ad handed out is replaced in the pool.
+                if (pool.loadAgain && pool.target == 0) pool.target = 1
+            }
             pool.items.size < pool.target -> {
                 pool.items.addLast(Cached(Pooled(result.ad, adUnitId), clock.elapsedRealtimeMillis(), pool.ttl))
                 rescheduleExpiry(pool)
@@ -305,6 +320,8 @@ internal class NativeAdLoaderEngine(
     private fun onLoadFailed(pool: Pool, p: EffectivePlacement, adUnitId: String, result: SdkLoadResult.Failure) {
         val attempt = ++pool.failedAttempts
         while (pool.waiters.isNotEmpty()) pool.waiters.removeFirst().onResult(NativeAdResult.Failed(result.error))
+        // Pools that load only when asked (PreloadStrategy.NONE) never retry by themselves: the next view or load asks.
+        if (pool.strategy == PreloadStrategy.NONE) pool.target = pool.items.size
         val delay = if (pool.items.size < pool.target) {
             retry.schedule(pool.key, attempt, p.retry, result.error, result.retryable) { pump(pool) }
         } else {
@@ -330,6 +347,8 @@ internal class NativeAdLoaderEngine(
             if (!cached.isExpired(clock)) continue
             iterator.remove()
             cached.value.ad.destroy()
+            // Pools that load only when asked don't replace an expired ad (loadAgain replaces shown ones only).
+            if (pool.strategy == PreloadStrategy.NONE) pool.target = (pool.target - 1).coerceAtLeast(0)
             emit(AdEvent.Expired(pool.owner.placement.key, AdFormat.NATIVE, cached.value.adUnitId, now()))
             log.i { "Native ${pool.owner.placement.key}: a pooled ad expired" }
         }

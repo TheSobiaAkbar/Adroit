@@ -1,7 +1,8 @@
 package com.company.admob.sample.xml.feed
 
 import androidx.lifecycle.ViewModel
-import com.company.admob.sample.xml.ads.Placements
+import com.company.admob.config.nativePlacement
+import com.company.admob.sample.xml.ads.SampleAds
 import com.company.admob.views.NativeAdHolder
 
 /** A row of the feed. */
@@ -29,7 +30,7 @@ class FeedViewModel : ViewModel() {
 
     private val holders = mutableMapOf<Int, NativeAdHolder>()
 
-    fun adHolder(slot: Int): NativeAdHolder = holders.getOrPut(slot) { NativeAdHolder(Placements.FeedNative) }
+    fun adHolder(slot: Int): NativeAdHolder = holders.getOrPut(slot) { NativeAdHolder(SampleAds.FeedNative.nativePlacement()) }
 
     override fun onCleared() {
         holders.values.forEach(NativeAdHolder::clear)

@@ -18,6 +18,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
             ids = listOf("ca-app-pub-0000000000000000/0000000002", "ca-app-pub-0000000000000000/0000000003"),
             counter = 3,
             maxPerSession = 5,
+            loadAgain = true, // the next ad unit loads right after each show
         ),
     ),
     HomeBanner(
@@ -127,7 +128,8 @@ The ads file, and what `AdDefinitions.firebaseTemplate` writes for each ad, look
       "adUnitIds": ["ca-app-pub-0000000000000000/0000000002", "ca-app-pub-0000000000000000/0000000003"],
       "counter": 3,
       "timerSeconds": 0,
-      "maxPerSession": 5
+      "maxPerSession": 5,
+      "loadAgain": true
     },
     "HomeBanner": {
       "format": "banner",
@@ -154,6 +156,7 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | `format` | text | required | `interstitial`, `rewarded`, `rewarded_interstitial`, `app_open`, `banner` or `native` |
 | `enabled` | true/false | `true` | `false` turns this ad off |
 | `adUnitIds` | list of IDs | test ads | Used one after another: each load takes the next one, and after the last one the first again. A single ID can be written as text. Empty or left out: Google's test ad unit for the format. In Firebase, an empty list keeps the defaults. |
+| `loadAgain` | true/false | `false` | `true` loads the next ad (the next ID of `adUnitIds`) right after each show; see [Loading](#loading). Not for banners. |
 
 ### Interstitial and rewarded interstitial
 
@@ -216,6 +219,31 @@ Rules:
 Fetch with `RemoteConfigSession.start(application)` in `Application.onCreate` (see
 [Remote configuration](REMOTE_CONFIG.md#fetching-once-per-session)): once per session, without making anything wait. Pass `settingsKey` to use a name other than `AdSettings`.
 
+## Loading
+
+Ads load only when your app asks, so no ad loads that the app won't show, which keeps AdMob's show rate (shown ads
+out of loaded ones) high:
+
+<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-load -->
+```kotlin
+override fun onResume() {
+    super.onResume()
+    // Ads load only when asked: load HistoryAd now, so it's ready when the user opens the history. After a failed
+    // load, the next resume asks again. Nothing happens if it's loaded or loading already.
+    AdSlots.load(AppAds.HistoryAd)
+}
+```
+
+- `AdSlots.load` does nothing when the ad is loaded or loading already, so calling it on every `onResume` is fine. A
+  native ad also loads when its view asks for one, and the splash ad when `SplashFlow` requests it.
+- A failed load isn't retried: the next `AdSlots.load` is the retry.
+- `AdSlots.showFullScreen` never loads an ad: if none is ready, it returns `NotShown(NotReady)` at once.
+- An ad that expires unshown (after an hour for most formats) isn't replaced until the next `AdSlots.load`.
+- After a show, an ad with **`loadAgain`** set loads the next one straight away: with `adUnitIds` of `[A, B]`, showing
+  the ad from A requests one from B. Without it (the default), the ad loads again only at the next `AdSlots.load`. For
+  a native ad, "shown" means handed to a view. Firebase can turn it on or off per ad: `{ "loadAgain": true }`.
+- When the splash ends without showing its ad, a load still in progress is dropped, so it's never shown later.
+
 ## Showing the ads
 
 Show every interstitial, app open and inline ad through `AdSlots` (or `AdSlotView` and the `AdSlot` composable): they
@@ -230,7 +258,6 @@ CompanyAdMob.start(this) {
     // Firebase swapped it) or gives up. Continue either way.
     AdSlots.showOnSplash(this, AppAds.SplashAd) { goToMain() }
 }
-
 ```
 
 Interstitials with a counter: call `showFullScreen` every time the event happens, and let the counter decide.
@@ -240,7 +267,6 @@ Interstitials with a counter: call `showFullScreen` every time the event happens
 // With "counter": 3 in HistoryAd, this shows an ad on the 3rd, 6th, 9th… call. Other calls return at once
 // with NotShown(CounterNotReached), and the app just continues.
 AdSlots.showFullScreen(this, AppAds.HistoryAd) { result: FullScreenResult -> openHistory() }
-
 ```
 
 Banners and native ads take their size and template from `style`:

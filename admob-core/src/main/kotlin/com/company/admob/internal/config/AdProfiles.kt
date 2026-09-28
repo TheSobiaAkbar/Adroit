@@ -13,6 +13,7 @@ import com.company.admob.RewardedPlacement
 import com.company.admob.config.FrequencyRule
 import com.company.admob.config.PlacementConfig
 import com.company.admob.config.PlacementsBuilder
+import com.company.admob.config.PreloadStrategy
 import com.company.admob.config.SplashTimings
 import com.company.admob.config.remote.AdOverrides
 import com.company.admob.config.remote.PlacementOverride
@@ -37,12 +38,13 @@ internal object AdProfiles {
         val splash: SplashTimings = SplashTimings(),
     )
 
-    /** [testIdKeys]: ads without ad unit IDs, given Google's test ad unit. */
+    /** [testIdKeys]: ads without ad unit IDs, given Google's test ad unit. [loadAgainKeys]: ads with `"loadAgain": true`. */
     class ParsedFile(
         val placements: List<PlacementConfig>,
         val settings: FileSettings,
         val issues: List<String>,
         val testIdKeys: Set<String> = emptySet(),
+        val loadAgainKeys: Set<String> = emptySet(),
     )
 
     class ParsedRemote(val overrides: AdOverrides, val issues: List<String>)
@@ -69,15 +71,18 @@ internal object AdProfiles {
         }
         val builder = PlacementsBuilder()
         val testIdKeys = linkedSetOf<String>()
+        val loadAgainKeys = linkedSetOf<String>()
         for (key in ads.keys()) {
             val ad = ads.optJSONObject(key)
             if (ad == null) {
                 issues += "Ads file: \"$key\" isn't a JSON object"
                 continue
             }
-            if (addPlacement(builder, key, ad) { issues += "Ads file, \"$key\": $it" }) testIdKeys += key
+            val issue: (String) -> Unit = { issues += "Ads file, \"$key\": $it" }
+            if (addPlacement(builder, key, ad, issue)) testIdKeys += key
+            if (builder.configs.lastOrNull()?.placement?.key == key && loadsAgain(ad, issue)) loadAgainKeys += key
         }
-        return ParsedFile(builder.configs.toList(), settings, issues, testIdKeys)
+        return ParsedFile(builder.configs.toList(), settings, issues, testIdKeys, loadAgainKeys)
     }
 
     /**
@@ -153,26 +158,32 @@ internal object AdProfiles {
         val maxPerSession = fields.count("maxPerSession")?.let(::zeroMeansNoLimit) ?: Int.MAX_VALUE
         val timer = (fields.count("timerSeconds") ?: 0).seconds
         val counter = fields.count("counter") ?: 0
+        // Every ad loads only when the app asks (AdSlots.load, or a native view); "loadAgain" reloads it after a show.
+        val preload = PreloadStrategy.NONE
         when (format) {
             AdFormat.INTERSTITIAL -> builder.interstitial(InterstitialPlacement(key), ids) {
                 this.enabled = enabled
                 frequency = FrequencyRule(timer, maxPerSession, counter)
                 splash = fields.boolean("splash") ?: false
                 fields.count("splashTimeoutSeconds")?.let { splashTimeout = it.seconds }
+                this.preload = preload
             }
             AdFormat.REWARDED_INTERSTITIAL -> builder.rewardedInterstitial(RewardedInterstitialPlacement(key), ids) {
                 this.enabled = enabled
                 frequency = FrequencyRule(timer, maxPerSession, counter)
+                this.preload = preload
             }
             AdFormat.REWARDED -> builder.rewarded(RewardedPlacement(key), ids) {
                 this.enabled = enabled
                 frequency = FrequencyRule(maxPerSession = maxPerSession)
+                this.preload = preload
             }
             AdFormat.APP_OPEN -> builder.appOpen(AppOpenPlacement(key), ids) {
                 this.enabled = enabled
                 frequency = FrequencyRule(maxPerSession = maxPerSession)
                 if (ad.has("timerSeconds")) cooldown = timer
                 fields.strings("excludedActivities")?.let(::excludeActivityClassNames)
+                this.preload = preload
             }
             AdFormat.BANNER -> builder.banner(BannerPlacement(key), ids) {
                 this.enabled = enabled
@@ -182,9 +193,20 @@ internal object AdProfiles {
                 this.enabled = enabled
                 fields.nativeStyle()?.let { style = it }
                 fields.count("poolSize")?.let { poolSize = it }
+                this.preload = preload
             }
         }
         return usesTestIds
+    }
+
+    /** `"loadAgain"` of a file ad; banners, which load with their view, report it and ignore it. */
+    private fun loadsAgain(ad: JSONObject, issue: (String) -> Unit): Boolean {
+        val value = Fields(ad, issue).boolean("loadAgain") ?: return false
+        if (ad.optString("format").trim().lowercase() == "banner") {
+            issue("\"loadAgain\" doesn't apply to banners, which load with their view; ignored")
+            return false
+        }
+        return value
     }
 
     private fun parseOverride(key: String, format: AdFormat, json: JSONObject, issue: (String) -> Unit): PlacementOverride? {
@@ -196,6 +218,9 @@ internal object AdProfiles {
             val allowed = FormatSwap.partnerOf(format)?.let { " (it can only become ${it.name.lowercase()})" }.orEmpty()
             issue("ignored: its format \"$formatName\" differs from the app's ${format.name.lowercase()} \"$key\"$allowed")
             return null
+        }
+        if (format == AdFormat.BANNER && json.has("loadAgain")) {
+            issue("\"loadAgain\" doesn't apply to banners, which load with their view; ignored")
         }
         for (fileOnly in listOf("splash", "excludedActivities", "poolSize")) {
             if (json.has(fileOnly)) issue("\"$fileOnly\" can only be set in the ads file; ignored")
@@ -215,7 +240,7 @@ internal object AdProfiles {
             nativeStyle = if (styleFormat == AdFormat.NATIVE) fields.nativeStyle() else null,
             splashTimeout = if (format == AdFormat.INTERSTITIAL) fields.count("splashTimeoutSeconds")?.seconds else null,
             format = swapTo,
-        )
+        ).also { if (format != AdFormat.BANNER) it.loadAgain = fields.boolean("loadAgain") }
     }
 
     private fun parseObject(raw: String, issue: (String) -> Unit): JSONObject? = try {

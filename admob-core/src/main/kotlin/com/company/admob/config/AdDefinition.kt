@@ -51,6 +51,14 @@ public sealed class AdProfile {
     public abstract val enabled: Boolean
 
     /**
+     * Whether the ad loads again by itself once it has been shown: the next ad unit of [adUnitIds] is requested right
+     * after each show. False (the default): after a show, the ad loads again only when the app calls
+     * `AdSlots.load`. Either way, the first load is the app's `AdSlots.load` call (a native ad's view also asks for
+     * one), and a failed load isn't retried. Always false for a banner, which loads with its view.
+     */
+    public open val loadAgain: Boolean get() = false
+
+    /**
      * An interstitial.
      *
      * @property counter 0 = off; N = shows on every Nth `show` call.
@@ -58,6 +66,7 @@ public sealed class AdProfile {
      * @property maxPerSession 0 = no limit; showings per app session.
      * @property splash whether this is the splash ad (not counted in the overall limit, no counter).
      * @property splashTimeoutSeconds how long a splash show waits for the ad.
+     * @property loadAgain see [AdProfile.loadAgain].
      */
     public class Interstitial internal constructor(
         override val adUnitIds: List<String>,
@@ -67,6 +76,7 @@ public sealed class AdProfile {
         public val maxPerSession: Int,
         public val splash: Boolean,
         public val splashTimeoutSeconds: Int,
+        override val loadAgain: Boolean,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.INTERSTITIAL
     }
@@ -77,6 +87,7 @@ public sealed class AdProfile {
      * @property counter 0 = off; N = shows on every Nth `show` call.
      * @property timerSeconds 0 = off; the minimum time between two showings of this ad.
      * @property maxPerSession 0 = no limit.
+     * @property loadAgain see [AdProfile.loadAgain].
      */
     public class RewardedInterstitial internal constructor(
         override val adUnitIds: List<String>,
@@ -84,6 +95,7 @@ public sealed class AdProfile {
         public val counter: Int,
         public val timerSeconds: Int,
         public val maxPerSession: Int,
+        override val loadAgain: Boolean,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.REWARDED_INTERSTITIAL
     }
@@ -92,11 +104,13 @@ public sealed class AdProfile {
      * A rewarded ad.
      *
      * @property maxPerSession 0 = no limit.
+     * @property loadAgain see [AdProfile.loadAgain].
      */
     public class Rewarded internal constructor(
         override val adUnitIds: List<String>,
         override val enabled: Boolean,
         public val maxPerSession: Int,
+        override val loadAgain: Boolean,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.REWARDED
     }
@@ -107,6 +121,7 @@ public sealed class AdProfile {
      * @property timerSeconds the cooldown between app open ads; null keeps the library default (4 minutes).
      * @property maxPerSession 0 = no limit.
      * @property excludedActivities Activity class names never covered by an app open ad, such as the splash screen.
+     * @property loadAgain see [AdProfile.loadAgain]; set it to keep an app open ad for every return to the app.
      */
     public class AppOpen internal constructor(
         override val adUnitIds: List<String>,
@@ -114,6 +129,7 @@ public sealed class AdProfile {
         public val timerSeconds: Int?,
         public val maxPerSession: Int,
         public val excludedActivities: List<String>,
+        override val loadAgain: Boolean,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.APP_OPEN
     }
@@ -137,12 +153,14 @@ public sealed class AdProfile {
      *
      * @property style the library template.
      * @property poolSize ads kept loaded, 1 to 3.
+     * @property loadAgain see [AdProfile.loadAgain]; for a native ad, "shown" means handed to a view.
      */
     public class Native internal constructor(
         override val adUnitIds: List<String>,
         override val enabled: Boolean,
         public val style: NativeStyle,
         public val poolSize: Int,
+        override val loadAgain: Boolean,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.NATIVE
     }
@@ -174,7 +192,9 @@ public sealed class AdProfile {
             maxPerSession: Int = 0,
             splash: Boolean = false,
             splashTimeoutSeconds: Int = 8,
-        ): Interstitial = Interstitial(ids.toList(), enabled, counter, timerSeconds, maxPerSession, splash, splashTimeoutSeconds)
+            loadAgain: Boolean = false,
+        ): Interstitial =
+            Interstitial(ids.toList(), enabled, counter, timerSeconds, maxPerSession, splash, splashTimeoutSeconds, loadAgain)
 
         /** A rewarded interstitial profile; see [RewardedInterstitial]. */
         @JvmStatic
@@ -185,13 +205,18 @@ public sealed class AdProfile {
             counter: Int = 0,
             timerSeconds: Int = 0,
             maxPerSession: Int = 0,
-        ): RewardedInterstitial = RewardedInterstitial(ids.toList(), enabled, counter, timerSeconds, maxPerSession)
+            loadAgain: Boolean = false,
+        ): RewardedInterstitial = RewardedInterstitial(ids.toList(), enabled, counter, timerSeconds, maxPerSession, loadAgain)
 
         /** A rewarded profile; see [Rewarded]. */
         @JvmStatic
         @JvmOverloads
-        public fun rewarded(ids: List<String> = emptyList(), enabled: Boolean = true, maxPerSession: Int = 0): Rewarded =
-            Rewarded(ids.toList(), enabled, maxPerSession)
+        public fun rewarded(
+            ids: List<String> = emptyList(),
+            enabled: Boolean = true,
+            maxPerSession: Int = 0,
+            loadAgain: Boolean = false,
+        ): Rewarded = Rewarded(ids.toList(), enabled, maxPerSession, loadAgain)
 
         /** An app open profile; see [AppOpen]. */
         @JvmStatic
@@ -202,7 +227,8 @@ public sealed class AdProfile {
             timerSeconds: Int? = null,
             maxPerSession: Int = 0,
             excludedActivities: List<String> = emptyList(),
-        ): AppOpen = AppOpen(ids.toList(), enabled, timerSeconds, maxPerSession, excludedActivities.toList())
+            loadAgain: Boolean = false,
+        ): AppOpen = AppOpen(ids.toList(), enabled, timerSeconds, maxPerSession, excludedActivities.toList(), loadAgain)
 
         /** A banner profile; see [Banner]. */
         @JvmStatic
@@ -221,7 +247,8 @@ public sealed class AdProfile {
             enabled: Boolean = true,
             style: NativeStyle = NativeStyle.MEDIUM,
             poolSize: Int = 1,
-        ): Native = Native(ids.toList(), enabled, style, poolSize)
+            loadAgain: Boolean = false,
+        ): Native = Native(ids.toList(), enabled, style, poolSize, loadAgain)
     }
 }
 

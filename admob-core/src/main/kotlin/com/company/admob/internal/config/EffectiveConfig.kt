@@ -107,7 +107,9 @@ internal class EffectiveConfig private constructor(
             val demo = usesDemoAdUnits(config)
             val placements = LinkedHashMap<AdPlacement, EffectivePlacement>()
             for (placementConfig in config.placements) {
-                placements.getOrPut(placementConfig.placement) { resolve(placementConfig, demo, overrides) }
+                placements.getOrPut(placementConfig.placement) {
+                    resolve(placementConfig, demo, overrides, placementConfig.placement.key in config.loadAgainPlacementKeys)
+                }
             }
             // Every swappable ad also gets its partner-format placement, off unless a remote value swaps to it. The
             // set of placements is then fixed for the whole run, which the engines rely on (their availability flows).
@@ -125,7 +127,7 @@ internal class EffectiveConfig private constructor(
         }
 
         /** Precedence (§21): a remotely disabled format, then the remote placement override, then the local value. */
-        private fun resolve(config: PlacementConfig, demo: Boolean, overrides: AdOverrides): EffectivePlacement {
+        private fun resolve(config: PlacementConfig, demo: Boolean, overrides: AdOverrides, loadAgain: Boolean): EffectivePlacement {
             val override = overrides.placements[config.placement.key]
             val configured = override?.effectiveAdUnitIds ?: config.adUnitIds.map { it.value }
             val bannerSize = override?.bannerSize ?: (config as? BannerPlacementConfig)?.size
@@ -159,6 +161,7 @@ internal class EffectiveConfig private constructor(
                 bannerSize = bannerSize,
                 nativeStyle = override?.nativeStyle ?: (config as? NativePlacementConfig)?.style,
                 splashTimeout = override?.splashTimeout ?: (config as? InterstitialPlacementConfig)?.splashTimeout,
+                loadAgain = config.format != AdFormat.BANNER && (override?.loadAgain ?: loadAgain),
             )
         }
 
@@ -207,6 +210,7 @@ internal class EffectiveConfig private constructor(
                 isAlternate = true,
                 frequencyPlacement = primary.placement,
                 splash = primary.isSplash,
+                loadAgain = format != AdFormat.BANNER && primary.loadAgain,
             )
         }
     }
@@ -244,6 +248,8 @@ internal class EffectivePlacement(
     /** Where shows are counted and frequency rules looked up: the configured placement, also for its alternate. */
     val frequencyPlacement: AdPlacement = config.placement,
     splash: Boolean = (config as? InterstitialPlacementConfig)?.splash == true,
+    /** An ad profile's `loadAgain`: load the next ad right after each show, whatever [preload] and [retry] say. */
+    val loadAgain: Boolean = false,
 ) {
     val placement: AdPlacement get() = config.placement
     val format: AdFormat get() = config.format

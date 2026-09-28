@@ -67,6 +67,7 @@ internal object AdDefinitionJson {
             is AdProfile.Native -> json.put("style", nativeStyle(profile.style))
                 .apply { if (!firebase) put("poolSize", profile.poolSize) }
         }
+        if (profile !is AdProfile.Banner) json.put("loadAgain", profile.loadAgain)
         return json
     }
 

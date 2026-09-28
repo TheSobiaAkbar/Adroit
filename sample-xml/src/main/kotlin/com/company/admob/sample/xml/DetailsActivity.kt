@@ -5,7 +5,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.company.admob.sample.xml.ads.Placements
+import com.company.admob.config.bannerPlacement
+import com.company.admob.sample.xml.ads.SampleAds
 import com.company.admob.views.attachBanner
 import com.company.admob.sample.xml.databinding.ActivityDetailsBinding
 
@@ -25,6 +26,6 @@ class DetailsActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        binding.bannerContainer.attachBanner(this, Placements.DetailsBanner)
+        binding.bannerContainer.attachBanner(this, SampleAds.DetailsBanner.bannerPlacement())
     }
 }

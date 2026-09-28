@@ -13,23 +13,35 @@ import com.company.admob.config.AdSettings
  *
  * No entry lists ad unit IDs, so each uses Google's test ad unit for its format. A real app lists its IDs here (or
  * sets them in Firebase): `AdProfile.interstitial(ids = listOf("ca-app-pub-…/…"))`.
+ *
+ * The app refers to every ad through this enum: `AdSlots.showFullScreen(activity, SampleAds.LevelCompleteAd)`,
+ * `SampleAds.ExtraLifeRewarded.rewardedPlacement()` for the format-specific APIs, or the entry name in XML
+ * (`app:company_admob_placement="HomeBanner"`).
+ *
+ * Ads load only when the app asks (`AdSlots.load`): the Home screen for its full-screen ads, `MainActivity` for the
+ * app open ad, the splash screen for `SplashAd`, and each native view for its ad. `loadAgain = true` loads the next
+ * ad (the next ID of the list) right after each show; the others wait for the next `AdSlots.load`.
  */
 enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
     /** Shown on the splash screen when it loads before the splash timer ends (docs/SPLASH.md). */
     SplashAd(AdProfile.interstitial(splash = true)),
 
     /** Home screen: "Level complete". At most one per minute. */
-    LevelCompleteAd(AdProfile.interstitial(timerSeconds = 60)),
+    LevelCompleteAd(AdProfile.interstitial(timerSeconds = 60, loadAgain = true)),
 
     /** Home screen: "Extra life". */
-    ExtraLifeRewarded(AdProfile.rewarded()),
+    ExtraLifeRewarded(AdProfile.rewarded(loadAgain = true)),
 
     /** Home screen: "Bonus round". */
-    BonusRewardedInterstitial(AdProfile.rewardedInterstitial()),
+    BonusRewardedInterstitial(AdProfile.rewardedInterstitial(loadAgain = true)),
 
-    /** On return to the app, never over the splash screen. */
+    /** On return to the app, never over the splash screen. Loaded again after each show, for the next return. */
     AppOpenAd(
-        AdProfile.appOpen(timerSeconds = 240, excludedActivities = listOf("com.company.admob.sample.xml.SplashActivity")),
+        AdProfile.appOpen(
+            timerSeconds = 240,
+            excludedActivities = listOf("com.company.admob.sample.xml.SplashActivity"),
+            loadAgain = true,
+        ),
     ),
 
     /** Bottom of the home screen. */
@@ -38,8 +50,8 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
     /** Bottom of the details screen. */
     DetailsBanner(AdProfile.banner(style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM))),
 
-    /** In the feed, every few articles. */
-    FeedNative(AdProfile.native(style = NativeStyle.SMALL)),
+    /** In the feed, every few articles: each ad shown is replaced, ready for the next slot. */
+    FeedNative(AdProfile.native(style = NativeStyle.SMALL, loadAgain = true)),
 
     /** Inside an article. */
     ArticleNative(AdProfile.native(style = NativeStyle.LARGE)),

@@ -18,7 +18,8 @@
       "adUnitIds": ["ca-app-pub-0000000000000000/0000000002", "ca-app-pub-0000000000000000/0000000003"],
       "counter": 3,
       "timerSeconds": 0,
-      "maxPerSession": 5
+      "maxPerSession": 5,
+      "loadAgain": true
     },
     "HomeBanner": {
       "format": "banner",

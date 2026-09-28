@@ -7,7 +7,8 @@ import com.company.admob.AdSlots
 import com.company.admob.AdsClient
 import com.company.admob.CompanyAdMob
 import com.company.admob.RewardResult
-import com.company.admob.sample.xml.ads.Placements
+import com.company.admob.config.rewardedInterstitialPlacement
+import com.company.admob.config.rewardedPlacement
 import com.company.admob.sample.xml.ads.SampleAds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +42,17 @@ class CoinsViewModel(private val ads: AdsClient = CompanyAdMob.client) : ViewMod
         }
     }
 
+    /**
+     * The Home screen is in front: load its full-screen ads, so each is ready when its button is tapped. Ads load
+     * only when asked, and a failed load isn't retried; this runs on every resume, so it also asks again after a
+     * failure. It does nothing for an ad already loaded or loading, such as one `loadAgain` reloaded after its show.
+     */
+    fun loadAds() {
+        AdSlots.load(SampleAds.LevelCompleteAd)
+        AdSlots.load(SampleAds.ExtraLifeRewarded)
+        AdSlots.load(SampleAds.BonusRewardedInterstitial)
+    }
+
     fun onLevelComplete(activity: Activity) {
         // Both branches continue: an ad that wasn't ready, was capped, or failed never blocks the user. AdSlots shows
         // LevelCompleteAd in its current format: an interstitial, or an app open ad if Firebase swapped it.
@@ -48,14 +60,14 @@ class CoinsViewModel(private val ads: AdsClient = CompanyAdMob.client) : ViewMod
     }
 
     fun onExtraLife(activity: Activity) {
-        ads.showRewarded(activity, Placements.ExtraLifeRewarded) { result ->
+        ads.showRewarded(activity, SampleAds.ExtraLifeRewarded.rewardedPlacement()) { result ->
             if (result is RewardResult.Earned) grant(result)
         }
     }
 
     /** Only after the intro screen offered the reward with a way to opt out (Google's rewarded interstitial rule). */
     fun onBonusAccepted(activity: Activity) {
-        ads.rewardedInterstitial.show(activity, Placements.BonusRewardedInterstitial) { result ->
+        ads.rewardedInterstitial.show(activity, SampleAds.BonusRewardedInterstitial.rewardedInterstitialPlacement()) { result ->
             if (result is RewardResult.Earned) grant(result)
         }
     }

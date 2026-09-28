@@ -83,6 +83,9 @@ public class AdMobConfig internal constructor(builder: Builder) {
     /** Placements with no ad unit IDs in their profile, which use Google's test ad unit. */
     internal val testAdUnitPlacementKeys: Set<String> = profile?.testIdKeys.orEmpty()
 
+    /** Ad profiles with `"loadAgain": true`: loaded again right after each show. */
+    internal val loadAgainPlacementKeys: Set<String> = profile?.loadAgainKeys.orEmpty()
+
     /** Problems in the ads file (reading or parsing). Validation reports them as errors. */
     internal val profileIssues: List<String> = listOfNotNull(builder.profileReadError) + profile?.issues.orEmpty()
 

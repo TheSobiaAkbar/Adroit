@@ -34,6 +34,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
             ids = listOf("ca-app-pub-0000000000000000/0000000002", "ca-app-pub-0000000000000000/0000000003"),
             counter = 3,
             maxPerSession = 5,
+            loadAgain = true, // the next ad unit loads right after each show
         ),
     ),
     HomeBanner(
@@ -95,6 +96,15 @@ class ProfilesSplashActivity : Activity() {
     }
 
     private fun openHistory() = Unit
+
+    // region profiles-load
+    override fun onResume() {
+        super.onResume()
+        // Ads load only when asked: load HistoryAd now, so it's ready when the user opens the history. After a failed
+        // load, the next resume asks again. Nothing happens if it's loaded or loading already.
+        AdSlots.load(AppAds.HistoryAd)
+    }
+    // endregion
 }
 
 // region profiles-ui

@@ -40,6 +40,11 @@ class HomeFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        coins.loadAds()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         binding = null

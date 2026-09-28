@@ -12,10 +12,13 @@ import com.company.admob.config.AdSettings
 import com.company.admob.config.BannerPlacementConfig
 import com.company.admob.config.InterstitialPlacementConfig
 import com.company.admob.config.NativePlacementConfig
+import com.company.admob.config.PreloadStrategy
 import com.company.admob.config.TestIds
 import com.company.admob.config.adMobConfig
 import com.company.admob.config.bannerPlacement
 import com.company.admob.config.interstitialPlacement
+import com.company.admob.config.remote.AdOverrides
+import com.company.admob.config.remote.PlacementOverride
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -160,5 +163,77 @@ class AdDefinitionTest {
     private fun definition(name: String, profile: AdProfile) = object : AdDefinition {
         override val name: String = name
         override val defaults: AdProfile = profile
+    }
+
+    // --- Loading ---
+
+    private enum class LoadingAds(override val defaults: AdProfile) : AdDefinition {
+        Once(AdProfile.interstitial()),
+        Again(AdProfile.interstitial(loadAgain = true)),
+        AgainRewarded(AdProfile.rewarded(loadAgain = true)),
+        OnceAppOpen(AdProfile.appOpen()),
+        AgainNative(AdProfile.native(loadAgain = true)),
+        Banner(AdProfile.banner()),
+    }
+
+    @Test
+    fun `every profile loads only when asked, loadAgain is false unless set, and the JSON carries it`() {
+        val config = adMobConfig {
+            appId = TestIds.APP_ID
+            profiles(LoadingAds.entries, AdSettings())
+        }
+        val fullScreen = config.placements.filter { it.format != AdFormat.BANNER }
+        assertTrue(fullScreen.all { it.preload == PreloadStrategy.NONE })
+        assertEquals(setOf("Again", "AgainRewarded", "AgainNative"), config.loadAgainPlacementKeys)
+        val effective = EffectiveConfig.from(config)
+        assertEquals(true, effective.active("Again")?.loadAgain)
+        assertEquals(false, effective.active("OnceAppOpen")?.loadAgain)
+
+        assertEquals(false, JSONObject(LoadingAds.Once.defaults.toJson()).getBoolean("loadAgain"))
+        assertEquals(true, JSONObject(LoadingAds.Again.defaults.toJson()).getBoolean("loadAgain"))
+        assertFalse("banners load with their view", JSONObject(LoadingAds.Banner.defaults.toJson()).has("loadAgain"))
+        assertFalse(LoadingAds.Banner.defaults.loadAgain)
+    }
+
+    @Test
+    fun `an ads file sets loadAgain per ad, and a banner's is ignored with a message`() {
+        val parsed = AdProfiles.parseFile(
+            """{ "ads": {
+                "A": { "format": "interstitial", "loadAgain": true },
+                "B": { "format": "interstitial" },
+                "C": { "format": "banner", "loadAgain": true } } }""",
+        )
+        assertEquals(setOf("A"), parsed.loadAgainKeys)
+        assertTrue(parsed.placements.filter { it.format != AdFormat.BANNER }.all { it.preload == PreloadStrategy.NONE })
+        assertTrue(parsed.issues.single().contains("banners"))
+    }
+
+    @Test
+    fun `Firebase can turn loadAgain on or off per ad, but not for a banner`() {
+        val parsed = AdProfiles.parseRemote(
+            mapOf("A" to AdFormat.INTERSTITIAL, "B" to AdFormat.NATIVE, "C" to AdFormat.BANNER, "D" to AdFormat.REWARDED),
+            mapOf(
+                "A" to """{ "loadAgain": true }""",
+                "B" to """{ "loadAgain": false }""",
+                "C" to """{ "loadAgain": true }""",
+                "D" to """{ "loadAgain": "yes" }""",
+            ),
+            settings = null,
+        )
+        val placements = parsed.overrides.placements
+        assertEquals(true, placements.getValue("A").loadAgain)
+        assertEquals(false, placements.getValue("B").loadAgain)
+        assertEquals(PlacementOverride(), placements.getValue("C"))
+        assertEquals(null, placements.getValue("D").loadAgain)
+        assertEquals(2, parsed.issues.size)
+
+        val config = adMobConfig {
+            appId = TestIds.APP_ID
+            profiles(LoadingAds.entries, AdSettings())
+        }
+        val remote = AdOverrides(placements = mapOf("Once" to placements.getValue("A"), "Again" to placements.getValue("B")))
+        val effective = EffectiveConfig.from(config).withOverrides(remote)
+        assertEquals(true, effective.active("Once")?.loadAgain)
+        assertEquals(false, effective.active("Again")?.loadAgain)
     }
 }

@@ -23,6 +23,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdSlots.showOnSplash`, `AdSlotView` (admob-views) and `AdSlot` (admob-compose) show an ad in its current format;
   a swapped app open ad shows its interstitial on returns to the app. `PlacementOverride.format`, through a new
   constructor; the 1.0.0-rc1 constructor is unchanged.
+- Ad profiles (the enum, the ads file and Firebase) load only when the app asks (`AdSlots.load`, docs/AD_PROFILES.md#loading):
+  no load at start, no retry after a failed load, no replacement after an expiry. `"loadAgain": true` (false by
+  default) loads the next ad unit right after each show; Firebase can set it per ad. A splash ad's load still in
+  progress is dropped when the splash ends without it. **Changed:** ads files from 1.0.0-rc1 loaded at start and
+  after each show; call `AdSlots.load` and set `loadAgain` for the same behaviour.
 - Load retries pause without a network, instead of failing again on their backoff, and run as soon as a network
   returns (after up to 5 seconds for Android to validate it).
 - Integration guide (`docs/INTEGRATION_GUIDE.md`): a step-by-step checklist for a new app, from the library to the
