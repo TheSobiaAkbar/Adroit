@@ -59,6 +59,9 @@ public object CompanyAdMob : AdsClient {
     internal var runtime: AdsRuntime? = null
         private set
 
+    /** [runtime] unless a test client stands in for it (admob-testing), in which case callers use [delegate]. */
+    internal val liveRuntime: AdsRuntime? get() = if (testClient == null) runtime else null
+
     /**
      * Sets up the library. Call it once, in `Application.onCreate()`. Cheap and synchronous: it validates [config]
      * and attaches lifecycle observers, with no network and no Google SDK calls. Consent and SDK initialization

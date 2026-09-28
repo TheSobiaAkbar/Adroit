@@ -78,6 +78,13 @@ public class AdNativeView @JvmOverloads constructor(
         if (placement == null) visibility = GONE
     }
 
+    /** Destroys the current ad now, for a container that removes this view for good ([AdSlotView]). */
+    internal fun release() {
+        boundOwner = null
+        current?.destroy()
+        current = null
+    }
+
     /**
      * Shows [placement] with [layout] instead of the XML attributes (null: the placement's configured style). Loads
      * now if attached, otherwise on attach.

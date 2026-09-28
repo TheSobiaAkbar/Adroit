@@ -43,13 +43,16 @@ import kotlin.time.Duration.Companion.seconds
  * finishes loading after the foreground event is never shown for it, which is what prevents loops.
  *
  * The process's first ON_START (cold start) is ignored here: only [showOnColdStart], called from a loading screen,
- * shows on a cold start. Cache, load, expiry and show are delegated to the app open [engine].
+ * shows on a cold start. Cache, load, expiry and show are delegated to the app open [engine], or to
+ * [interstitialEngine] while a remote value swaps the app open ad to an interstitial (docs/AD_PROFILES.md): the same
+ * gates apply, and the app open ad's own settings (exclusions, launch count) still decide when.
  *
  * Main thread only (ADR-006). No Activity is referenced outside a show or a [showOnColdStart] wait, and suppressors
  * are released on their owner's ON_DESTROY.
  */
 internal class AppOpenController(
     private val engine: FullScreenAdEngine,
+    private val interstitialEngine: FullScreenAdEngine? = null,
     private val config: LiveConfig,
     private val readiness: Readiness,
     private val activityTracker: ActivityTracker,
@@ -71,12 +74,17 @@ internal class AppOpenController(
         var showing = false
     }
 
-    /** The app open placement in the current effective configuration: read at every decision, never kept. */
-    private val placement: EffectivePlacement?
-        get() = config.current.allPlacements.firstOrNull { it.format == AdFormat.APP_OPEN }
+    /** The app's app open placement (never a swap alternate): read at every decision, never kept. */
+    private val configured: EffectivePlacement?
+        get() = config.current.allPlacements.firstOrNull { it.format == AdFormat.APP_OPEN && !it.isAlternate }
 
-    /** Local-only settings (overrides don't change them). */
-    private val settings: AppOpenPlacementConfig? get() = placement?.config as? AppOpenPlacementConfig
+    /** The placement serving app open moments now: [configured], or its interstitial alternate while swapped. */
+    private val placement: EffectivePlacement?
+        get() = configured?.let { config.current.active(it.placement.key) }?.takeIf { engineFor(it) != null }
+            ?: configured
+
+    /** Local-only settings of the app open ad (overrides don't change them), also while swapped. */
+    private val settings: AppOpenPlacementConfig? get() = configured?.config as? AppOpenPlacementConfig
     private val noPlacement: StateFlow<AdAvailability> = MutableStateFlow(AdAvailability.Disabled).asStateFlow()
     private var enabled = true
     private var warmCheck: Job? = null
@@ -84,7 +92,7 @@ internal class AppOpenController(
     private var lastShownAtElapsed: Long? = null
 
     init {
-        val appOpen = config.current.allPlacements.filter { it.format == AdFormat.APP_OPEN }
+        val appOpen = config.current.allPlacements.filter { it.format == AdFormat.APP_OPEN && !it.isAlternate }
         if (appOpen.size > 1) {
             log.w { "${appOpen.size} app open placements are configured; only ${appOpen.first().placement.key} is used" }
         }
@@ -96,7 +104,12 @@ internal class AppOpenController(
         }
     }
 
-    fun availability(): StateFlow<AdAvailability> = placement?.let { engine.availability(it.placement) } ?: noPlacement
+    fun availability(): StateFlow<AdAvailability> =
+        placement?.let { p -> engineFor(p)?.availability(p.placement) } ?: noPlacement
+
+    /** The engine that loads and shows [p]: app open, or interstitial for a swapped app open ad. */
+    private fun engineFor(p: EffectivePlacement): FullScreenAdEngine? =
+        if (p.format == AdFormat.INTERSTITIAL) interstitialEngine else engine
 
     fun skipNextForeground() = suppression.skipNextForeground()
 
@@ -147,7 +160,7 @@ internal class AppOpenController(
         val request = ColdStart(callback)
         coldStart = request
         // Runs now if Ready; otherwise kept as intent and loaded as soon as the library becomes ready.
-        engine.preload(p.placement)
+        engineFor(p)?.preload(p.placement)
         request.job = scope.launch {
             val blocked = awaitColdStartAd(activity, p, maxWait) ?: showGates(activity, fromColdStart = true)
             if (blocked != null) {
@@ -193,7 +206,7 @@ internal class AppOpenController(
 
     private fun show(activity: Activity, p: EffectivePlacement, onResult: (FullScreenResult) -> Unit) {
         val startedAt = clock.elapsedRealtimeMillis()
-        engine.show(activity, p.placement) { result ->
+        checkNotNull(engineFor(p)).show(activity, p.placement) { result ->
             if (result is FullScreenResult.Dismissed) lastShownAtElapsed = startedAt
             onResult(result)
         }
@@ -242,7 +255,7 @@ internal class AppOpenController(
         }
         // Gate 7: cooldown and session cap, plus a hard rule that two app open ads never show within the cooldown,
         // even when no impression was recorded.
-        (frequency.check(p.placement) as? FrequencyDecision.Capped)?.let {
+        (frequency.check(p.frequencyPlacement) as? FrequencyDecision.Capped)?.let {
             return Blocked(AdError.FrequencyCapped(it.retryAfter), "cooldown or session cap, retry after ${it.retryAfter}")
         }
         lastShownAtElapsed?.let { last ->
@@ -250,8 +263,9 @@ internal class AppOpenController(
             if (remaining.isPositive()) return Blocked(AdError.FrequencyCapped(remaining), "cooldown, $remaining left")
         }
         // Gate 8: a fresh cached ad. Checking availability drops an expired ad, which starts its reload.
-        engine.availability(p.placement)
-        if (!engine.isReady(p.placement)) return Blocked(AdError.NotReady, "no fresh ad is cached")
+        val serving = checkNotNull(engineFor(p))
+        serving.availability(p.placement)
+        if (!serving.isReady(p.placement)) return Blocked(AdError.NotReady, "no fresh ad is cached")
         return null
     }
 
@@ -269,8 +283,9 @@ internal class AppOpenController(
     private fun ensurePreload() {
         val p = placement ?: return
         if (!enabled || !p.enabled || p.preload == PreloadStrategy.NONE || !readiness.canLoad()) return
-        engine.availability(p.placement)
-        if (!engine.isReady(p.placement)) engine.preload(p.placement)
+        val serving = engineFor(p) ?: return
+        serving.availability(p.placement)
+        if (!serving.isReady(p.placement)) serving.preload(p.placement)
     }
 
     private suspend fun awaitResumedActivity(): Activity? = withTimeoutOrNull(RESUME_WAIT) {
@@ -306,7 +321,7 @@ internal class AppOpenController(
             val resumed = activityTracker.isValidForShow(activity)
             if (wasResumed && !resumed) return Blocked(AdError.ActivityUnavailable, "the Activity was paused")
             wasResumed = wasResumed || resumed
-            if (resumed && state == AdsState.Ready && engine.isReady(p.placement)) return READY
+            if (resumed && state == AdsState.Ready && engineFor(p)?.isReady(p.placement) == true) return READY
             delay(POLL_INTERVAL)
         }
     }

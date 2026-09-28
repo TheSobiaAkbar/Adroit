@@ -169,6 +169,7 @@ internal class AdsRuntime(
 
     val appOpenController: AppOpenController = AppOpenController(
         engine = appOpenEngine,
+        interstitialEngine = interstitialEngine,
         config = liveConfig,
         readiness = init,
         activityTracker = deps.activityTracker,

@@ -47,7 +47,8 @@ internal class DiagnosticsReportBuilder(
             state = state,
             consent = consent,
             testMode = TestModeInfo(current.usesDemoAdUnits, current.testDeviceIds.size),
-            placements = current.allPlacements.map(::placement),
+            // A swap alternate is listed only while it serves its key.
+            placements = current.allPlacements.filter { !it.isAlternate || it.enabled }.map(::placement),
             activeFullScreen = coordinator.currentOwner,
             currentActivity = activityTracker.resumedActivity?.javaClass?.simpleName,
             lastError = events.lastError ?: (state as? AdsState.Failed)?.error ?: consent.lastError,

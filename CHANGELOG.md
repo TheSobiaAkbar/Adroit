@@ -17,6 +17,12 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `adMobConfig { profiles(AppAds.entries, AdSettings(...)) }`. The entry name is the ad's Firebase parameter, which
   overrides the defaults as with an ads file. `AdDefinitions.firebaseTemplate(...)` writes a Remote Config template
   for the console's "Publish from a file"; outside PRODUCTION, `initialize` logs every ad's JSON.
+- Format swapping (`docs/AD_PROFILES.md`, "Swapping formats"): a Firebase value with `"format"` turns an interstitial
+  into an app open ad or back, and a banner into a native ad or back, with ad unit IDs of the new format (PRODUCTION
+  ignores a swap without them). The ad keeps its counter, timer and caps. `AdSlots.showFullScreen`,
+  `AdSlots.showOnSplash`, `AdSlotView` (admob-views) and `AdSlot` (admob-compose) show an ad in its current format;
+  a swapped app open ad shows its interstitial on returns to the app. `PlacementOverride.format`, through a new
+  constructor; the 1.0.0-rc1 constructor is unchanged.
 
 ### Changed
 - An ad without ad unit IDs (in a definition or an ads file) uses Google's test ad unit for its format instead of

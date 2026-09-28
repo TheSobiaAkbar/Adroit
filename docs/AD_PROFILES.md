@@ -199,7 +199,7 @@ In the Firebase console, open Remote Config:
 
 Rules:
 - An ad without a Firebase parameter (or with an empty one) uses the file's values.
-- A Firebase value can't change an ad's `format`: a value with another format is ignored.
+- A Firebase value can change an ad's `format` only within its pair; see [Swapping formats](#swapping-formats).
 - The file-only fields (`splash`, `excludedActivities`, `poolSize`) are ignored in Firebase values.
 - An invalid value, or a value that isn't JSON, is ignored with a warning in the log. An invalid field is dropped,
   and the rest of the value still applies.
@@ -213,40 +213,105 @@ Rules:
 
 ## Showing the ads
 
+Show every interstitial, app open and inline ad through `AdSlots` (or `AdSlotView` and the `AdSlot` composable): they
+show each ad in its current format, so a [format swap](#swapping-formats) from Firebase needs no release.
+
 Splash screen:
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-splash -->
 ```kotlin
 CompanyAdMob.start(this) {
-    // Waits up to SplashAd's splashTimeoutSeconds, then shows it or gives up. Continue either way.
-    CompanyAdMob.interstitial.showOnSplash(this, Ads.Splash) { goToMain() }
+    // Waits up to SplashAd's splashTimeoutSeconds, then shows it (as an interstitial, or an app open ad if
+    // Firebase swapped it) or gives up. Continue either way.
+    AdSlots.showOnSplash(this, AppAds.SplashAd) { goToMain() }
 }
+
 ```
 
-Interstitials with a counter: call `show` every time the event happens, and let the counter decide.
+Interstitials with a counter: call `showFullScreen` every time the event happens, and let the counter decide.
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-counter -->
 ```kotlin
 // With "counter": 3 in HistoryAd, this shows an ad on the 3rd, 6th, 9th… call. Other calls return at once
 // with NotShown(CounterNotReached), and the app just continues.
-CompanyAdMob.interstitial.show(this, Ads.History) { result: FullScreenResult -> openHistory() }
+AdSlots.showFullScreen(this, AppAds.HistoryAd) { result: FullScreenResult -> openHistory() }
+
 ```
 
-Banners and native ads take their size and template from `style` when your code doesn't pass one:
+Banners and native ads take their size and template from `style`:
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-ui -->
 ```kotlin
 @Composable
 fun HomeScreenAds() {
-    AdBanner(Ads.HomeBanner) // size from HomeBanner's "style"
-    AdNative(Ads.FeedNative) // template from FeedNative's "style"
+    AdSlot(AppAds.HomeBanner) // a banner sized by HomeBanner's "style", or a native ad if Firebase swaps it
+    AdSlot(AppAds.FeedNative) // a native ad in FeedNative's template, or a banner if Firebase swaps it
 }
 ```
 
-With Views, the same applies to `AdBannerView` and `AdNativeView` without a `company_admob_bannerSize` or
-`company_admob_template` attribute, and to `attachBanner`, `attachNativeAd` and `NativeAdHolder.bindTo` without a
-size or layout. A new style applies to banners and native ads created after the new values arrive; one already on
-screen keeps its style.
+With Views, declare an `AdSlotView`:
+
+```xml
+<com.company.admob.views.AdSlotView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:company_admob_placement="HomeBanner" />
+```
+
+The format-specific APIs (`CompanyAdMob.interstitial`, `AdBanner`, `AdNative`, `AdBannerView`, `AdNativeView`,
+`attachBanner`, `NativeAdHolder`…) keep working, but always use the ad's configured format:
+
+<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-typed -->
+```kotlin
+@Composable
+fun TypedAds() {
+    // The format-specific APIs still work, but don't follow a swap: this is always a banner.
+    AdBanner(Ads.HomeBanner)
+    AdNative(Ads.FeedNative)
+}
+```
+
+Without a `company_admob_bannerSize` or `company_admob_template` attribute, or a size or layout in code, they also
+take the style from the profile. A new style applies to banners and native ads created after the new values arrive;
+one already on screen keeps its style.
+
+## Swapping formats
+
+A Firebase value can give an ad another format, within these pairs:
+
+| Configured as | Can become |
+|---|---|
+| `interstitial` | `app_open` |
+| `app_open` | `interstitial` |
+| `banner` | `native` |
+| `native` | `banner` |
+
+Rewarded and rewarded interstitial ads never swap: the user chose to watch them for a reward. Any other format in a
+Firebase value is ignored with a warning, and so is the whole value.
+
+Put the new `format` and **ad unit IDs of the new format** in the same value. An AdMob ad unit serves one format only,
+so an interstitial unit can't show an app open ad:
+
+```json
+{ "format": "app_open", "adUnitIds": ["ca-app-pub-1234567890123456/1234567890"] }
+```
+
+- Without `adUnitIds`, PRODUCTION ignores the swap (with a warning) and keeps the configured format; the value's other
+  fields still apply. Outside PRODUCTION, Google's test ad unit of the new format is used.
+- The ad keeps its own counter, timer and per-session limit, and its shows count as the same ad, whatever the format.
+  An interstitial swapped to app open still counts toward `maxInterstitialsPerSession`.
+- The ad of the old format is released when the swap arrives, and one of the new format loads. Remove `format` (or
+  set the configured one) to swap back.
+- `AdSlots.showFullScreen` and `AdSlots.showOnSplash` show the ad in its current format. A splash interstitial swapped
+  to app open waits for an app open ad instead.
+- The app's own app open ad, swapped to an interstitial, shows that interstitial when the user returns to the app,
+  with the same rules (excluded screens, launch count, cooldown).
+- `AdSlotView` and `AdSlot` replace the banner with a native ad, or back, as soon as the swap arrives.
+- `style` in the value is read for the new format: `{ "format": "native", "style": "large", "adUnitIds": [...] }`.
+- `AdSlots.currentFormat(key)` and `AdSlots.formatChanges(key)` tell you an ad's format now.
+
+AdMob intends app open ads for app launch and returns to the app. Showing one at another moment, by swapping an
+interstitial, is your choice: check the AdMob policies for your app.
 
 ## How the limits combine
 

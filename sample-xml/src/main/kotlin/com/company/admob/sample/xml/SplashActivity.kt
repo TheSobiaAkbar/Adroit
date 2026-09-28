@@ -4,9 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.company.admob.AdSlots
 import com.company.admob.CompanyAdMob
 import com.company.admob.FullScreenResult
-import com.company.admob.sample.xml.ads.Placements
+import com.company.admob.sample.xml.ads.SampleAds
 import com.company.admob.sample.xml.databinding.ActivitySplashBinding
 import kotlin.time.Duration.Companion.seconds
 
@@ -30,7 +31,8 @@ class SplashActivity : AppCompatActivity() {
         // Called again after a rotation: start() joins the work in progress, and the new Activity waits again.
         CompanyAdMob.start(this) {
             if (isFinishing || isDestroyed) return@start
-            CompanyAdMob.interstitial.showOnSplash(this, Placements.SplashInterstitial) { result ->
+            // SplashAd in its current format: an interstitial, or an app open ad if Firebase swapped it.
+            AdSlots.showOnSplash(this, SampleAds.SplashAd) { result ->
                 when {
                     result is FullScreenResult.Dismissed -> goToMain()
                     isFinishing || isDestroyed -> Unit

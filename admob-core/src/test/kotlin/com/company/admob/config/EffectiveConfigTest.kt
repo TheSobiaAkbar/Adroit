@@ -71,7 +71,7 @@ class EffectiveConfigTest {
         listOf<Boolean?>(null, true, false).forEach { useDemo ->
             val effective = EffectiveConfig.from(allFormats(AdEnvironment.DEVELOPMENT) { testing { useDemoAdUnits = useDemo } })
             assertTrue(effective.usesDemoAdUnits)
-            assertEquals(9, effective.allPlacements.size)
+            assertEquals(9, effective.configuredPlacements.size)
             effective.allPlacements.forEach {
                 assertTrue("${it.placement} resolved to ${it.adUnitId}", GoogleDemoAdUnits.isDemo(it.adUnitId))
             }
@@ -186,6 +186,6 @@ class EffectiveConfigTest {
         })
         assertNull(effective.placement(InterstitialPlacement("unknown")))
         assertEquals(TestIds.unit(1), effective.adUnit(interstitial))
-        assertEquals(1, effective.allPlacements.size)
+        assertEquals(1, effective.configuredPlacements.size)
     }
 }

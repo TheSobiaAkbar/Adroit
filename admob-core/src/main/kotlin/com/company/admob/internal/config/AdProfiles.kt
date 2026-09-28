@@ -184,13 +184,18 @@ internal object AdProfiles {
     private fun parseOverride(key: String, format: AdFormat, json: JSONObject, issue: (String) -> Unit): PlacementOverride? {
         val fields = Fields(json, issue)
         val formatName = fields.string("format")
-        if (formatName != null && formatOf(formatName) != format) {
-            issue("ignored: its format \"$formatName\" differs from the app's ${format.name.lowercase()} \"$key\"")
+        val remoteFormat = formatName?.let(::formatOf)
+        val swapTo = remoteFormat?.takeIf { it != format && it == FormatSwap.partnerOf(format) }
+        if (formatName != null && remoteFormat != format && swapTo == null) {
+            val allowed = FormatSwap.partnerOf(format)?.let { " (it can only become ${it.name.lowercase()})" }.orEmpty()
+            issue("ignored: its format \"$formatName\" differs from the app's ${format.name.lowercase()} \"$key\"$allowed")
             return null
         }
         for (fileOnly in listOf("splash", "excludedActivities", "poolSize")) {
             if (json.has(fileOnly)) issue("\"$fileOnly\" can only be set in the ads file; ignored")
         }
+        // A swapped ad keeps its own frequency rules (counter, timer, caps); only its style follows the new format.
+        val styleFormat = swapTo ?: format
         val fullScreenFrequency = format == AdFormat.INTERSTITIAL || format == AdFormat.REWARDED_INTERSTITIAL
         return PlacementOverride(
             enabled = fields.boolean("enabled"),
@@ -200,9 +205,10 @@ internal object AdProfiles {
             },
             adUnitIds = fields.adUnitIds()?.ifEmpty { null },
             counter = if (fullScreenFrequency) fields.count("counter") else null,
-            bannerSize = if (format == AdFormat.BANNER) fields.bannerSize() else null,
-            nativeStyle = if (format == AdFormat.NATIVE) fields.nativeStyle() else null,
+            bannerSize = if (styleFormat == AdFormat.BANNER) fields.bannerSize() else null,
+            nativeStyle = if (styleFormat == AdFormat.NATIVE) fields.nativeStyle() else null,
             splashTimeout = if (format == AdFormat.INTERSTITIAL) fields.count("splashTimeoutSeconds")?.seconds else null,
+            format = swapTo,
         )
     }
 

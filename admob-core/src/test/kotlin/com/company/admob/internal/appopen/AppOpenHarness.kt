@@ -43,6 +43,8 @@ internal class TestLifecycleOwner : LifecycleOwner {
  */
 internal class AppOpenHarness(
     scope: TestScope,
+    /** Also runs an interstitial engine, which serves app open moments while the app open ad is swapped. */
+    withInterstitialEngine: Boolean = false,
     configure: AppOpenPlacementBuilder.() -> Unit = {},
 ) {
     val h = EngineHarness(
@@ -60,8 +62,11 @@ internal class AppOpenHarness(
     )
     var launchCount = 3
     val suppression = AppOpenSuppression(h.clock)
+    val interstitialEngine: FullScreenAdEngine? =
+        if (withInterstitialEngine) h.engine(FullScreenFormatStrategy.Interstitial) else null
     val controller = AppOpenController(
         engine = h.engine,
+        interstitialEngine = interstitialEngine,
         config = h.live,
         readiness = h.readiness,
         activityTracker = h.tracker,

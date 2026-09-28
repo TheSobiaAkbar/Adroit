@@ -30,6 +30,11 @@
         <attr name="company_admob_layout" format="reference" />
     </declare-styleable>
 
+    <!-- AdSlotView: a banner or native ad, whichever format the placement has now (docs/AD_PROFILES.md). -->
+    <declare-styleable name="CompanyAdmobAdSlotView">
+        <attr name="company_admob_placement" />
+    </declare-styleable>
+
     <!--
         Template styling. Every native template applies CompanyAdMob.ThemeOverlay.Native, which sets all of these.
         To restyle the templates, override that style (or the colors, dimens and styles it references) in your app.

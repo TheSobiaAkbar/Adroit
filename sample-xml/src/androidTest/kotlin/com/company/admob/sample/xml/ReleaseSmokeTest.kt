@@ -24,7 +24,7 @@ class ReleaseSmokeTest {
     fun minifiedAppStartsAndInflatesLibraryViewsFromXml() {
         ActivityScenario.launch(SplashActivity::class.java).use {
             val main = awaitResumed<MainActivity>(timeoutMillis = 10_000)
-            assertEquals(BANNER_VIEW, viewClassName(main, R.id.home_banner))
+            assertEquals(SLOT_VIEW, viewClassName(main, R.id.home_banner))
 
             onView(withId(R.id.level_complete)).perform(click())
             val details = awaitResumed<DetailsActivity>(timeoutMillis = 15_000)
@@ -45,7 +45,7 @@ class ReleaseSmokeTest {
 
     private companion object {
         // String literals, so R8's mapping of the test APK can't rewrite them: the names must survive minification.
-        const val BANNER_VIEW = "com.company.admob.views.AdBannerView"
+        const val SLOT_VIEW = "com.company.admob.views.AdSlotView"
         const val NATIVE_VIEW = "com.company.admob.views.AdNativeView"
     }
 }

@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import androidx.compose.runtime.Composable
+import com.company.admob.AdSlots
 import com.company.admob.BannerSize
 import com.company.admob.CollapsibleBannerPosition
 import com.company.admob.CompanyAdMob
@@ -13,6 +14,7 @@ import com.company.admob.FullScreenResult
 import com.company.admob.NativeStyle
 import com.company.admob.compose.AdBanner
 import com.company.admob.compose.AdNative
+import com.company.admob.compose.AdSlot
 import com.company.admob.config.AdDefinition
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AdProfile
@@ -77,8 +79,9 @@ class ProfilesSplashActivity : Activity() {
     fun onCreateSnippet() {
         // region profiles-splash
         CompanyAdMob.start(this) {
-            // Waits up to SplashAd's splashTimeoutSeconds, then shows it or gives up. Continue either way.
-            CompanyAdMob.interstitial.showOnSplash(this, Ads.Splash) { goToMain() }
+            // Waits up to SplashAd's splashTimeoutSeconds, then shows it (as an interstitial, or an app open ad if
+            // Firebase swapped it) or gives up. Continue either way.
+            AdSlots.showOnSplash(this, AppAds.SplashAd) { goToMain() }
         }
         // endregion
     }
@@ -87,7 +90,7 @@ class ProfilesSplashActivity : Activity() {
         // region profiles-counter
         // With "counter": 3 in HistoryAd, this shows an ad on the 3rd, 6th, 9th… call. Other calls return at once
         // with NotShown(CounterNotReached), and the app just continues.
-        CompanyAdMob.interstitial.show(this, Ads.History) { result: FullScreenResult -> openHistory() }
+        AdSlots.showFullScreen(this, AppAds.HistoryAd) { result: FullScreenResult -> openHistory() }
         // endregion
     }
 
@@ -97,7 +100,16 @@ class ProfilesSplashActivity : Activity() {
 // region profiles-ui
 @Composable
 fun HomeScreenAds() {
-    AdBanner(Ads.HomeBanner) // size from HomeBanner's "style"
-    AdNative(Ads.FeedNative) // template from FeedNative's "style"
+    AdSlot(AppAds.HomeBanner) // a banner sized by HomeBanner's "style", or a native ad if Firebase swaps it
+    AdSlot(AppAds.FeedNative) // a native ad in FeedNative's template, or a banner if Firebase swaps it
+}
+// endregion
+
+// region profiles-typed
+@Composable
+fun TypedAds() {
+    // The format-specific APIs still work, but don't follow a swap: this is always a banner.
+    AdBanner(Ads.HomeBanner)
+    AdNative(Ads.FeedNative)
 }
 // endregion

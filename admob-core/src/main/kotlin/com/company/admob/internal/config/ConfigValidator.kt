@@ -28,6 +28,7 @@ internal enum class ConfigIssueCode {
     INVALID_COUNT,
     INVALID_RETRY_POLICY,
     UNKNOWN_PLACEMENT_OVERRIDE,
+    SWAP_WITHOUT_AD_UNITS,
     INVALID_AD_PROFILE,
 
     // Errors in PRODUCTION.
@@ -268,13 +269,18 @@ internal object ConfigValidator {
             override.splashTimeout?.let {
                 if (!it.isPositive()) problem(ConfigIssueCode.INVALID_DURATION, "splashTimeout must be positive.")
             }
-            if (override.bannerSize != null && format != null && format != AdFormat.BANNER) {
-                problem(ConfigIssueCode.FORMAT_MISMATCH, "a banner size is set for a $format placement.")
+            val swapTo = override.format?.takeIf { it != format }
+            if (swapTo != null && format != null && FormatSwap.partnerOf(format) != swapTo) {
+                problem(ConfigIssueCode.FORMAT_MISMATCH, "a $format placement can't become $swapTo.")
             }
-            if (override.nativeStyle != null && format != null && format != AdFormat.NATIVE) {
-                problem(ConfigIssueCode.FORMAT_MISMATCH, "a native style is set for a $format placement.")
+            val targetFormat = swapTo ?: format
+            if (override.bannerSize != null && targetFormat != null && targetFormat != AdFormat.BANNER) {
+                problem(ConfigIssueCode.FORMAT_MISMATCH, "a banner size is set for a $targetFormat placement.")
             }
-            var checked = override
+            if (override.nativeStyle != null && targetFormat != null && targetFormat != AdFormat.NATIVE) {
+                problem(ConfigIssueCode.FORMAT_MISMATCH, "a native style is set for a $targetFormat placement.")
+            }
+            var checked = if (swapTo == null && override.format != null) override.withoutSwap() else override
             override.effectiveAdUnitIds?.let { ids ->
                 val rejected = ids.mapNotNull { id -> adUnitIdProblem(id, production) }
                 val valid = ids.filter { adUnitIdProblem(it, production) == null }
@@ -282,7 +288,17 @@ internal object ConfigValidator {
                 rejected.forEach { (code, message) ->
                     issues += ConfigIssue(code, "Remote override for placement '$key': $message$keeping", key)
                 }
-                if (valid != ids || override.adUnitId != null) checked = override.withAdUnitIds(valid.ifEmpty { null })
+                if (valid != ids || override.adUnitId != null) checked = checked.withAdUnitIds(valid.ifEmpty { null })
+            }
+            // The configured ad units belong to the old format: a swap needs its own, or test ads outside PRODUCTION.
+            if (swapTo != null && production && checked.effectiveAdUnitIds == null) {
+                issues += ConfigIssue(
+                    ConfigIssueCode.SWAP_WITHOUT_AD_UNITS,
+                    "Remote override for placement '$key': the swap to $swapTo is ignored in PRODUCTION because it " +
+                        "sets no valid adUnitIds of that format. Its other fields still apply.",
+                    key,
+                )
+                checked = checked.withoutSwap()
             }
             // An override left with nothing to change (only unusable ad units) isn't applied at all.
             if (problems.isEmpty() && checked != PlacementOverride()) accepted[key] = checked else issues += problems

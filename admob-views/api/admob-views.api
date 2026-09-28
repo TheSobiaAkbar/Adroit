@@ -16,6 +16,14 @@ public final class com/company/admob/views/AdNativeView : android/widget/FrameLa
 	public static synthetic fun setPlacement$default (Lcom/company/admob/views/AdNativeView;Lcom/company/admob/NativePlacement;Lcom/company/admob/NativeAdLayout;ILjava/lang/Object;)V
 }
 
+public final class com/company/admob/views/AdSlotView : android/widget/FrameLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun setDefinition (Lcom/company/admob/config/AdDefinition;)V
+	public final fun setKey (Ljava/lang/String;)V
+}
+
 public final class com/company/admob/views/BannerExtensionsKt {
 	public static final fun attachBanner (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lcom/company/admob/BannerPlacement;)Lcom/company/admob/BannerAdHandle;
 	public static final fun attachBanner (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lcom/company/admob/BannerPlacement;Lcom/company/admob/BannerOptions;)Lcom/company/admob/BannerAdHandle;

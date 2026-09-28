@@ -65,7 +65,7 @@ internal class FullScreenShow(
     }
 
     override fun onImpression() {
-        frequency.recordShown(placement.placement)
+        frequency.recordShown(placement.frequencyPlacement)
         events.emit(AdEvent.Impression(key, format, adUnitId, now()))
     }
 

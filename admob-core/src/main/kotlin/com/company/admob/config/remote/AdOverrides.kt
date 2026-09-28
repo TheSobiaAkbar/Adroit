@@ -57,6 +57,10 @@ public class AdOverrides(
  * @property bannerSize replaces a banner placement's size, for banners created afterwards.
  * @property nativeStyle replaces a native placement's style, for native ads rendered afterwards.
  * @property splashTimeout replaces a splash interstitial's `splashTimeout`.
+ * @property format swaps the placement to its partner format: `INTERSTITIAL` ↔ `APP_OPEN`, `BANNER` ↔ `NATIVE`
+ *   (docs/AD_PROFILES.md, "Swapping formats"). The same override should carry [adUnitIds] of the new format; without
+ *   them, PRODUCTION ignores the swap and other environments use Google's test ad unit. Its own format, or null,
+ *   changes nothing; any other format is rejected.
  */
 public class PlacementOverride(
     public val enabled: Boolean? = null,
@@ -70,11 +74,35 @@ public class PlacementOverride(
     public val nativeStyle: NativeStyle? = null,
     public val splashTimeout: Duration? = null,
 ) {
+    /** See the class description. Set only by the constructor that takes it; immutable afterwards. */
+    public var format: AdFormat? = null
+        private set
+
+    /**
+     * An override that may swap the placement's [format]. The other parameters are those of the primary constructor,
+     * which is kept without [format] so code compiled against 1.0.0-rc1 keeps working.
+     */
+    public constructor(
+        format: AdFormat?,
+        enabled: Boolean? = null,
+        minInterval: Duration? = null,
+        maxPerSession: Int? = null,
+        preload: PreloadStrategy? = null,
+        adUnitId: String? = null,
+        adUnitIds: List<String>? = null,
+        counter: Int? = null,
+        bannerSize: BannerSize? = null,
+        nativeStyle: NativeStyle? = null,
+        splashTimeout: Duration? = null,
+    ) : this(enabled, minInterval, maxPerSession, preload, adUnitId, adUnitIds, counter, bannerSize, nativeStyle, splashTimeout) {
+        this.format = format
+    }
+
     override fun equals(other: Any?): Boolean =
         other is PlacementOverride && other.enabled == enabled && other.minInterval == minInterval &&
             other.maxPerSession == maxPerSession && other.preload == preload && other.adUnitId == adUnitId &&
             other.adUnitIds == adUnitIds && other.counter == counter && other.bannerSize == bannerSize &&
-            other.nativeStyle == nativeStyle && other.splashTimeout == splashTimeout
+            other.nativeStyle == nativeStyle && other.splashTimeout == splashTimeout && other.format == format
 
     override fun hashCode(): Int {
         var result = enabled.hashCode()
@@ -86,17 +114,24 @@ public class PlacementOverride(
         result = 31 * result + counter.hashCode()
         result = 31 * result + bannerSize.hashCode()
         result = 31 * result + nativeStyle.hashCode()
-        return 31 * result + splashTimeout.hashCode()
+        result = 31 * result + splashTimeout.hashCode()
+        return 31 * result + format.hashCode()
     }
 
     override fun toString(): String =
         "PlacementOverride(enabled=$enabled, minInterval=$minInterval, maxPerSession=$maxPerSession, " +
             "preload=$preload, adUnitId=$adUnitId, adUnitIds=$adUnitIds, counter=$counter, bannerSize=$bannerSize, " +
-            "nativeStyle=$nativeStyle, splashTimeout=$splashTimeout)"
+            "nativeStyle=$nativeStyle, splashTimeout=$splashTimeout, format=$format)"
 
     /** This override with its ad units replaced by [ids] (null removes them), keeping every other field. */
     internal fun withAdUnitIds(ids: List<String>?): PlacementOverride = PlacementOverride(
-        enabled, minInterval, maxPerSession, preload, adUnitId = null, adUnitIds = ids, counter, bannerSize,
+        format, enabled, minInterval, maxPerSession, preload, adUnitId = null, adUnitIds = ids, counter, bannerSize,
+        nativeStyle, splashTimeout,
+    )
+
+    /** This override without its format swap, keeping every other field. */
+    internal fun withoutSwap(): PlacementOverride = PlacementOverride(
+        format = null, enabled, minInterval, maxPerSession, preload, adUnitId, adUnitIds, counter, bannerSize,
         nativeStyle, splashTimeout,
     )
 

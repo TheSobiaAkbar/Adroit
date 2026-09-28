@@ -10,6 +10,11 @@ public final class com/company/admob/compose/AdNativeKt {
 	public static final fun AdNative (Lcom/company/admob/NativePlacement;Landroidx/compose/ui/Modifier;Lcom/company/admob/NativeAdLayout;Ljava/lang/Object;Lcom/company/admob/NativeAdRenderer;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/company/admob/compose/AdSlotKt {
+	public static final fun AdSlot (Lcom/company/admob/config/AdDefinition;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AdSlot (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
 public abstract interface class com/company/admob/compose/FullScreenAdLauncher {
 	public abstract fun showInterstitial (Lcom/company/admob/InterstitialPlacement;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun showInterstitial$default (Lcom/company/admob/compose/FullScreenAdLauncher;Lcom/company/admob/InterstitialPlacement;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V

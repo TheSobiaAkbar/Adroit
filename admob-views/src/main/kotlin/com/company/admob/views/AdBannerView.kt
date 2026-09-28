@@ -98,6 +98,12 @@ public class AdBannerView @JvmOverloads constructor(
         if (isAttachedToWindow) createBanner()
     }
 
+    /** Destroys the current banner now, for a container that removes this view for good ([AdSlotView]). */
+    internal fun release() {
+        handle?.destroy()
+        handle = null
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         // A banner destroyed with its previous owner (Hidden(null)) is replaced when the view is attached again.

@@ -276,6 +276,16 @@ public abstract interface class com/company/admob/AdPlacement {
 	public abstract fun getKey ()Ljava/lang/String;
 }
 
+public final class com/company/admob/AdSlots {
+	public static final field INSTANCE Lcom/company/admob/AdSlots;
+	public static final fun currentFormat (Lcom/company/admob/config/AdDefinition;)Lcom/company/admob/AdFormat;
+	public static final fun currentFormat (Ljava/lang/String;)Lcom/company/admob/AdFormat;
+	public static final fun formatChanges (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun showFullScreen (Landroid/app/Activity;Lcom/company/admob/config/AdDefinition;Lkotlin/jvm/functions/Function1;)V
+	public static final fun showFullScreen (Landroid/app/Activity;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static final fun showOnSplash (Landroid/app/Activity;Lcom/company/admob/config/AdDefinition;Lkotlin/jvm/functions/Function1;)V
+}
+
 public abstract interface class com/company/admob/AdsClient {
 	public abstract fun awaitReady-VtjQ1oo (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun awaitReady-VtjQ1oo$default (Lcom/company/admob/AdsClient;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -1518,6 +1528,8 @@ public final class com/company/admob/config/remote/AdOverrides {
 
 public final class com/company/admob/config/remote/PlacementOverride {
 	public fun <init> ()V
+	public synthetic fun <init> (Lcom/company/admob/AdFormat;Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;Ljava/util/List;Ljava/lang/Integer;Lcom/company/admob/BannerSize;Lcom/company/admob/NativeStyle;Lkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/company/admob/AdFormat;Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;Ljava/util/List;Ljava/lang/Integer;Lcom/company/admob/BannerSize;Lcom/company/admob/NativeStyle;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;Ljava/util/List;Ljava/lang/Integer;Lcom/company/admob/BannerSize;Lcom/company/admob/NativeStyle;Lkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/Boolean;Lkotlin/time/Duration;Ljava/lang/Integer;Lcom/company/admob/config/PreloadStrategy;Ljava/lang/String;Ljava/util/List;Ljava/lang/Integer;Lcom/company/admob/BannerSize;Lcom/company/admob/NativeStyle;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -1526,6 +1538,7 @@ public final class com/company/admob/config/remote/PlacementOverride {
 	public final fun getBannerSize ()Lcom/company/admob/BannerSize;
 	public final fun getCounter ()Ljava/lang/Integer;
 	public final fun getEnabled ()Ljava/lang/Boolean;
+	public final fun getFormat ()Lcom/company/admob/AdFormat;
 	public final fun getMaxPerSession ()Ljava/lang/Integer;
 	public final fun getMinInterval-FghU774 ()Lkotlin/time/Duration;
 	public final fun getNativeStyle ()Lcom/company/admob/NativeStyle;

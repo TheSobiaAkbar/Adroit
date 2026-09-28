@@ -78,8 +78,12 @@ internal class FullScreenAdEngine(
 ) : AdsBlockedListener, ConfigChangeListener {
     val format: AdFormat = strategy.format
 
-    /** Whether a `show` call counts toward the placement's counter: interstitials and rewarded interstitials only. */
-    private val countsTriggers: Boolean = format == AdFormat.INTERSTITIAL || format == AdFormat.REWARDED_INTERSTITIAL
+    /**
+     * Whether a `show` call for [p] counts toward its counter: interstitials and rewarded interstitials only, judged
+     * by the configured format, so an interstitial swapped to app open keeps counting.
+     */
+    private fun countsTriggers(p: EffectivePlacement): Boolean =
+        p.frequencyPlacement.format == AdFormat.INTERSTITIAL || p.frequencyPlacement.format == AdFormat.REWARDED_INTERSTITIAL
 
     /** The `showOnSplash` wait in progress, if any. */
     private var splashJob: Job? = null
@@ -233,7 +237,7 @@ internal class FullScreenAdEngine(
         readiness.state.value.toShowError()?.let { return it }
         if (p == null) return AdError.InvalidConfiguration("${placement.key} isn't a configured $format placement")
         val slot = slots[placement] ?: return AdError.Disabled(p.disabledReason ?: UnavailableReason.DISABLED_BY_CONFIG)
-        when (val decision = frequency.check(placement, countTrigger = countsTriggers)) {
+        when (val decision = frequency.check(p.frequencyPlacement, countTrigger = countsTriggers(p))) {
             is FrequencyDecision.CounterNotReached -> return AdError.CounterNotReached(decision.remaining)
             is FrequencyDecision.Capped -> return AdError.FrequencyCapped(decision.retryAfter)
             FrequencyDecision.Allowed -> Unit

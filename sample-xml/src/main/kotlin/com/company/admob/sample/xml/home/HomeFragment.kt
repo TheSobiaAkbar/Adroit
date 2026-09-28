@@ -16,7 +16,7 @@ import com.company.admob.sample.xml.databinding.FragmentHomeBinding
 import kotlinx.coroutines.launch
 
 /**
- * The home banner is declared in XML (`AdBannerView`): it binds itself to this Fragment's view lifecycle, so it's
+ * The home banner is declared in XML (`AdSlotView`, a banner or a native ad as Firebase says): it binds itself to this Fragment's view lifecycle, so it's
  * destroyed in `onDestroyView` even though the Fragment stays on the back stack. The buttons show full-screen ads
  * through [CoinsViewModel].
  */
