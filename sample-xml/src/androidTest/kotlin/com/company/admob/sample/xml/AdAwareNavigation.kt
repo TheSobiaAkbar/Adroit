@@ -72,12 +72,15 @@ fun dismissFullScreenAdIfShown(showTimeoutMillis: Long = 15_000, dismissTimeoutM
 }
 
 /**
- * Taps the ad's close button (content description "Close", as Google's test ads have), or presses back when there's
- * none yet. Google's ads ignore back while they can't be closed. Callers wait [BACK_INTERVAL_MILLIS] between calls:
- * back presses sent faster queue up and, once the ad closes, close the app's own screens.
+ * Taps the ad's close button, or presses back when there's none yet. Google's interstitial and rewarded test ads
+ * have a button with the content description "Close"; the app open test ad is a web page whose close button is the
+ * text "Continue to app" and ignores back. Google's ads ignore back while they can't be closed. Callers wait
+ * [BACK_INTERVAL_MILLIS] between calls: back presses sent faster queue up and, once the ad closes, close the app's
+ * own screens.
  */
 fun closeAd(device: UiDevice) {
     val close = device.findObject(By.desc("Close").clickable(true))
+        ?: device.findObject(By.text("Continue to app"))
     if (close != null) close.click() else device.pressBack()
 }
 

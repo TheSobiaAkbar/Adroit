@@ -10,6 +10,12 @@ import com.company.admob.config.DebugGeography
  * thread, always posted, and at most once per call.
  */
 internal interface ConsentSdk {
+    /**
+     * Called once during `initialize`, on a background thread: loads the SDK's stored consent state, so the first
+     * call on the main thread in `start()` doesn't read it from disk.
+     */
+    fun warmUp() {}
+
     /** Requests up-to-date consent information. Call on every app launch. */
     fun requestUpdate(activity: Activity, params: ConsentParams, onDone: (ConsentUpdateResult) -> Unit)
 

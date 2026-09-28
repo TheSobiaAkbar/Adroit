@@ -28,12 +28,16 @@ internal interface AdsSdk {
     /** Google SDK version, or null when it can't be read. */
     val sdkVersion: String?
 
-    /** Initializes the SDK off the main thread. [onComplete] runs on the main thread exactly once. */
+    /**
+     * Initializes the SDK off the main thread. [beforeInit] runs first, on that same background thread, for work that
+     * must finish before the SDK starts (disk writes the SDK reads). [onComplete] runs on the main thread exactly once.
+     */
     fun initialize(
         appContext: Context,
         appId: String,
         request: SdkRequestConfig,
         disableCrashReporting: Boolean,
+        beforeInit: () -> Unit,
         onComplete: (SdkInitResult) -> Unit,
     )
 

@@ -34,6 +34,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   this version.
 
 ### Fixed
+- No disk I/O from the library on the main thread (`docs/audits/PERFORMANCE_AUDIT.md`): `initialize()` reads and
+  updates the launch count and loads UMP's stored consent state on a background thread, and `start()` writes
+  `gad_rdp` on the SDK's initialization thread, still before the SDK starts.
+- `initialize()` no longer triggers the `ServiceLoader` lookup of `Dispatchers.Main`, which opened the APK on the
+  main thread (60 to 80 ms per cold start in debuggable builds).
 - The views and Compose modules log through the host's configured logger and level, like core.
 - `docs/CONSENT.md`: the Consent Mode section had the order wrong. Firebase must be initialized before UMP starts,
   and UMP 3.2.0 or newer applies the consent choices itself.

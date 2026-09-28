@@ -17,6 +17,13 @@ import java.lang.ref.WeakReference
  * tests stay meaningful.
  */
 internal class FakeConsentSdk(private val scope: CoroutineScope) : ConsentSdk {
+    /** How many times [warmUp] ran. */
+    var warmUps = 0
+
+    override fun warmUp() {
+        warmUps++
+    }
+
     var updateResult: ConsentUpdateResult = ConsentUpdateResult.Success
     var updateDelayMs: Long = 0
     var formResult: AdError? = null

@@ -193,7 +193,7 @@ internal class InitCoordinator(
         lastInitAttemptMillis = clock.elapsedRealtimeMillis()
         if (state.value != AdsState.Unavailable(UnavailableReason.AD_FREE_USER)) transition(AdsState.InitializingSdk)
         val source = config.source
-        rdpWriter.apply(source.privacy.restrictedDataProcessing)
+        val restrictedDataProcessing = source.privacy.restrictedDataProcessing
         log.d { "Initializing the Google Mobile Ads SDK" }
         adsSdk.initialize(
             appContext = appContext,
@@ -204,6 +204,8 @@ internal class InitCoordinator(
                 maxAdContentRating = source.privacy.maxAdContentRating,
             ),
             disableCrashReporting = source.advanced.disableSdkCrashReporting,
+            // Off the main thread: RdpWriter commits to disk, and the SDK reads the value when it starts.
+            beforeInit = { rdpWriter.apply(restrictedDataProcessing) },
             onComplete = ::onSdkInitResult,
         )
     }

@@ -62,11 +62,15 @@ internal class NextGenAdsSdk(
         appId: String,
         request: SdkRequestConfig,
         disableCrashReporting: Boolean,
+        beforeInit: () -> Unit,
         onComplete: (SdkInitResult) -> Unit,
     ) {
         val done = OnceCallback(onComplete)
         scope.launch {
-            val result = withContext(ioDispatcher) { initializeBlocking(appContext, appId, request, disableCrashReporting) }
+            val result = withContext(ioDispatcher) {
+                beforeInit()
+                initializeBlocking(appContext, appId, request, disableCrashReporting)
+            }
             done(result)
         }
     }

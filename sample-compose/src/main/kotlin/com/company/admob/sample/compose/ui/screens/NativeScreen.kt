@@ -17,9 +17,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -47,6 +49,7 @@ import com.company.admob.views.NativeTemplates
 fun NativeScreen(container: AppContainer) {
     val loads by container.eventLog.nativeLoads.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    var recompositions by remember { mutableIntStateOf(0) }
 
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -56,6 +59,11 @@ fun NativeScreen(container: AppContainer) {
                 modifier = Modifier.testTag(LOAD_COUNTER_TAG),
             )
             Hint("Counted from LoadRequested/Loaded events, all native placements. Rotation must not add any.")
+            // The performance audit's recomposition check (docs/audits/PERFORMANCE_AUDIT.md, measurement 6): each tap
+            // recomposes this screen; the native ads must skip, and the counter above must not move.
+            TextButton(onClick = { recompositions++ }, Modifier.testTag("recompose")) {
+                Text("Recompose screen ($recompositions)")
+            }
         }
         PrimaryTabRow(selectedTabIndex = tab) {
             NativeTab.entries.forEachIndexed { index, it ->

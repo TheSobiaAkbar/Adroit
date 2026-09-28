@@ -139,6 +139,16 @@ class AppOpenColdStartTest {
     }
 
     @Test
+    fun `launch count not read yet - not shown, as not ready`() = runTest {
+        val a = AppOpenHarness(this).loaded()
+        a.launchCount = 0
+        a.showOnColdStart()
+        a.h.run()
+        assertEquals(listOf(notShown(AdError.NotReady)), a.coldStartResults)
+        assertEquals(0, a.shows)
+    }
+
+    @Test
     fun `ads become unavailable during the wait - completes at once with that reason`() = runTest {
         val a = AppOpenHarness(this)
         a.showOnColdStart()

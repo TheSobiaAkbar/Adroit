@@ -27,7 +27,10 @@ class AdProfilesDeviceTest {
     @Test
     fun theAdsFileConfiguresEveryAdAndTheCollapsibleBannerLoads() {
         ActivityScenario.launch(SplashActivity::class.java).use {
-            awaitResumed<MainActivity>()
+            // 20 s, not the default 10: this class runs first, so it gets the run's only cold start, and with it a
+            // possible cold-start app open ad (up to about 6 s after launch). That ad's close button ("Continue to
+            // app") is web content, exposed to UI Automator only about 5 s after the ad appears (Pixel 7a).
+            awaitResumed<MainActivity>(timeoutMillis = 20_000)
             val placements = CompanyAdMob.diagnostics.snapshot().placements.associateBy { it.key }
             assertEquals(
                 setOf(

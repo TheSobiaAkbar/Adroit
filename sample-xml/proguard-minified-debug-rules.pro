@@ -14,3 +14,16 @@
 -keepclassmembers class com.company.admob.sample.xml.R$* {
     public static <fields>;
 }
+
+# Failure fixed (AdProfilesDeviceTest):
+#   NoSuchMethodError: No interface method snapshot()Lcom/company/admob/DiagnosticsReport; in class
+#   Lcom/company/admob/DiagnosticsApi; (and then the same for getRecentEvents())
+# The test reads the diagnostics report and recent events, which the app itself never calls, so R8 removed them.
+# Kept, but still obfuscated: the test APK is rewritten with the app's mapping.
+-keepclassmembers,allowobfuscation interface com.company.admob.DiagnosticsApi {
+    *;
+}
+-keepclassmembers,allowobfuscation class com.company.admob.DiagnosticsReport, com.company.admob.PlacementDiagnostics {
+    public *** get*();
+    public *** is*();
+}

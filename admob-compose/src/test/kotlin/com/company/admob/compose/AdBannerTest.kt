@@ -44,7 +44,7 @@ class AdBannerTest {
     }
 
     @Test
-    fun `recomposing 10 times with unrelated state creates one banner`() {
+    fun `recomposing 100 times with unrelated state creates one banner`() {
         var tick by mutableIntStateOf(0)
         rule.setContent {
             Column {
@@ -52,11 +52,11 @@ class AdBannerTest {
                 AdBanner(HOME)
             }
         }
-        repeat(10) {
+        repeat(100) {
             tick++
             rule.waitForIdle()
         }
-        rule.onNodeWithText("tick 10").assertExists()
+        rule.onNodeWithText("tick 100").assertExists()
         assertEquals(1, client.banner.created.size)
         assertEquals(0, client.banner.created.single().handle.destroyCount)
         // The factory returned the handle's own view, now in the composition's view tree.

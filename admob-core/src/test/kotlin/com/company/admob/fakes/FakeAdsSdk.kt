@@ -91,8 +91,10 @@ internal class FakeAdsSdk(private val scope: CoroutineScope) : AdsSdk {
         appId: String,
         request: SdkRequestConfig,
         disableCrashReporting: Boolean,
+        beforeInit: () -> Unit,
         onComplete: (SdkInitResult) -> Unit,
     ) {
+        beforeInit()
         onInitialize?.invoke(appContext)
         initializeCalls += InitializeCall(appId, request, disableCrashReporting)
         initializeThreads += Thread.currentThread()

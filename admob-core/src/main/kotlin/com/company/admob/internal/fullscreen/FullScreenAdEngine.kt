@@ -53,8 +53,8 @@ import kotlin.time.Duration.Companion.milliseconds
  * ad unit list share a [FullScreenSlot], and each load takes the next ad unit of the list from [rotation]. Nothing is requested unless [Readiness.canLoad]; earlier `preload` calls are
  * kept as intent and run when the library becomes ready.
  *
- * Each time the library becomes ready, loads start after [readyDelay], then [stagger] apart, so the engines don't
- * all request at once.
+ * Each time the library becomes ready, this engine's loads start after [readyDelay], then [stagger] apart, so its
+ * placements don't all request at once. The spacing is per engine: each format's first load starts at the same time.
  *
  * Main thread only (ADR-006), except [availability] and [isReady]. No Activity is kept beyond a `show` call.
  */

@@ -24,7 +24,18 @@ internal class UmpConsentSdk(
     private val appContext: Context,
     private val log: AdLog,
 ) : ConsentSdk {
+    // Synchronized: warmUp() may create it on a background thread while start() needs it on the main thread.
     private val consentInformation: ConsentInformation by lazy { UserMessagingPlatform.getConsentInformation(appContext) }
+
+    // getConsentInformation reads UMP's SharedPreferences (about 5 ms on the main thread of a debug build, reported by
+    // StrictMode). Unlike the form methods, the reference doesn't restrict it to the main thread.
+    override fun warmUp() {
+        try {
+            consentInformation
+        } catch (e: Exception) {
+            log.w(e) { "Loading the consent information early failed; it loads in start() instead" }
+        }
+    }
 
     override fun requestUpdate(activity: Activity, params: ConsentParams, onDone: (ConsentUpdateResult) -> Unit) {
         val done = OnceCallback(onDone)

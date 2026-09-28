@@ -141,7 +141,7 @@ class FakeAdsSdkTest {
         sdk.initResult = SdkInitResult.Failure(AdError.SdkInitFailed())
         sdk.initDelayMs = 1_000
         var initResult: SdkInitResult? = null
-        sdk.initialize(ApplicationProvider.getApplicationContext(), "app", request, disableCrashReporting = true) { initResult = it }
+        sdk.initialize(ApplicationProvider.getApplicationContext(), "app", request, disableCrashReporting = true, beforeInit = {}) { initResult = it }
         sdk.updateRequestConfig(request.copy(testDeviceIds = listOf("device")))
         var inspectorResult: AdError? = AdError.NotReady
         sdk.openAdInspector { inspectorResult = it }

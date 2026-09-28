@@ -12,6 +12,7 @@ import com.company.admob.events.AdEvent
 import com.company.admob.internal.storage.SharedPrefsKeyValueStore
 import com.company.admob.logging.AdLogger
 import com.company.admob.logging.LogLevel
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -151,6 +152,22 @@ class InitializeTest {
 
         assertEquals(5, h.store.values[SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT])
         assertEquals(5, CompanyAdMob.runtime?.launchCount)
+    }
+
+    @Test
+    fun `the launch count and the consent warm-up run on the IO dispatcher, not during initialize`() = runTest {
+        val h = RuntimeHarness(this)
+        h.ioDispatcher = StandardTestDispatcher(testScheduler)
+        h.store.values[SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT] = 4
+        h.initialize()
+
+        assertEquals(4, h.store.values[SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT])
+        assertEquals(0, CompanyAdMob.runtime?.launchCount)
+        assertEquals(0, h.consentSdk.warmUps)
+        h.settle()
+        assertEquals(5, h.store.values[SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT])
+        assertEquals(5, CompanyAdMob.runtime?.launchCount)
+        assertEquals(1, h.consentSdk.warmUps)
     }
 
     @Test

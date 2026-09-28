@@ -258,6 +258,7 @@ internal class AppOpenController(
     private fun launchCountGate(): Blocked? {
         val minLaunches = settings?.minLaunchesBeforeFirstShow ?: return null
         val launches = launchCount()
+        if (launches == 0) return Blocked(AdError.NotReady, "the launch count isn't read yet")
         if (launches > minLaunches) return null
         return Blocked(AdError.FrequencyCapped(Duration.INFINITE), "launch $launches, first show after $minLaunches")
     }

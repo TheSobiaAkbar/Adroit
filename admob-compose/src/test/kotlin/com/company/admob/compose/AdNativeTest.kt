@@ -55,7 +55,7 @@ class AdNativeTest {
     }
 
     @Test
-    fun `first composition loads once, and 10 recompositions neither reload nor re-render`() {
+    fun `first composition loads once, and 100 recompositions neither reload nor re-render`() {
         var tick by mutableIntStateOf(0)
         rule.setContent {
             Column {
@@ -66,11 +66,11 @@ class AdNativeTest {
         rule.waitForIdle()
         assertEquals(1, client.native.loadCount)
         assertEquals(1, client.native.renders.size)
-        repeat(10) {
+        repeat(100) {
             tick++
             rule.waitForIdle()
         }
-        rule.onNodeWithText("tick 10").assertExists()
+        rule.onNodeWithText("tick 100").assertExists()
         assertEquals(1, client.native.loadCount)
         assertEquals(1, client.native.renders.size)
         assertEquals(NativeTemplates.Small, client.native.renders.single().layout)

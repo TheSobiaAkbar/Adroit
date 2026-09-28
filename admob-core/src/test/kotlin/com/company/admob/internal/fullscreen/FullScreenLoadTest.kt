@@ -3,6 +3,7 @@ package com.company.admob.internal.fullscreen
 import com.company.admob.AdAvailability
 import com.company.admob.AdError
 import com.company.admob.AdsState
+import com.company.admob.InterstitialPlacement
 import com.company.admob.UnavailableReason
 import com.company.admob.config.PreloadStrategy
 import com.company.admob.config.TestIds
@@ -38,6 +39,15 @@ class FullScreenLoadTest {
         assertEquals(1, h.adsSdk.loadCalls.size)
         assertEquals(AdAvailability.Ready, h.engine.availability(LEVEL_END).value)
         assertTrue(h.engine.isReady(LEVEL_END))
+    }
+
+    @Test
+    fun `availability returns the same flow on every call, so observers don't allocate per call`() = runTest {
+        val h = EngineHarness(this)
+        val first = h.engine.availability(LEVEL_END)
+        h.ready()
+        assertSame(first, h.engine.availability(LEVEL_END))
+        assertSame(h.engine.availability(InterstitialPlacement("unknown")), h.engine.availability(InterstitialPlacement("other")))
     }
 
     @Test
@@ -160,6 +170,32 @@ class FullScreenLoadTest {
         h.run()
         assertEquals(4, h.adsSdk.loadCalls.size)
         assertEquals(AdAvailability.Ready, h.engine.availability(LEVEL_END).value)
+    }
+
+    @Test
+    fun `offline for 5 minutes with the default policy - 1 request and 5 retries, then none`() = runTest {
+        val h = EngineHarness(this, engineConfig { placements { interstitial(LEVEL_END, TestIds.unit(1)) } })
+        h.adsSdk.defaultLoad = ScriptedLoad.Failure(AdError.NetworkError(), retryable = true)
+        h.ready()
+        h.run(5 * 60_000)
+        // Default delays 5, 10, 20, 40 and 80 s (±20%): about 155 s, well inside the 5 minutes.
+        assertEquals(6, h.adsSdk.loadCount(h.adUnit(LEVEL_END)))
+        h.run(60 * 60_000)
+        assertEquals(6, h.adsSdk.loadCount(h.adUnit(LEVEL_END)))
+    }
+
+    @Test
+    fun `offline in the background - no retry until the app is in the foreground again`() = runTest {
+        val h = EngineHarness(this, engineConfig { placements { interstitial(LEVEL_END, TestIds.unit(1)) } })
+        h.adsSdk.defaultLoad = ScriptedLoad.Failure(AdError.NetworkError(), retryable = true)
+        h.ready()
+        h.foreground.moveToBackground()
+        h.run(5 * 60_000)
+        assertEquals("only the request made at Ready", 1, h.adsSdk.loadCount(h.adUnit(LEVEL_END)))
+
+        h.foreground.moveToForeground()
+        h.run()
+        assertEquals(2, h.adsSdk.loadCount(h.adUnit(LEVEL_END)))
     }
 
     @Test

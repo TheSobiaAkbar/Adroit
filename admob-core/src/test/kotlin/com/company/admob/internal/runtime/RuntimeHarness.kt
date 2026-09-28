@@ -65,6 +65,9 @@ internal class RuntimeHarness(val scope: TestScope) {
     val bus = EventBus(AdLog({ _, _, _, _ -> }, LogLevel.NONE))
     var manifestAppId: String? = TestIds.APP_ID
     var isDebuggable = true
+
+    /** Unconfined by default, so the launch count is read during `initialize` as the tests expect. */
+    var ioDispatcher: kotlinx.coroutines.CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Unconfined
     var registerCount = 0
     var depsBuilt = 0
 
@@ -72,6 +75,7 @@ internal class RuntimeHarness(val scope: TestScope) {
         depsBuilt++
         return RuntimeDeps(
             adsSdk, consentSdk, tracker, foreground, clock, store, FakeNativeRenderPort(), manifestAppId, isDebuggable,
+            ioDispatcher = ioDispatcher,
             onRegister = { registerCount++ },
         )
     }

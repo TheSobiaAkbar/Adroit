@@ -18,7 +18,9 @@ import com.company.admob.internal.port.NativeRenderPort
 import com.company.admob.internal.storage.SharedPrefsKeyValueStore
 import com.company.admob.internal.time.Clock
 import com.company.admob.internal.time.SystemClockImpl
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 /**
  * The port instances and host facts [AdsRuntime] is built from. [production] builds the real ones; tests pass fakes.
@@ -26,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
  *
  * @property manifestAppId the manifest's AdMob app ID, or null.
  * @property isDebuggable whether the host app is debuggable.
+ * @property ioDispatcher where the library's own disk reads and writes run, never the main thread in production.
  */
 internal class RuntimeDeps(
     val adsSdk: AdsSdk,
@@ -37,6 +40,7 @@ internal class RuntimeDeps(
     val nativeRenderPort: NativeRenderPort,
     val manifestAppId: String?,
     val isDebuggable: Boolean,
+    val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val onRegister: () -> Unit = {},
     private val onUnregister: () -> Unit = {},
 ) {

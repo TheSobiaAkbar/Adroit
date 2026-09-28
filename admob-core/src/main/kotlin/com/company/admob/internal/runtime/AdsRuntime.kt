@@ -48,6 +48,7 @@ import com.company.admob.internal.threading.runOnMain
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -158,7 +159,11 @@ internal class AdsRuntime(
     val appOpenEngine: FullScreenAdEngine = fullScreenEngine(FullScreenFormatStrategy.AppOpen)
     private val fullScreenEngines = listOf(interstitialEngine, rewardedEngine, rewardedInterstitialEngine, appOpenEngine)
 
-    /** This process's launch number, counting from 1; 0 when the configuration is invalid. */
+    /**
+     * This process's launch number, counting from 1. It's 0 until the stored count has been read, which happens off the
+     * main thread during `initialize`, and stays 0 when the configuration is invalid.
+     */
+    @Volatile
     var launchCount: Int = 0
         private set
 
@@ -253,9 +258,16 @@ internal class AdsRuntime(
             adFree.addListener(nativeEngine)
             nativeEngine.start()
             appOpenController.start()
-            val store = deps.keyValueStore
-            launchCount = store.getInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, 0) + 1
-            store.putInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, launchCount)
+            // Off the main thread: UMP's stored consent state and the launch count both come from SharedPreferences,
+            // whose first read loads the file from disk. start() needs the consent state first. App open reads the
+            // count only after start() reaches Ready, long after this finishes.
+            scope.launch(deps.ioDispatcher) {
+                deps.consentSdk.warmUp()
+                val store = deps.keyValueStore
+                val count = store.getInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, 0) + 1
+                store.putInt(SharedPrefsKeyValueStore.KEY_LAUNCH_COUNT, count)
+                launchCount = count
+            }
             liveConfig.addListener(init)
             runOnMain {
                 init.onConfigValid()

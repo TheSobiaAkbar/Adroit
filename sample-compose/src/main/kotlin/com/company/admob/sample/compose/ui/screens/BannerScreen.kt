@@ -3,10 +3,12 @@ package com.company.admob.sample.compose.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,8 +32,14 @@ import com.company.admob.sample.compose.ui.components.label
 @Composable
 fun BannerScreen() {
     var showBanners by rememberSaveable { mutableStateOf(true) }
+    var recompositions by remember { mutableIntStateOf(0) }
 
     ScreenColumn {
+        // The performance audit's recomposition check (docs/audits/PERFORMANCE_AUDIT.md, measurement 6): each tap
+        // recomposes this screen, and the banners below must skip.
+        OutlinedButton(onClick = { recompositions++ }, Modifier.testTag("recompose")) {
+            Text("Recompose screen ($recompositions)")
+        }
         Section("Disposal") {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Show banners", Modifier.weight(1f))
