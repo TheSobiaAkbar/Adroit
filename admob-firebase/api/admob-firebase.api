@@ -40,3 +40,20 @@ public final class com/company/admob/firebase/FirebaseRemoteConfigProvider : com
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/company/admob/firebase/RemoteConfigSession {
+	public static final field Companion Lcom/company/admob/firebase/RemoteConfigSession$Companion;
+	public static final fun current ()Lcom/company/admob/firebase/RemoteConfigSession;
+	public final fun fetchIfNeeded ()V
+	public final fun isFetched ()Lkotlinx/coroutines/flow/StateFlow;
+	public static final fun start (Landroid/app/Application;)Lcom/company/admob/firebase/RemoteConfigSession;
+	public static final fun start (Landroid/app/Application;Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;)Lcom/company/admob/firebase/RemoteConfigSession;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/firebase/RemoteConfigSession$Companion {
+	public final fun current ()Lcom/company/admob/firebase/RemoteConfigSession;
+	public final fun start (Landroid/app/Application;)Lcom/company/admob/firebase/RemoteConfigSession;
+	public final fun start (Landroid/app/Application;Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;)Lcom/company/admob/firebase/RemoteConfigSession;
+	public static synthetic fun start$default (Lcom/company/admob/firebase/RemoteConfigSession$Companion;Landroid/app/Application;Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;ILjava/lang/Object;)Lcom/company/admob/firebase/RemoteConfigSession;
+}
+

@@ -47,9 +47,9 @@ class FirebaseRemoteConfigProviderTest {
             onDone()
         }
 
-        override fun fetchAndActivate(onDone: () -> Unit) {
+        override fun fetchAndActivate(onDone: (Boolean) -> Unit) {
             fetches++
-            activate(onDone)
+            activate { onDone(true) }
         }
     }
 
@@ -145,5 +145,18 @@ class FirebaseRemoteConfigProviderTest {
         val overrides = provider(source, autoFetch = true).overrides().first { it.placements.isNotEmpty() }
         assertEquals(1, source.fetches)
         assertEquals(PlacementOverride(enabled = false), overrides.placements.getValue("FeedNative"))
+    }
+
+    @Test
+    fun `re-reads when a RemoteConfigSession activates new values`() = runTest {
+        val source = FakeSource(mapOf("HistoryAd" to """{"counter": 2}"""))
+        val emitted = mutableListOf<AdOverrides>()
+        val job = launch { provider(source).overrides().take(2).toList(emitted) }
+        runCurrent()
+        source.values = mapOf("HistoryAd" to """{"counter": 5}""")
+        com.company.admob.firebase.internal.ActivationSignal.notifyActivated()
+        runCurrent()
+        job.join()
+        assertEquals(listOf(2, 5), emitted.map { it.placements.getValue("HistoryAd").counter })
     }
 }

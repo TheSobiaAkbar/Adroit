@@ -21,8 +21,8 @@ internal interface RemoteConfigSource {
     /** Activates fetched values, then calls [onDone] (any thread). */
     fun activate(onDone: () -> Unit)
 
-    /** Fetches and activates, then calls [onDone] (any thread). */
-    fun fetchAndActivate(onDone: () -> Unit)
+    /** Fetches and activates, then calls [onDone] (any thread) with whether the fetch succeeded. */
+    fun fetchAndActivate(onDone: (success: Boolean) -> Unit)
 }
 
 /** The part of Google Analytics for Firebase the listener uses. */
@@ -53,8 +53,8 @@ internal class FirebaseRemoteConfigSource(private val remoteConfig: FirebaseRemo
         remoteConfig.activate().addOnCompleteListener { onDone() }
     }
 
-    override fun fetchAndActivate(onDone: () -> Unit) {
-        remoteConfig.fetchAndActivate().addOnCompleteListener { onDone() }
+    override fun fetchAndActivate(onDone: (success: Boolean) -> Unit) {
+        remoteConfig.fetchAndActivate().addOnCompleteListener { onDone(it.isSuccessful) }
     }
 }
 

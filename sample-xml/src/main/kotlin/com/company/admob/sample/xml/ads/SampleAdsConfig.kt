@@ -7,7 +7,6 @@ import com.company.admob.config.adMobConfig
 import com.company.admob.firebase.FirebaseRemoteConfigProvider
 import com.company.admob.logging.LogLevel
 import com.company.admob.sample.xml.R
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 
 /**
  * The sample's CompanyAdMob configuration. Every ad is defined in one file, `res/raw/ads_config.json` (an ad profile
@@ -37,9 +36,8 @@ object SampleAdsConfig {
             this.testDeviceIds += testDeviceIds
         }
         profiles(context, R.raw.ads_config)
-        // Firebase values override the file, ad by ad. Fetches once when ads start (PROMPT 28B replaces this with a
-        // fetch-once-per-session controller that also retries on later screens).
-        remoteConfig = FirebaseRemoteConfigProvider(FirebaseRemoteConfig.getInstance(), autoFetch = true)
+        // Firebase values override the file, ad by ad. SampleApplication's RemoteConfigSession does the fetching.
+        remoteConfig = FirebaseRemoteConfigProvider()
         logging { level = if (buildType == "release") LogLevel.WARN else LogLevel.DEBUG }
     }
 }

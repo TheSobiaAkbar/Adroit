@@ -6,6 +6,7 @@ import android.os.SystemClock
 import android.util.Log
 import com.company.admob.CompanyAdMob
 import com.company.admob.sample.xml.ads.SampleAdsConfig
+import com.company.admob.firebase.RemoteConfigSession
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
 
@@ -26,13 +27,18 @@ class SampleApplication : Application() {
         Log.i(PERF_TAG, "config took ${(initializeStart - configStart) / 1_000} µs, initialize took ${(end - initializeStart) / 1_000} µs")
     }
 
-    // Debug and staging builds fetch fresh values on every launch, so a change in the Firebase console shows at once.
-    // Release keeps Firebase's default 12-hour cache.
+    // Fetches Remote Config (every ad's Firebase JSON) once this session, without making anything wait: at once, then
+    // again on each new screen or network return until one fetch succeeds. Debug and staging builds skip Firebase's
+    // cache so a console change shows on the next launch; release keeps the default 12 hours.
     private fun configureRemoteConfig() {
-        if (!BuildConfig.DEBUG) return
-        FirebaseRemoteConfig.getInstance().setConfigSettingsAsync(
-            remoteConfigSettings { minimumFetchIntervalInSeconds = 0 },
+        val remoteConfig = FirebaseRemoteConfig.getInstance()
+        remoteConfig.setConfigSettingsAsync(
+            remoteConfigSettings {
+                if (BuildConfig.DEBUG) minimumFetchIntervalInSeconds = 0
+                fetchTimeoutInSeconds = 10 // a slow attempt must not hold off the next screen's retry for a minute
+            },
         )
+        RemoteConfigSession.start(this, remoteConfig)
     }
 
     // Debug builds only: logs every disk or network access on the main thread (tag StrictMode), so a library

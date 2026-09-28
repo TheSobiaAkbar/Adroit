@@ -4,4 +4,6 @@
     <!-- Needed by MobileAds.initialize. The Google Mobile Ads SDK's manifest already merges it into every app;
          it is declared here so the library's own manifest states what its code requires. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- NetworkMonitor reads the connection state (also merged in by the Google Mobile Ads SDK). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 </manifest>

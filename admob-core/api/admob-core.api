@@ -1594,3 +1594,56 @@ public final class com/company/admob/logging/LogLevel : java/lang/Enum {
 	public static fun values ()[Lcom/company/admob/logging/LogLevel;
 }
 
+public final class com/company/admob/network/NetworkMonitor {
+	public static final field Companion Lcom/company/admob/network/NetworkMonitor$Companion;
+	public static final fun getInstance (Landroid/content/Context;)Lcom/company/admob/network/NetworkMonitor;
+	public final fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun isCellular ()Z
+	public final fun isOnline ()Z
+	public final fun isWifi ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/network/NetworkMonitor$Companion {
+	public final fun getInstance (Landroid/content/Context;)Lcom/company/admob/network/NetworkMonitor;
+}
+
+public abstract class com/company/admob/network/NetworkState {
+	public abstract fun isOnline ()Z
+}
+
+public final class com/company/admob/network/NetworkState$Connected : com/company/admob/network/NetworkState {
+	public fun <init> (Lcom/company/admob/network/NetworkTransport;Z)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTransport ()Lcom/company/admob/network/NetworkTransport;
+	public fun hashCode ()I
+	public final fun isMetered ()Z
+	public fun isOnline ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/network/NetworkState$ConnectedNoInternet : com/company/admob/network/NetworkState {
+	public fun <init> (Lcom/company/admob/network/NetworkTransport;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTransport ()Lcom/company/admob/network/NetworkTransport;
+	public fun hashCode ()I
+	public fun isOnline ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/network/NetworkState$Unavailable : com/company/admob/network/NetworkState {
+	public static final field INSTANCE Lcom/company/admob/network/NetworkState$Unavailable;
+	public fun isOnline ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/network/NetworkTransport : java/lang/Enum {
+	public static final field CELLULAR Lcom/company/admob/network/NetworkTransport;
+	public static final field ETHERNET Lcom/company/admob/network/NetworkTransport;
+	public static final field OTHER Lcom/company/admob/network/NetworkTransport;
+	public static final field WIFI Lcom/company/admob/network/NetworkTransport;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/network/NetworkTransport;
+	public static fun values ()[Lcom/company/admob/network/NetworkTransport;
+}
+

@@ -6,6 +6,13 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Added
+- `NetworkMonitor` (admob-core): the connection state as a `StateFlow<NetworkState>`: `Unavailable`,
+  `ConnectedNoInternet` (for example Wi-Fi behind a sign-in page) or `Connected` over Wi-Fi, mobile data or ethernet.
+- `RemoteConfigSession` (admob-firebase): fetches Remote Config once per app session without blocking. After a
+  failure it tries again on each new Activity and when the device comes back online. `FirebaseRemoteConfigProvider`
+  re-reads its values as soon as the session activates them.
+
 ## [1.0.0-rc1] - 2026-09-28
 
 The public API is frozen for 1.0.0 (`docs/audits/API_STABILITY_AUDIT.md`): from here on, the rules in

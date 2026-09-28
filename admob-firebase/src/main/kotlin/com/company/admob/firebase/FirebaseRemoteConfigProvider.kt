@@ -5,6 +5,7 @@ import com.company.admob.CompanyAdMobInternal
 import com.company.admob.InternalCompanyAdMobApi
 import com.company.admob.config.remote.AdConfigProvider
 import com.company.admob.config.remote.AdOverrides
+import com.company.admob.firebase.internal.ActivationSignal
 import com.company.admob.firebase.internal.FirebaseRemoteConfigSource
 import com.company.admob.firebase.internal.RemoteConfigSource
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
@@ -24,8 +25,9 @@ import kotlinx.coroutines.flow.flow
  * `minSecondsBetweenFullScreenAds`. An unset or empty parameter leaves that ad as configured, and a field left out of
  * a value keeps its configured value. An invalid value or field is logged and ignored; the rest still applies.
  *
- * It emits the activated values when collected, then again after each real-time update, which it activates. It
- * doesn't fetch unless [autoFetch] is true: your app usually owns fetch timing (`fetchAndActivate` at startup).
+ * It emits the activated values when collected, then again after each real-time update, which it activates, and after
+ * each activation by [RemoteConfigSession]. It doesn't fetch unless [autoFetch] is true: start a [RemoteConfigSession]
+ * instead, which fetches once per app session and retries on later screens.
  *
  * Firebase must be initialized by the app (the google-services plugin).
  *
@@ -63,11 +65,14 @@ public class FirebaseRemoteConfigProvider internal constructor(
         val latest = MutableStateFlow(read())
         val refresh = { latest.value = read() }
         val removeListener = source.addUpdateListener { source.activate(refresh) }
-        if (autoFetch) source.fetchAndActivate(refresh)
+        // RemoteConfigSession's activations raise no Firebase callback: it signals them here.
+        val removeSessionListener = ActivationSignal.add(refresh)
+        if (autoFetch) source.fetchAndActivate { refresh() }
         try {
             emitAll(latest)
         } finally {
             removeListener()
+            removeSessionListener()
         }
     }
 
