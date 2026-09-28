@@ -69,6 +69,8 @@ public class NativeAdHolder(private val placement: NativePlacement) {
             render(newTarget, held)
         } else {
             handle = null
+            // Also after a rotation during the load: the new container shows the shimmer until the ad arrives.
+            showNativeShimmer(container, placement, newTarget.layout)
             load()
         }
     }
@@ -97,7 +99,10 @@ public class NativeAdHolder(private val placement: NativePlacement) {
                     handle = result.handle
                     target?.let { render(it, result.handle) }
                 }
-                is NativeAdResult.Failed -> target?.container?.visibility = View.GONE
+                is NativeAdResult.Failed -> target?.container?.let {
+                    removeNativeShimmer(it)
+                    it.visibility = View.GONE
+                }
             }
         }
     }

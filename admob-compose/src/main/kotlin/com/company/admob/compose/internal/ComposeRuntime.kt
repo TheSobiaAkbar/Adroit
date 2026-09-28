@@ -18,6 +18,13 @@ internal object ComposeRuntime {
 
     val client: AdsClient get() = clientOverride ?: CompanyAdMob.client
 
+    /** For this module's tests: which keys show a shimmer while loading. */
+    @Volatile
+    var showsLoadingOverride: ((String) -> Boolean)? = null
+
+    /** Whether the ad [key] shows a shimmer while it loads (its `showLoading`, PROMPT 29C). */
+    fun showsLoading(key: String): Boolean = showsLoadingOverride?.invoke(key) ?: CompanyAdMobInternal.showsLoading(key)
+
     /** Drops a rendered native view without destroying the ad (ADR-012). Replaceable by tests. */
     var detachRenderedView: (NativeAdHandle) -> Unit = { CompanyAdMobInternal.detachRenderedView(it) }
 

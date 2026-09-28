@@ -1,5 +1,6 @@
 package com.company.admob.views
 
+import com.company.admob.InternalCompanyAdMobApi
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
@@ -37,6 +38,7 @@ public fun ViewGroup.attachNativeAd(
 ) {
     val container = this
     val resolvedLayout = layout ?: styledLayout(placement)
+    showNativeShimmer(container, placement, resolvedLayout)
     ViewsRuntime.client.native.load(placement) { result ->
         if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
             (result as? NativeAdResult.Loaded)?.handle?.destroy()
@@ -45,11 +47,36 @@ public fun ViewGroup.attachNativeAd(
         val shown = when (result) {
             is NativeAdResult.Loaded -> renderInto(container, result.handle, owner, resolvedLayout, renderer)
             is NativeAdResult.Failed -> {
+                removeNativeShimmer(container)
                 container.visibility = View.GONE
                 result
             }
         }
         onResult(shown)
+    }
+}
+
+/**
+ * Fills [container] with a shimmer shaped like [layout] while [placement]'s ad loads, when the ad's `showLoading` is
+ * on (PROMPT 29C). Rendering the ad replaces it; [removeNativeShimmer] removes it on failure.
+ */
+@OptIn(InternalCompanyAdMobApi::class)
+internal fun showNativeShimmer(container: ViewGroup, placement: NativePlacement, layout: NativeAdLayout) {
+    if (!ViewsRuntime.showsLoading(placement.key)) return
+    val style = NativeTemplates.styleOf(layout) ?: ViewsRuntime.client.native.style(placement)
+    container.removeAllViews()
+    container.addView(
+        AdShimmerView(container.context).apply { showNative(style) },
+        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+    )
+    container.visibility = View.VISIBLE
+}
+
+/** Removes a shimmer left by [showNativeShimmer], if any. */
+@OptIn(InternalCompanyAdMobApi::class)
+internal fun removeNativeShimmer(container: ViewGroup) {
+    for (i in container.childCount - 1 downTo 0) {
+        if (container.getChildAt(i) is AdShimmerView) container.removeViewAt(i)
     }
 }
 

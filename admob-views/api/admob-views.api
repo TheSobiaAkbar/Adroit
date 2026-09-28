@@ -16,6 +16,19 @@ public final class com/company/admob/views/AdNativeView : android/widget/FrameLa
 	public static synthetic fun setPlacement$default (Lcom/company/admob/views/AdNativeView;Lcom/company/admob/NativePlacement;Lcom/company/admob/NativeAdLayout;ILjava/lang/Object;)V
 }
 
+public final class com/company/admob/views/AdShimmerView : android/view/View {
+	public static final field Companion Lcom/company/admob/views/AdShimmerView$Companion;
+	public static final field DEFAULT_BANNER_HEIGHT_DP I
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun showBanner (I)V
+	public final fun showNative (Lcom/company/admob/NativeStyle;)V
+}
+
+public final class com/company/admob/views/AdShimmerView$Companion {
+}
+
 public final class com/company/admob/views/AdSlotView : android/widget/FrameLayout {
 	public fun <init> (Landroid/content/Context;)V
 	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V

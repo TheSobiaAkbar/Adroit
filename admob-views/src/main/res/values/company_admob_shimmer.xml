@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The loading placeholder of banners and native ads (AdShimmerView): its blocks, and the sweeping highlight. -->
+    <color name="company_admob_shimmer_base">#FFE3E3E3</color>
+    <color name="company_admob_shimmer_highlight">#FFF5F5F5</color>
+</resources>

@@ -151,7 +151,17 @@ internal class FakeNativeApi : NativeApi {
         loadCount++
         val result = failWith?.let { NativeAdResult.Failed(it) }
             ?: NativeAdResult.Loaded(FakeNativeHandle(placement).also { handles += it })
-        main.post { onResult(result) }
+        if (deliverImmediately) main.post { onResult(result) } else pending += { onResult(result) }
+    }
+
+    /** False keeps results until [deliverPending], to observe the loading state. */
+    var deliverImmediately = true
+    private val pending = mutableListOf<() -> Unit>()
+
+    fun deliverPending() {
+        val due = pending.toList()
+        pending.clear()
+        due.forEach { it() }
     }
 
     override suspend fun load(placement: NativePlacement): NativeAdResult = error("not used by admob-compose")

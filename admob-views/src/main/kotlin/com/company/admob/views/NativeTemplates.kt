@@ -38,6 +38,14 @@ public object NativeTemplates {
     }
 
     /** A [NativeAdLayout] for [layoutRes] using the standard template IDs; missing views are skipped (logged once). */
+    /** The style [layout] is the template of, or null for an app's own layout. */
+    internal fun styleOf(layout: NativeAdLayout): NativeStyle? = when (layout) {
+        Small -> NativeStyle.SMALL
+        Medium -> NativeStyle.MEDIUM
+        Large -> NativeStyle.LARGE
+        else -> null
+    }
+
     internal fun forLayout(@LayoutRes layoutRes: Int): NativeAdLayout = NativeAdLayout(
         layoutRes = layoutRes,
         headlineId = R.id.company_admob_native_headline,

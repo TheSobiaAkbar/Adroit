@@ -1,5 +1,7 @@
 package com.company.admob.views
 
+import com.company.admob.InternalCompanyAdMobApi
+import android.widget.FrameLayout
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
@@ -32,6 +34,7 @@ public fun ViewGroup.attachBanner(
     options: BannerOptions = BannerOptions(),
 ): BannerAdHandle = attachBanner(owner, placement, options, collapseWhenEmpty = true)
 
+@OptIn(InternalCompanyAdMobApi::class)
 internal fun ViewGroup.attachBanner(
     owner: LifecycleOwner,
     placement: BannerPlacement,
@@ -42,11 +45,13 @@ internal fun ViewGroup.attachBanner(
     val activity = checkNotNull(context.findActivity()) { "attachBanner(): the container isn't inside an Activity" }
     val handle = ViewsRuntime.client.banner.create(activity, placement, options)
     addView(handle.view)
+    val shimmer = if (ViewsRuntime.showsLoading(placement.key)) addBannerShimmer(handle) else null
     handle.bindTo(owner)
     owner.lifecycleScope.launch {
         owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             handle.state.collect { state ->
                 if (collapseWhenEmpty) handle.view.visibility = if (state.hasNoAd()) View.GONE else View.VISIBLE
+                shimmer?.visibility = if (state == BannerState.Loading) View.VISIBLE else View.GONE
                 onState(state)
             }
         }
@@ -55,3 +60,23 @@ internal fun ViewGroup.attachBanner(
 }
 
 internal fun BannerState.hasNoAd(): Boolean = this is BannerState.Hidden || this is BannerState.Failed
+
+/**
+ * A shimmer over [handle]'s view while its banner loads (the ad's `showLoading`): inside the banner's own container,
+ * so it's removed with the banner, and the banner stays visible, as its load needs. Sized like the banner once its
+ * height is known (after its first layout), a usual banner height until then. Null if the view can't hold it.
+ */
+@OptIn(InternalCompanyAdMobApi::class)
+internal fun addBannerShimmer(handle: BannerAdHandle): AdShimmerView? {
+    val container = handle.view as? FrameLayout ?: return null
+    val fallback = (AdShimmerView.DEFAULT_BANNER_HEIGHT_DP * container.resources.displayMetrics.density).toInt()
+    val shimmer = AdShimmerView(container.context)
+    shimmer.showBanner(handle.expectedHeightPx.takeIf { it > 0 } ?: fallback)
+    container.addView(shimmer, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+    container.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+        val height = handle.expectedHeightPx
+        // Posted: a layout change inside a layout pass would be ignored.
+        if (height > 0) view.post { shimmer.showBanner(height) }
+    }
+    return shimmer
+}

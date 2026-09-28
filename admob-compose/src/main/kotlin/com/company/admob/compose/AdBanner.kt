@@ -22,7 +22,10 @@ import com.company.admob.BannerAdHandle
 import com.company.admob.BannerOptions
 import com.company.admob.BannerPlacement
 import com.company.admob.BannerState
+import com.company.admob.InternalCompanyAdMobApi
+import com.company.admob.compose.internal.BannerShimmer
 import com.company.admob.compose.internal.ComposeRuntime
+import com.company.admob.views.AdShimmerView
 import com.company.admob.compose.internal.findActivity
 
 /**
@@ -34,11 +37,13 @@ import com.company.admob.compose.internal.findActivity
  *
  * @param modifier applied to the banner's slot, which fills the available width.
  * @param options the banner size, and whether to reserve its expected height while it loads.
- * @param placeholder shown over the reserved space while the banner is loading.
+ * @param placeholder shown over the reserved space while the banner is loading. Without one, an ad profile with
+ *   `showLoading` (the default) shows a shimmer shaped like its banner, in the banner's height.
  * @param onStateChange called on the main thread with each new [BannerState].
  *
  * Without an Activity in `LocalContext`, logs an error and shows nothing.
  */
+@OptIn(InternalCompanyAdMobApi::class)
 @Composable
 public fun AdBanner(
     placement: BannerPlacement,
@@ -61,8 +66,17 @@ public fun AdBanner(
 
     val loading = state == BannerState.Loading
     val showing = loading || state == BannerState.Loaded
-    val reserved = if (options.reserveSpace && showing) with(LocalDensity.current) { handle.expectedHeightPx.toDp() } else 0.dp
-    val collapsed = !options.reserveSpace && !showing
+    val shimmer = loading && placeholder == null && ComposeRuntime.showsLoading(placement.key)
+    val density = LocalDensity.current
+    // Before its first layout an adaptive banner doesn't know its height: a usual one until then.
+    val shimmerHeightPx = handle.expectedHeightPx.takeIf { it > 0 }
+        ?: with(density) { AdShimmerView.DEFAULT_BANNER_HEIGHT_DP.dp.roundToPx() }
+    val reserved = when {
+        shimmer -> with(density) { shimmerHeightPx.toDp() }
+        options.reserveSpace && showing -> with(density) { handle.expectedHeightPx.toDp() }
+        else -> 0.dp
+    }
+    val collapsed = !options.reserveSpace && !showing && !shimmer
     Box(
         modifier
             .fillMaxWidth()
@@ -76,6 +90,8 @@ public fun AdBanner(
         )
         if (loading && placeholder != null) {
             Box(Modifier.matchParentSize()) { placeholder() }
+        } else if (shimmer) {
+            BannerShimmer(shimmerHeightPx, Modifier.matchParentSize())
         }
     }
 }

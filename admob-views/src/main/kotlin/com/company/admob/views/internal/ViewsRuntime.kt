@@ -17,6 +17,13 @@ internal object ViewsRuntime {
 
     val client: AdsClient get() = clientOverride ?: CompanyAdMob.client
 
+    /** For this module's tests: which keys show a shimmer while loading. */
+    @Volatile
+    var showsLoadingOverride: ((String) -> Boolean)? = null
+
+    /** Whether the ad [key] shows a shimmer while it loads (its `showLoading`). */
+    fun showsLoading(key: String): Boolean = showsLoadingOverride?.invoke(key) ?: CompanyAdMobInternal.showsLoading(key)
+
     fun error(message: String) {
         CompanyAdMobInternal.log(LogLevel.ERROR, message)
     }

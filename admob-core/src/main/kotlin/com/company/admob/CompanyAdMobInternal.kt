@@ -36,6 +36,15 @@ public object CompanyAdMobInternal {
     }
 
     /**
+     * Whether the ad [key] (in its current format) shows a loading placeholder while it loads: a shimmer for a banner
+     * or native ad (PROMPT 29C). True only for ad profiles with `showLoading`; false before `initialize()`, for
+     * placements declared in `placements { }`, and while a test client stands in. Any thread.
+     */
+    @JvmStatic
+    public fun showsLoading(key: String): Boolean =
+        CompanyAdMob.liveRuntime?.liveConfig?.current?.active(key)?.behavior?.showLoading == true
+
+    /**
      * Each configured placement's format, by placement key: the ad keys whose remote values admob-firebase reads.
      * Empty before `initialize()`. Any thread.
      */

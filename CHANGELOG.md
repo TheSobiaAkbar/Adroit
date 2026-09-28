@@ -23,6 +23,9 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdSlots.showOnSplash`, `AdSlotView` (admob-views) and `AdSlot` (admob-compose) show an ad in its current format;
   a swapped app open ad shows its interstitial on returns to the app. `PlacementOverride.format`, through a new
   constructor; the 1.0.0-rc1 constructor is unchanged.
+- Shimmer while banner and native ad profiles load (`showLoading`): shaped like the banner's size or the native
+  template, as currently configured (Firebase included), in every view helper and composable; removed when the ad
+  appears or fails. Colours `company_admob_shimmer_base` and `company_admob_shimmer_highlight` can be overridden.
 - "Loading ad…" screen before full-screen ad profiles (`showLoading`, default true; `loadingSeconds`, default 1): shown
   from the show call for at least `loadingSeconds`, or during the load wait, and removed when the ad opens, fails,
   times out or the user leaves. Its layout (`company_admob_loading_ad`) can be replaced by the app. Not for splash ads.

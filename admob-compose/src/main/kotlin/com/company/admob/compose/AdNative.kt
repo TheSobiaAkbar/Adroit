@@ -16,6 +16,8 @@ import com.company.admob.NativeAdRenderer
 import com.company.admob.NativeAdResult
 import com.company.admob.NativePlacement
 import com.company.admob.compose.internal.ComposeRuntime
+import com.company.admob.compose.internal.NativeShimmer
+import com.company.admob.compose.internal.styleOf
 import com.company.admob.views.NativeTemplates
 
 /**
@@ -30,7 +32,8 @@ import com.company.admob.views.NativeTemplates
  *
  * @param modifier applied to the ad's slot.
  * @param renderer styles the bound views after the standard binding; used when the ad is rendered.
- * @param placeholder shown while the ad loads.
+ * @param placeholder shown while the ad loads. Without one, an ad profile with `showLoading` (the default) shows a
+ *   shimmer shaped like its template.
  *
  * Shows nothing if the load fails, or once ads are blocked (ad-free, consent withdrawn). A layout without a headline
  * view is logged as an error and shows nothing.
@@ -46,7 +49,13 @@ public fun AdNative(
 ) {
     val result by rememberNativeAd(placement, slotKey)
     when (val current = result) {
-        null -> if (placeholder != null) Box(modifier) { placeholder() }
+        null -> when {
+            placeholder != null -> Box(modifier) { placeholder() }
+            ComposeRuntime.showsLoading(placement.key) -> NativeShimmer(
+                layout?.let(::styleOf) ?: ComposeRuntime.client.native.style(placement),
+                modifier,
+            )
+        }
         is NativeAdResult.Loaded -> RenderedNativeAd(
             current.handle,
             modifier,

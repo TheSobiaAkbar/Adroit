@@ -235,7 +235,7 @@ for example:
 | Lengthen the splash to 13 s | `AdSettings` | `{ "splashSeconds": 13 }` |
 | Load the next ad right after each show | the ad's | `{ "loadAgain": true }` |
 | Wait at most 5 s for any full-screen ad that isn't loaded | `AdSettings` | `{ "loadTimeoutSeconds": 5 }` |
-| No "Loading ad…" screen before one ad | the ad's | `{ "showLoading": false }` |
+| No "Loading ad…" screen before one ad, or no shimmer on a banner or native ad | the ad's | `{ "showLoading": false }` |
 | Turn every ad off | `AdSettings` | `{ "adsEnabled": false }` |
 
 Every field is listed in [Ad profiles](AD_PROFILES.md#the-json), and format changes in
@@ -258,4 +258,4 @@ may keep Firebase's cached values for up to 12 hours.
 
 Problems? See [Troubleshooting](TROUBLESHOOTING.md).
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29
