@@ -42,6 +42,8 @@ internal class FullScreenShow(
     private val onReward: (Reward) -> Unit,
     private val scope: CoroutineScope,
     private val dismissGrace: Duration,
+    /** The ad opened, failed to, or the show ended: the loading screen can go (PROMPT 29B). May run more than once. */
+    private val onOpened: () -> Unit = {},
     private val onEnded: () -> Unit,
 ) : FullScreenAdListener {
     lateinit var session: ShowSession<FullScreenResult>
@@ -60,6 +62,7 @@ internal class FullScreenShow(
     }
 
     override fun onShown() {
+        onOpened()
         session.markShown()
         events.emit(AdEvent.Shown(key, format, adUnitId, now()))
     }
@@ -104,6 +107,7 @@ internal class FullScreenShow(
     }
 
     override fun onFailedToShow(error: AdError) {
+        onOpened()
         if (session.resolve(FullScreenResult.NotShown(error))) {
             end(AdEvent.NotShown(key, format, adUnitId, now(), error))
         } else {
@@ -112,6 +116,7 @@ internal class FullScreenShow(
     }
 
     private fun end(event: AdEvent) {
+        onOpened()
         coordinator.release(token)
         ad.release()
         events.emit(event)

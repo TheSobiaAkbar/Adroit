@@ -10,6 +10,7 @@ import com.company.admob.config.AdMobConfig
 import com.company.admob.config.AdProfile
 import com.company.admob.config.AdSettings
 import com.company.admob.config.PreloadStrategy
+import com.company.admob.fakes.TestClock
 import com.company.admob.AdFormat
 import com.company.admob.internal.config.AdProfiles
 import com.company.admob.config.TestIds
@@ -347,17 +348,21 @@ class AdProfilesEngineTest {
         Slow(AdProfile.interstitial(ids = listOf(TestIds.unit(8)), loadTimeoutSeconds = 3)),
         NoWait(AdProfile.interstitial(ids = listOf(TestIds.unit(9)), loadTimeoutSeconds = 0)),
         Counted(AdProfile.interstitial(ids = listOf(TestIds.unit(10)), counter = 2)),
+        Quiet(AdProfile.interstitial(ids = listOf(TestIds.unit(11)), showLoading = false)),
+        LongLoading(AdProfile.interstitial(ids = listOf(TestIds.unit(12)), loadingSeconds = 3)),
+        Splash(AdProfile.interstitial(ids = listOf(TestIds.unit(13)), splash = true)),
     }
 
     private val again = InterstitialPlacement("Again")
     private val once = InterstitialPlacement("Once")
 
-    private fun TestScope.profilesHarness(): EngineHarness = EngineHarness(
+    private fun TestScope.profilesHarness(loading: Boolean = false): EngineHarness = EngineHarness(
         this,
         engineConfig {
             frequency { minIntervalBetweenFullScreenAds = Duration.ZERO }
             profiles(Defs.entries, AdSettings())
         },
+        loadingScreens = if (loading) FakeLoadingScreens(TestClock(testScheduler)) else null,
     ).apply { ready(); run(60_000) }
 
     @Test
@@ -499,5 +504,103 @@ class AdProfilesEngineTest {
         h.show(slow)
         h.run(1_100)
         assertEquals("the ad's own Firebase value wins: 1 s", 2, h.results.size)
+    }
+
+    // --- Loading screen (PROMPT 29B) ---
+
+    private fun EngineHarness.screens() = checkNotNull(loadingScreens).screens
+
+    @Test
+    fun `a ready ad shows after a loading screen of loadingSeconds, which goes when the ad opens`() = runTest {
+        val h = profilesHarness(loading = true)
+        h.engine.preload(once)
+        h.run(1_000)
+        val start = h.clock.elapsedRealtimeMillis()
+        h.show(once)
+        h.run(900)
+        assertEquals(1, h.screens().size)
+        assertEquals("not shown during the loading screen", 0, h.lastAd().showCount)
+        h.run(200)
+        assertEquals(1, h.lastAd().showCount)
+        assertTrue("still up until the ad opens", h.loadingScreens!!.showing)
+        h.lastAd().simulateShown()
+        assertEquals("gone the moment the ad opens", start + 1_100, h.screens().single().dismissedAt)
+        h.lastAd().simulateImpression()
+        h.lastAd().simulateDismissed()
+        h.run(1_000)
+        assertEquals(listOf(FullScreenResult.Dismissed(clicked = false)), h.results)
+    }
+
+    @Test
+    fun `the loading screen covers the wait, and the ad shows as soon as it arrives past loadingSeconds`() = runTest {
+        val h = profilesHarness(loading = true)
+        h.adsSdk.enqueueLoad(TestIds.unit(5), ScriptedLoad.Success(), delayMs = 3_000)
+        h.show(once)
+        h.run(100)
+        assertTrue(h.loadingScreens!!.showing)
+        h.run(3_000)
+        assertEquals(1, h.lastAd().showCount)
+        h.lastAd().simulateFailedToShow()
+        h.run()
+        assertTrue("a show failure removes it", !h.loadingScreens!!.showing)
+    }
+
+    @Test
+    fun `the loading screen goes when the wait times out or the load fails`() = runTest {
+        val h = profilesHarness(loading = true)
+        h.adsSdk.enqueueLoad(TestIds.unit(5), ScriptedLoad.Pending)
+        h.show(once)
+        h.run(8_100)
+        assertEquals(FullScreenResult.NotShown(AdError.Timeout()), h.results.single())
+        assertTrue(!h.loadingScreens!!.showing)
+
+        h.adsSdk.enqueueLoad(TestIds.unit(8), ScriptedLoad.Failure(AdError.NoFill(), retryable = true), delayMs = 500)
+        h.show(slow)
+        h.run(1_000)
+        assertEquals(FullScreenResult.NotShown(AdError.NoFill()), h.results.last())
+        assertEquals(2, h.screens().size)
+        assertTrue(!h.loadingScreens!!.showing)
+    }
+
+    @Test
+    fun `showLoading false and the splash ad show without a loading screen, and loadingSeconds sets its length`() = runTest {
+        val h = profilesHarness(loading = true)
+        val quiet = InterstitialPlacement("Quiet")
+        val splashAd = InterstitialPlacement("Splash")
+        val long = InterstitialPlacement("LongLoading")
+        listOf(quiet, splashAd, long).forEach { h.engine.preload(it) }
+        h.run(1_000)
+        h.show(quiet)
+        h.run()
+        assertEquals(1, h.adsSdk.fullScreenAds[0].showCount)
+        h.adsSdk.fullScreenAds[0].simulateFullShow()
+        h.run(1_000)
+        h.show(splashAd)
+        h.run()
+        assertEquals(1, h.adsSdk.fullScreenAds[1].showCount)
+        h.adsSdk.fullScreenAds[1].simulateFullShow()
+        h.run(1_000)
+        assertTrue("no screen so far", h.screens().isEmpty())
+
+        h.show(long)
+        h.run(2_900)
+        assertEquals(0, h.adsSdk.fullScreenAds[2].showCount)
+        h.run(200)
+        assertEquals(1, h.adsSdk.fullScreenAds[2].showCount)
+    }
+
+    @Test
+    fun `leaving the screen during the loading screen cancels the show and removes it`() = runTest {
+        val h = profilesHarness(loading = true)
+        h.engine.preload(once)
+        h.run(1_000)
+        val activity = h.activity()
+        h.engine.show(activity, once) { h.results += it }
+        h.run(500)
+        h.tracker.invalidActivities += activity
+        h.run(600)
+        assertEquals(FullScreenResult.NotShown(AdError.ActivityUnavailable), h.results.single())
+        assertTrue(!h.loadingScreens!!.showing)
+        assertTrue("the ad stays for later", h.engine.isReady(once))
     }
 }

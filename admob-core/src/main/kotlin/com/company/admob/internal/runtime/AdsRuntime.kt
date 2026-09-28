@@ -27,6 +27,7 @@ import com.company.admob.internal.diagnostics.DiagnosticsApiImpl
 import com.company.admob.internal.diagnostics.DiagnosticsReportBuilder
 import com.company.admob.internal.consent.RdpWriter
 import com.company.admob.internal.events.EventBus
+import com.company.admob.internal.fullscreen.DialogLoadingScreens
 import com.company.admob.internal.fullscreen.FullScreenAdEngine
 import com.company.admob.internal.fullscreen.FullScreenFormatStrategy
 import com.company.admob.internal.fullscreen.InterstitialApiImpl
@@ -129,6 +130,8 @@ internal class AdsRuntime(
         .any { it.format == AdFormat.APP_OPEN && it.enabled && (it.config as AppOpenPlacementConfig).showOnColdStartAllowed }
     private val hasAppOpen: Boolean = effectiveConfig.allPlacements.any { it.format == AdFormat.APP_OPEN && it.enabled }
 
+    private val loadingScreens = DialogLoadingScreens(log)
+
     private fun fullScreenEngine(strategy: FullScreenFormatStrategy) = FullScreenAdEngine(
         strategy = strategy,
         config = liveConfig,
@@ -143,6 +146,7 @@ internal class AdsRuntime(
         clock = deps.clock,
         scope = scope,
         log = log,
+        loadingScreens = loadingScreens,
         readyDelay = when {
             !hasAppOpen -> Duration.ZERO
             strategy == FullScreenFormatStrategy.AppOpen -> if (appOpenFirst) Duration.ZERO else APP_OPEN_AFTER_OTHERS

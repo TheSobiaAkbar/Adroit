@@ -23,6 +23,9 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdSlots.showOnSplash`, `AdSlotView` (admob-views) and `AdSlot` (admob-compose) show an ad in its current format;
   a swapped app open ad shows its interstitial on returns to the app. `PlacementOverride.format`, through a new
   constructor; the 1.0.0-rc1 constructor is unchanged.
+- "Loading ad…" screen before full-screen ad profiles (`showLoading`, default true; `loadingSeconds`, default 1): shown
+  from the show call for at least `loadingSeconds`, or during the load wait, and removed when the ad opens, fails,
+  times out or the user leaves. Its layout (`company_admob_loading_ad`) can be replaced by the app. Not for splash ads.
 - Load timeout for full-screen ad profiles (`loadTimeoutSeconds`, default 8, per ad or in `AdSettings`): a show on an
   ad that isn't loaded requests it and waits at most that long, then answers `NotShown(Timeout)` (a failed load ends
   the wait at once); a late ad is kept for the next show. `showLoading` and `loadingSeconds` are read already, for

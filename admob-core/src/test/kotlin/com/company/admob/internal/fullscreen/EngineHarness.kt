@@ -67,6 +67,8 @@ internal class EngineHarness(
         }
     },
     strategy: FullScreenFormatStrategy = FullScreenFormatStrategy.Interstitial,
+    /** Loading screens for ad profiles (PROMPT 29B); null, the default, keeps shows immediate. */
+    val loadingScreens: FakeLoadingScreens? = null,
 ) {
     val live = LiveConfig(EffectiveConfig.from(config))
     val effective: EffectiveConfig get() = live.current
@@ -106,6 +108,7 @@ internal class EngineHarness(
         clock = clock,
         scope = scope.backgroundScope,
         log = log,
+        loadingScreens = loadingScreens,
     ).also {
         it.start()
         run()
@@ -140,4 +143,23 @@ internal class EngineHarness(
 
     /** The most recent fake ad loaded. */
     fun lastAd(): FakeLoadedFullScreenAd = adsSdk.fullScreenAds.last()
+}
+
+/** Records loading screens: when each appeared and whether it's gone. */
+internal class FakeLoadingScreens(private val clock: TestClock) : LoadingScreens {
+    inner class Screen(val shownAt: Long) : LoadingScreen {
+        var dismissedAt: Long? = null
+            private set
+
+        override fun dismiss() {
+            if (dismissedAt == null) dismissedAt = clock.elapsedRealtimeMillis()
+        }
+    }
+
+    val screens = mutableListOf<Screen>()
+
+    /** Whether a screen is on display now. */
+    val showing: Boolean get() = screens.any { it.dismissedAt == null }
+
+    override fun show(activity: Activity): LoadingScreen = Screen(clock.elapsedRealtimeMillis()).also { screens += it }
 }

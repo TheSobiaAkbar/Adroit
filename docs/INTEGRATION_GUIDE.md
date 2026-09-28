@@ -235,6 +235,7 @@ for example:
 | Lengthen the splash to 13 s | `AdSettings` | `{ "splashSeconds": 13 }` |
 | Load the next ad right after each show | the ad's | `{ "loadAgain": true }` |
 | Wait at most 5 s for any full-screen ad that isn't loaded | `AdSettings` | `{ "loadTimeoutSeconds": 5 }` |
+| No "Loading ad…" screen before one ad | the ad's | `{ "showLoading": false }` |
 | Turn every ad off | `AdSettings` | `{ "adsEnabled": false }` |
 
 Every field is listed in [Ad profiles](AD_PROFILES.md#the-json), and format changes in

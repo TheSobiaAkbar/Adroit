@@ -37,6 +37,7 @@ import com.company.admob.internal.reliability.FullScreenCoordinator
 import com.company.admob.internal.reliability.RetryScheduler
 import com.company.admob.internal.reliability.ShowSession
 import com.company.admob.internal.time.Clock
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -75,6 +76,8 @@ internal class FullScreenAdEngine(
     private val stagger: Duration = STAGGER,
     private val readyDelay: Duration = Duration.ZERO,
     private val rotation: AdUnitRotation = AdUnitRotation(),
+    /** The "Loading ad…" screen of ad profiles with `showLoading` (PROMPT 29B); null shows none. */
+    private val loadingScreens: LoadingScreens? = null,
 ) : AdsBlockedListener, ConfigChangeListener {
     val format: AdFormat = strategy.format
 
@@ -182,6 +185,10 @@ internal class FullScreenAdEngine(
      * (PROMPT 29): it shows if it arrives in time, otherwise the result is `NotShown(Timeout)` and the ad, once
      * loaded, is kept for the next show. Other placements, and shows the library starts itself ([mayWait] false, the
      * app open ad on return), answer `NotShown(NotReady)` at once.
+     *
+     * An ad profile with `showLoading` (not the splash ad, whose screen is the splash) gets a loading screen from the
+     * wait, or from the call when the ad is ready, for at least its `loadingSeconds`; it's removed when the ad opens,
+     * fails, or isn't shown.
      */
     fun show(
         activity: Activity,
@@ -202,18 +209,25 @@ internal class FullScreenAdEngine(
         callback: OnceCallback<FullScreenResult>,
         afterWait: Boolean,
         mayWait: Boolean = false,
+        loading: LoadingScreen? = null,
     ) {
         val p = placements[placement]
         val requestedUnit = slots[placement]?.adUnitId ?: p?.adUnitId
         if (!afterWait) p?.let { emit(AdEvent.ShowRequested(it.placement.key, format, requestedUnit!!, now())) }
         // After a wait, the trigger was already counted by the call that started it.
         val error = gateError(activity, placement, p, countTrigger = !afterWait)
-        val timeout = p?.behavior?.loadTimeout
-        if (mayWait && !afterWait && (error == AdError.NotReady || error == AdError.Expired) && timeout != null && timeout.isPositive()) {
-            waitThenShow(activity, p, timeout, prepare, onRewardEarned, callback)
+        val behavior = p?.behavior
+        val timeout = behavior?.loadTimeout
+        val waits = mayWait && !afterWait && (error == AdError.NotReady || error == AdError.Expired) &&
+            timeout != null && timeout.isPositive()
+        val withLoading = !afterWait && loadingScreens != null && behavior?.showLoading == true && !p.isSplash &&
+            (error == null || waits)
+        if (waits || withLoading) {
+            prepareThenShow(activity, p!!, if (waits) timeout else null, withLoading, prepare, onRewardEarned, callback)
             return
         }
         if (error != null) {
+            loading?.dismiss()
             log.i { "$format ${placement.key} not shown: ${error.code}" }
             p?.let { emit(AdEvent.NotShown(it.placement.key, format, requestedUnit!!, now(), error)) }
             callback(FullScreenResult.NotShown(error))
@@ -227,6 +241,7 @@ internal class FullScreenAdEngine(
         val show = FullScreenShow(
             p!!, slot.adUnitId, ad, token, format, frequency, coordinator, events, clock, log, onRewardEarned, scope,
             strategy.dismissGrace,
+            onOpened = { loading?.dismiss() },
         ) {
             reloadAfterShow(p)
         }
@@ -257,41 +272,60 @@ internal class FullScreenAdEngine(
     }
 
     /**
-     * Waits up to [timeout] for [p]'s ad (requested now, an explicit ask), then shows it; the loading screen and every
-     * other full-screen ad wait meanwhile, since the coordinator is held. On timeout the load goes on and its ad is
-     * kept for the next show.
+     * What comes before a profile's show (PROMPT 29): with [waitFor], requests [p]'s ad and waits for it that long;
+     * with [withLoading], a loading screen covers the wait, and stays at least the ad's `loadingSeconds`. Every other
+     * full-screen ad waits meanwhile (the coordinator is held, without counting as an ad's end). Then the ad shows,
+     * or the result is `NotShown` (timeout, failed load, Activity gone) and the screen goes. A late ad is kept.
      */
-    private fun waitThenShow(
+    private fun prepareThenShow(
         activity: Activity,
         p: EffectivePlacement,
-        timeout: Duration,
+        waitFor: Duration?,
+        withLoading: Boolean,
         prepare: (LoadedFullScreenAd) -> Unit,
         onRewardEarned: (Reward) -> Unit,
         callback: OnceCallback<FullScreenResult>,
     ) {
         val placement = p.placement
-        val token = coordinator.tryAcquire("$format:${placement.key}:waiting")
         fun notShown(error: AdError) {
             log.i { "$format ${placement.key} not shown: ${error.code}" }
             emit(AdEvent.NotShown(placement.key, format, slots[placement]?.adUnitId ?: p.adUnitId, now(), error))
             callback(FullScreenResult.NotShown(error))
         }
-        if (token == null) return notShown(AdError.AlreadyShowing)
-        log.i { "$format ${placement.key} isn't loaded; waiting for it up to $timeout" }
-        preload(placement)
+        val token = coordinator.tryAcquire("$format:${placement.key}:preparing") ?: return notShown(AdError.AlreadyShowing)
+        val screen = if (withLoading) loadingScreens?.show(activity) else null
+        val startedAt = clock.elapsedRealtimeMillis()
+        if (waitFor != null) {
+            log.i { "$format ${placement.key} isn't loaded; waiting for it up to $waitFor" }
+            preload(placement)
+        }
         scope.launch {
-            val waited = try {
-                withTimeoutOrNull(timeout) { SplashWait(awaitAd(activity, placement)) }
+            var error: AdError? = null
+            try {
+                if (waitFor != null) {
+                    val waited = withTimeoutOrNull(waitFor) { SplashWait(awaitAd(activity, placement)) }
+                    error = if (waited == null) {
+                        log.i { "$format ${placement.key}: not loaded within $waitFor; moving on (the ad is kept if it arrives)" }
+                        AdError.Timeout()
+                    } else {
+                        waited.error
+                    }
+                }
+                if (error == null && screen != null) {
+                    val left = (p.behavior?.loadingTime ?: Duration.ZERO) - (clock.elapsedRealtimeMillis() - startedAt).milliseconds
+                    if (left.isPositive()) delay(left)
+                }
+            } catch (e: CancellationException) {
+                screen?.dismiss()
+                throw e
             } finally {
                 coordinator.release(token, adEnded = false)
             }
-            when {
-                waited == null -> {
-                    log.i { "$format ${placement.key}: not loaded within $timeout; moving on (the ad is kept if it arrives)" }
-                    notShown(AdError.Timeout())
-                }
-                waited.error != null -> notShown(waited.error)
-                else -> show(activity, placement, prepare, onRewardEarned, callback, afterWait = true)
+            if (error != null) {
+                screen?.dismiss()
+                notShown(error)
+            } else {
+                show(activity, placement, prepare, onRewardEarned, callback, afterWait = true, loading = screen)
             }
         }
     }
