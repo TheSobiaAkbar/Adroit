@@ -44,6 +44,9 @@ public class AdBannerView @JvmOverloads constructor(
     private var collapseWhenEmpty = true
     private var handle: BannerAdHandle? = null
 
+    /** A banner loading in the background to replace [handle] (`load(refresh = true)`); invisible until it's loaded. */
+    private var incoming: BannerAdHandle? = null
+
     /** The current banner, or null before it's created (on attach) or after a failed setup. */
     internal val bannerHandle: BannerAdHandle? get() = handle
 
@@ -95,13 +98,45 @@ public class AdBannerView @JvmOverloads constructor(
         this.options = options
         handle?.destroy()
         handle = null
+        dropIncoming()
         if (isAttachedToWindow) createBanner()
     }
 
     /** Destroys the current banner now, for a container that removes this view for good ([AdSlotView]). */
     internal fun release() {
+        dropIncoming()
         handle?.destroy()
         handle = null
+    }
+
+    /**
+     * Asks for a banner in this view. It never requests a second one while the view has a banner, loaded or loading:
+     * the call does nothing then. It requests one when the view has none (the last load failed, or it was
+     * destroyed).
+     *
+     * With [refresh], a banner that's already shown is replaced by a new one: the new banner loads in the
+     * background while the current one stays on screen (no shimmer), and replaces it once loaded. If it fails, the
+     * current banner stays. A refresh while a banner is loading, or while another refresh runs, does nothing.
+     *
+     * Before the view is attached, it does nothing: the view loads on attach. Main thread only.
+     */
+    @JvmOverloads
+    public fun load(refresh: Boolean = false) {
+        val placement = placement ?: return
+        if (!isAttachedToWindow || incoming != null) return
+        val current = handle
+        when (val state = current?.state?.value) {
+            null, BannerState.Hidden(null) -> Unit
+            BannerState.Loading, is BannerState.Hidden -> return
+            BannerState.Loaded -> {
+                if (refresh) refreshBanner(placement)
+                return
+            }
+            is BannerState.Failed -> ViewsRuntime.debug("AdBannerView(${placement.key}): no ad (${state.error.code}); requesting one")
+        }
+        current?.destroy()
+        handle = null
+        createBanner()
     }
 
     override fun onAttachedToWindow() {
@@ -123,6 +158,38 @@ public class AdBannerView @JvmOverloads constructor(
             val invalid = (state as? BannerState.Failed)?.error is AdError.InvalidConfiguration
             visibility = if (invalid || (collapseWhenEmpty && state.hasNoAd())) GONE else VISIBLE
         }
+    }
+
+    /** Loads a new banner under the shown one; swaps them once it's loaded, or drops it if it fails. */
+    private fun refreshBanner(placement: BannerPlacement) {
+        val owner = findViewTreeLifecycleOwner() ?: return
+        val next = attachBanner(owner, placement, options, collapseWhenEmpty = false, shimmer = false) { state ->
+            val candidate = incoming ?: return@attachBanner
+            when (state) {
+                BannerState.Loading -> Unit
+                BannerState.Loaded -> {
+                    val old = handle
+                    handle = candidate
+                    incoming = null
+                    candidate.view.visibility = VISIBLE
+                    old?.destroy()
+                    ViewsRuntime.debug("AdBannerView(${placement.key}): refreshed")
+                }
+                is BannerState.Failed, is BannerState.Hidden -> {
+                    ViewsRuntime.debug("AdBannerView(${placement.key}): refresh not loaded; keeping the current banner")
+                    dropIncoming()
+                }
+            }
+        }
+        // Laid out (it needs its width to load) but not seen until it replaces the current banner.
+        next.view.visibility = INVISIBLE
+        incoming = next
+    }
+
+    private fun dropIncoming() {
+        val next = incoming ?: return
+        incoming = null
+        next.destroy()
     }
 
     private companion object {

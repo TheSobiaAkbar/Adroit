@@ -17,19 +17,22 @@ import com.company.admob.config.AdDefinition
  * come from the ad's style. Shows nothing while [key] is neither, or isn't configured.
  *
  * @param modifier applied to the banner or native ad.
- * @param placeholder shown while the ad loads.
+ * @param placeholder shown while the ad loads; without one, an ad with `showLoading` shows a shimmer.
+ * @param refreshKey change it to ask for a new ad: a shown ad stays until the new one arrives and replaces it, and
+ *   stays if the new one fails. The slot never requests a second ad otherwise.
  */
 @Composable
 public fun AdSlot(
     key: String,
     modifier: Modifier = Modifier,
     placeholder: (@Composable () -> Unit)? = null,
+    refreshKey: Any? = null,
 ) {
     val formats = remember(key) { AdSlots.formatChanges(key) }
     val format by formats.collectAsStateWithLifecycle(initialValue = remember(key) { AdSlots.currentFormat(key) })
     when (format) {
-        AdFormat.BANNER -> AdBanner(BannerPlacement(key), modifier, placeholder = placeholder)
-        AdFormat.NATIVE -> AdNative(NativePlacement(key), modifier, placeholder = placeholder)
+        AdFormat.BANNER -> AdBanner(BannerPlacement(key), modifier, placeholder = placeholder, refreshKey = refreshKey)
+        AdFormat.NATIVE -> AdNative(NativePlacement(key), modifier, placeholder = placeholder, refreshKey = refreshKey)
         else -> Unit
     }
 }
@@ -40,6 +43,7 @@ public fun AdSlot(
     definition: AdDefinition,
     modifier: Modifier = Modifier,
     placeholder: (@Composable () -> Unit)? = null,
+    refreshKey: Any? = null,
 ) {
-    AdSlot(definition.name, modifier, placeholder)
+    AdSlot(definition.name, modifier, placeholder, refreshKey)
 }

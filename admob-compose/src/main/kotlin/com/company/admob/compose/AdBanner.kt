@@ -10,6 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.alpha
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -43,6 +47,23 @@ import com.company.admob.compose.internal.findActivity
  *
  * Without an Activity in `LocalContext`, logs an error and shows nothing.
  */
+@Composable
+public fun AdBanner(
+    placement: BannerPlacement,
+    modifier: Modifier = Modifier,
+    options: BannerOptions = BannerOptions(),
+    placeholder: (@Composable () -> Unit)? = null,
+    onStateChange: (BannerState) -> Unit = {},
+) {
+    AdBanner(placement, modifier, options, placeholder, refreshKey = null, onStateChange)
+}
+
+/**
+ * [AdBanner], with [refreshKey]: each time it changes after the first composition, the slot asks for a new banner.
+ * A shown banner stays on screen (no shimmer) while the new one loads unseen, and is replaced once it's loaded; if
+ * the new one fails, the shown one stays. A banner whose load failed is replaced by a new request, and one still
+ * loading is left alone. Without a change of [refreshKey], the slot never requests a second banner.
+ */
 @OptIn(InternalCompanyAdMobApi::class)
 @Composable
 public fun AdBanner(
@@ -50,6 +71,7 @@ public fun AdBanner(
     modifier: Modifier = Modifier,
     options: BannerOptions = BannerOptions(),
     placeholder: (@Composable () -> Unit)? = null,
+    refreshKey: Any?,
     onStateChange: (BannerState) -> Unit = {},
 ) {
     val activity = LocalContext.current.findActivity()
@@ -59,7 +81,26 @@ public fun AdBanner(
         }
         return
     }
-    val handle = remember(placement, activity, options) { RememberedBanner(activity, placement, options) }.handle
+    val banner = remember(placement, activity, options) { RememberedBanner(activity, placement, options) }
+    val lastRefreshKey = remember(banner) { arrayOf(refreshKey) }
+    LaunchedEffect(banner, refreshKey) {
+        if (lastRefreshKey[0] == refreshKey) return@LaunchedEffect
+        lastRefreshKey[0] = refreshKey
+        banner.refresh()
+    }
+    val incoming = banner.incoming
+    if (incoming != null) {
+        LaunchedEffect(incoming) {
+            incoming.state.collect { state ->
+                when (state) {
+                    BannerState.Loaded -> banner.promote(incoming)
+                    is BannerState.Failed, is BannerState.Hidden -> banner.dropIncoming(incoming)
+                    else -> Unit
+                }
+            }
+        }
+    }
+    val handle = banner.handle
     val state by handle.state.collectAsStateWithLifecycle()
     val currentOnStateChange by rememberUpdatedState(onStateChange)
     LaunchedEffect(handle, state) { currentOnStateChange(state) }
@@ -83,11 +124,22 @@ public fun AdBanner(
             .heightIn(min = reserved)
             .then(if (collapsed) Modifier.height(0.dp) else Modifier),
     ) {
-        AndroidView(
-            // The handle's own view, never a new AdView: recomposition and re-attachment reuse the same banner.
-            factory = { handle.view.also { (it.parent as? ViewGroup)?.removeView(it) } },
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (incoming != null) {
+            // Loading unseen under the shown banner (laid out: it needs its width), until it replaces it.
+            key(incoming) {
+                AndroidView(
+                    factory = { incoming.view.also { (it.parent as? ViewGroup)?.removeView(it) } },
+                    modifier = Modifier.fillMaxWidth().alpha(0f),
+                )
+            }
+        }
+        key(handle) {
+            AndroidView(
+                // The handle's own view, never a new AdView: recomposition and re-attachment reuse the same banner.
+                factory = { handle.view.also { (it.parent as? ViewGroup)?.removeView(it) } },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         if (loading && placeholder != null) {
             Box(Modifier.matchParentSize()) { placeholder() }
         } else if (shimmer) {
@@ -101,19 +153,55 @@ public fun AdBanner(
  * abandoned (which a `DisposableEffect` would miss).
  */
 private class RememberedBanner(
-    activity: Activity,
-    placement: BannerPlacement,
-    options: BannerOptions,
+    private val activity: Activity,
+    private val placement: BannerPlacement,
+    private val options: BannerOptions,
 ) : RememberObserver {
-    val handle: BannerAdHandle = ComposeRuntime.client.banner.create(activity, placement, options)
+    /** The banner shown, or loading when there's none yet. */
+    var handle: BannerAdHandle by mutableStateOf(ComposeRuntime.client.banner.create(activity, placement, options))
+        private set
+
+    /** A refresh loading unseen, which replaces [handle] once loaded. */
+    var incoming: BannerAdHandle? by mutableStateOf(null)
+        private set
+
+    /** A shown banner gets a background replacement; a failed one a new request; a loading one nothing. */
+    fun refresh() {
+        if (incoming != null) return
+        when (handle.state.value) {
+            BannerState.Loaded -> incoming = ComposeRuntime.client.banner.create(activity, placement, options)
+            is BannerState.Failed -> {
+                handle.destroy()
+                handle = ComposeRuntime.client.banner.create(activity, placement, options)
+            }
+            else -> Unit
+        }
+    }
+
+    fun promote(next: BannerAdHandle) {
+        if (incoming !== next) return
+        val old = handle
+        handle = next
+        incoming = null
+        old.destroy()
+    }
+
+    fun dropIncoming(next: BannerAdHandle) {
+        if (incoming !== next) return
+        ComposeRuntime.debug("AdBanner(${placement.key}): refresh not loaded; keeping the current banner")
+        incoming = null
+        next.destroy()
+    }
 
     override fun onRemembered() = Unit
 
-    override fun onForgotten() {
-        handle.destroy()
-    }
+    override fun onForgotten() = destroyAll()
 
-    override fun onAbandoned() {
+    override fun onAbandoned() = destroyAll()
+
+    private fun destroyAll() {
+        incoming?.destroy()
+        incoming = null
         handle.destroy()
     }
 }

@@ -25,6 +25,11 @@ import kotlinx.coroutines.launch
  *
  * Banners belong in fixed containers; don't put them in a `RecyclerView`. Main thread only.
  *
+ * One banner per container and placement: calling this again while the banner this container got for [placement]
+ * is loading, shown, or hidden while ads are blocked returns that banner instead of requesting another. After a
+ * failed load, the failed banner is destroyed and a new one requested. To replace a shown banner with a new one, use
+ * [AdBannerView.load] with `refresh = true`.
+ *
  * @throws IllegalStateException if this container isn't inside an Activity.
  */
 @JvmOverloads
@@ -32,7 +37,25 @@ public fun ViewGroup.attachBanner(
     owner: LifecycleOwner,
     placement: BannerPlacement,
     options: BannerOptions = BannerOptions(),
-): BannerAdHandle = attachBanner(owner, placement, options, collapseWhenEmpty = true)
+): BannerAdHandle {
+    val attached = getTag(R.id.company_admob_attached_banner) as? AttachedBanner
+    if (attached != null && attached.placement == placement) {
+        when (attached.handle.state.value) {
+            BannerState.Hidden(null) -> Unit
+            is BannerState.Failed -> attached.handle.destroy()
+            else -> {
+                ViewsRuntime.debug("attachBanner(${placement.key}): this container already has its banner; not requesting another")
+                return attached.handle
+            }
+        }
+    }
+    return attachBanner(owner, placement, options, collapseWhenEmpty = true).also {
+        setTag(R.id.company_admob_attached_banner, AttachedBanner(placement, it))
+    }
+}
+
+/** The banner [attachBanner] put in a container, so a second call for the same placement reuses it. */
+private class AttachedBanner(val placement: BannerPlacement, val handle: BannerAdHandle)
 
 @OptIn(InternalCompanyAdMobApi::class)
 internal fun ViewGroup.attachBanner(
@@ -40,18 +63,19 @@ internal fun ViewGroup.attachBanner(
     placement: BannerPlacement,
     options: BannerOptions,
     collapseWhenEmpty: Boolean,
+    shimmer: Boolean = ViewsRuntime.showsLoading(placement.key),
     onState: (BannerState) -> Unit = {},
 ): BannerAdHandle {
     val activity = checkNotNull(context.findActivity()) { "attachBanner(): the container isn't inside an Activity" }
     val handle = ViewsRuntime.client.banner.create(activity, placement, options)
     addView(handle.view)
-    val shimmer = if (ViewsRuntime.showsLoading(placement.key)) addBannerShimmer(handle) else null
+    val shimmerView = if (shimmer) addBannerShimmer(handle) else null
     handle.bindTo(owner)
     owner.lifecycleScope.launch {
         owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             handle.state.collect { state ->
                 if (collapseWhenEmpty) handle.view.visibility = if (state.hasNoAd()) View.GONE else View.VISIBLE
-                shimmer?.visibility = if (state == BannerState.Loading) View.VISIBLE else View.GONE
+                shimmerView?.visibility = if (state == BannerState.Loading) View.VISIBLE else View.GONE
                 onState(state)
             }
         }

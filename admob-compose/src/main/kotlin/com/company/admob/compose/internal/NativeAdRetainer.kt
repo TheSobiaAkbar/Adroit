@@ -1,6 +1,7 @@
 package com.company.admob.compose.internal
 
 import androidx.lifecycle.ViewModel
+import com.company.admob.NativeAdHandle
 import com.company.admob.NativeAdResult
 import com.company.admob.NativePlacement
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,9 +23,17 @@ internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_
         var users = 0
         var released = false
 
+        /** A refresh request is under way; the current ad stays until it answers. */
+        var refreshing = false
+
+        /** Ads replaced by a refresh, destroyed once their successor is drawn ([onReplaced]). */
+        val retired = mutableListOf<NativeAdHandle>()
+
         fun release() {
             released = true
             (result.value as? NativeAdResult.Loaded)?.handle?.destroy()
+            retired.forEach { it.destroy() }
+            retired.clear()
             result.value = null
         }
     }
@@ -51,6 +60,39 @@ internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_
     /** The slot [acquired] from [acquire] left the screen; its ad stays retained. */
     fun release(placement: NativePlacement, slotKey: Any, acquired: StateFlow<NativeAdResult?>) {
         slots[Key(placement, slotKey)]?.takeIf { it.result === acquired }?.let { it.users = maxOf(0, it.users - 1) }
+    }
+
+    /**
+     * Replaces the slot's shown ad with a new one (PROMPT 29D): the new ad loads while the current one stays, and
+     * takes its place when it arrives; if it fails, the current one stays. Returns false when the slot has no ad and
+     * isn't loading (its load failed, or it was evicted): the caller then acquires it again, which loads anew. A slot
+     * that is loading or refreshing already is left alone.
+     */
+    fun refresh(placement: NativePlacement, slotKey: Any): Boolean {
+        val slot = slots[Key(placement, slotKey)] ?: return false
+        if (slot.refreshing || slot.result.value == null) return true
+        val old = (slot.result.value as? NativeAdResult.Loaded)?.handle ?: return false
+        slot.refreshing = true
+        ComposeRuntime.client.native.load(placement) { result ->
+            slot.refreshing = false
+            when {
+                slot.released -> (result as? NativeAdResult.Loaded)?.handle?.destroy()
+                result is NativeAdResult.Loaded -> {
+                    slot.result.value = result
+                    // On screen, the old ad goes once the new one is drawn; off screen, now.
+                    if (slot.users > 0) slot.retired += old else old.destroy()
+                }
+                else -> ComposeRuntime.debug("Native slot ${placement.key}/$slotKey: refresh not loaded; keeping the current ad")
+            }
+        }
+        return true
+    }
+
+    /** [replaced] is no longer drawn: destroys it if a refresh retired it. */
+    fun onReplaced(replaced: NativeAdHandle) {
+        for (slot in slots.values) {
+            if (slot.retired.remove(replaced)) replaced.destroy()
+        }
     }
 
     private fun load(key: Key, slot: Slot) {

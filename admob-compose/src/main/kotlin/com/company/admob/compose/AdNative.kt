@@ -4,6 +4,10 @@ import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -47,7 +51,34 @@ public fun AdNative(
     renderer: NativeAdRenderer? = null,
     placeholder: (@Composable () -> Unit)? = null,
 ) {
-    val result by rememberNativeAd(placement, slotKey)
+    AdNative(placement, modifier, layout, slotKey, renderer, placeholder, refreshKey = null)
+}
+
+/**
+ * [AdNative], with [refreshKey]: each time it changes after the first composition, the slot asks for a new ad. A
+ * shown ad stays on screen (no shimmer) until the new one arrives and replaces it; if the new one fails, the shown
+ * one stays. A slot without an ad (its load failed) loads again, and one still loading is left alone. Without a
+ * change of [refreshKey], the slot never requests a second ad: recomposition, rotation and scrolling reuse its ad.
+ */
+@Composable
+public fun AdNative(
+    placement: NativePlacement,
+    modifier: Modifier = Modifier,
+    layout: NativeAdLayout? = null,
+    slotKey: Any = Unit,
+    renderer: NativeAdRenderer? = null,
+    placeholder: (@Composable () -> Unit)? = null,
+    refreshKey: Any?,
+) {
+    val retainer = rememberNativeAdRetainer()
+    var attempt by remember(placement, slotKey) { mutableIntStateOf(0) }
+    val lastRefreshKey = remember(placement, slotKey) { arrayOf(refreshKey) }
+    LaunchedEffect(placement, slotKey, refreshKey) {
+        if (lastRefreshKey[0] == refreshKey) return@LaunchedEffect
+        lastRefreshKey[0] = refreshKey
+        if (!retainer.refresh(placement, slotKey)) attempt++
+    }
+    val result by rememberNativeAd(placement, slotKey, retainer, attempt)
     when (val current = result) {
         null -> when {
             placeholder != null -> Box(modifier) { placeholder() }
@@ -61,6 +92,7 @@ public fun AdNative(
             modifier,
             layout ?: NativeTemplates.forStyle(ComposeRuntime.client.native.style(placement)),
             renderer,
+            onReplaced = retainer::onReplaced,
         )
         is NativeAdResult.Failed -> Unit
     }
@@ -75,6 +107,7 @@ private fun RenderedNativeAd(
     modifier: Modifier,
     layout: NativeAdLayout,
     renderer: NativeAdRenderer?,
+    onReplaced: (NativeAdHandle) -> Unit,
 ) {
     val handleState by handle.state.collectAsStateWithLifecycle()
     if (handleState != NativeAdHandleState.Active) return
@@ -84,9 +117,12 @@ private fun RenderedNativeAd(
         modifier = modifier,
         update = { container ->
             val rendered = Rendered(handle, layout)
-            if (container.tag != rendered) {
+            val previous = container.tag as? Rendered
+            if (previous != rendered) {
                 container.tag = rendered
                 render(container, rendered, currentRenderer)
+                // A refreshed ad is drawn: the one it replaced can go.
+                if (previous != null && previous.handle !== handle) onReplaced(previous.handle)
             }
         },
         onRelease = { container ->

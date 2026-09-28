@@ -312,6 +312,36 @@ With Views, declare an `AdSlotView`:
     app:company_admob_placement="HomeBanner" />
 ```
 
+### One ad per slot, and refresh
+
+A banner or native slot never requests a second ad while it shows one or one is loading: attaching again, calling
+`load()` again, recomposing or rotating reuses it. It requests one when it has none (its load failed). To replace a
+shown ad with a new one, ask for a refresh: the new ad loads in the background while the shown one stays on screen
+(no shimmer), and takes its place once loaded. If it fails, the shown ad stays.
+
+<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-refresh-views -->
+```kotlin
+fun refreshHomeAd(homeSlot: AdSlotView) {
+    // Never a second request while the slot has an ad or one is loading. With refresh, the shown ad stays until a
+    // new one has loaded and replaces it; if the new one fails, the shown one stays.
+    homeSlot.load(refresh = true)
+}
+```
+
+`AdBannerView`, `AdNativeView` and `NativeAdHolder` have the same `load(refresh)`. In Compose, change `refreshKey`:
+
+<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-refresh-compose -->
+```kotlin
+@Composable
+fun RefreshableHomeAd(refreshCount: Int) {
+    // Each new refreshCount asks for a new ad, replaced the same way; recomposition alone never requests one.
+    AdSlot(AppAds.HomeBanner, refreshKey = refreshCount)
+}
+```
+
+`AdBanner` and `AdNative` take `refreshKey` too. `attachBanner` and `attachNativeAd` reuse the ad already in their
+container for the same placement; use a view or a `NativeAdHolder` to refresh.
+
 The format-specific APIs (`CompanyAdMob.interstitial`, `AdBanner`, `AdNative`, `AdBannerView`, `AdNativeView`,
 `attachBanner`, `NativeAdHolder`…) keep working, but always use the ad's configured format:
 

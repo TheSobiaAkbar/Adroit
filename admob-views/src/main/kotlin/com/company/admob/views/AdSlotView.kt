@@ -63,6 +63,21 @@ public class AdSlotView @JvmOverloads constructor(
         if (isAttachedToWindow) startWatching()
     }
 
+    /**
+     * Asks the banner or native ad shown now for an ad: see [AdBannerView.load] and [AdNativeView.load]. It never
+     * requests a second one while the slot has an ad or one is loading; with [refresh], a shown ad is replaced once a
+     * new one has loaded, and stays if it fails. Main thread only.
+     */
+    @JvmOverloads
+    public fun load(refresh: Boolean = false) {
+        for (i in 0 until childCount) {
+            when (val child = getChildAt(i)) {
+                is AdBannerView -> child.load(refresh)
+                is AdNativeView -> child.load(refresh)
+            }
+        }
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         startWatching()

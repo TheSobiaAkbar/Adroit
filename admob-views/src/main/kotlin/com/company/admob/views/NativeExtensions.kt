@@ -26,7 +26,10 @@ import kotlinx.coroutines.launch
  *
  * In a Fragment, pass `viewLifecycleOwner`. In a `RecyclerView`, don't call this from `onBindViewHolder`: keep a
  * [NativeAdHolder] per ad position in the screen's ViewModel instead, so scrolling and rotation don't reload.
- * Main thread only.
+ *
+ * One ad per container and placement: while this container shows an ad from an earlier call for [placement], or one
+ * is loading, another call does nothing (and [onResult] isn't called). To replace a shown ad with a new one, use
+ * [AdNativeView.load] or [NativeAdHolder.load] with `refresh = true`. Main thread only.
  */
 @JvmOverloads
 public fun ViewGroup.attachNativeAd(
@@ -37,9 +40,17 @@ public fun ViewGroup.attachNativeAd(
     onResult: (NativeAdResult) -> Unit = {},
 ) {
     val container = this
+    val attached = getTag(R.id.company_admob_attached_native) as? AttachedNative
+    if (attached != null && attached.placement == placement && attached.busy) {
+        ViewsRuntime.debug("attachNativeAd(${placement.key}): this container already has its ad, or it's loading; not requesting another")
+        return
+    }
+    val record = AttachedNative(placement).also { setTag(R.id.company_admob_attached_native, it) }
     val resolvedLayout = layout ?: styledLayout(placement)
     showNativeShimmer(container, placement, resolvedLayout)
     ViewsRuntime.client.native.load(placement) { result ->
+        record.loading = false
+        record.handle = (result as? NativeAdResult.Loaded)?.handle
         if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
             (result as? NativeAdResult.Loaded)?.handle?.destroy()
             return@load
@@ -54,6 +65,15 @@ public fun ViewGroup.attachNativeAd(
         }
         onResult(shown)
     }
+}
+
+/** What [attachNativeAd] put in a container, so a second call for the same placement doesn't request another ad. */
+private class AttachedNative(val placement: NativePlacement) {
+    var loading = true
+    var handle: NativeAdHandle? = null
+
+    /** Loading, or showing a live ad. */
+    val busy: Boolean get() = loading || handle?.isDestroyed == false
 }
 
 /**

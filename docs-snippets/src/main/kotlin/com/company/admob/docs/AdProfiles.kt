@@ -25,6 +25,7 @@ import com.company.admob.config.interstitialPlacement
 import com.company.admob.config.nativePlacement
 import com.company.admob.firebase.FirebaseRemoteConfigProvider
 import com.company.admob.firebase.RemoteConfigSession
+import com.company.admob.views.AdSlotView
 
 // region profiles-enum
 enum class AppAds(override val defaults: AdProfile) : AdDefinition {
@@ -112,6 +113,22 @@ class ProfilesSplashActivity : Activity() {
 fun HomeScreenAds() {
     AdSlot(AppAds.HomeBanner) // a banner sized by HomeBanner's "style", or a native ad if Firebase swaps it
     AdSlot(AppAds.FeedNative) // a native ad in FeedNative's template, or a banner if Firebase swaps it
+}
+// endregion
+
+// region profiles-refresh-views
+fun refreshHomeAd(homeSlot: AdSlotView) {
+    // Never a second request while the slot has an ad or one is loading. With refresh, the shown ad stays until a
+    // new one has loaded and replaces it; if the new one fails, the shown one stays.
+    homeSlot.load(refresh = true)
+}
+// endregion
+
+// region profiles-refresh-compose
+@Composable
+fun RefreshableHomeAd(refreshCount: Int) {
+    // Each new refreshCount asks for a new ad, replaced the same way; recomposition alone never requests one.
+    AdSlot(AppAds.HomeBanner, refreshKey = refreshCount)
 }
 // endregion
 

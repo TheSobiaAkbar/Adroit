@@ -71,7 +71,7 @@ public class NativeAdHolder(private val placement: NativePlacement) {
             handle = null
             // Also after a rotation during the load: the new container shows the shimmer until the ad arrives.
             showNativeShimmer(container, placement, newTarget.layout)
-            load()
+            request(replacing = null)
         }
     }
 
@@ -84,7 +84,25 @@ public class NativeAdHolder(private val placement: NativePlacement) {
         handle = null
     }
 
-    private fun load() {
+    /**
+     * Asks for an ad. It never requests a second one while the holder has an ad or one is loading: the call does
+     * nothing then. It requests one when the holder has none (the last load failed, or [clear] was called); a bound
+     * container shows it when it arrives.
+     *
+     * With [refresh], a held ad is replaced by a new one: the new ad loads in the background while the current one
+     * stays on screen (no shimmer), and is rendered in its place once it arrives. If it fails, the current ad stays.
+     * A refresh while an ad is loading does nothing. Main thread only.
+     */
+    @JvmOverloads
+    public fun load(refresh: Boolean = false) {
+        if (loading) return
+        val held = handle?.takeUnless { it.isDestroyed }
+        if (held != null && !refresh) return
+        if (held == null) target?.let { showNativeShimmer(it.container, placement, it.layout) }
+        request(replacing = held)
+    }
+
+    private fun request(replacing: NativeAdHandle?) {
         if (loading) return
         loading = true
         val loadGeneration = generation
@@ -98,10 +116,16 @@ public class NativeAdHolder(private val placement: NativePlacement) {
                 is NativeAdResult.Loaded -> {
                     handle = result.handle
                     target?.let { render(it, result.handle) }
+                    // Only now: the old ad stayed on screen until its replacement arrived.
+                    if (replacing != null && replacing !== result.handle) replacing.destroy()
                 }
-                is NativeAdResult.Failed -> target?.container?.let {
-                    removeNativeShimmer(it)
-                    it.visibility = View.GONE
+                is NativeAdResult.Failed -> if (replacing == null) {
+                    target?.container?.let {
+                        removeNativeShimmer(it)
+                        it.visibility = View.GONE
+                    }
+                } else {
+                    ViewsRuntime.debug("NativeAdHolder(${placement.key}): refresh not loaded; keeping the current ad")
                 }
             }
         }

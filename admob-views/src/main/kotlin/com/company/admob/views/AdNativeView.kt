@@ -44,6 +44,12 @@ public class AdNativeView @JvmOverloads constructor(
     private var boundOwner: LifecycleOwner? = null
     private var current: NativeAdHandle? = null
 
+    /** A request is under way. */
+    private var loading = false
+
+    /** Bumped when the view drops its ad ([setPlacement], [release]), so an older request's ad is destroyed. */
+    private var generation = 0
+
     init {
         readAttributes(attrs)
     }
@@ -80,6 +86,8 @@ public class AdNativeView @JvmOverloads constructor(
 
     /** Destroys the current ad now, for a container that removes this view for good ([AdSlotView]). */
     internal fun release() {
+        generation++
+        loading = false
         boundOwner = null
         current?.destroy()
         current = null
@@ -93,20 +101,43 @@ public class AdNativeView @JvmOverloads constructor(
     public fun setPlacement(placement: NativePlacement, layout: NativeAdLayout? = this.layout) {
         this.placement = placement
         this.layout = layout
+        generation++
+        loading = false
         boundOwner = null
         current?.destroy()
         current = null
-        if (isAttachedToWindow) loadAd()
+        if (isAttachedToWindow) load()
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         val owner = boundOwner
-        if (owner == null || owner.lifecycle.currentState == Lifecycle.State.DESTROYED) loadAd()
+        if (owner == null || owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
+            // The ad went with its previous owner: this attach is a new screen.
+            current = null
+            loading = false
+            generation++
+            load()
+        }
     }
 
-    private fun loadAd() {
+    /**
+     * Asks for a native ad in this view. It never requests a second one while the view shows an ad or one is
+     * loading: the call does nothing then. It requests one when the view has none (the last load failed, or ads were
+     * blocked).
+     *
+     * With [refresh], a shown ad is replaced by a new one: the new ad loads in the background while the current one
+     * stays on screen (no shimmer), and is rendered in its place once it arrives. If it fails, the current ad stays.
+     * A refresh while an ad is loading does nothing.
+     *
+     * Before the view is attached, it does nothing: the view loads on attach. Main thread only.
+     */
+    @JvmOverloads
+    public fun load(refresh: Boolean = false) {
         val placement = placement ?: return
+        if (!isAttachedToWindow || loading) return
+        val shown = current?.takeUnless { it.isDestroyed }
+        if (shown != null && !refresh) return
         val owner = findViewTreeLifecycleOwner()
         if (owner == null) {
             ViewsRuntime.error("AdNativeView(${placement.key}): no LifecycleOwner in the view tree; not loading an ad")
@@ -114,8 +145,31 @@ public class AdNativeView @JvmOverloads constructor(
             return
         }
         boundOwner = owner
-        attachNativeAd(owner, placement, layout) { result ->
-            current = (result as? NativeAdResult.Loaded)?.handle
+        loading = true
+        val loadGeneration = generation
+        val resolvedLayout = layout ?: styledLayout(placement)
+        if (shown == null) showNativeShimmer(this, placement, resolvedLayout)
+        ViewsRuntime.client.native.load(placement) { result ->
+            if (loadGeneration != generation || owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
+                (result as? NativeAdResult.Loaded)?.handle?.destroy()
+                return@load
+            }
+            loading = false
+            when (result) {
+                is NativeAdResult.Loaded -> {
+                    if (renderInto(this, result.handle, owner, resolvedLayout, renderer = null) is NativeAdResult.Loaded) {
+                        current = result.handle
+                        // Only now: the old ad stayed on screen until its replacement was rendered.
+                        if (shown != null && shown !== result.handle) shown.destroy()
+                    }
+                }
+                is NativeAdResult.Failed -> if (shown == null) {
+                    removeNativeShimmer(this)
+                    visibility = GONE
+                } else {
+                    ViewsRuntime.debug("AdNativeView(${placement.key}): refresh not loaded; keeping the current ad")
+                }
+            }
         }
     }
 

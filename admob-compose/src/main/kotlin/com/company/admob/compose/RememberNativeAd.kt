@@ -20,9 +20,23 @@ import com.company.admob.compose.internal.NativeAdRetainer
  * The handle belongs to the library: don't destroy it. Most apps use [AdNative], which renders it.
  */
 @Composable
-public fun rememberNativeAd(placement: NativePlacement, slotKey: Any = Unit): State<NativeAdResult?> {
-    val retainer: NativeAdRetainer = viewModel(key = NativeAdRetainer.VIEW_MODEL_KEY) { NativeAdRetainer() }
-    return produceState(retainer.peek(placement, slotKey), retainer, placement, slotKey) {
+public fun rememberNativeAd(placement: NativePlacement, slotKey: Any = Unit): State<NativeAdResult?> =
+    rememberNativeAd(placement, slotKey, rememberNativeAdRetainer(), attempt = 0)
+
+/** The screen's native ad retainer, shared by every [rememberNativeAd] of the `ViewModelStoreOwner`. */
+@Composable
+internal fun rememberNativeAdRetainer(): NativeAdRetainer =
+    viewModel(key = NativeAdRetainer.VIEW_MODEL_KEY) { NativeAdRetainer() }
+
+/** [rememberNativeAd], acquiring the slot again (a new load, after a failure) whenever [attempt] changes. */
+@Composable
+internal fun rememberNativeAd(
+    placement: NativePlacement,
+    slotKey: Any,
+    retainer: NativeAdRetainer,
+    attempt: Int,
+): State<NativeAdResult?> {
+    return produceState(retainer.peek(placement, slotKey), retainer, placement, slotKey, attempt) {
         val acquired = retainer.acquire(placement, slotKey)
         try {
             acquired.collect { value = it }

@@ -23,6 +23,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdSlots.showOnSplash`, `AdSlotView` (admob-views) and `AdSlot` (admob-compose) show an ad in its current format;
   a swapped app open ad shows its interstitial on returns to the app. `PlacementOverride.format`, through a new
   constructor; the 1.0.0-rc1 constructor is unchanged.
+- One ad per banner or native slot, and refresh: `load(refresh = false)` on `AdBannerView`, `AdNativeView`,
+  `AdSlotView` and `NativeAdHolder`, and `refreshKey` on the `AdSlot`, `AdBanner` and `AdNative` composables. A slot
+  with an ad, or with one loading, never requests another; a refresh loads a new ad in the background while the
+  shown one stays (no shimmer), swaps it in once loaded, and keeps the shown one if it fails. `attachBanner` and
+  `attachNativeAd` reuse the ad already in their container for the same placement.
 - Shimmer while banner and native ad profiles load (`showLoading`): shaped like the banner's size or the native
   template, as currently configured (Firebase included), in every view helper and composable; removed when the ad
   appears or fails. Colours `company_admob_shimmer_base` and `company_admob_shimmer_highlight` can be overridden.

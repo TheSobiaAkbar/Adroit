@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tags: the banner or native ad attachBanner / attachNativeAd put in a container (one per placement). -->
+    <item name="company_admob_attached_banner" type="id" />
+    <item name="company_admob_attached_native" type="id" />
+</resources>
