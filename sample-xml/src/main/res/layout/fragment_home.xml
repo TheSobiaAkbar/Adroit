@@ -40,6 +40,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/bonus_round" />
+
+            <!-- Replaces the home banner with a new one; the shown one stays until the new one has loaded. -->
+            <Button
+                android:id="@+id/refresh_banner"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/refresh_banner" />
         </LinearLayout>
     </ScrollView>
 

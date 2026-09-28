@@ -32,6 +32,8 @@ class HomeFragment : Fragment() {
         b.levelComplete.setOnClickListener { coins.onLevelComplete(requireActivity()) }
         b.extraLife.setOnClickListener { coins.onExtraLife(requireActivity()) }
         b.bonusRound.setOnClickListener { BonusIntroDialogFragment().show(childFragmentManager, BonusIntroDialogFragment.TAG) }
+        // A new banner loads in the background; the shown one stays until it's loaded, and stays if it fails.
+        b.refreshBanner.setOnClickListener { b.homeBanner.load(refresh = true) }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { coins.coins.collect { b.coins.text = getString(R.string.coins, it) } }

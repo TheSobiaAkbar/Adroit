@@ -180,7 +180,9 @@ override fun onResume() {
 }
 ```
 
-Then call `showFullScreen` where the ad belongs, and continue in its callback, whatever the result.
+Then call `showFullScreen` where the ad belongs, and continue in its callback, whatever the result. A "Loading ad…"
+screen covers the app for about a second first. If the ad isn't loaded yet, the show waits for it at most 8 seconds
+(`loadTimeoutSeconds`), then gives up and your callback runs: the user is never stuck on a slow network.
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-counter -->
 ```kotlin
@@ -198,10 +200,16 @@ Banners and native ads: put an `AdSlotView` in the layout, with the ad's entry n
     app:company_admob_placement="HomeBanner" />
 ```
 
-In Compose, use `AdSlot(AppAds.HomeBanner)`. The app open ad needs no code: it shows by itself when the user returns
-to the app. Rewarded ads use `CompanyAdMob.rewarded` ([Rewarded](REWARDED.md)).
+In Compose, use `AdSlot(AppAds.HomeBanner)`. While the ad loads, the slot shows a shimmer shaped like it. A slot never
+requests a second ad while it has one; to replace it with a new one, call `load(refresh = true)` on the view (or
+change `refreshKey` in Compose): the shown ad stays until the new one has loaded ([details](AD_PROFILES.md#one-ad-per-slot-and-refresh)).
 
-**Check:** each ad shows a test ad labelled "Test Ad" in a debug build.
+The app open ad shows by itself when the user returns to the app. Like every ad, it loads only when asked: call
+`AdSlots.load(AppAds.AppOpenAd)` once when your main screen opens, and give it `loadAgain = true` so a new one loads
+after each show. Rewarded ads use `CompanyAdMob.rewarded` ([Rewarded](REWARDED.md)).
+
+**Check:** each ad shows a test ad labelled "Test Ad" in a debug build, after a "Loading ad…" screen for full-screen ads
+and a shimmer for banners and native ads.
 
 ## 7. Create the Firebase parameters
 

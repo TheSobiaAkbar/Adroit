@@ -9,6 +9,7 @@
     <string name="level_complete">Level complete (interstitial)</string>
     <string name="extra_life">Extra life (rewarded)</string>
     <string name="bonus_round">Bonus round (rewarded interstitial)</string>
+    <string name="refresh_banner">Refresh the banner</string>
     <string name="bonus_intro">Watch a short ad to earn bonus coins?</string>
     <string name="bonus_countdown">The ad starts in %1$d s</string>
     <string name="no_thanks">No thanks</string>
