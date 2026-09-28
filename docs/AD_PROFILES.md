@@ -90,7 +90,8 @@ object Ads {
   paste as the value of that ad's parameter.
 - `AdDefinitions.firebaseTemplate(AppAds.entries, settings)` returns a whole Remote Config template: one JSON
   parameter per ad, plus `AdSettings`. Save it as a file and import it in the Firebase console (Remote Config, ⋮,
-  **Publish from a file**) to create every parameter at once. `sample-xml/firebase/remote_config_template.json` is
+  **Publish from a file**) to create every parameter at once. Importing replaces every parameter of the project, so on
+a project that already uses Remote Config, add the parameters one by one instead. `sample-xml/firebase/remote_config_template.json` is
   the sample's, kept up to date by a unit test.
 - `profile.toJson()` gives one ad's value. It leaves out the fields Firebase can't change (`splash`,
   `excludedActivities`, `poolSize`).
@@ -212,8 +213,8 @@ Rules:
 - Ad-free users see no ads, whatever Firebase says: `setAdFree(true)` always wins. Precedence is as in
   [Remote configuration](REMOTE_CONFIG.md#precedence).
 
-`FirebaseRemoteConfigProvider(remoteConfig, autoFetch = true)` fetches when ads start; otherwise your app calls
-`fetchAndActivate()` itself. Pass `settingsKey` to use a name other than `AdSettings`.
+Fetch with `RemoteConfigSession.start(application)` in `Application.onCreate` (see
+[Remote configuration](REMOTE_CONFIG.md#fetching-once-per-session)): once per session, without making anything wait. Pass `settingsKey` to use a name other than `AdSettings`.
 
 ## Showing the ads
 
@@ -334,4 +335,4 @@ counted per app session (per process), in memory.
 
 These limits are a user-experience safeguard, not a replacement for AdMob's own frequency capping.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-27
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28

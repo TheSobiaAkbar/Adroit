@@ -101,8 +101,8 @@ configured, and a field left out of a value keeps its configured value.
 
 - When collected, the provider emits the currently **activated** values, then again after each real-time update, which
   it activates.
-- It doesn't fetch unless you pass `FirebaseRemoteConfigProvider(remoteConfig, autoFetch = true)`: your app usually
-  calls `fetchAndActivate()` at startup, on its own schedule.
+- It doesn't fetch unless you pass `FirebaseRemoteConfigProvider(remoteConfig, autoFetch = true)`. Prefer
+  `RemoteConfigSession` ([below](#fetching-once-per-session)), or call `fetchAndActivate()` on your own schedule.
 - An invalid value is logged and ignored; the other parameters still apply. An invalid field ignores just that field.
 - Pass a `FirebaseRemoteConfig` instance for apps with several Firebase apps, and `settingsKey` to rename
   `AdSettings`.

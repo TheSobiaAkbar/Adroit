@@ -204,10 +204,12 @@ binding as `sample-compose`'s `AppContainer`.)
 
 ## Next steps
 
+- Setting up a new app with ads tuned from Firebase? Follow the [Integration guide](INTEGRATION_GUIDE.md) checklist.
+
 - Read [Consent](CONSENT.md) and set up your messages in the AdMob UI before going to production.
 - Pick your formats: [Banner](BANNER.md), [Interstitial](INTERSTITIAL.md), [Rewarded](REWARDED.md),
   [Rewarded interstitial](REWARDED_INTERSTITIAL.md), [App open](APP_OPEN.md), [Native](NATIVE.md).
 - Before release: switch to PRODUCTION with your real IDs ([Configuration](CONFIGURATION.md#environments)) and check
   [Troubleshooting](TROUBLESHOOTING.md).
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28

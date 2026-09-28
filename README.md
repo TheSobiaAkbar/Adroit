@@ -68,7 +68,7 @@ Apps using AdMob Mediation must exclude the legacy `play-services-ads`: see [Med
 - Formats: [Banner](docs/BANNER.md) · [Interstitial](docs/INTERSTITIAL.md) · [Rewarded](docs/REWARDED.md) ·
   [Rewarded interstitial](docs/REWARDED_INTERSTITIAL.md) · [App open](docs/APP_OPEN.md) · [Native](docs/NATIVE.md)
 - UI toolkits: [Compose](docs/COMPOSE.md) · [XML and Views](docs/XML.md)
-- [Ad profiles](docs/AD_PROFILES.md) · [Splash screen](docs/SPLASH.md) · [Mediation](docs/MEDIATION.md) · [Analytics](docs/ANALYTICS.md) ·
+- [Integration guide](docs/INTEGRATION_GUIDE.md) · [Ad profiles](docs/AD_PROFILES.md) · [Splash screen](docs/SPLASH.md) · [Mediation](docs/MEDIATION.md) · [Analytics](docs/ANALYTICS.md) ·
   [Remote config](docs/REMOTE_CONFIG.md) ·
   [Testing](docs/TESTING.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Migration](docs/MIGRATION.md) ·
   [Releasing](docs/RELEASE.md) · [Changelog](CHANGELOG.md)
