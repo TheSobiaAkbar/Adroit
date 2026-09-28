@@ -33,11 +33,14 @@ internal class FullScreenCoordinator(private val clock: Clock) {
         return Token(owner).also { current = it }
     }
 
-    /** Releases [token] if it's still the current one. Returns false for a stale or repeated release. */
-    fun release(token: Token): Boolean {
+    /**
+     * Releases [token] if it's still the current one. Returns false for a stale or repeated release. [adEnded] false
+     * (a wait for an ad that never showed) doesn't count as the end of a full-screen ad for the suppression rules.
+     */
+    fun release(token: Token, adEnded: Boolean = true): Boolean {
         if (current !== token) return false
         current = null
-        lastFullScreenEndedAtElapsed = clock.elapsedRealtimeMillis()
+        if (adEnded) lastFullScreenEndedAtElapsed = clock.elapsedRealtimeMillis()
         return true
     }
 

@@ -10,6 +10,8 @@ import com.company.admob.config.AdMobConfig
 import com.company.admob.config.AdProfile
 import com.company.admob.config.AdSettings
 import com.company.admob.config.PreloadStrategy
+import com.company.admob.AdFormat
+import com.company.admob.internal.config.AdProfiles
 import com.company.admob.config.TestIds
 import com.company.admob.config.remote.AdOverrides
 import com.company.admob.config.remote.PlacementOverride
@@ -342,6 +344,9 @@ class AdProfilesEngineTest {
     private enum class Defs(override val defaults: AdProfile) : AdDefinition {
         Again(AdProfile.interstitial(ids = listOf(TestIds.unit(1), TestIds.unit(2)), loadAgain = true)),
         Once(AdProfile.interstitial(ids = listOf(TestIds.unit(5), TestIds.unit(6)))),
+        Slow(AdProfile.interstitial(ids = listOf(TestIds.unit(8)), loadTimeoutSeconds = 3)),
+        NoWait(AdProfile.interstitial(ids = listOf(TestIds.unit(9)), loadTimeoutSeconds = 0)),
+        Counted(AdProfile.interstitial(ids = listOf(TestIds.unit(10)), counter = 2)),
     }
 
     private val again = InterstitialPlacement("Again")
@@ -396,5 +401,103 @@ class AdProfilesEngineTest {
         h.run(1_000)
         h.fullShow(once)
         assertEquals(listOf(TestIds.unit(5), TestIds.unit(6)), h.loadedUnits())
+    }
+
+    // --- Load timeout (PROMPT 29A) ---
+
+    private val slow = InterstitialPlacement("Slow")
+
+    @Test
+    fun `an ad that isn't loaded is requested and shown if it arrives within the load timeout`() = runTest {
+        val h = profilesHarness()
+        h.adsSdk.enqueueLoad(TestIds.unit(5), ScriptedLoad.Success(), delayMs = 5_000)
+        h.show(once)
+        h.run(4_900)
+        assertTrue("still waiting, within the default 8 s", h.results.isEmpty())
+        h.run(200)
+        h.lastAd().simulateFullShow()
+        h.run(1_000)
+        assertEquals(listOf(FullScreenResult.Dismissed(clicked = false)), h.results)
+    }
+
+    @Test
+    fun `past the load timeout the show gives up, and the late ad is kept for the next show`() = runTest {
+        val h = profilesHarness()
+        h.adsSdk.enqueueLoad(TestIds.unit(8), ScriptedLoad.Success(), delayMs = 10_000)
+        h.show(slow)
+        h.run(3_100)
+        assertEquals(listOf(FullScreenResult.NotShown(AdError.Timeout())), h.results)
+        h.run(10_000)
+        assertTrue("kept", h.engine.isReady(slow))
+
+        h.fullShow(slow)
+        assertTrue(h.results.last() is FullScreenResult.Dismissed)
+        assertEquals("one request, the late one, served the next show", 1, h.adsSdk.loadCount(TestIds.unit(8)))
+    }
+
+    @Test
+    fun `a load timeout of 0 doesn't wait, and placements that aren't profiles never wait`() = runTest {
+        val h = profilesHarness()
+        h.show(InterstitialPlacement("NoWait"))
+        h.run()
+        assertEquals(listOf(FullScreenResult.NotShown(AdError.NotReady)), h.results)
+
+        val dsl = EngineHarness(this, config { interstitial(history, ids) { preload = PreloadStrategy.NONE } })
+        dsl.ready()
+        dsl.show(history)
+        dsl.run()
+        assertEquals(listOf(FullScreenResult.NotShown(AdError.NotReady)), dsl.results)
+    }
+
+    @Test
+    fun `a second show while one waits is AlreadyShowing, and a failed load ends the wait at once`() = runTest {
+        val h = profilesHarness()
+        h.adsSdk.enqueueLoad(TestIds.unit(5), ScriptedLoad.Failure(AdError.NoFill(), retryable = true), delayMs = 1_000)
+        h.show(once)
+        h.show(again)
+        h.run(100)
+        assertEquals(listOf(FullScreenResult.NotShown(AdError.AlreadyShowing)), h.results)
+        h.run(1_000)
+        assertEquals("nothing retries it, so the wait ends with the failure", FullScreenResult.NotShown(AdError.NoFill()), h.results.last())
+    }
+
+    @Test
+    fun `the counter counts the trigger once, even when the show waits for the ad`() = runTest {
+        val h = profilesHarness()
+        val counted = InterstitialPlacement("Counted")
+        h.adsSdk.enqueueLoad(TestIds.unit(10), ScriptedLoad.Success(), delayMs = 2_000)
+        h.show(counted)
+        h.run()
+        assertEquals(FullScreenResult.NotShown(AdError.CounterNotReached(1)), h.results.single())
+        h.show(counted)
+        h.run(2_100)
+        h.lastAd().simulateFullShow()
+        h.run(1_000)
+        assertTrue(h.results.last() is FullScreenResult.Dismissed)
+        h.show(counted)
+        h.run()
+        assertEquals("counting starts over after the show", FullScreenResult.NotShown(AdError.CounterNotReached(1)), h.results.last())
+    }
+
+    @Test
+    fun `the load timeout comes from AdSettings, and Firebase can change it for all ads or one`() = runTest {
+        val h = profilesHarness()
+        h.adsSdk.enqueueLoad(TestIds.unit(5), ScriptedLoad.Pending)
+        val remote = AdProfiles.parseRemote(
+            mapOf("Once" to AdFormat.INTERSTITIAL, "Slow" to AdFormat.INTERSTITIAL),
+            mapOf("Slow" to """{ "loadTimeoutSeconds": 1 }"""),
+            settings = """{ "loadTimeoutSeconds": 2 }""",
+        )
+        h.live.update(h.live.current.withOverrides(remote.overrides))
+        h.show(once)
+        h.run(1_900)
+        assertTrue(h.results.isEmpty())
+        h.run(200)
+        assertEquals("AdSettings from Firebase: 2 s", listOf(FullScreenResult.NotShown(AdError.Timeout())), h.results)
+
+        h.adsSdk.enqueueLoad(TestIds.unit(8), ScriptedLoad.Pending)
+        h.show(slow)
+        h.run(1_100)
+        assertEquals("the ad's own Firebase value wins: 1 s", 2, h.results.size)
     }
 }

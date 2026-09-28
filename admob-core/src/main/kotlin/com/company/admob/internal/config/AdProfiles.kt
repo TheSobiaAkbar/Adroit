@@ -36,6 +36,7 @@ internal object AdProfiles {
         val maxInterstitialsPerSession: Int?,
         val minIntervalBetweenFullScreenAds: Duration,
         val splash: SplashTimings = SplashTimings(),
+        val behavior: AdBehavior? = null,
     )
 
     /** [testIdKeys]: ads without ad unit IDs, given Google's test ad unit. [loadAgainKeys]: ads with `"loadAgain": true`. */
@@ -45,6 +46,8 @@ internal object AdProfiles {
         val issues: List<String>,
         val testIdKeys: Set<String> = emptySet(),
         val loadAgainKeys: Set<String> = emptySet(),
+        /** Each ad's own loading behaviour, when it sets any. */
+        val behaviors: Map<String, AdBehavior> = emptyMap(),
     )
 
     class ParsedRemote(val overrides: AdOverrides, val issues: List<String>)
@@ -72,6 +75,7 @@ internal object AdProfiles {
         val builder = PlacementsBuilder()
         val testIdKeys = linkedSetOf<String>()
         val loadAgainKeys = linkedSetOf<String>()
+        val behaviors = LinkedHashMap<String, AdBehavior>()
         for (key in ads.keys()) {
             val ad = ads.optJSONObject(key)
             if (ad == null) {
@@ -80,9 +84,11 @@ internal object AdProfiles {
             }
             val issue: (String) -> Unit = { issues += "Ads file, \"$key\": $it" }
             if (addPlacement(builder, key, ad, issue)) testIdKeys += key
-            if (builder.configs.lastOrNull()?.placement?.key == key && loadsAgain(ad, issue)) loadAgainKeys += key
+            val added = builder.configs.lastOrNull()?.takeIf { it.placement.key == key } ?: continue
+            if (loadsAgain(ad, issue)) loadAgainKeys += key
+            behaviorOf(ad, added.format, issue)?.let { behaviors[key] = it }
         }
-        return ParsedFile(builder.configs.toList(), settings, issues, testIdKeys, loadAgainKeys)
+        return ParsedFile(builder.configs.toList(), settings, issues, testIdKeys, loadAgainKeys, behaviors)
     }
 
     /**
@@ -102,6 +108,7 @@ internal object AdProfiles {
         var maxInterstitials: Int? = null
         var minInterval: Duration? = null
         var splash: SplashTimings? = null
+        var behavior: AdBehavior? = null
         if (!settings.isNullOrBlank()) {
             parseObject(settings) { issues += "Firebase settings ignored: $it" }?.let { json ->
                 val fields = Fields(json) { issues += "Firebase settings: $it" }
@@ -109,6 +116,7 @@ internal object AdProfiles {
                 maxInterstitials = fields.count("maxInterstitialsPerSession")?.let(::zeroMeansNoLimit)
                 minInterval = fields.count("minSecondsBetweenFullScreenAds")?.seconds
                 splash = fields.splashTimings()
+                behavior = behaviorOf(json, format = null) { issues += "Firebase settings: $it" }
             }
         }
         return ParsedRemote(
@@ -118,7 +126,7 @@ internal object AdProfiles {
                 placements = placements,
                 minIntervalBetweenFullScreenAds = minInterval,
                 maxInterstitialsPerSession = maxInterstitials,
-            ),
+            ).also { it.behavior = behavior },
             issues,
         )
     }
@@ -132,6 +140,7 @@ internal object AdProfiles {
             maxInterstitialsPerSession = fields.count("maxInterstitialsPerSession")?.let(::zeroMeansNoLimit),
             minIntervalBetweenFullScreenAds = (fields.count("minSecondsBetweenFullScreenAds") ?: 0).seconds,
             splash = fields.splashTimings() ?: SplashTimings(),
+            behavior = behaviorOf(json, format = null) { issues += "Ads file settings: $it" },
         )
     }
 
@@ -199,6 +208,25 @@ internal object AdProfiles {
         return usesTestIds
     }
 
+    /**
+     * The loading fields of an ad of [format], or of the settings (null format): `loadTimeoutSeconds` and
+     * `loadingSeconds` apply to full-screen ads only, `showLoading` to every ad. Null when none is set.
+     */
+    private fun behaviorOf(json: JSONObject, format: AdFormat?, issue: (String) -> Unit): AdBehavior? {
+        val fields = Fields(json, issue)
+        val inline = format == AdFormat.BANNER || format == AdFormat.NATIVE
+        if (inline) {
+            for (name in listOf("loadTimeoutSeconds", "loadingSeconds")) {
+                if (json.has(name)) issue("\"$name\" applies to full-screen ads only; ignored")
+            }
+        }
+        return AdBehavior(
+            loadTimeout = if (inline) null else fields.count("loadTimeoutSeconds")?.seconds,
+            showLoading = fields.boolean("showLoading"),
+            loadingTime = if (inline) null else fields.count("loadingSeconds")?.seconds,
+        ).takeIfSet()
+    }
+
     /** `"loadAgain"` of a file ad; banners, which load with their view, report it and ignore it. */
     private fun loadsAgain(ad: JSONObject, issue: (String) -> Unit): Boolean {
         val value = Fields(ad, issue).boolean("loadAgain") ?: return false
@@ -240,7 +268,10 @@ internal object AdProfiles {
             nativeStyle = if (styleFormat == AdFormat.NATIVE) fields.nativeStyle() else null,
             splashTimeout = if (format == AdFormat.INTERSTITIAL) fields.count("splashTimeoutSeconds")?.seconds else null,
             format = swapTo,
-        ).also { if (format != AdFormat.BANNER) it.loadAgain = fields.boolean("loadAgain") }
+        ).also {
+            if (format != AdFormat.BANNER) it.loadAgain = fields.boolean("loadAgain")
+            it.behavior = behaviorOf(json, format, issue)
+        }
     }
 
     private fun parseObject(raw: String, issue: (String) -> Unit): JSONObject? = try {

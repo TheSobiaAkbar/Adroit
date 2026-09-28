@@ -23,6 +23,10 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdSlots.showOnSplash`, `AdSlotView` (admob-views) and `AdSlot` (admob-compose) show an ad in its current format;
   a swapped app open ad shows its interstitial on returns to the app. `PlacementOverride.format`, through a new
   constructor; the 1.0.0-rc1 constructor is unchanged.
+- Load timeout for full-screen ad profiles (`loadTimeoutSeconds`, default 8, per ad or in `AdSettings`): a show on an
+  ad that isn't loaded requests it and waits at most that long, then answers `NotShown(Timeout)` (a failed load ends
+  the wait at once); a late ad is kept for the next show. `showLoading` and `loadingSeconds` are read already, for
+  the loading screen and shimmer that follow (PROMPT 29B, 29C).
 - Ad profiles (the enum, the ads file and Firebase) load only when the app asks (`AdSlots.load`, docs/AD_PROFILES.md#loading):
   no load at start, no retry after a failed load, no replacement after an expiry. `"loadAgain": true` (false by
   default) loads the next ad unit right after each show; Firebase can set it per ad. A splash ad's load still in

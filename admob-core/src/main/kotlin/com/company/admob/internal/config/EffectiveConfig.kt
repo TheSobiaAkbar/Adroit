@@ -107,8 +107,9 @@ internal class EffectiveConfig private constructor(
             val demo = usesDemoAdUnits(config)
             val placements = LinkedHashMap<AdPlacement, EffectivePlacement>()
             for (placementConfig in config.placements) {
+                val key = placementConfig.placement.key
                 placements.getOrPut(placementConfig.placement) {
-                    resolve(placementConfig, demo, overrides, placementConfig.placement.key in config.loadAgainPlacementKeys)
+                    resolve(placementConfig, demo, overrides, key in config.loadAgainPlacementKeys, behaviorOf(key, config, overrides))
                 }
             }
             // Every swappable ad also gets its partner-format placement, off unless a remote value swaps to it. The
@@ -120,6 +121,16 @@ internal class EffectiveConfig private constructor(
             return EffectiveConfig(config, overrides, placements)
         }
 
+        /** An ad profile's loading behaviour, every field resolved; null for placements not defined as profiles. */
+        private fun behaviorOf(key: String, config: AdMobConfig, overrides: AdOverrides): AdBehavior? {
+            if (key !in config.profilePlacementKeys) return null
+            return (overrides.placements[key]?.behavior ?: AdBehavior())
+                .orElse(config.profileBehaviors[key])
+                .orElse(overrides.behavior)
+                .orElse(config.settingsBehavior)
+                .orElse(AdBehavior.DEFAULTS)
+        }
+
         private fun usesDemoAdUnits(config: AdMobConfig): Boolean = when (config.environment) {
             AdEnvironment.DEVELOPMENT -> true
             AdEnvironment.STAGING -> config.testing.useDemoAdUnits ?: true
@@ -127,7 +138,13 @@ internal class EffectiveConfig private constructor(
         }
 
         /** Precedence (§21): a remotely disabled format, then the remote placement override, then the local value. */
-        private fun resolve(config: PlacementConfig, demo: Boolean, overrides: AdOverrides, loadAgain: Boolean): EffectivePlacement {
+        private fun resolve(
+            config: PlacementConfig,
+            demo: Boolean,
+            overrides: AdOverrides,
+            loadAgain: Boolean,
+            behavior: AdBehavior?,
+        ): EffectivePlacement {
             val override = overrides.placements[config.placement.key]
             val configured = override?.effectiveAdUnitIds ?: config.adUnitIds.map { it.value }
             val bannerSize = override?.bannerSize ?: (config as? BannerPlacementConfig)?.size
@@ -162,6 +179,7 @@ internal class EffectiveConfig private constructor(
                 nativeStyle = override?.nativeStyle ?: (config as? NativePlacementConfig)?.style,
                 splashTimeout = override?.splashTimeout ?: (config as? InterstitialPlacementConfig)?.splashTimeout,
                 loadAgain = config.format != AdFormat.BANNER && (override?.loadAgain ?: loadAgain),
+                behavior = behavior,
             )
         }
 
@@ -211,6 +229,7 @@ internal class EffectiveConfig private constructor(
                 frequencyPlacement = primary.placement,
                 splash = primary.isSplash,
                 loadAgain = format != AdFormat.BANNER && primary.loadAgain,
+                behavior = primary.behavior,
             )
         }
     }
@@ -250,6 +269,8 @@ internal class EffectivePlacement(
     splash: Boolean = (config as? InterstitialPlacementConfig)?.splash == true,
     /** An ad profile's `loadAgain`: load the next ad right after each show, whatever [preload] and [retry] say. */
     val loadAgain: Boolean = false,
+    /** An ad profile's loading behaviour (load timeout, loading screen, shimmer); null for other placements. */
+    val behavior: AdBehavior? = null,
 ) {
     val placement: AdPlacement get() = config.placement
     val format: AdFormat get() = config.format

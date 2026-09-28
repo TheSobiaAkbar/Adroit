@@ -29,6 +29,9 @@ internal object AdDefinitionJson {
         .put("premiumSplashSeconds", settings.premiumSplashSeconds)
         .put("offlineSplashSeconds", settings.offlineSplashSeconds)
         .put("consentTimeoutSeconds", settings.consentTimeoutSeconds)
+        .put("loadTimeoutSeconds", settings.loadTimeoutSeconds)
+        .put("showLoading", settings.showLoading)
+        .put("loadingSeconds", settings.loadingSeconds)
 
     /**
      * [profile] as JSON. With [firebase], the file-only fields (`splash`, `excludedActivities`, `poolSize`) are left
@@ -68,6 +71,10 @@ internal object AdDefinitionJson {
                 .apply { if (!firebase) put("poolSize", profile.poolSize) }
         }
         if (profile !is AdProfile.Banner) json.put("loadAgain", profile.loadAgain)
+        // Unset: the ad follows AdSettings.
+        profile.loadTimeoutSeconds?.let { json.put("loadTimeoutSeconds", it) }
+        profile.showLoading?.let { json.put("showLoading", it) }
+        profile.loadingSeconds?.let { json.put("loadingSeconds", it) }
         return json
     }
 

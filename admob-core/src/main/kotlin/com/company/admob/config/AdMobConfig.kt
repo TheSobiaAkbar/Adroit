@@ -12,6 +12,7 @@ import com.company.admob.config.remote.AdConfigProvider
 import com.company.admob.config.remote.StaticConfigProvider
 import com.company.admob.events.AdEventListener
 import com.company.admob.internal.config.AdDefinitionJson
+import com.company.admob.internal.config.AdBehavior
 import com.company.admob.internal.config.AdProfiles
 import com.company.admob.internal.config.toReadOnlyList
 
@@ -85,6 +86,13 @@ public class AdMobConfig internal constructor(builder: Builder) {
 
     /** Ad profiles with `"loadAgain": true`: loaded again right after each show. */
     internal val loadAgainPlacementKeys: Set<String> = profile?.loadAgainKeys.orEmpty()
+
+    /** Every ad defined as a profile (enum or ads file): the ones with loading behaviour (PROMPT 29). */
+    internal val profilePlacementKeys: Set<String> = profile?.placements?.map { it.placement.key }.orEmpty().toSet()
+
+    /** Each profile's own loading behaviour, and the settings' default for all of them. */
+    internal val profileBehaviors: Map<String, AdBehavior> = profile?.behaviors.orEmpty()
+    internal val settingsBehavior: AdBehavior? = profile?.settings?.behavior
 
     /** Problems in the ads file (reading or parsing). Validation reports them as errors. */
     internal val profileIssues: List<String> = listOfNotNull(builder.profileReadError) + profile?.issues.orEmpty()

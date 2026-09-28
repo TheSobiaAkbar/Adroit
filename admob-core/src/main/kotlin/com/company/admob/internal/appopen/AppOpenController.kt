@@ -206,7 +206,7 @@ internal class AppOpenController(
 
     private fun show(activity: Activity, p: EffectivePlacement, onResult: (FullScreenResult) -> Unit) {
         val startedAt = clock.elapsedRealtimeMillis()
-        checkNotNull(engineFor(p)).show(activity, p.placement) { result ->
+        checkNotNull(engineFor(p)).show(activity, p.placement, mayWait = false) { result ->
             if (result is FullScreenResult.Dismissed) lastShownAtElapsed = startedAt
             onResult(result)
         }

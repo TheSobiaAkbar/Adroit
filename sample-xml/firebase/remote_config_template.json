@@ -2,7 +2,7 @@
   "parameters": {
     "AdSettings": {
       "defaultValue": {
-        "value": "{\"adsEnabled\":true,\"maxInterstitialsPerSession\":0,\"minSecondsBetweenFullScreenAds\":30,\"splashSeconds\":11,\"premiumSplashSeconds\":3,\"offlineSplashSeconds\":3,\"consentTimeoutSeconds\":8}"
+        "value": "{\"adsEnabled\":true,\"maxInterstitialsPerSession\":0,\"minSecondsBetweenFullScreenAds\":30,\"splashSeconds\":11,\"premiumSplashSeconds\":3,\"offlineSplashSeconds\":3,\"consentTimeoutSeconds\":8,\"loadTimeoutSeconds\":8,\"showLoading\":true,\"loadingSeconds\":1}"
       },
       "valueType": "JSON",
       "description": "Settings of every ad (docs\/AD_PROFILES.md)"

@@ -157,6 +157,9 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | `enabled` | true/false | `true` | `false` turns this ad off |
 | `adUnitIds` | list of IDs | test ads | Used one after another: each load takes the next one, and after the last one the first again. A single ID can be written as text. Empty or left out: Google's test ad unit for the format. In Firebase, an empty list keeps the defaults. |
 | `loadAgain` | true/false | `false` | `true` loads the next ad (the next ID of `adUnitIds`) right after each show; see [Loading](#loading). Not for banners. |
+| `loadTimeoutSeconds` | number | from `AdSettings` (`8`) | Full-screen ads: how long a show waits for an ad that isn't loaded yet, then gives up; see [Loading](#loading). `0` doesn't wait. |
+| `showLoading` | true/false | from `AdSettings` (`true`) | A loading screen before a full-screen ad, a shimmer while a banner or native ad loads. Read now; takes effect with the loading screen and shimmer update (PROMPT 29B, 29C). |
+| `loadingSeconds` | number | from `AdSettings` (`1`) | Full-screen ads: how long the loading screen stays up at least. Takes effect with PROMPT 29B. |
 
 ### Interstitial and rewarded interstitial
 
@@ -191,6 +194,9 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | `premiumSplashSeconds` | number | `3` | The splash timer for a premium user |
 | `offlineSplashSeconds` | number | `3` | The splash timer without internet |
 | `consentTimeoutSeconds` | number | `8` | How long the consent form may take to appear on the splash |
+| `loadTimeoutSeconds` | number | `8` | The load timeout of every full-screen ad that doesn't set its own |
+| `showLoading` | true/false | `true` | The loading screen and shimmer of every ad that doesn't set its own |
+| `loadingSeconds` | number | `1` | The loading screen's minimum time for every full-screen ad that doesn't set its own |
 
 Unknown fields are ignored, so an older app version accepts newer JSON.
 
@@ -237,7 +243,11 @@ override fun onResume() {
 - `AdSlots.load` does nothing when the ad is loaded or loading already, so calling it on every `onResume` is fine. A
   native ad also loads when its view asks for one, and the splash ad when `SplashFlow` requests it.
 - A failed load isn't retried: the next `AdSlots.load` is the retry.
-- `AdSlots.showFullScreen` never loads an ad: if none is ready, it returns `NotShown(NotReady)` at once.
+- **Load timeout.** When `AdSlots.showFullScreen` (or a rewarded show) finds no ad ready, it requests one and waits
+  up to `loadTimeoutSeconds` (8 by default). If the ad arrives in time it shows; otherwise, or if the load fails,
+  the result is `NotShown(Timeout)` (or the load's error) and your callback moves the app on, so a slow network never
+  leaves the user stuck. An ad that arrives after the timeout is kept for the next show. While a show waits, no other
+  full-screen ad can start. `0` doesn't wait: `NotShown(NotReady)` at once.
 - An ad that expires unshown (after an hour for most formats) isn't replaced until the next `AdSlots.load`.
 - After a show, an ad with **`loadAgain`** set loads the next one straight away: with `adUnitIds` of `[A, B]`, showing
   the ad from A requests one from B. Without it (the default), the ad loads again only at the next `AdSlots.load`. For

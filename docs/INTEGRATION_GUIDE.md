@@ -234,6 +234,7 @@ for example:
 | Show an app open ad instead of an interstitial | the interstitial's | `{ "format": "app_open", "adUnitIds": ["<an app open ad unit>"] }` |
 | Lengthen the splash to 13 s | `AdSettings` | `{ "splashSeconds": 13 }` |
 | Load the next ad right after each show | the ad's | `{ "loadAgain": true }` |
+| Wait at most 5 s for any full-screen ad that isn't loaded | `AdSettings` | `{ "loadTimeoutSeconds": 5 }` |
 | Turn every ad off | `AdSettings` | `{ "adsEnabled": false }` |
 
 Every field is listed in [Ad profiles](AD_PROFILES.md#the-json), and format changes in

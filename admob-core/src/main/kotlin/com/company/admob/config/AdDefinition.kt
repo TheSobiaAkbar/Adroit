@@ -9,6 +9,7 @@ import com.company.admob.NativePlacement
 import com.company.admob.NativeStyle
 import com.company.admob.RewardedInterstitialPlacement
 import com.company.admob.RewardedPlacement
+import com.company.admob.internal.config.AdBehavior
 import com.company.admob.internal.config.AdDefinitionJson
 
 /**
@@ -59,6 +60,26 @@ public sealed class AdProfile {
     public open val loadAgain: Boolean get() = false
 
     /**
+     * How long a show waits for this full-screen ad when it isn't loaded yet (for example on a slow network), in
+     * seconds; the show then gives up (`NotShown(Timeout)`) and the app moves on. An ad that arrives later is kept
+     * for the next show. 0 doesn't wait. Null uses [AdSettings.loadTimeoutSeconds]; always null for a banner or a
+     * native ad.
+     */
+    public open val loadTimeoutSeconds: Int? get() = null
+
+    /**
+     * Whether a loading screen appears before this full-screen ad, or a shimmer while this banner or native ad loads.
+     * Null uses [AdSettings.showLoading].
+     */
+    public open val showLoading: Boolean? get() = null
+
+    /**
+     * How long the loading screen stays up at least before this full-screen ad, in seconds, when the ad is already
+     * loaded. Null uses [AdSettings.loadingSeconds]; always null for a banner or a native ad.
+     */
+    public open val loadingSeconds: Int? get() = null
+
+    /**
      * An interstitial.
      *
      * @property counter 0 = off; N = shows on every Nth `show` call.
@@ -77,6 +98,9 @@ public sealed class AdProfile {
         public val splash: Boolean,
         public val splashTimeoutSeconds: Int,
         override val loadAgain: Boolean,
+        override val loadTimeoutSeconds: Int?,
+        override val showLoading: Boolean?,
+        override val loadingSeconds: Int?,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.INTERSTITIAL
     }
@@ -96,6 +120,9 @@ public sealed class AdProfile {
         public val timerSeconds: Int,
         public val maxPerSession: Int,
         override val loadAgain: Boolean,
+        override val loadTimeoutSeconds: Int?,
+        override val showLoading: Boolean?,
+        override val loadingSeconds: Int?,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.REWARDED_INTERSTITIAL
     }
@@ -111,6 +138,9 @@ public sealed class AdProfile {
         override val enabled: Boolean,
         public val maxPerSession: Int,
         override val loadAgain: Boolean,
+        override val loadTimeoutSeconds: Int?,
+        override val showLoading: Boolean?,
+        override val loadingSeconds: Int?,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.REWARDED
     }
@@ -130,6 +160,9 @@ public sealed class AdProfile {
         public val maxPerSession: Int,
         public val excludedActivities: List<String>,
         override val loadAgain: Boolean,
+        override val loadTimeoutSeconds: Int?,
+        override val showLoading: Boolean?,
+        override val loadingSeconds: Int?,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.APP_OPEN
     }
@@ -144,6 +177,7 @@ public sealed class AdProfile {
         override val adUnitIds: List<String>,
         override val enabled: Boolean,
         public val style: BannerSize,
+        override val showLoading: Boolean?,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.BANNER
     }
@@ -161,6 +195,7 @@ public sealed class AdProfile {
         public val style: NativeStyle,
         public val poolSize: Int,
         override val loadAgain: Boolean,
+        override val showLoading: Boolean?,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.NATIVE
     }
@@ -193,8 +228,13 @@ public sealed class AdProfile {
             splash: Boolean = false,
             splashTimeoutSeconds: Int = 8,
             loadAgain: Boolean = false,
-        ): Interstitial =
-            Interstitial(ids.toList(), enabled, counter, timerSeconds, maxPerSession, splash, splashTimeoutSeconds, loadAgain)
+            loadTimeoutSeconds: Int? = null,
+            showLoading: Boolean? = null,
+            loadingSeconds: Int? = null,
+        ): Interstitial = Interstitial(
+            ids.toList(), enabled, counter, timerSeconds, maxPerSession, splash, splashTimeoutSeconds, loadAgain,
+            loadTimeoutSeconds, showLoading, loadingSeconds,
+        )
 
         /** A rewarded interstitial profile; see [RewardedInterstitial]. */
         @JvmStatic
@@ -206,7 +246,13 @@ public sealed class AdProfile {
             timerSeconds: Int = 0,
             maxPerSession: Int = 0,
             loadAgain: Boolean = false,
-        ): RewardedInterstitial = RewardedInterstitial(ids.toList(), enabled, counter, timerSeconds, maxPerSession, loadAgain)
+            loadTimeoutSeconds: Int? = null,
+            showLoading: Boolean? = null,
+            loadingSeconds: Int? = null,
+        ): RewardedInterstitial = RewardedInterstitial(
+            ids.toList(), enabled, counter, timerSeconds, maxPerSession, loadAgain, loadTimeoutSeconds, showLoading,
+            loadingSeconds,
+        )
 
         /** A rewarded profile; see [Rewarded]. */
         @JvmStatic
@@ -216,7 +262,11 @@ public sealed class AdProfile {
             enabled: Boolean = true,
             maxPerSession: Int = 0,
             loadAgain: Boolean = false,
-        ): Rewarded = Rewarded(ids.toList(), enabled, maxPerSession, loadAgain)
+            loadTimeoutSeconds: Int? = null,
+            showLoading: Boolean? = null,
+            loadingSeconds: Int? = null,
+        ): Rewarded =
+            Rewarded(ids.toList(), enabled, maxPerSession, loadAgain, loadTimeoutSeconds, showLoading, loadingSeconds)
 
         /** An app open profile; see [AppOpen]. */
         @JvmStatic
@@ -228,7 +278,13 @@ public sealed class AdProfile {
             maxPerSession: Int = 0,
             excludedActivities: List<String> = emptyList(),
             loadAgain: Boolean = false,
-        ): AppOpen = AppOpen(ids.toList(), enabled, timerSeconds, maxPerSession, excludedActivities.toList(), loadAgain)
+            loadTimeoutSeconds: Int? = null,
+            showLoading: Boolean? = null,
+            loadingSeconds: Int? = null,
+        ): AppOpen = AppOpen(
+            ids.toList(), enabled, timerSeconds, maxPerSession, excludedActivities.toList(), loadAgain, loadTimeoutSeconds,
+            showLoading, loadingSeconds,
+        )
 
         /** A banner profile; see [Banner]. */
         @JvmStatic
@@ -237,7 +293,8 @@ public sealed class AdProfile {
             ids: List<String> = emptyList(),
             enabled: Boolean = true,
             style: BannerSize = BannerSize.AnchoredAdaptive,
-        ): Banner = Banner(ids.toList(), enabled, style)
+            showLoading: Boolean? = null,
+        ): Banner = Banner(ids.toList(), enabled, style, showLoading)
 
         /** A native profile; see [Native]. */
         @JvmStatic
@@ -248,7 +305,8 @@ public sealed class AdProfile {
             style: NativeStyle = NativeStyle.MEDIUM,
             poolSize: Int = 1,
             loadAgain: Boolean = false,
-        ): Native = Native(ids.toList(), enabled, style, poolSize, loadAgain)
+            showLoading: Boolean? = null,
+        ): Native = Native(ids.toList(), enabled, style, poolSize, loadAgain, showLoading)
     }
 }
 
@@ -262,6 +320,10 @@ public sealed class AdProfile {
  * @property premiumSplashSeconds the splash timer for a premium user.
  * @property offlineSplashSeconds the splash timer without internet.
  * @property consentTimeoutSeconds how long the consent form may take to appear on the splash screen.
+ * @property loadTimeoutSeconds how long a show waits for a full-screen ad that isn't loaded yet; each ad can set its own.
+ * @property showLoading a loading screen before full-screen ads and a shimmer while banners and native ads load; each
+ *   ad can set its own.
+ * @property loadingSeconds how long the loading screen stays up at least; each ad can set its own.
  */
 public class AdSettings @JvmOverloads constructor(
     public val adsEnabled: Boolean = true,
@@ -271,6 +333,9 @@ public class AdSettings @JvmOverloads constructor(
     public val premiumSplashSeconds: Int = SplashTimings.DEFAULT_SHORT_SPLASH_SECONDS,
     public val offlineSplashSeconds: Int = SplashTimings.DEFAULT_SHORT_SPLASH_SECONDS,
     public val consentTimeoutSeconds: Int = SplashTimings.DEFAULT_CONSENT_TIMEOUT_SECONDS,
+    public val loadTimeoutSeconds: Int = AdBehavior.DEFAULT_LOAD_TIMEOUT_SECONDS,
+    public val showLoading: Boolean = true,
+    public val loadingSeconds: Int = AdBehavior.DEFAULT_LOADING_SECONDS,
 ) {
     override fun equals(other: Any?): Boolean = other is AdSettings && other.toJson() == toJson()
 

@@ -236,4 +236,51 @@ class AdDefinitionTest {
         assertEquals(true, effective.active("Once")?.loadAgain)
         assertEquals(false, effective.active("Again")?.loadAgain)
     }
+
+    // --- Loading behaviour (PROMPT 29) ---
+
+    private enum class BehaviorAds(override val defaults: AdProfile) : AdDefinition {
+        Plain(AdProfile.interstitial()),
+        Own(AdProfile.rewarded(loadTimeoutSeconds = 4, showLoading = false, loadingSeconds = 2)),
+        Banner(AdProfile.banner(showLoading = false)),
+    }
+
+    @Test
+    fun `loading fields resolve from the ad, then Firebase, then AdSettings, then the defaults`() {
+        val config = adMobConfig {
+            appId = TestIds.APP_ID
+            profiles(BehaviorAds.entries, AdSettings(loadTimeoutSeconds = 6))
+        }
+        val local = EffectiveConfig.from(config)
+        assertEquals(AdBehavior(6.seconds, true, 1.seconds), local.active("Plain")?.behavior)
+        assertEquals(AdBehavior(4.seconds, false, 2.seconds), local.active("Own")?.behavior)
+        assertEquals(false, local.active("Banner")?.behavior?.showLoading)
+
+        val remote = AdProfiles.parseRemote(
+            mapOf("Plain" to AdFormat.INTERSTITIAL, "Own" to AdFormat.REWARDED),
+            mapOf("Own" to """{ "loadTimeoutSeconds": 9 }"""),
+            settings = """{ "loadTimeoutSeconds": 3, "showLoading": false }""",
+        )
+        assertEquals(emptyList<String>(), remote.issues)
+        val live = local.withOverrides(remote.overrides)
+        assertEquals("Firebase AdSettings beat the app's", AdBehavior(3.seconds, false, 1.seconds), live.active("Plain")?.behavior)
+        assertEquals("the ad's Firebase value beats everything", 9.seconds, live.active("Own")?.behavior?.loadTimeout)
+        assertEquals("the ad's own value beats AdSettings", false, live.active("Own")?.behavior?.showLoading)
+
+        val json = JSONObject(BehaviorAds.Own.defaults.toJson())
+        assertEquals(4, json.getInt("loadTimeoutSeconds"))
+        assertFalse("unset: follows AdSettings", JSONObject(BehaviorAds.Plain.defaults.toJson()).has("loadTimeoutSeconds"))
+        assertEquals(6, JSONObject(AdSettings(loadTimeoutSeconds = 6).toJson()).getInt("loadTimeoutSeconds"))
+    }
+
+    @Test
+    fun `timeouts on a banner or native ad are ignored with a message`() {
+        val remote = AdProfiles.parseRemote(
+            mapOf("B" to AdFormat.BANNER),
+            mapOf("B" to """{ "loadTimeoutSeconds": 3, "showLoading": false }"""),
+            settings = null,
+        )
+        assertEquals(AdBehavior(showLoading = false), remote.overrides.placements.getValue("B").behavior)
+        assertTrue(remote.issues.single().contains("full-screen ads only"))
+    }
 }
