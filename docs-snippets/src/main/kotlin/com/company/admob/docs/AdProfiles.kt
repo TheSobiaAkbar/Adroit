@@ -6,28 +6,56 @@ import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import androidx.compose.runtime.Composable
-import com.company.admob.BannerPlacement
+import com.company.admob.BannerSize
+import com.company.admob.CollapsibleBannerPosition
 import com.company.admob.CompanyAdMob
 import com.company.admob.FullScreenResult
-import com.company.admob.InterstitialPlacement
-import com.company.admob.NativePlacement
+import com.company.admob.NativeStyle
 import com.company.admob.compose.AdBanner
 import com.company.admob.compose.AdNative
+import com.company.admob.config.AdDefinition
 import com.company.admob.config.AdEnvironment
+import com.company.admob.config.AdProfile
+import com.company.admob.config.AdSettings
 import com.company.admob.config.adMobConfig
+import com.company.admob.config.bannerPlacement
+import com.company.admob.config.interstitialPlacement
+import com.company.admob.config.nativePlacement
 import com.company.admob.firebase.FirebaseRemoteConfigProvider
+import com.company.admob.firebase.RemoteConfigSession
+
+// region profiles-enum
+enum class AppAds(override val defaults: AdProfile) : AdDefinition {
+    SplashAd(AdProfile.interstitial(ids = listOf("ca-app-pub-0000000000000000/0000000001"), splash = true)),
+    HistoryAd(
+        AdProfile.interstitial(
+            ids = listOf("ca-app-pub-0000000000000000/0000000002", "ca-app-pub-0000000000000000/0000000003"),
+            counter = 3,
+            maxPerSession = 5,
+        ),
+    ),
+    HomeBanner(
+        AdProfile.banner(
+            ids = listOf("ca-app-pub-0000000000000000/0000000004"),
+            style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM),
+        ),
+    ),
+    FeedNative(AdProfile.native(ids = listOf("ca-app-pub-0000000000000000/0000000005"), style = NativeStyle.LARGE)),
+}
+// endregion
 
 // region profiles-setup
 class AdsApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        RemoteConfigSession.start(this) // fetches Firebase once this session, without making anything wait
         CompanyAdMob.initialize(
             this,
             adMobConfig {
-                // Debug builds show only Google's test ads, whatever IDs the file lists.
+                // Debug builds show only Google's test ads, whatever IDs the definitions list.
                 environment = if (BuildConfig.DEBUG) AdEnvironment.DEVELOPMENT else AdEnvironment.PRODUCTION
-                profiles(this@AdsApp, R.raw.ads_config) // every ad and its default values
-                remoteConfig = FirebaseRemoteConfigProvider() // Firebase values override the file, ad by ad
+                profiles(AppAds.entries, AdSettings()) // every ad and its default values
+                remoteConfig = FirebaseRemoteConfigProvider() // Firebase values override the defaults, ad by ad
             },
         )
     }
@@ -36,10 +64,10 @@ class AdsApp : Application() {
 
 // region profiles-placements
 object Ads {
-    val Splash = InterstitialPlacement("SplashAd")
-    val History = InterstitialPlacement("HistoryAd")
-    val HomeBanner = BannerPlacement("HomeBanner")
-    val FeedNative = NativePlacement("FeedNative")
+    val Splash = AppAds.SplashAd.interstitialPlacement()
+    val History = AppAds.HistoryAd.interstitialPlacement()
+    val HomeBanner = AppAds.HomeBanner.bannerPlacement()
+    val FeedNative = AppAds.FeedNative.nativePlacement()
 }
 // endregion
 

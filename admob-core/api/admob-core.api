@@ -926,6 +926,28 @@ public final class com/company/admob/UnavailableReason : java/lang/Enum {
 	public static fun values ()[Lcom/company/admob/UnavailableReason;
 }
 
+public abstract interface class com/company/admob/config/AdDefinition {
+	public abstract fun getDefaults ()Lcom/company/admob/config/AdProfile;
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/AdDefinitionKt {
+	public static final fun appOpenPlacement (Lcom/company/admob/config/AdDefinition;)Lcom/company/admob/AppOpenPlacement;
+	public static final fun bannerPlacement (Lcom/company/admob/config/AdDefinition;)Lcom/company/admob/BannerPlacement;
+	public static final fun interstitialPlacement (Lcom/company/admob/config/AdDefinition;)Lcom/company/admob/InterstitialPlacement;
+	public static final fun nativePlacement (Lcom/company/admob/config/AdDefinition;)Lcom/company/admob/NativePlacement;
+	public static final fun rewardedInterstitialPlacement (Lcom/company/admob/config/AdDefinition;)Lcom/company/admob/RewardedInterstitialPlacement;
+	public static final fun rewardedPlacement (Lcom/company/admob/config/AdDefinition;)Lcom/company/admob/RewardedPlacement;
+}
+
+public final class com/company/admob/config/AdDefinitions {
+	public static final field INSTANCE Lcom/company/admob/config/AdDefinitions;
+	public static final fun firebaseTemplate (Ljava/lang/Iterable;)Ljava/lang/String;
+	public static final fun firebaseTemplate (Ljava/lang/Iterable;Lcom/company/admob/config/AdSettings;)Ljava/lang/String;
+	public static final fun firebaseTemplate (Ljava/lang/Iterable;Lcom/company/admob/config/AdSettings;Ljava/lang/String;)Ljava/lang/String;
+	public static synthetic fun firebaseTemplate$default (Ljava/lang/Iterable;Lcom/company/admob/config/AdSettings;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
+}
+
 public final class com/company/admob/config/AdEnvironment : java/lang/Enum {
 	public static final field DEVELOPMENT Lcom/company/admob/config/AdEnvironment;
 	public static final field PRODUCTION Lcom/company/admob/config/AdEnvironment;
@@ -995,7 +1017,10 @@ public final class com/company/admob/config/AdMobConfig$Builder {
 	public final fun placements (Lkotlin/jvm/functions/Function1;)V
 	public final fun privacy (Lkotlin/jvm/functions/Function1;)V
 	public final fun profiles (Landroid/content/Context;I)V
+	public final fun profiles (Ljava/lang/Iterable;)V
+	public final fun profiles (Ljava/lang/Iterable;Lcom/company/admob/config/AdSettings;)V
 	public final fun profiles (Ljava/lang/String;)V
+	public static synthetic fun profiles$default (Lcom/company/admob/config/AdMobConfig$Builder;Ljava/lang/Iterable;Lcom/company/admob/config/AdSettings;ILjava/lang/Object;)V
 	public final fun remoteConfig (Lcom/company/admob/config/remote/AdConfigProvider;)Lcom/company/admob/config/AdMobConfig$Builder;
 	public final fun setAppId (Ljava/lang/String;)V
 	public final fun setEnvironment (Lcom/company/admob/config/AdEnvironment;)V
@@ -1008,6 +1033,158 @@ public abstract interface annotation class com/company/admob/config/AdMobConfigD
 
 public final class com/company/admob/config/AdMobConfigKt {
 	public static final fun adMobConfig (Lkotlin/jvm/functions/Function1;)Lcom/company/admob/config/AdMobConfig;
+}
+
+public abstract class com/company/admob/config/AdProfile {
+	public static final field Companion Lcom/company/admob/config/AdProfile$Companion;
+	public static final fun appOpen ()Lcom/company/admob/config/AdProfile$AppOpen;
+	public static final fun appOpen (Ljava/util/List;)Lcom/company/admob/config/AdProfile$AppOpen;
+	public static final fun appOpen (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$AppOpen;
+	public static final fun appOpen (Ljava/util/List;ZLjava/lang/Integer;)Lcom/company/admob/config/AdProfile$AppOpen;
+	public static final fun appOpen (Ljava/util/List;ZLjava/lang/Integer;I)Lcom/company/admob/config/AdProfile$AppOpen;
+	public static final fun appOpen (Ljava/util/List;ZLjava/lang/Integer;ILjava/util/List;)Lcom/company/admob/config/AdProfile$AppOpen;
+	public static final fun banner ()Lcom/company/admob/config/AdProfile$Banner;
+	public static final fun banner (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Banner;
+	public static final fun banner (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Banner;
+	public static final fun banner (Ljava/util/List;ZLcom/company/admob/BannerSize;)Lcom/company/admob/config/AdProfile$Banner;
+	public fun equals (Ljava/lang/Object;)Z
+	public abstract fun getAdUnitIds ()Ljava/util/List;
+	public abstract fun getEnabled ()Z
+	public abstract fun getFormat ()Lcom/company/admob/AdFormat;
+	public fun hashCode ()I
+	public static final fun interstitial ()Lcom/company/admob/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZI)Lcom/company/admob/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZII)Lcom/company/admob/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZIII)Lcom/company/admob/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZIIIZ)Lcom/company/admob/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZIIIZI)Lcom/company/admob/config/AdProfile$Interstitial;
+	public static final fun native ()Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;I)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun rewarded ()Lcom/company/admob/config/AdProfile$Rewarded;
+	public static final fun rewarded (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Rewarded;
+	public static final fun rewarded (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Rewarded;
+	public static final fun rewarded (Ljava/util/List;ZI)Lcom/company/admob/config/AdProfile$Rewarded;
+	public static final fun rewardedInterstitial ()Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;ZI)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;ZII)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;ZIII)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public final fun toJson ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/company/admob/config/AdProfile$AppOpen : com/company/admob/config/AdProfile {
+	public fun getAdUnitIds ()Ljava/util/List;
+	public fun getEnabled ()Z
+	public final fun getExcludedActivities ()Ljava/util/List;
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getMaxPerSession ()I
+	public final fun getTimerSeconds ()Ljava/lang/Integer;
+}
+
+public final class com/company/admob/config/AdProfile$Banner : com/company/admob/config/AdProfile {
+	public fun getAdUnitIds ()Ljava/util/List;
+	public fun getEnabled ()Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getStyle ()Lcom/company/admob/BannerSize;
+}
+
+public final class com/company/admob/config/AdProfile$Companion {
+	public final fun appOpen ()Lcom/company/admob/config/AdProfile$AppOpen;
+	public final fun appOpen (Ljava/util/List;)Lcom/company/admob/config/AdProfile$AppOpen;
+	public final fun appOpen (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$AppOpen;
+	public final fun appOpen (Ljava/util/List;ZLjava/lang/Integer;)Lcom/company/admob/config/AdProfile$AppOpen;
+	public final fun appOpen (Ljava/util/List;ZLjava/lang/Integer;I)Lcom/company/admob/config/AdProfile$AppOpen;
+	public final fun appOpen (Ljava/util/List;ZLjava/lang/Integer;ILjava/util/List;)Lcom/company/admob/config/AdProfile$AppOpen;
+	public static synthetic fun appOpen$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/util/List;ZLjava/lang/Integer;ILjava/util/List;ILjava/lang/Object;)Lcom/company/admob/config/AdProfile$AppOpen;
+	public final fun banner ()Lcom/company/admob/config/AdProfile$Banner;
+	public final fun banner (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Banner;
+	public final fun banner (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Banner;
+	public final fun banner (Ljava/util/List;ZLcom/company/admob/BannerSize;)Lcom/company/admob/config/AdProfile$Banner;
+	public static synthetic fun banner$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/util/List;ZLcom/company/admob/BannerSize;ILjava/lang/Object;)Lcom/company/admob/config/AdProfile$Banner;
+	public final fun interstitial ()Lcom/company/admob/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZI)Lcom/company/admob/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZII)Lcom/company/admob/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZIII)Lcom/company/admob/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZIIIZ)Lcom/company/admob/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZIIIZI)Lcom/company/admob/config/AdProfile$Interstitial;
+	public static synthetic fun interstitial$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/util/List;ZIIIZIILjava/lang/Object;)Lcom/company/admob/config/AdProfile$Interstitial;
+	public final fun native ()Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;)Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;I)Lcom/company/admob/config/AdProfile$Native;
+	public static synthetic fun native$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/util/List;ZLcom/company/admob/NativeStyle;IILjava/lang/Object;)Lcom/company/admob/config/AdProfile$Native;
+	public final fun rewarded ()Lcom/company/admob/config/AdProfile$Rewarded;
+	public final fun rewarded (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Rewarded;
+	public final fun rewarded (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Rewarded;
+	public final fun rewarded (Ljava/util/List;ZI)Lcom/company/admob/config/AdProfile$Rewarded;
+	public static synthetic fun rewarded$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/util/List;ZIILjava/lang/Object;)Lcom/company/admob/config/AdProfile$Rewarded;
+	public final fun rewardedInterstitial ()Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;ZI)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;ZII)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;ZIII)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+	public static synthetic fun rewardedInterstitial$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/util/List;ZIIIILjava/lang/Object;)Lcom/company/admob/config/AdProfile$RewardedInterstitial;
+}
+
+public final class com/company/admob/config/AdProfile$Interstitial : com/company/admob/config/AdProfile {
+	public fun getAdUnitIds ()Ljava/util/List;
+	public final fun getCounter ()I
+	public fun getEnabled ()Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getMaxPerSession ()I
+	public final fun getSplash ()Z
+	public final fun getSplashTimeoutSeconds ()I
+	public final fun getTimerSeconds ()I
+}
+
+public final class com/company/admob/config/AdProfile$Native : com/company/admob/config/AdProfile {
+	public fun getAdUnitIds ()Ljava/util/List;
+	public fun getEnabled ()Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getPoolSize ()I
+	public final fun getStyle ()Lcom/company/admob/NativeStyle;
+}
+
+public final class com/company/admob/config/AdProfile$Rewarded : com/company/admob/config/AdProfile {
+	public fun getAdUnitIds ()Ljava/util/List;
+	public fun getEnabled ()Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getMaxPerSession ()I
+}
+
+public final class com/company/admob/config/AdProfile$RewardedInterstitial : com/company/admob/config/AdProfile {
+	public fun getAdUnitIds ()Ljava/util/List;
+	public final fun getCounter ()I
+	public fun getEnabled ()Z
+	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getMaxPerSession ()I
+	public final fun getTimerSeconds ()I
+}
+
+public final class com/company/admob/config/AdSettings {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public fun <init> (ZI)V
+	public fun <init> (ZII)V
+	public synthetic fun <init> (ZIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdsEnabled ()Z
+	public final fun getMaxInterstitialsPerSession ()I
+	public final fun getMinSecondsBetweenFullScreenAds ()I
+	public fun hashCode ()I
+	public final fun toJson ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/company/admob/config/AdUnitId {

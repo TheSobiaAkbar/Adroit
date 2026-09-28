@@ -44,10 +44,10 @@
     </ScrollView>
 
     <!-- A banner declared in XML. It follows this Fragment's view lifecycle and stays GONE without an ad. Its size
-         comes from the ads file (home_banner's style). -->
+         comes from HomeBanner's style (SampleAds, or Firebase). -->
     <com.company.admob.views.AdBannerView
         android:id="@+id/home_banner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:company_admob_placement="home_banner" />
+        app:company_admob_placement="HomeBanner" />
 </LinearLayout>

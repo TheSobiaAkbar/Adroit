@@ -12,7 +12,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * The launcher. Gathers consent and initializes the SDK (`start`), then shows the splash interstitial if it's
- * turned on (`splash_interstitial` in `res/raw/ads_config.json`; off in this sample), otherwise offers a cold-start
+ * turned on (`SampleAds.SplashAd`; off by default), otherwise offers a cold-start
  * app open ad for up to 4 seconds. It continues to [MainActivity] whatever happened: consent refused, no ad,
  * offline, or ad dismissed. Excluded from automatic app open ads in the ads file.
  *

@@ -27,6 +27,11 @@ android {
             testDeviceIds.joinToString(prefix = "{", postfix = "}") { "\"$it\"" },
         )
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        // FirebaseTemplateTest rewrites firebase/remote_config_template.json with -PupdateFirebaseTemplate.
+        unitTests.all { it.systemProperty("updateFirebaseTemplate", providers.gradleProperty("updateFirebaseTemplate").isPresent.toString()) }
+    }
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -67,6 +72,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     debugImplementation(libs.leakcanary.android)
+
+    testImplementation(libs.robolectric)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)

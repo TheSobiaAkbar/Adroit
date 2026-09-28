@@ -60,7 +60,7 @@ private class FeedAdapter(
         when (val row = viewModel.rows[position]) {
             is FeedRow.Article -> (holder as ArticleHolder).binding.title.text =
                 holder.itemView.context.getString(R.string.feed_article, row.index + 1)
-            // No layout: the ads file's style for feed_native (small) picks the template.
+            // No layout: FeedNative's style (small, in SampleAds) picks the template.
             is FeedRow.Ad -> viewModel.adHolder(row.slot).bindTo((holder as AdHolder).binding.adContainer, viewLifecycleOwner)
         }
     }

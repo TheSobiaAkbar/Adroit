@@ -12,6 +12,15 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 - `RemoteConfigSession` (admob-firebase): fetches Remote Config once per app session without blocking. After a
   failure it tries again on each new Activity and when the device comes back online. `FirebaseRemoteConfigProvider`
   re-reads its values as soon as the session activates them.
+- Ad definitions (`docs/AD_PROFILES.md`): an enum implementing `AdDefinition`, each entry holding a typed
+  `AdProfile` default (`AdProfile.interstitial(...)`, `banner(...)`, …), registered with
+  `adMobConfig { profiles(AppAds.entries, AdSettings(...)) }`. The entry name is the ad's Firebase parameter, which
+  overrides the defaults as with an ads file. `AdDefinitions.firebaseTemplate(...)` writes a Remote Config template
+  for the console's "Publish from a file"; outside PRODUCTION, `initialize` logs every ad's JSON.
+
+### Changed
+- An ad without ad unit IDs (in a definition or an ads file) uses Google's test ad unit for its format instead of
+  being a configuration error. PRODUCTION logs a warning for it.
 
 ## [1.0.0-rc1] - 2026-09-28
 

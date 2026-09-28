@@ -6,16 +6,15 @@ import com.company.admob.config.AdMobConfig
 import com.company.admob.config.adMobConfig
 import com.company.admob.firebase.FirebaseRemoteConfigProvider
 import com.company.admob.logging.LogLevel
-import com.company.admob.sample.xml.R
 
 /**
- * The sample's CompanyAdMob configuration. Every ad is defined in one file, `res/raw/ads_config.json` (an ad profile
- * per placement key; see docs/AD_PROFILES.md). Each ad can then be changed from the Firebase Remote Config parameter
- * of the same name (Firebase project `sample-ads-plugin`, through `admob-firebase`).
+ * The sample's CompanyAdMob configuration. Every ad is an entry of [SampleAds], with its default settings (see
+ * docs/AD_PROFILES.md). Each ad can then be changed from the Firebase Remote Config parameter named after its entry
+ * (Firebase project `sample-ads-plugin`, through `admob-firebase`).
  *
- * This sample never contains real ad unit or app IDs. The IDs in the file are well-formed placeholders: DEVELOPMENT
- * and STAGING with `useDemoAdUnits = true` replace every one of them with Google's demo ad unit for the format, so
- * the app shows Google's test ads in every build type.
+ * This sample never contains real ad unit or app IDs. The entries list no IDs, so each uses Google's test ad unit for
+ * its format, and DEVELOPMENT and STAGING with `useDemoAdUnits = true` also replace any ID set from Firebase, so the
+ * app shows Google's test ads in every build type.
  */
 object SampleAdsConfig {
     /**
@@ -35,8 +34,8 @@ object SampleAdsConfig {
             // Test devices get test ads even from real ad units. STAGING with real units requires at least one.
             this.testDeviceIds += testDeviceIds
         }
-        profiles(context, R.raw.ads_config)
-        // Firebase values override the file, ad by ad. SampleApplication's RemoteConfigSession does the fetching.
+        profiles(SampleAds.entries, SampleAds.settings)
+        // Firebase values override the enum's defaults, ad by ad. SampleApplication's RemoteConfigSession does the fetching.
         remoteConfig = FirebaseRemoteConfigProvider()
         logging { level = if (buildType == "release") LogLevel.WARN else LogLevel.DEBUG }
     }

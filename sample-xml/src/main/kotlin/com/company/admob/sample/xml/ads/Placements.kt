@@ -1,24 +1,24 @@
 package com.company.admob.sample.xml.ads
 
-import com.company.admob.AppOpenPlacement
-import com.company.admob.BannerPlacement
-import com.company.admob.InterstitialPlacement
-import com.company.admob.NativePlacement
-import com.company.admob.RewardedInterstitialPlacement
-import com.company.admob.RewardedPlacement
+import com.company.admob.config.appOpenPlacement
+import com.company.admob.config.bannerPlacement
+import com.company.admob.config.interstitialPlacement
+import com.company.admob.config.nativePlacement
+import com.company.admob.config.rewardedInterstitialPlacement
+import com.company.admob.config.rewardedPlacement
 
 /**
- * Every place this app shows an ad. Declared once; the keys match `res/raw/ads_config.json`, the XML attributes and
- * remote overrides.
+ * The typed placements of [SampleAds], for the format-specific APIs (`CompanyAdMob.interstitial.show(…)`). XML
+ * attributes use the entry name directly: `app:company_admob_placement="HomeBanner"`.
  */
 object Placements {
-    val SplashInterstitial = InterstitialPlacement("splash_interstitial")
-    val HomeBanner = BannerPlacement("home_banner")
-    val DetailsBanner = BannerPlacement("details_banner")
-    val LevelCompleteInterstitial = InterstitialPlacement("level_complete")
-    val ExtraLifeRewarded = RewardedPlacement("extra_life")
-    val BonusRewardedInterstitial = RewardedInterstitialPlacement("bonus_round")
-    val AppOpen = AppOpenPlacement("app_open")
-    val FeedNative = NativePlacement("feed_native")
-    val ArticleNative = NativePlacement("article_native")
+    val SplashInterstitial = SampleAds.SplashAd.interstitialPlacement()
+    val HomeBanner = SampleAds.HomeBanner.bannerPlacement()
+    val DetailsBanner = SampleAds.DetailsBanner.bannerPlacement()
+    val LevelCompleteInterstitial = SampleAds.LevelCompleteAd.interstitialPlacement()
+    val ExtraLifeRewarded = SampleAds.ExtraLifeRewarded.rewardedPlacement()
+    val BonusRewardedInterstitial = SampleAds.BonusRewardedInterstitial.rewardedInterstitialPlacement()
+    val AppOpen = SampleAds.AppOpenAd.appOpenPlacement()
+    val FeedNative = SampleAds.FeedNative.nativePlacement()
+    val ArticleNative = SampleAds.ArticleNative.nativePlacement()
 }

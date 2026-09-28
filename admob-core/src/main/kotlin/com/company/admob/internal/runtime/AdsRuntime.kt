@@ -248,6 +248,10 @@ internal class AdsRuntime(
             }
             events.emit(AdEvent.ConfigurationWarning(warning.message, deps.clock.currentTimeMillis()))
         }
+        if (config.environment != AdEnvironment.PRODUCTION) {
+            // Enum definitions: each ad's JSON, ready to paste as the value of its Firebase parameter.
+            config.definitionJson.forEach { (key, json) -> log.d { "Firebase parameter $key: $json" } }
+        }
         if (validation.isValid) {
             deps.register()
             fullScreenEngines.forEach {

@@ -35,7 +35,13 @@ internal object AdProfiles {
         val minIntervalBetweenFullScreenAds: Duration,
     )
 
-    class ParsedFile(val placements: List<PlacementConfig>, val settings: FileSettings, val issues: List<String>)
+    /** [testIdKeys]: ads without ad unit IDs, given Google's test ad unit. */
+    class ParsedFile(
+        val placements: List<PlacementConfig>,
+        val settings: FileSettings,
+        val issues: List<String>,
+        val testIdKeys: Set<String> = emptySet(),
+    )
 
     class ParsedRemote(val overrides: AdOverrides, val issues: List<String>)
 
@@ -60,15 +66,16 @@ internal object AdProfiles {
             return ParsedFile(emptyList(), settings, issues)
         }
         val builder = PlacementsBuilder()
+        val testIdKeys = linkedSetOf<String>()
         for (key in ads.keys()) {
             val ad = ads.optJSONObject(key)
             if (ad == null) {
                 issues += "Ads file: \"$key\" isn't a JSON object"
                 continue
             }
-            addPlacement(builder, key, ad) { issues += "Ads file, \"$key\": $it" }
+            if (addPlacement(builder, key, ad) { issues += "Ads file, \"$key\": $it" }) testIdKeys += key
         }
-        return ParsedFile(builder.configs.toList(), settings, issues)
+        return ParsedFile(builder.configs.toList(), settings, issues, testIdKeys)
     }
 
     /**
@@ -117,23 +124,25 @@ internal object AdProfiles {
         )
     }
 
-    private fun addPlacement(builder: PlacementsBuilder, key: String, ad: JSONObject, issue: (String) -> Unit) {
+    /** Adds [ad] as a placement. Returns true when it has no ad unit IDs and was given Google's test ad unit. */
+    private fun addPlacement(builder: PlacementsBuilder, key: String, ad: JSONObject, issue: (String) -> Unit): Boolean {
         val fields = Fields(ad, issue)
         val formatName = fields.string("format")
         val format = formatName?.let(::formatOf)
         if (format == null) {
             issue(if (formatName == null) "\"format\" is missing" else "unknown format \"$formatName\"")
-            return
+            return false
         }
         val placementKeyValid = KEY_PATTERN.matches(key)
         if (!placementKeyValid) {
             issue("the key must match ${KEY_PATTERN.pattern}")
-            return
+            return false
         }
-        val ids = fields.adUnitIds() ?: run {
-            issue("\"adUnitIds\" is missing")
-            emptyList()
-        }
+        val bannerSize = if (format == AdFormat.BANNER) fields.bannerSize() else null
+        // No IDs (missing, or an empty list): Google's test ad unit for the format, in every environment.
+        val listedIds = fields.adUnitIds().orEmpty()
+        val usesTestIds = listedIds.isEmpty()
+        val ids = if (usesTestIds) listOf(GoogleDemoAdUnits.forFormat(format, bannerSize)) else listedIds
         val enabled = fields.boolean("enabled") ?: true
         val maxPerSession = fields.count("maxPerSession")?.let(::zeroMeansNoLimit) ?: Int.MAX_VALUE
         val timer = (fields.count("timerSeconds") ?: 0).seconds
@@ -161,7 +170,7 @@ internal object AdProfiles {
             }
             AdFormat.BANNER -> builder.banner(BannerPlacement(key), ids) {
                 this.enabled = enabled
-                fields.bannerSize()?.let { size = it }
+                bannerSize?.let { size = it }
             }
             AdFormat.NATIVE -> builder.native(NativePlacement(key), ids) {
                 this.enabled = enabled
@@ -169,6 +178,7 @@ internal object AdProfiles {
                 fields.count("poolSize")?.let { poolSize = it }
             }
         }
+        return usesTestIds
     }
 
     private fun parseOverride(key: String, format: AdFormat, json: JSONObject, issue: (String) -> Unit): PlacementOverride? {

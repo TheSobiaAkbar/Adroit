@@ -43,6 +43,7 @@ internal enum class ConfigIssueCode {
     NON_PRODUCTION_IN_RELEASE_BUILD,
     PRODUCTION_IN_DEBUGGABLE_BUILD,
     NO_PLACEMENTS,
+    TEST_AD_UNITS_BY_DEFAULT,
 }
 
 /** One configuration problem. [placementKey] is set when the problem belongs to a placement. */
@@ -75,6 +76,16 @@ internal object ConfigValidator {
         checkAppId(config, manifestAppId, production, errors)
         config.profileIssues.forEach { errors += ConfigIssue(ConfigIssueCode.INVALID_AD_PROFILE, it) }
         checkPlacements(config, production, errors)
+        if (production) {
+            config.testAdUnitPlacementKeys.forEach { key ->
+                warnings += ConfigIssue(
+                    ConfigIssueCode.TEST_AD_UNITS_BY_DEFAULT,
+                    "Placement '$key' has no ad unit IDs, so it shows Google's test ads, which earn nothing. Set its " +
+                        "adUnitIds in its definition or in Firebase.",
+                    key,
+                )
+            }
+        }
         checkGlobalOptions(config, errors)
 
         if (production) {
@@ -185,8 +196,10 @@ internal object ConfigValidator {
                     "a ${placementConfig.placement.format} placement is configured as ${placementConfig.format}.",
                 )
             }
+            // An ad without IDs was given Google's test ad unit on purpose: only warned about in PRODUCTION (above).
+            val testIdsByDefault = key in config.testAdUnitPlacementKeys
             for (adUnitId in placementConfig.adUnitIds) {
-                adUnitIdProblem(adUnitId.value, production)?.let { (code, message) -> error(code, message) }
+                adUnitIdProblem(adUnitId.value, production && !testIdsByDefault)?.let { (code, message) -> error(code, message) }
             }
 
             checkNotNegative(placementConfig.frequency.minInterval, "frequency.minInterval", ::error)

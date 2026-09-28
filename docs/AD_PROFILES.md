@@ -1,53 +1,109 @@
-# Ad profiles: one ads file, changed from Firebase
+# Ad profiles: every ad in one enum, changed from Firebase
 
-Define every ad in one file, `res/raw/ads_config.json`. Each ad then has a Firebase Remote Config parameter of
-the same name, so you can turn it off, and change its ad unit IDs, counter, timer, limits and style, without a
-release. For the design and the reasons behind it, see
+Define every ad of your app as an entry of one enum, with its default settings. Each ad then has a Firebase Remote
+Config parameter named after its entry, so you can turn it off, and change its ad unit IDs, counter, timer, limits and
+style, without a release. For the design and the reasons behind it, see
 [architecture/05_AD_PROFILES.md](architecture/05_AD_PROFILES.md).
 
 ## Setup
+
+List your ads:
+
+<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-enum -->
+```kotlin
+enum class AppAds(override val defaults: AdProfile) : AdDefinition {
+    SplashAd(AdProfile.interstitial(ids = listOf("ca-app-pub-0000000000000000/0000000001"), splash = true)),
+    HistoryAd(
+        AdProfile.interstitial(
+            ids = listOf("ca-app-pub-0000000000000000/0000000002", "ca-app-pub-0000000000000000/0000000003"),
+            counter = 3,
+            maxPerSession = 5,
+        ),
+    ),
+    HomeBanner(
+        AdProfile.banner(
+            ids = listOf("ca-app-pub-0000000000000000/0000000004"),
+            style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM),
+        ),
+    ),
+    FeedNative(AdProfile.native(ids = listOf("ca-app-pub-0000000000000000/0000000005"), style = NativeStyle.LARGE)),
+}
+```
+
+- The entry name (`HistoryAd`) is the ad's key and its Firebase parameter name. Use letters, digits and underscores
+  (up to 40), which is also the rule for Firebase parameter names.
+- Every argument of `AdProfile.interstitial(...)`, `rewarded(...)`, `rewardedInterstitial(...)`, `appOpen(...)`,
+  `banner(...)` and `native(...)` has the default listed in [the fields](#fields-for-every-ad).
+- **No IDs means test ads.** An ad whose `ids` list is empty (the default) uses Google's test ad unit for its format,
+  in every build. That lets you add an ad before its real ad unit exists. In PRODUCTION, `initialize` logs a warning
+  for each such ad, since test ads earn nothing: set its IDs in the enum or in Firebase before release.
+
+Then register them:
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-setup -->
 ```kotlin
 class AdsApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        RemoteConfigSession.start(this) // fetches Firebase once this session, without making anything wait
         CompanyAdMob.initialize(
             this,
             adMobConfig {
-                // Debug builds show only Google's test ads, whatever IDs the file lists.
+                // Debug builds show only Google's test ads, whatever IDs the definitions list.
                 environment = if (BuildConfig.DEBUG) AdEnvironment.DEVELOPMENT else AdEnvironment.PRODUCTION
-                profiles(this@AdsApp, R.raw.ads_config) // every ad and its default values
-                remoteConfig = FirebaseRemoteConfigProvider() // Firebase values override the file, ad by ad
+                profiles(AppAds.entries, AdSettings()) // every ad and its default values
+                remoteConfig = FirebaseRemoteConfigProvider() // Firebase values override the defaults, ad by ad
             },
         )
     }
 }
 ```
 
-- `FirebaseRemoteConfigProvider` comes from the optional `com.company:admob-firebase` module. Without it, the file
-  alone configures the ads.
+- `FirebaseRemoteConfigProvider` and `RemoteConfigSession` come from the optional `com.company:admob-firebase`
+  module. Without it, the enum alone configures the ads. See [Remote configuration](REMOTE_CONFIG.md) for the
+  session: it fetches once per app session, retries on later screens until it succeeds, and never makes the app wait.
+- `AdSettings(...)` holds the defaults of the `AdSettings` Firebase parameter (see [Settings](#settings)).
 - `profiles()` can be combined with a `placements { }` block, but each key may be defined only once.
 - `DEVELOPMENT` swaps every ad unit ID for Google's test ads. Debug builds therefore need no separate IDs: they show
-  only test ads, whatever the file or Firebase lists.
-- A missing or invalid file is a configuration error. Outside PRODUCTION `initialize` throws, so you find out in
-  development; in PRODUCTION, ads turn off and the app keeps running.
+  only test ads, whatever the enum or Firebase lists.
+- An invalid definition (a negative counter, a pool size out of range…) is a configuration error. Outside PRODUCTION
+  `initialize` throws, so you find out in development; in PRODUCTION, ads turn off and the app keeps running.
 
-Refer to each ad by its key:
+Refer to each ad through its entry:
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-placements -->
 ```kotlin
 object Ads {
-    val Splash = InterstitialPlacement("SplashAd")
-    val History = InterstitialPlacement("HistoryAd")
-    val HomeBanner = BannerPlacement("HomeBanner")
-    val FeedNative = NativePlacement("FeedNative")
+    val Splash = AppAds.SplashAd.interstitialPlacement()
+    val History = AppAds.HistoryAd.interstitialPlacement()
+    val HomeBanner = AppAds.HomeBanner.bannerPlacement()
+    val FeedNative = AppAds.FeedNative.nativePlacement()
 }
 ```
 
-Keys use letters, digits and underscores (up to 40), which is also the rule for Firebase parameter names.
+`interstitialPlacement()` and the others throw if the entry's format is another one. In XML, use the entry name:
+`app:company_admob_placement="HomeBanner"`.
 
-## The file
+### Getting the JSON for Firebase
+
+- Outside PRODUCTION, `initialize` logs every ad's JSON at debug level (`Firebase parameter HistoryAd: {…}`), ready to
+  paste as the value of that ad's parameter.
+- `AdDefinitions.firebaseTemplate(AppAds.entries, settings)` returns a whole Remote Config template: one JSON
+  parameter per ad, plus `AdSettings`. Save it as a file and import it in the Firebase console (Remote Config, ⋮,
+  **Publish from a file**) to create every parameter at once. `sample-xml/firebase/remote_config_template.json` is
+  the sample's, kept up to date by a unit test.
+- `profile.toJson()` gives one ad's value. It leaves out the fields Firebase can't change (`splash`,
+  `excludedActivities`, `poolSize`).
+
+### Alternative: an ads file
+
+Instead of an enum, the same ads can be listed in `res/raw/ads_config.json` and registered with
+`profiles(context, R.raw.ads_config)`. Refer to them with `InterstitialPlacement("HistoryAd")` and so on. The fields
+are the same as in Firebase, plus `format`. An entry without `adUnitIds` also gets Google's test ad unit.
+
+## The JSON
+
+The ads file, and what `AdDefinitions.firebaseTemplate` writes for each ad, looks like this:
 
 ```json
 {
@@ -88,7 +144,7 @@ Keys use letters, digits and underscores (up to 40), which is also the rule for 
 }
 ```
 
-Replace the placeholder IDs with your real ad unit IDs.
+Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out for Google's test ads.
 
 ### Fields for every ad
 
@@ -96,7 +152,7 @@ Replace the placeholder IDs with your real ad unit IDs.
 |---|---|---|---|
 | `format` | text | required | `interstitial`, `rewarded`, `rewarded_interstitial`, `app_open`, `banner` or `native` |
 | `enabled` | true/false | `true` | `false` turns this ad off |
-| `adUnitIds` | list of IDs | required | Used one after another: each load takes the next one, and after the last one the first again. A single ID can be written as text. |
+| `adUnitIds` | list of IDs | test ads | Used one after another: each load takes the next one, and after the last one the first again. A single ID can be written as text. Empty or left out: Google's test ad unit for the format. In Firebase, an empty list keeps the defaults. |
 
 ### Interstitial and rewarded interstitial
 

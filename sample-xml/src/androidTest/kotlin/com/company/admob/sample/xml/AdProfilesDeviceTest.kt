@@ -17,9 +17,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The ads file (`res/raw/ads_config.json`) on a device: every ad it defines is configured, test builds use Google's
- * demo ad units whatever IDs the file lists, the ad the file turns off is off, and the Details banner (style
- * `collapsible_bottom`) loads. Rotation is covered by unit tests; with demo ad units every ID is the same one here.
+ * The ad definitions (`SampleAds`) on a device: every entry is configured under its name, test builds use Google's
+ * demo ad units, the ad turned off by default is off, and the Details banner (style `collapsible_bottom`) loads. Rotation is covered by unit tests; with demo ad units every ID is the same one here.
  */
 @RequiresNetwork
 @RunWith(AndroidJUnit4::class)
@@ -34,17 +33,17 @@ class AdProfilesDeviceTest {
             val placements = CompanyAdMob.diagnostics.snapshot().placements.associateBy { it.key }
             assertEquals(
                 setOf(
-                    "splash_interstitial", "level_complete", "extra_life", "bonus_round", "app_open", "home_banner",
-                    "details_banner", "feed_native", "article_native",
+                    "SplashAd", "LevelCompleteAd", "ExtraLifeRewarded", "BonusRewardedInterstitial", "AppOpenAd",
+                    "HomeBanner", "DetailsBanner", "FeedNative", "ArticleNative",
                 ),
                 placements.keys,
             )
             assertTrue(placements.values.all { it.adUnitId.startsWith(GOOGLE_DEMO_PUBLISHER) })
-            assertFalse("splash_interstitial is off in the file", placements.getValue("splash_interstitial").enabled)
+            assertFalse("SplashAd is off by default", placements.getValue("SplashAd").enabled)
 
             onView(withId(R.id.level_complete)).perform(click())
             awaitResumed<DetailsActivity>(timeoutMillis = 15_000)
-            awaitEvent(20_000) { it is AdEvent.Loaded && it.format == AdFormat.BANNER && it.placementKey == "details_banner" }
+            awaitEvent(20_000) { it is AdEvent.Loaded && it.format == AdFormat.BANNER && it.placementKey == "DetailsBanner" }
         }
     }
 

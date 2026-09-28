@@ -11,6 +11,7 @@ import com.company.admob.RewardedPlacement
 import com.company.admob.config.remote.AdConfigProvider
 import com.company.admob.config.remote.StaticConfigProvider
 import com.company.admob.events.AdEventListener
+import com.company.admob.internal.config.AdDefinitionJson
 import com.company.admob.internal.config.AdProfiles
 import com.company.admob.internal.config.toReadOnlyList
 
@@ -72,6 +73,12 @@ public class AdMobConfig internal constructor(builder: Builder) {
 
     /** Whether ads are on before any remote override: the ads file's `settings.adsEnabled`, true without one. */
     internal val adsEnabledByDefault: Boolean = profile?.settings?.adsEnabled ?: true
+
+    /** Each ad definition's JSON (and the settings'), by Firebase parameter name, when built from definitions. */
+    internal val definitionJson: Map<String, String> = builder.definitionJson.orEmpty()
+
+    /** Placements with no ad unit IDs in their profile, which use Google's test ad unit. */
+    internal val testAdUnitPlacementKeys: Set<String> = profile?.testIdKeys.orEmpty()
 
     /** Problems in the ads file (reading or parsing). Validation reports them as errors. */
     internal val profileIssues: List<String> = listOfNotNull(builder.profileReadError) + profile?.issues.orEmpty()
@@ -154,6 +161,7 @@ public class AdMobConfig internal constructor(builder: Builder) {
 
         internal var profileText: String? = null
         internal var profileReadError: String? = null
+        internal var definitionJson: Map<String, String>? = null
 
         /**
          * Adds every ad in an ads file (`res/raw/ads_config.json`, see docs/AD_PROFILES.md): each entry becomes a
@@ -173,6 +181,24 @@ public class AdMobConfig internal constructor(builder: Builder) {
         public fun profiles(json: String) {
             profileText = json
             profileReadError = null
+            definitionJson = null
+        }
+
+        /**
+         * Adds every ad in [definitions], usually an enum's `entries` (docs/AD_PROFILES.md): each becomes a placement
+         * of its default format, keyed by its `name`, with [settings] as the frequency settings. Each ad can then be
+         * changed from the Firebase parameter of the same name, exactly as with an ads file, and the same validation
+         * applies. Replaces an earlier `profiles` call. Outside PRODUCTION, `initialize` logs every ad's JSON (debug
+         * level), ready to paste into Firebase.
+         */
+        @JvmOverloads
+        public fun profiles(definitions: Iterable<AdDefinition>, settings: AdSettings = AdSettings()) {
+            val list = definitions.toList()
+            profiles(AdDefinitionJson.file(list, settings).toString())
+            definitionJson = linkedMapOf<String, String>().apply {
+                put(AdProfiles.DEFAULT_SETTINGS_KEY, settings.toJson())
+                list.forEach { put(it.name, it.defaults.toJson()) }
+            }
         }
 
         /** Configures [testing]. */

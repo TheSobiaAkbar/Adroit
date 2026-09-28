@@ -34,4 +34,11 @@ class AdsFileExampleTest {
         assertEquals(NativeStyle.LARGE, (ads.getValue("FeedNative") as NativePlacementConfig).style)
         assertEquals(Int.MAX_VALUE, config.frequency.maxInterstitialsPerSession)
     }
+
+    @Test
+    fun `the documented enum configures the same ads as the documented file`() {
+        val fromFile = adMobConfig { profiles(ApplicationProvider.getApplicationContext(), R.raw.ads_config) }
+        val fromEnum = adMobConfig { profiles(AppAds.entries) }
+        assertEquals(fromFile.placements, fromEnum.placements)
+    }
 }
