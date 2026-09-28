@@ -16,6 +16,8 @@ dependencies {
     implementation(libs.android.gradlePlugin)
     implementation(libs.kotlin.gradlePlugin)
     implementation(libs.compose.gradlePlugin)
+    // For sample-xml's real Firebase project: loaded here so it sees AGP's classes.
+    implementation(libs.googleServices.gradlePlugin)
     // Compile-time only: the dump engine runs in an isolated worker with its own classpath (ApiValidation.kt).
     compileOnly(libs.binaryCompatibilityValidator)
 }
@@ -37,6 +39,10 @@ gradlePlugin {
         register("androidSampleCompose") {
             id = "companyadmob.android.sample.compose"
             implementationClass = "com.company.admob.buildlogic.ComposeSampleAppConventionPlugin"
+        }
+        register("androidFirebase") {
+            id = "companyadmob.android.firebase"
+            implementationClass = "com.company.admob.buildlogic.FirebaseAppConventionPlugin"
         }
         register("publishing") {
             id = "companyadmob.publishing"

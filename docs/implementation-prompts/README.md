@@ -39,6 +39,7 @@
 | 25A | Ad profiles: one JSON per ad, controlled from Firebase (added 2026-09-27) | 24, 25 | One ads file configures every ad; Firebase changes each ad without a release. |
 | 26 | Performance audit | 25A | Measurements are recorded and regressions fixed. |
 | 27 | API stability audit | 25, 25A, 26 | The public API is frozen for 1.0.0-rc1. |
+| 28 | Real Firebase, enum ad definitions, format swapping, splash flow (added 2026-09-28) | 27 | See PROMPT_28; additive to the 1.0.0-rc1 API. |
 | FINAL | Production readiness audit | 27 | PASS/WARN/FAIL scorecard with fixes. |
 
 Prompt 24 is optional. Skip it if the company doesn't use Firebase.

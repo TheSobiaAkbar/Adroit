@@ -108,6 +108,8 @@ androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxT
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 
 # Build logic (convention plugins)
+# On build-logic's classpath next to AGP (its plugin needs AGP's classes); applied by sample-xml only (PROMPT 28A)
+googleServices-gradlePlugin = { module = "com.google.gms:google-services", version = "4.5.0" }
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 compose-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
@@ -124,4 +126,5 @@ companyadmob-android-library = { id = "companyadmob.android.library" }
 companyadmob-android-library-compose = { id = "companyadmob.android.library.compose" }
 companyadmob-android-sample = { id = "companyadmob.android.sample" }
 companyadmob-android-sample-compose = { id = "companyadmob.android.sample.compose" }
+companyadmob-android-firebase = { id = "companyadmob.android.firebase" }
 companyadmob-publishing = { id = "companyadmob.publishing" }

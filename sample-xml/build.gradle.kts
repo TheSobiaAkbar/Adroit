@@ -2,6 +2,8 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.companyadmob.android.sample)
+    // Reads google-services.json (Firebase project sample-ads-plugin, app com.company.admob.sample.xml).
+    alias(libs.plugins.companyadmob.android.firebase)
 }
 
 /**
@@ -39,9 +41,9 @@ android {
             proguardFile("proguard-minified-debug-rules.pro")
         }
         // Like debug (debuggable, not minified), but configured as a tester's build: STAGING (see SampleAdsConfig).
+        // No applicationId suffix: google-services.json registers only com.company.admob.sample.xml.
         create("staging") {
             initWith(getByName("debug"))
-            applicationIdSuffix = ".staging"
             matchingFallbacks += "debug"
         }
     }
@@ -50,6 +52,8 @@ android {
 dependencies {
     implementation(project(":admob-core"))
     implementation(project(":admob-views"))
+    // Remote Config and Analytics (Firebase BoM, from admob-firebase); Firebase itself starts from google-services.json.
+    implementation(project(":admob-firebase"))
 
     // Sample-only UI libraries. The CompanyAdMob libraries themselves never depend on these.
     implementation(libs.androidx.core.ktx)
