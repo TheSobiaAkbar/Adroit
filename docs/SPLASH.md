@@ -8,8 +8,10 @@ it: a logo, the app name, and a progress bar.
 
 1. **Consent** (state `Preparing`, no progress bar). Google's consent form gets at most `consentTimeoutSeconds` (8)
    to appear. If it doesn't, the splash continues without it and the form isn't shown this launch, not even later:
-   it's tried again on the next launch. A form that appeared in time stays until the user answers. Then the library
-   starts, whatever the answer: granted, denied, already given, or no form.
+   it's tried again on the next launch. A form that appeared in time stays until the user answers, and nothing else
+   starts meanwhile: no timer, no progress bar, no splash ad request. Until the user answers, every splash shows the
+   form again, including a new splash in the same process after the first one was closed or recreated. Then the
+   library starts, whatever the answer: granted, denied, already given, or no form.
 2. **The splash timer** (state `Loading`, progress 0 to 100). It lasts:
    - `splashSeconds` (11) for a user who may see the splash ad;
    - `premiumSplashSeconds` (3) for a premium user, who also gets no consent form and no ad;
@@ -85,6 +87,7 @@ Each is a whole number of seconds, at least 1; an invalid value is ignored with 
 ## What is guaranteed
 
 - The consent step ends within `consentTimeoutSeconds` plus 2 seconds, even if Google's consent service never answers.
+  The time the consent form is on screen doesn't count: the splash waits for the user's answer.
 - The timer always ends: the splash moves on at the latest when it does, unless the splash ad is on screen.
 - A splash ad is never shown after the timer, nor while the screen is in the background.
 - The flow doesn't restart on rotation, and `cancel()` stops it without closing an ad on screen.

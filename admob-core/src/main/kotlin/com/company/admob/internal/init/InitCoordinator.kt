@@ -108,8 +108,15 @@ internal class InitCoordinator(
     fun start(activity: Activity, onComplete: ((AdsState) -> Unit)?, consentFormTimeout: Duration? = null) {
         val callback = onComplete?.let { OnceCallback(it) }
         this.consentFormTimeout = consentFormTimeout
-        // A rotation during consent: hand the newer Activity to the in-flight gather for the form step.
-        if (consent.isGathering) consent.gather(activity) {}
+        // A rotation or a new splash during consent: hand the newer Activity to the in-flight gather (it shows the
+        // form again if the form's screen is gone), and settle when the gather does, even if ads started early.
+        if (consent.isGathering) {
+            consent.gather(activity) {}
+            if (state.value != AdsState.NotInitialized) {
+                callback?.let(waiters::add)
+                return
+            }
+        }
 
         when (val current = state.value) {
             AdsState.NotInitialized -> {

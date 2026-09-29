@@ -23,6 +23,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -116,6 +117,32 @@ class StartFlowTest {
         assertEquals(2, s.h.adsSdk.initializeCalls.size)
         assertEquals(ready, s.results.last())
         assertEquals(3, s.results.size)
+    }
+
+    @Test
+    fun `a start that joins while the form is on screen waits for the answer, even after an early SDK init`() = runTest {
+        val s = started {
+            consentSdk.canRequestAds = true // the previous session's consent: the SDK starts during the form
+            consentSdk.status = ConsentStatus.REQUIRED
+            consentSdk.formOpenMs = 60_000
+        }
+        val activity = newActivity()
+        s.runtime.init.start(activity, { s.results += it }, 8.seconds)
+        repeat(3) {
+            shadowOf(Looper.getMainLooper()).idle()
+            testScheduler.advanceTimeBy(1_000)
+            testScheduler.runCurrent()
+        }
+        assertEquals(ready, s.h.state.value)
+        assertTrue(s.runtime.init.consent.isFormShowing)
+
+        // The splash is recreated: its start joins and waits for the user's answer.
+        s.runtime.init.start(newActivity(), { s.results += it }, 8.seconds)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(s.results.isEmpty())
+
+        s.h.settle()
+        assertEquals(listOf(ready, ready), s.results)
     }
 
     @Test

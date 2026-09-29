@@ -32,6 +32,7 @@ class SplashFlowTest {
         val startCalls = mutableListOf<Duration>()
         var finishStart: (() -> Unit)? = null
         var answerStartAtOnce = true
+        var formShowing = false
         val requested = mutableListOf<String>()
         var showCallback: ((FullScreenResult) -> Unit)? = null
         val abandoned = mutableListOf<String>()
@@ -42,6 +43,7 @@ class SplashFlowTest {
             startCalls += consentTimeout
             if (answerStartAtOnce) onDone() else finishStart = onDone
         }
+        override fun consentFormShowing() = formShowing
         override fun requestAd(key: String): Boolean {
             requested += key
             return adAvailable
@@ -144,6 +146,49 @@ class SplashFlowTest {
         assertTrue(ports.requested.isEmpty())
         advance(200) // 8 s form timeout + 2 s guard
         assertEquals(SplashState.Loading(0), flow.state.value)
+    }
+
+    @Test
+    fun `a consent form on screen holds the splash until the user answers - no timer, no ad request`() = runTest {
+        ports.answerStartAtOnce = false
+        val flow = flow()
+        advance(3_000)
+        ports.formShowing = true
+        advance(120_000) // the user reads the form for two minutes
+        assertEquals(SplashState.Preparing, flow.state.value)
+        assertTrue(ports.requested.isEmpty())
+
+        ports.formShowing = false
+        ports.finishStart!!()
+        advance(100)
+        assertEquals(listOf("SplashAd"), ports.requested)
+        assertEquals(SplashState.Loading(0), flow.state.value)
+    }
+
+    @Test
+    fun `after the form closes, a start that never answers is still bounded`() = runTest {
+        ports.answerStartAtOnce = false
+        val flow = flow()
+        ports.formShowing = true
+        advance(60_000)
+        ports.formShowing = false
+        advance(9_900)
+        assertEquals(SplashState.Preparing, flow.state.value)
+        advance(200)
+        assertTrue(flow.state.value is SplashState.Loading)
+    }
+
+    @Test
+    fun `a recreated splash during consent hands its Activity to the consent step`() = runTest {
+        ports.answerStartAtOnce = false
+        val flow = flow()
+        val recreated = Robolectric.buildActivity(Activity::class.java).setup().get()
+        flow.start(recreated)
+        assertEquals(2, ports.startCalls.size)
+        ports.finishStart!!()
+        advance(100)
+        flow.start(recreated) // after consent: nothing to hand over
+        assertEquals(2, ports.startCalls.size)
     }
 
     @Test

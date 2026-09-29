@@ -38,7 +38,9 @@ import kotlin.time.Duration
  *
  * A gather with a form timeout (the splash screen's) finishes when the timeout passes and no form is on screen: the
  * steps still running are abandoned, and a form that loads afterwards is never shown (it's tried again on the next
- * launch). A form already on screen isn't interrupted.
+ * launch). A form already on screen isn't interrupted: the gather waits for the user's answer, however long it takes.
+ * If the form's Activity is gone before an answer (the splash was closed or recreated), the next [gather] joining it
+ * shows the form again on its Activity.
  *
  * Consent is never cached here: every value is read from UMP. Main thread only. The Activity is held weakly, and
  * only while a gather is in flight.
@@ -78,7 +80,17 @@ internal class ConsentCoordinator(
     private var cancelDeadline: (() -> Unit)? = null
     private var formShowing = false
 
+    /** The Activity the form is shown on, and the form's show, so an abandoned show's answer is ignored. */
+    private var formActivityRef: WeakReference<Activity>? = null
+    private var formToken = 0
+
+    /** The form timeout of the current gather. */
+    private var formTimeout: Duration? = null
+
     val isGathering: Boolean get() = waiting != null
+
+    /** A consent form is on screen, waiting for the user's answer. */
+    val isFormShowing: Boolean get() = waiting != null && formShowing && formActivityRef?.get().isUsable()
 
     /** Test hook: whether an Activity reference is held. */
     internal val holdsActivity: Boolean get() = activityRef != null
@@ -99,15 +111,33 @@ internal class ConsentCoordinator(
         waiting?.let {
             log.d { "Consent gathering already in progress; waiting for it" }
             it += onFinished
+            if (formShowing && !formActivityRef?.get().isUsable()) showFormAgain(activity)
             return
         }
         waiting = mutableListOf(onFinished)
         initRequested = false
         val gen = ++generation
-        formDeadline = formTimeout?.let { clock.elapsedRealtimeMillis() + it.inWholeMilliseconds }
-        cancelDeadline = formTimeout?.let { timeout -> schedule(timeout) { onFormTimeout(gen, timeout) } }
+        this.formTimeout = formTimeout
+        startFormDeadline(gen)
         log.d { "Requesting consent information" }
         consentSdk.requestUpdate(activity, consentParams(config, isDebuggable)) { onUpdated(gen, it) }
+    }
+
+    private fun startFormDeadline(gen: Int) {
+        val timeout = formTimeout
+        formDeadline = timeout?.let { clock.elapsedRealtimeMillis() + it.inWholeMilliseconds }
+        cancelDeadline = timeout?.let { limit -> schedule(limit) { onFormTimeout(gen, limit) } }
+    }
+
+    /** The form's Activity is gone with no answer: the user hasn't chosen yet, so the form is shown again. */
+    private fun showFormAgain(activity: Activity) {
+        log.i { "The consent form's screen closed before an answer; showing the form again" }
+        formShowing = false
+        formActivityRef = null
+        formToken++
+        startFormDeadline(generation)
+        val gen = generation
+        consentSdk.loadFormIfRequired(activity) { form, error -> onFormLoaded(gen, form, error) }
     }
 
     private fun onFormTimeout(gen: Int, timeout: Duration) {
@@ -172,10 +202,14 @@ internal class ConsentCoordinator(
             }
             else -> {
                 formShowing = true
+                formActivityRef = WeakReference(activity)
+                val token = ++formToken
                 cancelDeadline?.invoke()
                 cancelDeadline = null
                 form.show(activity) { showError ->
+                    if (token != formToken) return@show
                     formShowing = false
+                    formActivityRef = null
                     if (gen == generation && waiting != null) onFormDone(showError)
                 }
             }
@@ -196,6 +230,8 @@ internal class ConsentCoordinator(
         cancelDeadline?.invoke()
         cancelDeadline = null
         formDeadline = null
+        formShowing = false
+        formActivityRef = null
         activityRef = null
         val current = publish()
         log.d { "Consent gathering finished: status=${current.status}, canRequestAds=${current.canRequestAds}" }
@@ -275,6 +311,8 @@ internal class ConsentCoordinator(
             log.e(e) { "A consent callback threw" }
         }
     }
+
+    private fun Activity?.isUsable(): Boolean = this != null && !isFinishing && !isDestroyed
 
     companion object {
         /**

@@ -12,6 +12,7 @@ import com.company.admob.config.SplashTimings
 import com.company.admob.internal.threading.MainDispatcher
 import com.company.admob.logging.LogLevel
 import com.company.admob.network.NetworkMonitor
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -32,8 +33,9 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * A splash screen's whole ads sequence (docs/SPLASH.md), which never gets stuck:
  * 1. [SplashState.Preparing]: consent (UMP), for at most `consentTimeoutSeconds` for the form to appear; after that,
- *    the form is dropped for this launch. Then the library starts (`CompanyAdMob.start`), whatever the answer.
- *    Skipped for a premium user.
+ *    the form is dropped for this launch. A form that appeared stays until the user answers, and nothing else starts
+ *    meanwhile. Until the user answers, every splash asks again. Then the library starts (`CompanyAdMob.start`),
+ *    whatever the answer. Skipped for a premium user.
  * 2. [SplashState.Loading]: the splash timer, with a [SplashState.Loading.progress] from 0 to 100 for a progress bar.
  *    It lasts `splashSeconds` (Firebase `AdSettings`, read when the timer starts), `premiumSplashSeconds` for a premium
  *    user or `offlineSplashSeconds` without internet. Meanwhile, the splash ad loads (not for premium or offline
@@ -58,6 +60,7 @@ public class SplashFlow internal constructor(
     private val mutableState = MutableStateFlow<SplashState>(SplashState.Preparing)
     private var activityRef: WeakReference<Activity>? = null
     private var job: Job? = null
+    private val adsStarted = CompletableDeferred<Unit>()
 
     /** Where the splash is. [SplashState.Finished] is final: navigate on it, from any Activity that collects it. */
     public val state: StateFlow<SplashState> = mutableState.asStateFlow()
@@ -65,7 +68,11 @@ public class SplashFlow internal constructor(
     /** Starts the flow for [activity], or, after a rotation, hands the running flow the new Activity. Main thread. */
     public fun start(activity: Activity) {
         activityRef = WeakReference(activity)
-        if (job != null) return
+        if (job != null) {
+            // Recreated during consent: the new Activity takes over the form, which is shown again if it was lost.
+            if (mutableState.value == SplashState.Preparing && !isPremium && !adsStarted.isCompleted) startAds(activity)
+            return
+        }
         job = scope.launch { run() }
     }
 
@@ -78,17 +85,15 @@ public class SplashFlow internal constructor(
 
     private suspend fun run() {
         if (!isPremium) {
-            val consentTimeout = ports.timings().consentTimeout
-            // The consent step has its own form timeout; this guard also bounds an update request that never answers.
-            withTimeoutOrNull(consentTimeout + CONSENT_GUARD) {
-                suspendCancellableCoroutine { continuation ->
-                    val current = activity
-                    if (current == null) {
-                        continuation.resume(Unit)
-                    } else {
-                        ports.startAds(current, consentTimeout) { if (continuation.isActive) continuation.resume(Unit) }
-                    }
-                }
+            val current = activity
+            if (current == null) adsStarted.complete(Unit) else startAds(current)
+            // The consent step has its own form timeout. This guard bounds the rest (an update request or an SDK start
+            // that never answers), but never runs while the form is on screen: the timer starts after the answer.
+            val limit = ports.timings().consentTimeout + CONSENT_GUARD
+            var waited = Duration.ZERO
+            while (!adsStarted.isCompleted && waited < limit) {
+                withTimeoutOrNull(TICK) { adsStarted.await() }
+                waited = if (ports.consentFormShowing()) Duration.ZERO else waited + TICK
             }
         }
         // Read now, not before consent: a Remote Config fetch may have finished meanwhile.
@@ -126,6 +131,10 @@ public class SplashFlow internal constructor(
             ports.showAd(current, checkNotNull(splashAdKey)) { if (continuation.isActive) continuation.resume(it) }
         }
         finish(adShown = result is FullScreenResult.Dismissed)
+    }
+
+    private fun startAds(activity: Activity) {
+        ports.startAds(activity, ports.timings().consentTimeout) { adsStarted.complete(Unit) }
     }
 
     private fun finish(adShown: Boolean) {
@@ -207,6 +216,9 @@ internal interface SplashPorts {
     /** Consent (at most [consentTimeout] for the form to appear) and the library's start; [onDone] once, when settled. */
     fun startAds(activity: Activity, consentTimeout: Duration, onDone: () -> Unit)
 
+    /** A consent form is on screen, waiting for the user's answer. */
+    fun consentFormShowing(): Boolean
+
     /** Starts loading the ad [key] in its current format. False when it can't be requested (unknown, off). */
     fun requestAd(key: String): Boolean
 
@@ -242,6 +254,8 @@ internal class RuntimeSplashPorts(private val network: NetworkMonitor) : SplashP
         }
         runtime.init.start(activity, { onDone() }, consentTimeout)
     }
+
+    override fun consentFormShowing(): Boolean = runtime?.init?.consent?.isFormShowing == true
 
     private fun serving(key: String) = runtime?.let { rt ->
         rt.liveConfig.current.active(key)?.let { p ->

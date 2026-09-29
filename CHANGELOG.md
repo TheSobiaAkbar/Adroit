@@ -6,6 +6,15 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Fixed
+- The splash timer no longer starts while the consent form is on screen: the consent step's 2-second guard counted the
+  form's time, so after 10 seconds the timer, the progress bar and the splash ad request started behind the form. Now
+  they start after the user's answer (or when no form appeared in `consentTimeoutSeconds`).
+- A consent form whose screen closed before an answer (the splash finished or was recreated) is shown again on the
+  next splash, even in the same process, instead of that splash waiting on the lost form. A `start()` that joins a
+  consent gather with the form on screen waits for the answer, even when the SDK already started from the previous
+  session's consent.
+
 ### Added
 - Debug builds ask for consent as in Europe: in a debuggable build that isn't PRODUCTION, UMP assumes the EEA unless
   `privacy { debugGeography }` says otherwise, and the device is made a UMP test device automatically (the MD5 of

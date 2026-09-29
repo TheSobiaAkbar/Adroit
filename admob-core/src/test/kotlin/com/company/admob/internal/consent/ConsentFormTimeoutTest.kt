@@ -18,6 +18,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -79,6 +80,53 @@ class ConsentFormTimeoutTest {
         assertEquals(1, h.results.size)
         assertTrue(h.results.single().canRequestAds)
     }
+
+    @Test
+    fun `a shown form reports itself until the user answers`() = runTest {
+        val h = Harness(this) {
+            formLoadDelayMs = 1_000
+            formOpenMs = 20_000
+        }
+        h.gather()
+        advance(500)
+        assertFalse(h.coordinator.isFormShowing)
+        advance(1_000)
+        assertTrue(h.coordinator.isFormShowing)
+        advance(20_000)
+        assertFalse(h.coordinator.isFormShowing)
+        assertEquals(1, h.results.size)
+    }
+
+    @Test
+    fun `the form's screen closes before an answer - the next splash shows the form again and the gather waits`() =
+        runTest {
+            val controller = Robolectric.buildActivity(Activity::class.java).setup()
+            val h = Harness(this) {
+                formLoadDelayMs = 1_000
+                formOpenMs = 600_000 // the first form never answers: its screen is gone
+            }
+            h.coordinator.gather(controller.get(), 8.seconds) { h.results += it }
+            advance(1_100)
+            assertEquals(1, h.sdk.formShowCount)
+            controller.pause().stop().destroy()
+            assertFalse(h.coordinator.isFormShowing)
+            assertTrue(h.coordinator.isGathering)
+
+            // A new splash: the form shows again on it, and this time the user answers.
+            h.sdk.formOpenMs = 5_000
+            h.sdk.onFormShown = { status = ConsentStatus.OBTAINED; canRequestAds = true }
+            val next = Robolectric.buildActivity(Activity::class.java).setup().get()
+            h.coordinator.gather(next, 8.seconds) { h.results += it }
+            advance(1_100)
+            assertEquals(2, h.sdk.formShowCount)
+            assertTrue(h.coordinator.isFormShowing)
+            advance(5_000)
+            assertEquals(2, h.results.size)
+            assertTrue(h.results.all { it.canRequestAds })
+            // The first form's late answer (if any) changes nothing.
+            advance(600_000)
+            assertEquals(2, h.results.size)
+        }
 
     @Test
     fun `a form that loads after the limit is never shown, and the gather finished at the limit`() = runTest {
