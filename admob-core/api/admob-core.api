@@ -1525,6 +1525,7 @@ public final class com/company/admob/config/PrivacyOptions {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAgeTreatment ()Lcom/company/admob/config/AgeTreatment;
 	public final fun getConsentSyncId ()Ljava/lang/String;
+	public final fun getDebugBuildGeography ()Lcom/company/admob/config/DebugGeography;
 	public final fun getDebugGeography ()Lcom/company/admob/config/DebugGeography;
 	public final fun getMaxAdContentRating ()Lcom/company/admob/config/MaxAdContentRating;
 	public final fun getRestrictedDataProcessing ()Z
@@ -1535,11 +1536,13 @@ public final class com/company/admob/config/PrivacyOptions {
 public final class com/company/admob/config/PrivacyOptions$Builder {
 	public final fun getAgeTreatment ()Lcom/company/admob/config/AgeTreatment;
 	public final fun getConsentSyncId ()Ljava/lang/String;
+	public final fun getDebugBuildGeography ()Lcom/company/admob/config/DebugGeography;
 	public final fun getDebugGeography ()Lcom/company/admob/config/DebugGeography;
 	public final fun getMaxAdContentRating ()Lcom/company/admob/config/MaxAdContentRating;
 	public final fun getRestrictedDataProcessing ()Z
 	public final fun setAgeTreatment (Lcom/company/admob/config/AgeTreatment;)V
 	public final fun setConsentSyncId (Ljava/lang/String;)V
+	public final fun setDebugBuildGeography (Lcom/company/admob/config/DebugGeography;)V
 	public final fun setDebugGeography (Lcom/company/admob/config/DebugGeography;)V
 	public final fun setMaxAdContentRating (Lcom/company/admob/config/MaxAdContentRating;)V
 	public final fun setRestrictedDataProcessing (Z)V

@@ -105,8 +105,14 @@ fun ConsentStatusLine() {
 
 ## Testing consent
 
-- **Debug geography:** `privacy { debugGeography = DebugGeography.EEA }` makes UMP behave as if the device were in the
-  EEA. It works on test devices only, and is rejected in PRODUCTION.
+- **Debug builds ask for consent as in Europe:** in a debuggable build, UMP behaves as if the device were in the
+  EEA, so the consent form shows on the splash (until the user answers it; see Reset below). It works on a phone as
+  well as an emulator: the library makes the phone a UMP test device itself. To test with the real location instead,
+  set `privacy { debugBuildGeography = DebugGeography.DISABLED }`. Release builds (not debuggable) and PRODUCTION
+  never use a debug geography.
+- **Debug geography:** `privacy { debugGeography = DebugGeography.REGULATED_US_STATE }` (or `EEA`, `OTHER`) forces a
+  geography in every build that isn't PRODUCTION, debuggable or not, and overrides `debugBuildGeography`. It works
+  on test devices only, and is rejected in PRODUCTION.
 - **Test devices:** UMP prints the device's hashed ID in Logcat after the first consent request, in a message
   containing `addTestDeviceHashedId("…")`. Add that ID to `testing { testDeviceIds += "…" }` (the same list also
   gives test ads).
@@ -162,4 +168,4 @@ under Google Play's Families policy) removes the permission in its manifest:
     tools:node="remove" />
 ```
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29

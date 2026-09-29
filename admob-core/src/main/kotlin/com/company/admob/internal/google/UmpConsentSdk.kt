@@ -1,7 +1,9 @@
 package com.company.admob.internal.google
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.provider.Settings
 import com.company.admob.AdError
 import com.company.admob.ConsentStatus
 import com.company.admob.config.DebugGeography
@@ -15,6 +17,7 @@ import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
+import java.security.MessageDigest
 
 /**
  * [ConsentSdk] over UMP. UMP usually calls back on the main thread; results are posted anyway through
@@ -59,10 +62,25 @@ internal class UmpConsentSdk(
         if (params.debugGeography != DebugGeography.DISABLED || params.testDeviceHashedIds.isNotEmpty()) {
             val debug = ConsentDebugSettings.Builder(appContext)
                 .setDebugGeography(UmpMapping.debugGeography(params.debugGeography))
-            params.testDeviceHashedIds.forEach(debug::addTestDeviceHashedId)
+            val thisDevice = if (params.includeThisDevice) thisDeviceHashedId() else null
+            (params.testDeviceHashedIds + listOfNotNull(thisDevice)).distinct().forEach(debug::addTestDeviceHashedId)
             builder.setConsentDebugSettings(debug.build())
         }
         return builder.build()
+    }
+
+    /**
+     * UMP's hashed ID of this device (the MD5 of its Android ID, as UMP logs it), so a debuggable build's debug
+     * geography applies on a phone without copying its ID from logcat. Emulators are test devices already.
+     */
+    @SuppressLint("HardwareIds")
+    private fun thisDeviceHashedId(): String? = try {
+        Settings.Secure.getString(appContext.contentResolver, Settings.Secure.ANDROID_ID)?.let { id ->
+            MessageDigest.getInstance("MD5").digest(id.toByteArray()).joinToString("") { "%02X".format(it) }
+        }
+    } catch (e: Exception) {
+        log.w(e) { "Reading this device's ID failed; debug geography applies on emulators and listed test devices only" }
+        null
     }
 
     override fun loadAndShowFormIfRequired(activity: Activity, onDone: (AdError?) -> Unit) {

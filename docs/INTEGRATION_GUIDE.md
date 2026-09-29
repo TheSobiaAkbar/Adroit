@@ -1,5 +1,8 @@
 # Integration guide: ads in a new app, step by step
 
+Starting a new Kotlin + XML app? [Adding ads to a new Kotlin + XML app](NEW_APP_XML.md) covers the same steps with
+complete files for every screen, and a sample Firebase value for every kind of ad.
+
 This page is a checklist for adding the ads library to a new app, from nothing to ads you can tune from Firebase
 without a release. Every step says what to do and how to check it worked. You write one Kotlin file listing your ads,
 and add a few lines to three others. The other pages explain each part in depth; you don't need them to finish.
@@ -28,8 +31,8 @@ plugins {
     id("com.google.gms.google-services") // reads google-services.json
 }
 dependencies {
-    implementation("com.company:admob-views:0.1.0") // or admob-compose for Compose apps
-    implementation("com.company:admob-firebase:0.1.0") // Remote Config and Analytics; brings Firebase itself
+    implementation("com.company:admob-views:1.0.0-rc1") // or admob-compose for Compose apps
+    implementation("com.company:admob-firebase:1.0.0-rc1") // Remote Config and Analytics; brings Firebase itself
 }
 ```
 

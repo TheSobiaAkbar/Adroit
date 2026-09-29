@@ -7,6 +7,15 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 ## [Unreleased]
 
 ### Added
+- Debug builds ask for consent as in Europe: in a debuggable build that isn't PRODUCTION, UMP assumes the EEA unless
+  `privacy { debugGeography }` says otherwise, and the device is made a UMP test device automatically (the MD5 of
+  its Android ID), so it works on a phone too. `privacy { debugBuildGeography = DebugGeography.DISABLED }` uses the
+  real location. `PrivacyOptions.debugBuildGeography`.
+- `docs/NEW_APP_XML.md`: adding the plugin to a new Kotlin + XML app, step by step, with a sample Firebase value
+  for every kind of ad.
+- `RemoteValue` (admob-firebase): the app's own Remote Config parameters, with in-app defaults:
+  `RemoteValue.boolean`, `long`, `double`, `string`, `json` and `custom`. `.value` never waits and reads as the
+  default when Firebase doesn't set a valid value; `updates()` follows activations.
 - `NetworkMonitor` (admob-core): the connection state as a `StateFlow<NetworkState>`: `Unavailable`,
   `ConnectedNoInternet` (for example Wi-Fi behind a sign-in page) or `Connected` over Wi-Fi, mobile data or ethernet.
 - `RemoteConfigSession` (admob-firebase): fetches Remote Config once per app session without blocking. After a

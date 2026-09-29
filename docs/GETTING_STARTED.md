@@ -34,9 +34,9 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.company:admob-compose:0.1.0") // Compose apps (brings admob-core and admob-views)
-    // implementation("com.company:admob-views:0.1.0") // XML/View apps without Compose (brings admob-core)
-    testImplementation("com.company:admob-testing:0.1.0")
+    implementation("com.company:admob-compose:1.0.0-rc1") // Compose apps (brings admob-core and admob-views)
+    // implementation("com.company:admob-views:1.0.0-rc1") // XML/View apps without Compose (brings admob-core)
+    testImplementation("com.company:admob-testing:1.0.0-rc1")
 }
 ```
 

@@ -25,7 +25,7 @@ exactly once, test-ad safety, analytics events and remote kill switches. No Goog
 
 ```kotlin
 // build.gradle.kts
-dependencies { implementation("com.company:admob-compose:0.1.0") }
+dependencies { implementation("com.company:admob-compose:1.0.0-rc1") }
 
 // Application.onCreate
 CompanyAdMob.initialize(this, adMobConfig {
@@ -68,6 +68,7 @@ Apps using AdMob Mediation must exclude the legacy `play-services-ads`: see [Med
 - Formats: [Banner](docs/BANNER.md) · [Interstitial](docs/INTERSTITIAL.md) · [Rewarded](docs/REWARDED.md) ·
   [Rewarded interstitial](docs/REWARDED_INTERSTITIAL.md) · [App open](docs/APP_OPEN.md) · [Native](docs/NATIVE.md)
 - UI toolkits: [Compose](docs/COMPOSE.md) · [XML and Views](docs/XML.md)
+- **New Kotlin + XML app, step by step: [Adding ads to a new Kotlin + XML app](docs/NEW_APP_XML.md)**
 - [Integration guide](docs/INTEGRATION_GUIDE.md) · [Ad profiles](docs/AD_PROFILES.md) · [Splash screen](docs/SPLASH.md) · [Mediation](docs/MEDIATION.md) · [Analytics](docs/ANALYTICS.md) ·
   [Remote config](docs/REMOTE_CONFIG.md) ·
   [Testing](docs/TESTING.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Migration](docs/MIGRATION.md) ·
@@ -81,4 +82,4 @@ CompanyAdMob follows Google's documented requirements as of 2026-09-26. Your app
 policy configuration and product usage: your AdMob account settings, consent messages, ad placement and content
 choices, and your Google Play data safety form.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29

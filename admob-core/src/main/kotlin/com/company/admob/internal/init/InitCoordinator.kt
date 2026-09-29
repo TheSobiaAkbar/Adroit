@@ -51,6 +51,7 @@ internal class InitCoordinator(
     private val clock: Clock,
     private val events: EventBus,
     private val log: AdLog,
+    private val isDebuggable: Boolean = false,
 ) : Readiness, ConfigChangeListener {
     override val state: StateFlow<AdsState> = mutableState.asStateFlow()
 
@@ -62,6 +63,7 @@ internal class InitCoordinator(
         clock = clock,
         onCanRequestAds = ::initSdkOnce,
         onConsentRevoked = ::onConsentRevoked,
+        isDebuggable = isDebuggable,
     )
 
     /** Set while SDK initialization is in flight or done; cleared after a failure so `start()` can retry. */

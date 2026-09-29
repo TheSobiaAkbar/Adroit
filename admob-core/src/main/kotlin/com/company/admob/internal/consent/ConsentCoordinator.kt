@@ -6,6 +6,7 @@ import com.company.admob.ConsentState
 import com.company.admob.config.AdEnvironment
 import com.company.admob.config.AgeTreatment
 import com.company.admob.config.DebugGeography
+import com.company.admob.config.PrivacyOptions
 import com.company.admob.events.AdEvent
 import com.company.admob.internal.config.EffectiveConfig
 import com.company.admob.internal.events.EventBus
@@ -52,6 +53,8 @@ internal class ConsentCoordinator(
     private val onConsentRevoked: () -> Unit,
     /** Runs a block after a delay on the main thread; returns its cancellation. */
     private val schedule: (Duration, () -> Unit) -> (() -> Unit) = ::postDelayedOnMain,
+    /** Whether the host app is debuggable: [PrivacyOptions.debugBuildGeography] applies. */
+    private val isDebuggable: Boolean = false,
 ) {
     private val mutableState = MutableStateFlow(ConsentState.Unknown)
     val state: StateFlow<ConsentState> = mutableState.asStateFlow()
@@ -104,7 +107,7 @@ internal class ConsentCoordinator(
         formDeadline = formTimeout?.let { clock.elapsedRealtimeMillis() + it.inWholeMilliseconds }
         cancelDeadline = formTimeout?.let { timeout -> schedule(timeout) { onFormTimeout(gen, timeout) } }
         log.d { "Requesting consent information" }
-        consentSdk.requestUpdate(activity, consentParams(config)) { onUpdated(gen, it) }
+        consentSdk.requestUpdate(activity, consentParams(config, isDebuggable)) { onUpdated(gen, it) }
     }
 
     private fun onFormTimeout(gen: Int, timeout: Duration) {
@@ -274,16 +277,27 @@ internal class ConsentCoordinator(
     }
 
     companion object {
-        /** UMP request parameters. Debug settings are never sent in PRODUCTION, even if validation was bypassed. */
-        fun consentParams(config: EffectiveConfig): ConsentParams {
+        /**
+         * UMP request parameters. Debug settings are never sent in PRODUCTION, even if validation was bypassed. A
+         * debuggable build without a [PrivacyOptions.debugGeography] uses [PrivacyOptions.debugBuildGeography], on
+         * this device too.
+         */
+        fun consentParams(config: EffectiveConfig, isDebuggable: Boolean = false): ConsentParams {
             val privacy = config.source.privacy
             val production = config.environment == AdEnvironment.PRODUCTION
+            val geography = when {
+                production -> DebugGeography.DISABLED
+                privacy.debugGeography != DebugGeography.DISABLED -> privacy.debugGeography
+                isDebuggable -> privacy.debugBuildGeography
+                else -> DebugGeography.DISABLED
+            }
             return ConsentParams(
-                debugGeography = if (production) DebugGeography.DISABLED else privacy.debugGeography,
+                debugGeography = geography,
                 // GMA test device IDs are also UMP's hashed device IDs; EffectiveConfig empties them in PRODUCTION.
                 testDeviceHashedIds = if (production) emptyList() else config.testDeviceIds.toList(),
                 tagUnderAgeOfConsent = privacy.ageTreatment == AgeTreatment.CHILD,
                 consentSyncId = privacy.consentSyncId,
+                includeThisDevice = isDebuggable && geography != DebugGeography.DISABLED,
             )
         }
     }

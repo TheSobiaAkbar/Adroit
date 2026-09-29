@@ -48,6 +48,10 @@ public class TestingOptions internal constructor(
  * @property maxAdContentRating the maximum ad content rating, or null to leave it unset.
  * @property restrictedDataProcessing enables restricted data processing (`gad_rdp`) for US state privacy laws.
  * @property debugGeography forces UMP's geography on test devices. Must be DISABLED in PRODUCTION.
+ * @property debugBuildGeography the geography UMP assumes in a debuggable build when [debugGeography] is DISABLED.
+ *   Default EEA: every debug build asks for consent on the splash, as it does for a user in Europe, on an emulator
+ *   and on a phone alike (the phone is made a UMP test device automatically). DISABLED uses the device's real
+ *   location. Never applied in PRODUCTION or in a non-debuggable build.
  * @property consentSyncId an ID that syncs the user's consent choices across your apps (UMP's consent sync ID), or
  *   null. Use the same value for the same user in every app that shares consent. A blank value is ignored.
  */
@@ -57,26 +61,29 @@ public class PrivacyOptions internal constructor(
     public val restrictedDataProcessing: Boolean,
     public val debugGeography: DebugGeography,
     public val consentSyncId: String?,
+    public val debugBuildGeography: DebugGeography,
 ) {
     override fun equals(other: Any?): Boolean =
         other is PrivacyOptions && other.ageTreatment == ageTreatment &&
             other.maxAdContentRating == maxAdContentRating &&
             other.restrictedDataProcessing == restrictedDataProcessing && other.debugGeography == debugGeography &&
-            other.consentSyncId == consentSyncId
+            other.consentSyncId == consentSyncId && other.debugBuildGeography == debugBuildGeography
 
     override fun hashCode(): Int {
         var result = ageTreatment.hashCode()
         result = 31 * result + maxAdContentRating.hashCode()
         result = 31 * result + restrictedDataProcessing.hashCode()
         result = 31 * result + debugGeography.hashCode()
-        return 31 * result + consentSyncId.hashCode()
+        result = 31 * result + consentSyncId.hashCode()
+        return 31 * result + debugBuildGeography.hashCode()
     }
 
     // The sync ID identifies a user, so it's only reported as set or unset.
     override fun toString(): String =
         "PrivacyOptions(ageTreatment=$ageTreatment, maxAdContentRating=$maxAdContentRating, " +
             "restrictedDataProcessing=$restrictedDataProcessing, debugGeography=$debugGeography, " +
-            "consentSyncId=${if (consentSyncId == null) "null" else "<set>"})"
+            "consentSyncId=${if (consentSyncId == null) "null" else "<set>"}, " +
+            "debugBuildGeography=$debugBuildGeography)"
 
     /** Mutable builder for [PrivacyOptions]. */
     @AdMobConfigDsl
@@ -96,12 +103,16 @@ public class PrivacyOptions internal constructor(
         /** See [PrivacyOptions.consentSyncId]. */
         public var consentSyncId: String? = null
 
+        /** See [PrivacyOptions.debugBuildGeography]. */
+        public var debugBuildGeography: DebugGeography = DebugGeography.EEA
+
         internal fun build(): PrivacyOptions = PrivacyOptions(
             ageTreatment,
             maxAdContentRating,
             restrictedDataProcessing,
             debugGeography,
             consentSyncId?.takeIf { it.isNotBlank() },
+            debugBuildGeography,
         )
     }
 }

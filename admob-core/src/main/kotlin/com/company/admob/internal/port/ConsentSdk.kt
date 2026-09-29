@@ -55,6 +55,8 @@ internal data class ConsentParams(
     val testDeviceHashedIds: List<String>,
     val tagUnderAgeOfConsent: Boolean,
     val consentSyncId: String?,
+    /** Adds this device to [testDeviceHashedIds] (debuggable builds), so [debugGeography] applies on a phone too. */
+    val includeThisDevice: Boolean = false,
 )
 
 internal sealed interface ConsentUpdateResult {

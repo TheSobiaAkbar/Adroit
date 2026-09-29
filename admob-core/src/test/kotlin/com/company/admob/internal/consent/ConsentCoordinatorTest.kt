@@ -380,6 +380,39 @@ class ConsentCoordinatorTest {
     }
 
     @Test
+    fun `consent params - a debuggable build assumes the EEA on this device, unless told otherwise`() {
+        val development = EffectiveConfig.from(adMobConfig { environment = AdEnvironment.DEVELOPMENT })
+        val debug = ConsentCoordinator.consentParams(development, isDebuggable = true)
+        assertEquals(DebugGeography.EEA, debug.debugGeography)
+        assertTrue("this phone becomes a UMP test device", debug.includeThisDevice)
+
+        val notDebuggable = ConsentCoordinator.consentParams(development, isDebuggable = false)
+        assertEquals(DebugGeography.DISABLED, notDebuggable.debugGeography)
+        assertFalse(notDebuggable.includeThisDevice)
+
+        val realLocation = EffectiveConfig.from(
+            adMobConfig { privacy { debugBuildGeography = DebugGeography.DISABLED } },
+        )
+        val real = ConsentCoordinator.consentParams(realLocation, isDebuggable = true)
+        assertEquals(DebugGeography.DISABLED, real.debugGeography)
+        assertFalse(real.includeThisDevice)
+
+        val explicit = EffectiveConfig.from(
+            adMobConfig { privacy { debugGeography = DebugGeography.REGULATED_US_STATE } },
+        )
+        assertEquals(
+            "an explicit debugGeography wins",
+            DebugGeography.REGULATED_US_STATE,
+            ConsentCoordinator.consentParams(explicit, isDebuggable = true).debugGeography,
+        )
+
+        val production = EffectiveConfig.from(adMobConfig { environment = AdEnvironment.PRODUCTION })
+        val live = ConsentCoordinator.consentParams(production, isDebuggable = true)
+        assertEquals("never in PRODUCTION", DebugGeography.DISABLED, live.debugGeography)
+        assertFalse(live.includeThisDevice)
+    }
+
+    @Test
     fun `consent params - under-age tag only for CHILD, and the sync ID passes through`() {
         fun params(treatment: AgeTreatment, syncId: String? = null) = ConsentCoordinator.consentParams(
             EffectiveConfig.from(

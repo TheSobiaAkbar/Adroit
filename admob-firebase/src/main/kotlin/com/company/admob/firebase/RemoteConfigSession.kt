@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * waits for it: code that needs a value reads the one active now (from the last session's fetch, or the default).
  */
 public class RemoteConfigSession internal constructor(
-    private val source: RemoteConfigSource,
+    internal val source: RemoteConfigSource,
     private val isOnline: () -> Boolean,
 ) {
     private val fetched = MutableStateFlow(false)

@@ -57,3 +57,30 @@ public final class com/company/admob/firebase/RemoteConfigSession$Companion {
 	public static synthetic fun start$default (Lcom/company/admob/firebase/RemoteConfigSession$Companion;Landroid/app/Application;Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;ILjava/lang/Object;)Lcom/company/admob/firebase/RemoteConfigSession;
 }
 
+public final class com/company/admob/firebase/RemoteValue {
+	public static final field Companion Lcom/company/admob/firebase/RemoteValue$Companion;
+	public static final fun boolean (Ljava/lang/String;Z)Lcom/company/admob/firebase/RemoteValue;
+	public static final fun custom (Ljava/lang/String;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lcom/company/admob/firebase/RemoteValue;
+	public static final fun double (Ljava/lang/String;D)Lcom/company/admob/firebase/RemoteValue;
+	public final fun getDefault ()Ljava/lang/Object;
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/Object;
+	public static final fun json (Ljava/lang/String;)Lcom/company/admob/firebase/RemoteValue;
+	public static final fun json (Ljava/lang/String;Lorg/json/JSONObject;)Lcom/company/admob/firebase/RemoteValue;
+	public static final fun long (Ljava/lang/String;J)Lcom/company/admob/firebase/RemoteValue;
+	public static final fun string (Ljava/lang/String;Ljava/lang/String;)Lcom/company/admob/firebase/RemoteValue;
+	public fun toString ()Ljava/lang/String;
+	public final fun updates ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/company/admob/firebase/RemoteValue$Companion {
+	public final fun boolean (Ljava/lang/String;Z)Lcom/company/admob/firebase/RemoteValue;
+	public final fun custom (Ljava/lang/String;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lcom/company/admob/firebase/RemoteValue;
+	public final fun double (Ljava/lang/String;D)Lcom/company/admob/firebase/RemoteValue;
+	public final fun json (Ljava/lang/String;)Lcom/company/admob/firebase/RemoteValue;
+	public final fun json (Ljava/lang/String;Lorg/json/JSONObject;)Lcom/company/admob/firebase/RemoteValue;
+	public static synthetic fun json$default (Lcom/company/admob/firebase/RemoteValue$Companion;Ljava/lang/String;Lorg/json/JSONObject;ILjava/lang/Object;)Lcom/company/admob/firebase/RemoteValue;
+	public final fun long (Ljava/lang/String;J)Lcom/company/admob/firebase/RemoteValue;
+	public final fun string (Ljava/lang/String;Ljava/lang/String;)Lcom/company/admob/firebase/RemoteValue;
+}
+

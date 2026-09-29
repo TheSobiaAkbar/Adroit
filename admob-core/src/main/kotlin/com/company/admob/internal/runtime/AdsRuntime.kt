@@ -104,6 +104,7 @@ internal class AdsRuntime(
         clock = deps.clock,
         events = events,
         log = log,
+        isDebuggable = deps.isDebuggable,
     )
 
     private val retryScheduler = RetryScheduler(scope, deps.foregroundSource, log, clock = deps.clock, network = deps.network)
