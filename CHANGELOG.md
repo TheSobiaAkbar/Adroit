@@ -11,6 +11,13 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `privacy { debugGeography }` says otherwise, and the device is made a UMP test device automatically (the MD5 of
   its Android ID), so it works on a phone too. `privacy { debugBuildGeography = DebugGeography.DISABLED }` uses the
   real location. `PrivacyOptions.debugBuildGeography`.
+- Banners load ahead of their view: `AdSlots.load` of a banner loads it (at the window's width) without a view, and
+  the next banner view for it shows it at once, or waits for it while it's loading; one of another width loads its
+  own. Native ads already could; a native view asking while its ad loads ahead now takes that ad without a second
+  request.
+- The native templates' sizes use sdp and text sizes ssp (com.intuit.sdp and com.intuit.ssp, new `admob-views`
+  dependencies), scaling with the screen width. New dimens `company_admob_native_spacing_tiny`,
+  `company_admob_shimmer_corner_radius` and `company_admob_shimmer_padding`.
 - Eight more native styles, each with its template: `SMALL_BUTTON_BOTTOM`, `SMALL_BUTTON_TOP`, `SMALL_BUTTON_END`,
   `LARGE_BUTTON_BOTTOM`, `LARGE_BUTTON_TOP`, `LARGE_COMPACT`, `SIDE_MEDIA_BUTTON_BOTTOM` and `SIDE_MEDIA_BUTTON_TOP`
   (`"style": "small_button_top"`, ... in Firebase; `company_admob_template` in XML).

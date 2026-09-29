@@ -71,6 +71,8 @@ internal class BannerAdHandleImpl(
     private val scope: CoroutineScope,
     private val log: AdLog,
     private val rotation: AdUnitRotation,
+    /** Banners loaded ahead of their view (`AdSlots.load`): the first load takes one when it fits. */
+    private val preloader: BannerPreloader? = null,
 ) : BannerAdHandle {
     private val container = BannerContainer(activity, this)
     private val mutableState = MutableStateFlow<BannerState>(BannerState.Loading)
@@ -94,6 +96,9 @@ internal class BannerAdHandleImpl(
     private var lastError: AdError? = null
     private var retryPending = false
     private var waitingForLayout = false
+
+    /** Waiting for this placement's banner loading ahead of its view, instead of requesting another. */
+    private var waitingForPreload = false
     private var collector: Job? = null
     private var boundOwner: LifecycleOwner? = null
     private var ownerObserver: LifecycleEventObserver? = null
@@ -187,6 +192,7 @@ internal class BannerAdHandleImpl(
             return
         }
         waitingForLayout = false
+        if (waitingForPreload) return
         val activity = container.context as Activity
         val spec = BannerSizeResolver.resolve(
             size,
@@ -194,6 +200,20 @@ internal class BannerAdHandleImpl(
             container.resources.displayMetrics.density,
             BannerSizeResolver.windowWidthPx(activity),
         )
+        if (sdkView == null && preloader != null) {
+            val token = ++generation
+            val claimed = preloader.claim(placementKey, spec, adUnitIds) { preloaded ->
+                if (destroyed || token != generation || sdkView != null) return@claim false
+                waitingForPreload = false
+                if (preloaded == null) requestLoad() else show(preloaded, spec, activity)
+                true
+            }
+            if (claimed) {
+                // Shown now if it was loaded; otherwise when its load completes.
+                if (sdkView == null) waitingForPreload = true
+                return
+            }
+        }
         val bannerView = sdkView ?: adsSdk.createBannerView(activity).also { created ->
             sdkView = created
             loadsOnView = 0
@@ -209,6 +229,29 @@ internal class BannerAdHandleImpl(
         expectedHeightPx = bannerView.expectedHeightPx(spec.size, spec.widthDp)
         if (options.reserveSpace) container.minimumHeight = expectedHeightPx
         load(bannerView, spec)
+    }
+
+    /** Shows a banner loaded ahead of this view: attached as this handle's SDK view, loaded already. */
+    private fun show(preloaded: PreloadedBannerAd, spec: BannerSizeSpec, activity: Activity) {
+        val loadGeneration = ++generation
+        val bannerView = preloaded.banner.attach(activity, Listener(loadGeneration))
+        sdkView = bannerView
+        loadsOnView = 1
+        loadedSpec = spec
+        adUnitId = preloaded.adUnitId
+        container.addView(
+            bannerView.view,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER_HORIZONTAL,
+            ),
+        )
+        expectedHeightPx = bannerView.expectedHeightPx(spec.size, spec.widthDp)
+        if (options.reserveSpace) container.minimumHeight = expectedHeightPx
+        failedAttempts = 0
+        mutableState.value = BannerState.Loaded
+        log.i { "Banner $placementKey shown from its load ahead of the view (${logId()})" }
     }
 
     private fun load(bannerView: SdkBannerView, spec: BannerSizeSpec) {
@@ -234,6 +277,7 @@ internal class BannerAdHandleImpl(
         retryPending = false
         failedAttempts = 0
         waitingForLayout = false
+        waitingForPreload = false
         loadedSpec = null
         val bannerView = sdkView ?: return
         sdkView = null

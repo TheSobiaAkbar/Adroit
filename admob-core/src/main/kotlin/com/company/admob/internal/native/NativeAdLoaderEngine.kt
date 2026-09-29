@@ -303,8 +303,13 @@ internal class NativeAdLoaderEngine(
         when {
             waiter != null -> {
                 handOut(waiter.placement, result.ad, adUnitId, waiter.onResult)
-                // loadAgain: the ad handed out is replaced in the pool.
-                if (pool.loadAgain && pool.target == 0) pool.target = 1
+                when {
+                    // loadAgain: the ad handed out is replaced in the pool.
+                    pool.loadAgain -> if (pool.target == 0) pool.target = 1
+                    // A pool that loads only when asked: a preload handed to a view that asked meanwhile is used up,
+                    // as when a view takes it from the pool, so no second ad loads to refill it.
+                    !pool.autoRefill -> pool.target = (pool.target - 1).coerceAtLeast(0)
+                }
             }
             pool.items.size < pool.target -> {
                 pool.items.addLast(Cached(Pooled(result.ad, adUnitId), clock.elapsedRealtimeMillis(), pool.ttl))

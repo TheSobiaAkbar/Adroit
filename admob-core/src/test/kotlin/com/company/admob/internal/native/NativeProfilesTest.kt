@@ -61,6 +61,21 @@ class NativeProfilesTest {
         assertEquals("and nothing refills the pool", 2, h.loads())
     }
 
+    @Test
+    fun `a view asking while its ad is loading ahead gets that ad, without a second request`() = runTest {
+        val h = NativeHarness(this, nativeConfig { placements { native(FEED, ids) { preload = PreloadStrategy.NONE } } })
+        h.ready()
+        h.adsSdk.enqueueLoad(ids[0], ScriptedLoad.Success(), delayMs = 2_000)
+        h.engine.preload(FEED)
+        h.run(500)
+        h.load()
+        h.run(500)
+        assertEquals("still loading: nothing yet", 0, h.handles().size)
+        h.run(2_000)
+        assertEquals(1, h.handles().size)
+        assertEquals("one request in all", 1, h.loads())
+    }
+
     private enum class NativeDefs(override val defaults: AdProfile) : AdDefinition {
         feed(AdProfile.native(ids = listOf(TestIds.unit(1), TestIds.unit(2)), loadAgain = true)),
     }

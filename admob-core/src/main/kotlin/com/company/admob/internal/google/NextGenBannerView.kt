@@ -7,6 +7,7 @@ import com.company.admob.AdError
 import com.company.admob.BannerSize
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.port.BannerListener
+import com.company.admob.internal.port.PreloadedBanner
 import com.company.admob.internal.port.RequestExtras
 import com.company.admob.internal.port.SdkBannerView
 import com.google.android.libraries.ads.mobile.sdk.banner.AdView
@@ -77,6 +78,66 @@ internal class NextGenBannerView(
     }
 }
 
+/**
+ * A banner loaded without a view (`BannerAd.load`). [attach] gets its view for the Activity that shows it, and from
+ * then on its events go to that banner's listener.
+ */
+internal class NextGenPreloadedBanner(private val ad: BannerAd, private val log: AdLog) : PreloadedBanner {
+    override fun attach(activity: Activity, listener: BannerListener): SdkBannerView {
+        val mainListener = MainThreadBannerListener(listener)
+        BannerEvents(mainListener, log).adopt(ad)
+        val adView = AdView(activity)
+        adView.registerBannerAd(ad, activity)
+        return AttachedBanner(adView, ad, mainListener, log)
+    }
+
+    override fun destroy() {
+        try {
+            ad.destroy()
+        } catch (e: Exception) {
+            log.w(e) { "Destroying a preloaded banner failed" }
+        }
+    }
+}
+
+/** The view of an attached preloaded banner. It's loaded already, and the SDK refreshes it; it never loads again. */
+private class AttachedBanner(
+    private val adView: AdView,
+    private val ad: BannerAd,
+    private val listener: MainThreadBannerListener,
+    private val log: AdLog,
+) : SdkBannerView {
+    private var destroyed = false
+
+    override val view: View
+        get() = adView
+
+    override fun load(adUnitId: String, size: BannerSize, widthDp: Int, extras: RequestExtras, listener: BannerListener) {
+        // Never called: a banner needing a new load (a width change, a retry) replaces this view with a new one.
+        log.w { "A preloaded banner doesn't load again" }
+    }
+
+    override fun expectedHeightPx(size: BannerSize, widthDp: Int): Int = try {
+        ad.getAdSize().getHeightInPixels(view.context)
+    } catch (e: Exception) {
+        log.w(e) { "Reading the preloaded banner's size failed" }
+        0
+    }
+
+    override fun destroy() {
+        if (destroyed) return
+        destroyed = true
+        listener.clear()
+        (adView.parent as? ViewGroup)?.removeView(adView)
+        try {
+            adView.destroy()
+            ad.destroy()
+        } catch (e: Exception) {
+            log.w(e) { "Destroying a banner failed" }
+        }
+    }
+}
+
 /** Maps Google's banner load, refresh and event callbacks, which arrive on background threads. */
 private class BannerEvents(
     private val listener: MainThreadBannerListener,
@@ -87,6 +148,17 @@ private class BannerEvents(
     BannerAdRefreshCallback {
     @Volatile
     private var bannerAd: BannerAd? = null
+
+    /** Takes the events of [ad], loaded already (a preloaded banner being attached). */
+    fun adopt(ad: BannerAd) {
+        bannerAd = ad
+        try {
+            ad.adEventCallback = this
+            ad.bannerAdRefreshCallback = this
+        } catch (e: Exception) {
+            log.w(e) { "Handling a preloaded banner failed; its events may be missing" }
+        }
+    }
 
     override fun onAdLoaded(ad: BannerAd) {
         bannerAd = ad

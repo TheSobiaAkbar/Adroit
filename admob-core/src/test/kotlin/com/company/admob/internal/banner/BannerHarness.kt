@@ -21,6 +21,7 @@ import com.company.admob.internal.config.EffectiveConfig
 import com.company.admob.internal.config.LiveConfig
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.logging.AdLog
+import com.company.admob.internal.reliability.AdUnitRotation
 import com.company.admob.internal.reliability.RetryScheduler
 import com.company.admob.logging.LogLevel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,6 +29,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import org.robolectric.Robolectric
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import kotlin.random.Random
@@ -62,6 +64,12 @@ internal class BannerHarness(val scope: TestScope, config: AdMobConfig = bannerC
     val clock = TestClock(scope.testScheduler)
     val log = AdLog({ _, _, _, _ -> }, LogLevel.NONE)
     val events = EventBus(AdLog({ _, _, _, _ -> }, LogLevel.NONE))
+    val rotation = AdUnitRotation()
+
+    /** Banners loaded ahead of their view (`AdSlots.load`); [api]'s banners claim them. */
+    val preloader = BannerPreloader(
+        RuntimeEnvironment.getApplication(), live, adsSdk, readiness, events, clock, log, rotation, scope.backgroundScope,
+    )
     val api = BannerApiImpl(
         live,
         adsSdk,
@@ -71,6 +79,8 @@ internal class BannerHarness(val scope: TestScope, config: AdMobConfig = bannerC
         clock,
         scope.backgroundScope,
         log,
+        rotation = rotation,
+        preloader = preloader,
     )
     val activityController: ActivityController<Activity> = Robolectric.buildActivity(Activity::class.java).setup()
     val activity: Activity get() = activityController.get()

@@ -58,6 +58,19 @@ internal interface AdsSdk {
     /** Creates a banner view bound to [activity]. Main thread only. */
     fun createBannerView(activity: Activity): SdkBannerView
 
+    /**
+     * Loads a banner without a view, to show later in a banner container ([PreloadedBanner.attach]): a banner loaded
+     * ahead of its screen. [widthDp] sizes adaptive banners. [onResult] may be called on any thread.
+     */
+    fun preloadBanner(
+        context: Context,
+        adUnitId: String,
+        size: BannerSize,
+        widthDp: Int,
+        extras: RequestExtras,
+        onResult: (SdkLoadResult<PreloadedBanner>) -> Unit,
+    )
+
     /** Opens Google's Ad Inspector. [onClosed] receives null on a normal close. */
     fun openAdInspector(onClosed: (AdError?) -> Unit)
 }
@@ -161,6 +174,18 @@ internal interface SdkBannerView {
     fun expectedHeightPx(size: BannerSize, widthDp: Int): Int
 
     /** Destroys the SDK view and drops the listener. Safe to call more than once. */
+    fun destroy()
+}
+
+/** A banner loaded without a view ([AdsSdk.preloadBanner]). Main thread only. */
+internal interface PreloadedBanner {
+    /**
+     * Shows it in [activity]: a banner view whose SDK events (impressions, clicks, refreshes, revenue) go to
+     * [listener] from now on. Called at most once; the returned view owns the ad and destroys it.
+     */
+    fun attach(activity: Activity, listener: BannerListener): SdkBannerView
+
+    /** Destroys an ad that was never attached. */
     fun destroy()
 }
 

@@ -156,16 +156,24 @@ your app (for example in `res/values/ads_style.xml`); yours replaces the library
 | `color/company_admob_native_cta_text` | `?android:textColorPrimaryInverse` | Its text |
 | `color/company_admob_native_attribution` | `?android:colorAccent` | The "Ad" badge |
 | `color/company_admob_native_attribution_text` | `?android:textColorPrimaryInverse` | Its text |
-| `dimen/company_admob_native_card_corner_radius`, `_card_stroke_width` | 8dp, 1dp | The card's corners and border |
-| `dimen/company_admob_native_cta_corner_radius`, `_attribution_corner_radius` | 6dp, 2dp | The button's and the badge's corners |
-| `dimen/company_admob_native_headline_text_size`, `_body_text_size`, `_caption_text_size`, `_cta_text_size`, `_attribution_text_size` | 15, 13, 12, 14, 10sp | Text sizes |
-| `dimen/company_admob_native_icon_size`, `_icon_size_large` | 40dp, 48dp | The icon |
-| `dimen/company_admob_native_media_height`, `_media_height_compact` | 160dp, 120dp | Media in the new large and side-media styles. Keep it at least 120dp, Google's minimum for video. |
-| `dimen/company_admob_native_spacing`, `_spacing_small`, `_spacing_large` | 8, 4, 16dp | Padding and gaps |
+| `dimen/company_admob_native_card_corner_radius`, `_card_stroke_width` | `_7sdp`, 1dp | The card's corners and border |
+| `dimen/company_admob_native_cta_corner_radius`, `_attribution_corner_radius` | `_5sdp`, `_2sdp` | The button's and the badge's corners |
+| `dimen/company_admob_native_headline_text_size`, `_body_text_size`, `_caption_text_size`, `_cta_text_size`, `_attribution_text_size` | `_12ssp`, `_11ssp`, `_10ssp`, `_12ssp`, `_8ssp` | Text sizes |
+| `dimen/company_admob_native_icon_size`, `_icon_size_large` | `_34sdp`, `_40sdp` | The icon |
+| `dimen/company_admob_native_cta_min_height` | `_33sdp` | The button's height |
+| `dimen/company_admob_native_media_height`, `_media_height_compact` | `_133sdp`, 120dp | Media in the new large and side-media styles. Keep it at least 120dp, Google's minimum for video. |
+| `dimen/company_admob_native_spacing`, `_spacing_small`, `_spacing_tiny`, `_spacing_large` | `_7sdp`, `_3sdp`, `_2sdp`, `_13sdp` | Padding and gaps |
+| `color/company_admob_shimmer_card`, `_shimmer_base`, `_shimmer_highlight` | light greys (dark in night mode) | The [shimmer](#the-shimmer): its card, its blocks, the sweep |
+| `dimen/company_admob_shimmer_corner_radius`, `_shimmer_padding` | `_3sdp`, `_7sdp` | The shimmer's block corners, and a banner shimmer's padding |
 | `drawable/company_admob_native_card` | a rounded card with a border | The whole background shape |
 | `drawable/company_admob_native_cta_background` | a rounded button with a ripple | The whole button shape |
 | `drawable/company_admob_native_attribution_background` | a rounded rectangle | The whole badge shape |
 | `string/company_admob_ad_attribution` | `Ad` | The badge text: translate it in `values-xx` |
+
+Sizes use [sdp and ssp](https://github.com/intuit/sdp) (`@dimen/_8sdp`, `@dimen/_12ssp`), which scale with the
+screen's width; `admob-views` brings both. Each default matches the dp size a 360dp-wide phone had, so the templates
+look the same there and scale on smaller and larger screens. Your overrides can use sdp and ssp too, or plain dp and
+sp. The few kept in dp are set by Google: the AdChoices corner, the badge's 16dp minimum, and the 120dp media minimum.
 
 Replace a drawable to change a shape itself, for example a gradient button or a badge with a border. The colors
 follow the light and dark themes until you override them; to override them per theme, put yours in `values` and
@@ -221,8 +229,13 @@ show in: the library inflates that layout without drawing it, and draws the whol
 inside it: one per line of text, one per icon, badge, button and media area, at their real positions and sizes. A
 highlight sweeps across the card and the blocks together. So every template and every layout of your own gets a
 shimmer of the ad's own shape and size, with nothing to write. A banner's shimmer is its whole area, with blocks
-like a banner's content. Its colors are `company_admob_shimmer_card`, `company_admob_shimmer_base` and
-`company_admob_shimmer_highlight`, with night variants; override them like the others.
+like a banner's content. To change the shimmer's colors, override them like the others, in `values` and, for dark mode, `values-night`:
+
+```xml
+<color name="company_admob_shimmer_card">#FFF3F0FF</color>      <!-- the ad area -->
+<color name="company_admob_shimmer_base">#FFE0D8FF</color>      <!-- the blocks -->
+<color name="company_admob_shimmer_highlight">#FFFFFFFF</color> <!-- the sweep -->
+```
 
 ### A layout from code
 

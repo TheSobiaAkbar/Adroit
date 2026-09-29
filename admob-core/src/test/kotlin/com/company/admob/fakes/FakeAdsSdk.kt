@@ -17,6 +17,7 @@ import com.company.admob.internal.port.FullScreenAdListener
 import com.company.admob.internal.port.LoadedFullScreenAd
 import com.company.admob.internal.port.LoadedNativeAd
 import com.company.admob.internal.port.NativeAdListener
+import com.company.admob.internal.port.PreloadedBanner
 import com.company.admob.internal.port.RequestExtras
 import com.company.admob.internal.port.SdkBannerView
 import com.company.admob.internal.port.SdkInitResult
@@ -147,6 +148,20 @@ internal class FakeAdsSdk(private val scope: CoroutineScope) : AdsSdk {
 
     override fun createBannerView(activity: Activity): SdkBannerView =
         FakeSdkBannerView(View(activity)).also { bannerViews += it }
+
+    /** Banner loads without a view ([preloadBanner]), completed by the test with [FakeBannerPreload.succeed] or [FakeBannerPreload.fail]. */
+    val bannerPreloads = mutableListOf<FakeBannerPreload>()
+
+    override fun preloadBanner(
+        context: Context,
+        adUnitId: String,
+        size: BannerSize,
+        widthDp: Int,
+        extras: RequestExtras,
+        onResult: (SdkLoadResult<PreloadedBanner>) -> Unit,
+    ) {
+        bannerPreloads += FakeBannerPreload(adUnitId, size, widthDp, onResult)
+    }
 
     override fun openAdInspector(onClosed: (AdError?) -> Unit) {
         adInspectorOpenCount++
@@ -287,6 +302,11 @@ internal class FakeSdkBannerView(override val view: View) : SdkBannerView {
 
     fun simulateLoaded(source: AdSourceInfo? = null, isRefresh: Boolean = false) = listener?.onLoaded(source, isRefresh)
 
+    /** A preloaded banner's view: loaded already, its events going to [listener]. */
+    fun adopt(listener: BannerListener) {
+        this.listener = listener
+    }
+
     fun simulateFailedToLoad(error: AdError = AdError.NoFill(), retryable: Boolean = true, isRefresh: Boolean = false) =
         listener?.onFailedToLoad(error, retryable, isRefresh)
 
@@ -295,4 +315,38 @@ internal class FakeSdkBannerView(override val view: View) : SdkBannerView {
     fun simulateClicked() = listener?.onClicked()
 
     fun simulatePaid(revenue: AdRevenue = AdRevenue(1_000, "USD", RevenuePrecision.PRECISE)) = listener?.onPaid(revenue)
+}
+
+/** A banner load without a view, pending until the test completes it. */
+internal class FakeBannerPreload(
+    val adUnitId: String,
+    val size: BannerSize,
+    val widthDp: Int,
+    private val onResult: (SdkLoadResult<PreloadedBanner>) -> Unit,
+) {
+    val banner = FakePreloadedBanner()
+
+    fun succeed(source: AdSourceInfo? = null) = onResult(SdkLoadResult.Success(banner, source))
+
+    fun fail(error: AdError = AdError.NoFill()) = onResult(SdkLoadResult.Failure(error, retryable = true))
+}
+
+/** A preloaded banner: records where it's attached, and whether it was destroyed unshown. */
+internal class FakePreloadedBanner : PreloadedBanner {
+    var attachedView: FakeSdkBannerView? = null
+        private set
+    var destroyedUnshown = false
+        private set
+
+    override fun attach(activity: Activity, listener: BannerListener): SdkBannerView {
+        check(attachedView == null) { "attached twice" }
+        return FakeSdkBannerView(View(activity)).also {
+            it.adopt(listener)
+            attachedView = it
+        }
+    }
+
+    override fun destroy() {
+        destroyedUnshown = true
+    }
 }

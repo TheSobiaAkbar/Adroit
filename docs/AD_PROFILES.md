@@ -241,7 +241,25 @@ override fun onResume() {
 ```
 
 - `AdSlots.load` does nothing when the ad is loaded or loading already, so calling it on every `onResume` is fine. A
-  native ad also loads when its view asks for one, and the splash ad when `SplashFlow` requests it.
+  banner or native ad also loads when its view asks for one, and the splash ad when `SplashFlow` requests it.
+- **Banners and native ads, ahead of their screen.** `AdSlots.load` works for them too: load the next screen's ads
+  before it opens, and its views show them at once.
+
+<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-preload-inline -->
+```kotlin
+fun preloadNextScreenAds() {
+    // The next screen's banner and native ad, loaded now. Its AdSlotView (or any banner or native view) shows each at
+    // once, or when it arrives if it's still loading; without this, each loads when its view appears.
+    AdSlots.load(AppAds.HomeBanner)
+    AdSlots.load(AppAds.FeedNative)
+}
+```
+
+A view created while its ad is still loading shows it when it arrives, without a second request; if that load
+fails, the view loads its own. A banner is loaded at the window's width, for a full-width banner: a banner view of
+another width (more than 8dp off) loads its own, and the preloaded one is dropped. A loaded ad waits at most an hour,
+and none waits while ads are off (ad-free, consent). Refresh (`load(refresh = true)`) always loads a new ad.
+
 - A failed load isn't retried: the next `AdSlots.load` is the retry.
 - **Load timeout.** When `AdSlots.showFullScreen` (or a rewarded show) finds no ad ready, it requests one and waits
   up to `loadTimeoutSeconds` (8 by default). If the ad arrives in time it shows; otherwise, or if the load fails,

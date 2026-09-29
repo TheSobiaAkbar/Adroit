@@ -54,6 +54,12 @@ public class AdShimmerView @JvmOverloads constructor(
     /** The inflated native layout: measured and laid out for its views' positions, never drawn. */
     private var skeleton: View? = null
     private val density = resources.displayMetrics.density
+
+    /** One "dp" of the shimmer's own geometry: an eighth of its padding, which is 8dp on a 360dp phone. */
+    private val sdpUnit = resources.getDimension(R.dimen.company_admob_shimmer_padding) / 8f
+
+    /** The corners of the blocks. */
+    private val radius = resources.getDimension(R.dimen.company_admob_shimmer_corner_radius)
     private val bones = mutableListOf<Bone>()
     private val card = RectF()
     private var cardRadius = 0f
@@ -132,7 +138,7 @@ public class AdShimmerView @JvmOverloads constructor(
         }
         val height = when (s) {
             is Shape.Banner -> s.heightPx
-            else -> dp(FALLBACK_NATIVE_HEIGHT_DP)
+            else -> sdp(FALLBACK_NATIVE_HEIGHT_DP)
         }
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), resolveSize(height, heightMeasureSpec))
     }
@@ -189,7 +195,7 @@ public class AdShimmerView @JvmOverloads constructor(
         bones.clear()
         val w = width.toFloat()
         val h = height.toFloat()
-        val pad = dp(8).toFloat()
+        val pad = resources.getDimension(R.dimen.company_admob_shimmer_padding)
         when (val s = shape) {
             is Shape.Banner -> {
                 card.set(0f, 0f, w, h)
@@ -219,10 +225,10 @@ public class AdShimmerView @JvmOverloads constructor(
         if (view.visibility != VISIBLE || view.width == 0 || view.height == 0) return
         val id = view.id
         when {
-            id != NO_ID && id == layout.mediaContainerId -> addBone(view, dp(6).toFloat())
+            id != NO_ID && id == layout.mediaContainerId -> addBone(view, radius * 1.5f)
             view is ViewGroup -> for (i in 0 until view.childCount) collectBones(view.getChildAt(i), layout)
             view is TextView && !isSolid(view, layout) -> addTextLines(view)
-            else -> addBone(view, min(dp(6).toFloat(), view.height / 2f))
+            else -> addBone(view, min(radius * 1.5f, view.height / 2f))
         }
     }
 
@@ -240,7 +246,7 @@ public class AdShimmerView @JvmOverloads constructor(
     private fun addTextLines(view: TextView) {
         val text = view.layout
         if (text == null || text.lineCount == 0) {
-            addBone(view, dp(4).toFloat())
+            addBone(view, radius)
             return
         }
         val origin = Rect(0, 0, 0, 0)
@@ -253,55 +259,62 @@ public class AdShimmerView @JvmOverloads constructor(
             val lineBottom = top + text.getLineBottom(line)
             val inset = (lineBottom - lineTop) * 0.2f
             val start = left + text.getLineLeft(line)
-            val end = min(left + max(text.getLineRight(line), text.getLineLeft(line) + dp(24)), maxRight.toFloat())
-            bones += Bone(RectF(start, lineTop + inset, end, lineBottom - inset), dp(4).toFloat())
+            val end = min(left + max(text.getLineRight(line), text.getLineLeft(line) + sdp(24)), maxRight.toFloat())
+            bones += Bone(RectF(start, lineTop + inset, end, lineBottom - inset), radius)
         }
     }
 
     /** Icon, two text lines and a button in one row: ordinary banners. */
     private fun compactRow(w: Float, h: Float, pad: Float) {
         val icon = max(h - 2 * pad, 0f)
-        val button = dp(64).toFloat()
-        bones += Bone(RectF(pad, pad, pad + icon, pad + icon), dp(4).toFloat())
+        val button = sdp(64).toFloat()
+        bones += Bone(RectF(pad, pad, pad + icon, pad + icon), radius)
         val textStart = pad + icon + pad
         val textEnd = w - pad - button - pad
-        val line = dp(12).toFloat()
-        val top = h / 2 - line - dp(2)
-        bones += Bone(RectF(textStart, top, textStart + (textEnd - textStart) * 0.8f, top + line), dp(4).toFloat())
+        val line = sdp(12).toFloat()
+        val top = h / 2 - line - sdp(2)
+        bones += Bone(RectF(textStart, top, textStart + (textEnd - textStart) * 0.8f, top + line), radius)
         bones += Bone(
-            RectF(textStart, top + line + dp(4), textStart + (textEnd - textStart) * 0.5f, top + 2 * line + dp(4)),
-            dp(4).toFloat(),
+            RectF(textStart, top + line + sdp(4), textStart + (textEnd - textStart) * 0.5f, top + 2 * line + sdp(4)),
+            radius,
         )
-        val buttonHeight = minOf(dp(32).toFloat(), h - 2 * pad)
-        bones += Bone(RectF(w - pad - button, (h - buttonHeight) / 2, w - pad, (h + buttonHeight) / 2), dp(4).toFloat())
+        val buttonHeight = minOf(sdp(32).toFloat(), h - 2 * pad)
+        bones += Bone(RectF(w - pad - button, (h - buttonHeight) / 2, w - pad, (h + buttonHeight) / 2), radius)
     }
 
     /** A large adaptive banner: a headline, two text lines and a button, like the ad itself. */
     private fun textBanner(w: Float, h: Float, pad: Float) {
-        val button = dp(96).toFloat()
-        val buttonHeight = dp(40).toFloat()
+        val button = sdp(96).toFloat()
+        val buttonHeight = sdp(40).toFloat()
         val textEnd = w - pad - button - 2 * pad
-        val block = dp(16) + dp(10) + dp(12) + dp(6) + dp(12)
+        val block = sdp(16) + sdp(10) + sdp(12) + sdp(6) + sdp(12)
         var y = (h - block) / 2
-        val r = dp(4).toFloat()
-        bones += Bone(RectF(pad, y, pad + (textEnd - pad) * 0.8f, y + dp(16)), r); y += dp(16) + dp(10)
-        bones += Bone(RectF(pad, y, textEnd, y + dp(12)), r); y += dp(12) + dp(6)
-        bones += Bone(RectF(pad, y, pad + (textEnd - pad) * 0.6f, y + dp(12)), r)
+        val r = radius
+        bones += Bone(RectF(pad, y, pad + (textEnd - pad) * 0.8f, y + sdp(16)), r); y += sdp(16) + sdp(10)
+        bones += Bone(RectF(pad, y, textEnd, y + sdp(12)), r); y += sdp(12) + sdp(6)
+        bones += Bone(RectF(pad, y, pad + (textEnd - pad) * 0.6f, y + sdp(12)), r)
         bones += Bone(RectF(w - pad - button, (h - buttonHeight) / 2, w - pad, (h + buttonHeight) / 2), r)
     }
 
     /** A medium rectangle or inline banner: media, a text line and a button. */
     private fun tallBanner(w: Float, h: Float, pad: Float) {
-        val button = dp(32).toFloat()
-        val line = dp(12).toFloat()
+        val button = sdp(32).toFloat()
+        val line = sdp(12).toFloat()
         val mediaBottom = h - pad - button - pad - line - pad
-        val r = dp(4).toFloat()
+        val r = radius
         bones += Bone(RectF(pad, pad, w - pad, mediaBottom), r)
         bones += Bone(RectF(pad, mediaBottom + pad, w * 0.7f, mediaBottom + pad + line), r)
         bones += Bone(RectF(pad, h - pad - button, w - pad, h - pad), r)
     }
 
+    /** [value] in real dp: for banner heights, which the SDK sets in dp. */
     private fun dp(value: Int): Int = (value * density).toInt()
+
+    /**
+     * [value] "dp" scaled like the templates' sdp sizes (and like an app's override of the shimmer padding), so the
+     * blocks keep their proportions on every screen width.
+     */
+    private fun sdp(value: Int): Int = (value * sdpUnit).toInt()
 
     /**
      * Gives the skeleton the content a typical ad has, so it lays out like one: a one-line headline, a two-line body,
@@ -316,14 +329,14 @@ public class AdShimmerView @JvmOverloads constructor(
         find<View>(layout.iconId)?.let { icon ->
             val lp = icon.layoutParams
             if (lp != null && (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT || lp.height == ViewGroup.LayoutParams.WRAP_CONTENT)) {
-                icon.minimumWidth = dp(40)
-                icon.minimumHeight = dp(40)
+                icon.minimumWidth = sdp(40)
+                icon.minimumHeight = sdp(40)
                 (icon as? ImageView)?.adjustViewBounds = false
             }
         }
         find<View>(layout.mediaContainerId)?.let { media ->
             if (media.layoutParams?.height == ViewGroup.LayoutParams.WRAP_CONTENT && media.minimumHeight == 0) {
-                media.minimumHeight = dp(FALLBACK_MEDIA_HEIGHT_DP)
+                media.minimumHeight = sdp(FALLBACK_MEDIA_HEIGHT_DP)
             }
         }
         for (id in listOf(layout.advertiserId, layout.starRatingId, layout.priceId, layout.storeId)) {

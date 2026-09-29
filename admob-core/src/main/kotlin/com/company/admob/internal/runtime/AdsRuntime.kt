@@ -28,6 +28,7 @@ import com.company.admob.internal.diagnostics.DiagnosticsReportBuilder
 import com.company.admob.internal.consent.RdpWriter
 import com.company.admob.internal.events.EventBus
 import com.company.admob.internal.fullscreen.DialogLoadingScreens
+import com.company.admob.internal.banner.BannerPreloader
 import com.company.admob.internal.fullscreen.FullScreenAdEngine
 import com.company.admob.internal.fullscreen.FullScreenFormatStrategy
 import com.company.admob.internal.fullscreen.InterstitialApiImpl
@@ -123,6 +124,11 @@ internal class AdsRuntime(
 
     val fullScreenCoordinator: FullScreenCoordinator = FullScreenCoordinator(deps.clock)
 
+    /** Banners loaded ahead of their view by `AdSlots.load`. */
+    val bannerPreloader: BannerPreloader = BannerPreloader(
+        app.applicationContext, liveConfig, deps.adsSdk, init, events, deps.clock, log, adUnitRotation, scope,
+    )
+
     /**
      * Startup load order (§15): app open first when it may show on cold start, since a loading screen is waiting for
      * it; otherwise after the other formats.
@@ -214,7 +220,7 @@ internal class AdsRuntime(
         appOpen = AppOpenApiImpl(appOpenController),
         banner = BannerApiImpl(
             liveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log, hardwareAcceleration,
-            adUnitRotation,
+            adUnitRotation, bannerPreloader,
         ),
         native = NativeApiImpl(nativeEngine, NativeAdBinder(deps.nativeRenderPort, log), hardwareAcceleration) {
             liveConfig.current.placement(it)?.nativeStyle

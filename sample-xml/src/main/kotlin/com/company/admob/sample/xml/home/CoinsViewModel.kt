@@ -51,6 +51,10 @@ class CoinsViewModel(private val ads: AdsClient = CompanyAdMob.client) : ViewMod
         AdSlots.load(SampleAds.LevelCompleteAd)
         AdSlots.load(SampleAds.ExtraLifeRewarded)
         AdSlots.load(SampleAds.BonusRewardedInterstitial)
+        // The Details screen's banner and native ad, loaded ahead: they show the moment Details opens (its
+        // attachBanner and AdNativeView take them), or when they arrive if they're still loading.
+        AdSlots.load(SampleAds.DetailsBanner)
+        AdSlots.load(SampleAds.ArticleNative)
     }
 
     fun onLevelComplete(activity: Activity) {

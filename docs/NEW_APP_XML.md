@@ -648,6 +648,19 @@ Every resource you can override is listed in [Native: Styling](NATIVE.md#styling
 the card background is the drawable `company_admob_native_card`, the button `company_admob_native_cta_background`, and
 the badge `company_admob_native_attribution_background`.
 
+Sizes use `sdp` and text sizes `ssp` (`@dimen/_8sdp`, `@dimen/_12ssp`), so the ads scale with the screen like the rest
+of your app; your overrides can use them too, for example
+`<dimen name="company_admob_native_headline_text_size">@dimen/_11ssp</dimen>`.
+
+**Shimmer colors.** The loading shimmer (of native ads and banners) has three colors. Override them the same way,
+and in `res/values-night/` for dark mode:
+
+```xml
+<color name="company_admob_shimmer_card">#FFF3F0FF</color>      <!-- the whole ad area -->
+<color name="company_admob_shimmer_base">#FFE0D8FF</color>      <!-- the blocks -->
+<color name="company_admob_shimmer_highlight">#FFFFFFFF</color> <!-- the moving shine -->
+```
+
 **Your own layout.** Design any layout with ordinary views (no `NativeAdView` or `MediaView`: the plugin adds them).
 Give its views these IDs: `@id/company_admob_native_headline`, `_body`, `_cta` (write it as
 `<android.widget.Button>`), `_icon`, `_media` (an empty `FrameLayout`, at least 120dp tall) and `_attribution` (a
@@ -660,6 +673,29 @@ NativeTemplates.register("promo", R.layout.my_native_ad)
 Use it by default for an ad (`HomeNative(AdProfile.native(layout = "promo"))`), or switch any native ad to it from
 Firebase: `{ "style": "promo" }`. Its shimmer is built from your layout automatically: the whole card shimmers, with a
 block over each view inside it. [Native: your own layout](NATIVE.md#your-own-layout-picked-by-name) has the details.
+
+### Load banners and native ads before their screen
+
+Banners and native ads load by themselves when their view appears. To have them ready the moment a screen opens,
+load them earlier, for example from the previous screen, with the same `AdSlots.load` as full-screen ads:
+
+```kotlin
+// Home screen, onResume: the Details screen's ads, loaded now.
+AdSlots.load(AppAds.DetailsBanner)
+AdSlots.load(AppAds.HomeNative)
+```
+
+Then show them as usual (an `AdSlotView` in the layout, `attachBanner`, a `NativeAdHolder`…):
+
+| When the view appears | What happens |
+|---|---|
+| The ad is loaded | It shows at once. No shimmer, no new request. |
+| The ad is still loading | The shimmer shows, then that same ad when it arrives. No second request. |
+| It wasn't loaded, or its load failed | The view loads it now, with the shimmer, as without `AdSlots.load`. |
+
+A banner is loaded for a full-width banner (the screen's width); a banner view of another width loads its own. Each
+ad waits at most an hour. `AdSlots.load` does nothing for an ad already loaded or loading, so calling it on every
+`onResume` is fine.
 
 ### Native ads in a RecyclerView
 

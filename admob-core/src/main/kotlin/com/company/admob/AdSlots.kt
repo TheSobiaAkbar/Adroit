@@ -70,8 +70,13 @@ public object AdSlots {
      * Loads the ad [definition] now, in its current format, unless it's loaded or loading already. Ad profiles load
      * only when asked (docs/AD_PROFILES.md#loading): call this when the screen that may show the ad opens (for example
      * in `onResume`), so it's ready by the time it's shown. A failed load isn't retried; the next call tries again.
-     * After a show, the ad loads again by itself only with `loadAgain`. Nothing happens for banners, which load with
-     * their view, or before `initialize()`. Any thread.
+     * After a show, the ad loads again by itself only with `loadAgain`. Nothing happens before `initialize()`. Any
+     * thread.
+     *
+     * A banner or native ad loaded this way waits for its view: the next `AdSlotView`, `AdBannerView`,
+     * `AdNativeView`, `attachBanner`, `attachNativeAd`, `NativeAdHolder` or composable created for it shows it at once,
+     * and one created while it's still loading shows it when it arrives, without a second request. A banner is loaded
+     * at the window's width, for a full-width banner; a banner view of another width loads its own.
      */
     @JvmStatic
     public fun load(definition: AdDefinition) {
@@ -94,7 +99,7 @@ public object AdSlots {
                 AdFormat.REWARDED -> runtime.rewardedEngine.preload(p.placement)
                 AdFormat.REWARDED_INTERSTITIAL -> runtime.rewardedInterstitialEngine.preload(p.placement)
                 AdFormat.NATIVE -> runtime.nativeEngine.preload(p.placement as NativePlacement)
-                AdFormat.BANNER -> Unit
+                AdFormat.BANNER -> runtime.bannerPreloader.preload(p)
             }
         }
     }

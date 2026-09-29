@@ -96,6 +96,13 @@ fun showBanner(activity: Activity, container: FrameLayout, owner: LifecycleOwner
 }
 ```
 
+## Loading ahead of the screen
+
+`AdSlots.load` loads a banner before its screen opens (an ad profile's banner, or any banner placement by key): the
+next banner view created for it, `AdSlotView`, `AdBannerView`, `attachBanner` or `AdBanner`, shows it at once, or
+waits for it if it's still loading instead of requesting another. It's loaded at the window's width, so it fits a
+full-width banner; a banner of another width loads its own. See [Ad profiles](AD_PROFILES.md#loading).
+
 ## Lifecycle
 
 - A banner belongs to an Activity, and is destroyed when its lifecycle owner is. In a Fragment, always use
@@ -139,4 +146,4 @@ and the state reported by `onStateChange`. See [Troubleshooting](TROUBLESHOOTING
 
 **Can I show the same placement twice on one screen?** Yes, each view is a separate banner.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29

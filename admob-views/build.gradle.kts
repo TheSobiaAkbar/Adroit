@@ -17,6 +17,11 @@ dependencies {
     api(project(":admob-core"))
     // lifecycleScope and repeatOnLifecycle. Core keeps lifecycle-runtime as implementation, so it isn't visible here.
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    // The templates' dimens use sdp and ssp (@dimen/_8sdp, @dimen/_12ssp): sizes that scale with the screen width.
+    // Resources only, and api: an app can use them in its own layouts and overrides (an app already using them
+    // shares the same artifacts).
+    api(libs.sdp.android)
+    api(libs.ssp.android)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

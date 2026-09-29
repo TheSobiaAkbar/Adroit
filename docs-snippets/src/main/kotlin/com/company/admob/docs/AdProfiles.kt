@@ -116,6 +116,15 @@ fun HomeScreenAds() {
 }
 // endregion
 
+// region profiles-preload-inline
+fun preloadNextScreenAds() {
+    // The next screen's banner and native ad, loaded now. Its AdSlotView (or any banner or native view) shows each at
+    // once, or when it arrives if it's still loading; without this, each loads when its view appears.
+    AdSlots.load(AppAds.HomeBanner)
+    AdSlots.load(AppAds.FeedNative)
+}
+// endregion
+
 // region profiles-refresh-views
 fun refreshHomeAd(homeSlot: AdSlotView) {
     // Never a second request while the slot has an ad or one is loading. With refresh, the shown ad stays until a

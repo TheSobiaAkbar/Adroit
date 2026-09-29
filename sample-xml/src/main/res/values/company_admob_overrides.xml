@@ -14,9 +14,13 @@
     <color name="company_admob_native_body">#757575</color>
     <color name="company_admob_native_background">#FFFFFF</color>
     <color name="company_admob_native_stroke">#1F000000</color>
-    <dimen name="company_admob_native_card_corner_radius">12dp</dimen>
-    <dimen name="company_admob_native_cta_corner_radius">22dp</dimen>
-    <dimen name="company_admob_native_headline_text_size">14sp</dimen>
+    <dimen name="company_admob_native_card_corner_radius">@dimen/_10sdp</dimen>
+    <dimen name="company_admob_native_cta_corner_radius">@dimen/_18sdp</dimen>
+    <dimen name="company_admob_native_headline_text_size">@dimen/_11ssp</dimen>
+    The loading shimmer's colors (and in values-night for dark mode):
+    <color name="company_admob_shimmer_card">#FFF3F0FF</color>
+    <color name="company_admob_shimmer_base">#FFE0D8FF</color>
+    <color name="company_admob_shimmer_highlight">#FFFFFFFF</color>
     Or replace a whole shape: a drawable named company_admob_native_card, company_admob_native_cta_background or
     company_admob_native_attribution_background. -->
 </resources>

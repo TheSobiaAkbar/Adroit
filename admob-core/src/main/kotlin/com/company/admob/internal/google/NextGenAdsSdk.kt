@@ -4,12 +4,14 @@ import android.app.Activity
 import android.content.Context
 import com.company.admob.AdError
 import com.company.admob.AdFormat
+import com.company.admob.BannerSize
 import com.company.admob.SdkErrorDetails
 import com.company.admob.internal.callbacks.OnceCallback
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.port.AdsSdk
 import com.company.admob.internal.port.LoadedFullScreenAd
 import com.company.admob.internal.port.LoadedNativeAd
+import com.company.admob.internal.port.PreloadedBanner
 import com.company.admob.internal.port.RequestExtras
 import com.company.admob.internal.port.SdkBannerView
 import com.company.admob.internal.port.SdkInitResult
@@ -17,9 +19,13 @@ import com.company.admob.internal.port.SdkLoadResult
 import com.company.admob.internal.port.SdkRequestConfig
 import com.google.android.libraries.ads.mobile.sdk.MobileAds
 import com.google.android.libraries.ads.mobile.sdk.appopen.AppOpenAd
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdPreloader
 import com.google.android.libraries.ads.mobile.sdk.common.Ad
 import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
 import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
+import com.google.android.libraries.ads.mobile.sdk.common.PreloadCallback
+import com.google.android.libraries.ads.mobile.sdk.common.PreloadConfiguration
+import com.google.android.libraries.ads.mobile.sdk.common.ResponseInfo
 import com.google.android.libraries.ads.mobile.sdk.initialization.InitializationConfig
 import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAd
 import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAd
@@ -32,6 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * [AdsSdk] over the GMA Next-Gen SDK, the only production implementation.
@@ -48,6 +55,9 @@ internal class NextGenAdsSdk(
     private val loadDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : AdsSdk {
     private val requestFactory = GoogleRequestFactory(log)
+
+    /** Numbers each banner preload, for its preloader ID. */
+    private val preloadIds = AtomicInteger()
 
     override val sdkVersion: String?
         get() = try {
@@ -142,6 +152,29 @@ internal class NextGenAdsSdk(
 
     override fun createBannerView(activity: Activity): SdkBannerView = NextGenBannerView(activity, requestFactory, log)
 
+    override fun preloadBanner(
+        context: Context,
+        adUnitId: String,
+        size: BannerSize,
+        widthDp: Int,
+        extras: RequestExtras,
+        onResult: (SdkLoadResult<PreloadedBanner>) -> Unit,
+    ) {
+        val result = OnceCallback(onResult)
+        scope.launch(loadDispatcher) {
+            try {
+                val request = requestFactory.bannerAdRequest(adUnitId, GoogleRequestFactory.adSize(context, size, widthDp), extras)
+                // Google's preloader, used for one ad: a buffer of one, stopped as soon as its ad is taken, so it never
+                // loads another on its own (ad profiles load only when asked).
+                val preloadId = "company_admob_banner_${preloadIds.incrementAndGet()}"
+                BannerAdPreloader.start(preloadId, PreloadConfiguration(request, 1), BannerPreload(result, log))
+            } catch (e: Exception) {
+                log.e(e) { "Preloading a banner failed" }
+                result(SdkLoadResult.Failure(AdError.Internal("Loading the banner failed", e), retryable = true))
+            }
+        }
+    }
+
     override fun openAdInspector(onClosed: (AdError?) -> Unit) {
         val closed = OnceCallback(onClosed)
         try {
@@ -178,6 +211,42 @@ private class FullScreenLoad<T : Ad>(
 }
 
 /** Delivers one native load result. Only `NATIVE` ads are requested, so other ad types never arrive. */
+/** One banner from Google's preloader: taken as soon as it's ready, then the preloader is stopped. */
+private class BannerPreload(
+    private val result: OnceCallback<SdkLoadResult<PreloadedBanner>>,
+    private val log: AdLog,
+) : PreloadCallback {
+    override fun onAdPreloaded(preloadId: String, responseInfo: ResponseInfo) {
+        try {
+            val ad = BannerAdPreloader.pollAd(preloadId)
+            stop(preloadId)
+            if (ad == null) {
+                result(SdkLoadResult.Failure(AdError.Internal("The preloaded banner was gone"), retryable = true))
+                return
+            }
+            val source = GoogleResponseInfoMapper.map(ad.getResponseInfo())
+            if (!result(SdkLoadResult.Success(NextGenPreloadedBanner(ad, log), source))) ad.destroy()
+        } catch (e: Exception) {
+            log.e(e) { "Handling a preloaded banner failed" }
+            stop(preloadId)
+            result(SdkLoadResult.Failure(AdError.Internal("Handling the loaded banner failed", e), retryable = true))
+        }
+    }
+
+    override fun onAdFailedToPreload(preloadId: String, adError: LoadAdError) {
+        stop(preloadId)
+        result(GoogleErrorMapper.map(adError))
+    }
+
+    private fun stop(preloadId: String) {
+        try {
+            BannerAdPreloader.destroy(preloadId)
+        } catch (e: Exception) {
+            log.w(e) { "Stopping the banner preloader failed" }
+        }
+    }
+}
+
 private class NativeLoad(
     private val result: OnceCallback<SdkLoadResult<LoadedNativeAd>>,
     private val log: AdLog,
