@@ -122,7 +122,7 @@ class AdProfilesTest {
                 "NoFormat": { "adUnitIds": ["${TestIds.unit(1)}"] },
                 "Odd": { "format": "video", "adUnitIds": ["${TestIds.unit(1)}"] },
                 "BadCounter": { "format": "interstitial", "counter": -1, "adUnitIds": ["${TestIds.unit(1)}"] },
-                "BadStyle": { "format": "native", "style": "huge", "adUnitIds": ["${TestIds.unit(2)}"] },
+                "BadStyle": { "format": "native", "style": "huge ad!", "adUnitIds": ["${TestIds.unit(2)}"] },
                 "bad-key": { "format": "banner", "adUnitIds": ["${TestIds.unit(3)}"] }
             } }
         """.trimIndent()
@@ -252,5 +252,46 @@ class AdProfilesTest {
         val config = adMobConfig { profiles(file) }
         assertTrue(config.placements.any { it.placement == InterstitialPlacement("HistoryAd") })
         assertTrue(config.placements.any { it.placement == BannerPlacement("HomeBanner") })
+    }
+
+    @Test
+    fun `a native style is a library style's name or a registered layout's name`() {
+        val file = """
+            { "ads": {
+                "Top": { "format": "native", "style": "small_button_top" },
+                "Side": { "format": "native", "style": "Side_Media_Button_Bottom" },
+                "Promo": { "format": "native", "style": "my_promo" },
+                "Bad": { "format": "native", "style": "not a name!" }
+            } }
+        """.trimIndent()
+        val parsed = AdProfiles.parseFile(file)
+        val byKey = parsed.placements.associateBy { it.placement.key }.mapValues { it.value as NativePlacementConfig }
+        assertEquals(NativeStyle.SMALL_BUTTON_TOP, byKey.getValue("Top").style)
+        assertNull(byKey.getValue("Top").layoutName)
+        assertEquals("case doesn't matter", NativeStyle.SIDE_MEDIA_BUTTON_BOTTOM, byKey.getValue("Side").style)
+        assertEquals("my_promo", byKey.getValue("Promo").layoutName)
+        assertEquals("the fallback template", NativeStyle.MEDIUM, byKey.getValue("Promo").style)
+        assertNull(byKey.getValue("Bad").layoutName)
+        assertEquals(1, parsed.issues.size)
+        assertTrue(parsed.issues.single(), "style" in parsed.issues.single())
+    }
+
+    @Test
+    fun `a Firebase style replaces the ad's look, whether a library style or a registered layout`() {
+        val parsed = AdProfiles.parseRemote(
+            mapOf("A" to AdFormat.NATIVE, "B" to AdFormat.NATIVE, "C" to AdFormat.BANNER),
+            mapOf(
+                "A" to """{ "style": "promo" }""",
+                "B" to """{ "style": "large_button_bottom" }""",
+                "C" to """{ "format": "native", "style": "promo", "adUnitIds": ["${TestIds.unit(3)}"] }""",
+            ),
+            settings = null,
+        )
+        assertEquals(emptyList<String>(), parsed.issues)
+        val a = parsed.overrides.placements.getValue("A")
+        assertEquals("promo", a.nativeLayoutName)
+        assertNull(a.nativeStyle)
+        assertEquals(NativeStyle.LARGE_BUTTON_BOTTOM, parsed.overrides.placements.getValue("B").nativeStyle)
+        assertEquals("a banner swapped to native takes the layout", "promo", parsed.overrides.placements.getValue("C").nativeLayoutName)
     }
 }

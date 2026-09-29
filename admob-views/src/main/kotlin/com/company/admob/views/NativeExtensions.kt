@@ -77,16 +77,16 @@ private class AttachedNative(val placement: NativePlacement) {
 }
 
 /**
- * Fills [container] with a shimmer shaped like [layout] while [placement]'s ad loads, when the ad's `showLoading` is
- * on (PROMPT 29C). Rendering the ad replaces it; [removeNativeShimmer] removes it on failure.
+ * Fills [container] with a shimmer shaped like [layout] (whatever layout: built from its views at runtime) while
+ * [placement]'s ad loads, when the ad's `showLoading` is on. Rendering the ad replaces it; [removeNativeShimmer]
+ * removes it on failure.
  */
 @OptIn(InternalCompanyAdMobApi::class)
 internal fun showNativeShimmer(container: ViewGroup, placement: NativePlacement, layout: NativeAdLayout) {
     if (!ViewsRuntime.showsLoading(placement.key)) return
-    val style = NativeTemplates.styleOf(layout) ?: ViewsRuntime.client.native.style(placement)
     container.removeAllViews()
     container.addView(
-        AdShimmerView(container.context).apply { showNative(style) },
+        AdShimmerView(container.context).apply { showLayout(layout) },
         ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
     )
     container.visibility = View.VISIBLE
@@ -100,9 +100,8 @@ internal fun removeNativeShimmer(container: ViewGroup) {
     }
 }
 
-/** The template for [placement]'s configured style. */
-internal fun styledLayout(placement: NativePlacement): NativeAdLayout =
-    NativeTemplates.forStyle(ViewsRuntime.client.native.style(placement))
+/** The layout [placement]'s ads show in now: its registered app layout, or its style's template. */
+internal fun styledLayout(placement: NativePlacement): NativeAdLayout = NativeTemplates.forPlacement(placement)
 
 /**
  * Renders [handle] into [container], destroys it on [owner]'s ON_DESTROY, and hides [container] if ads become

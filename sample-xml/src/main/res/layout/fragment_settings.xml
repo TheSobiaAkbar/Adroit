@@ -24,4 +24,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/ad_inspector" />
+
+    <Button
+        android:id="@+id/native_styles"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/native_styles" />
 </LinearLayout>

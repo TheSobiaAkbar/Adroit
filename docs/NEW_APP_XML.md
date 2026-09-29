@@ -207,8 +207,9 @@ The rules:
 | `enabled = false` | all | Turns this ad off. |
 
 Banner `style`: `BannerSize.AnchoredAdaptive` (default, full width), `BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM)`,
-`BannerSize.MediumRectangle` (300×250), `BannerSize.Standard` (320×50). Native `style`: `NativeStyle.SMALL`, `MEDIUM`
-(default) or `LARGE`.
+`BannerSize.MediumRectangle` (300×250), `BannerSize.Standard` (320×50). Native `style`: one of 11 layouts, for example
+`NativeStyle.SMALL_BUTTON_BOTTOM` or `NativeStyle.SIDE_MEDIA_BUTTON_TOP` ([the list](NATIVE.md#templates-and-custom-layouts)),
+or `AdProfile.native(layout = "promo")` for your own layout ([step 9](#native-styles-colors-and-your-own-layouts)).
 
 `AdSettings` holds what every ad shares. The main settings:
 
@@ -596,7 +597,7 @@ In a Fragment, pass `viewLifecycleOwner` instead of `this`.
 
 ### Native ad in a layout
 
-The same `AdSlotView`, with a native ad's name. The template (small, medium or large) comes from its `style`:
+The same `AdSlotView`, with a native ad's name. The layout comes from its `style`:
 
 ```xml
 <com.company.admob.views.AdSlotView
@@ -610,6 +611,55 @@ Refresh works the same way: `binding.homeNative.load(refresh = true)`.
 
 `AdSlotView` also follows a format swap from Firebase: if you change `HomeBanner` to a native ad in the console, the
 same view shows a native ad, with no new release ([step 11](#swap-a-format)).
+
+### Native styles, colors and your own layouts
+
+A native ad's `style` picks its layout. The 11 built-in ones:
+
+| Firebase `"style"` | Layout |
+|---|---|
+| `small` | Icon, headline and button in one row |
+| `medium` | Header, body, media, store, price and button |
+| `large` | Media first, then everything else |
+| `small_button_bottom` | Icon, headline and body, button below. No media. |
+| `small_button_top` | Button on top, then icon, headline and body. No media. |
+| `small_button_end` | Icon, headline and body, button at the end of the row. No media. |
+| `large_button_bottom` | Icon, headline and body, media, button below |
+| `large_button_top` | Button on top, icon, headline and body, media |
+| `large_compact` | Like `large_button_bottom`, with shorter media |
+| `side_media_button_bottom` | Text beside the media, button below |
+| `side_media_button_top` | Button on top, text beside the media |
+
+**Colors and shapes.** Every color, size and shape is a resource you override by declaring one with the same name in
+your app. For example, a golden "Ad" badge and an orange button, in `res/values/ads_style.xml`:
+
+```xml
+<resources>
+    <color name="company_admob_native_attribution">#FFC107</color>
+    <color name="company_admob_native_attribution_text">#FFFFFF</color>
+    <color name="company_admob_native_cta">#FF6D00</color>
+    <color name="company_admob_native_cta_text">#FFFFFF</color>
+    <color name="company_admob_native_background">#FFFFFF</color>
+    <dimen name="company_admob_native_card_corner_radius">12dp</dimen>
+</resources>
+```
+
+Every resource you can override is listed in [Native: Styling](NATIVE.md#styling). You can also replace a whole shape:
+the card background is the drawable `company_admob_native_card`, the button `company_admob_native_cta_background`, and
+the badge `company_admob_native_attribution_background`.
+
+**Your own layout.** Design any layout with ordinary views (no `NativeAdView` or `MediaView`: the plugin adds them).
+Give its views these IDs: `@id/company_admob_native_headline`, `_body`, `_cta` (write it as
+`<android.widget.Button>`), `_icon`, `_media` (an empty `FrameLayout`, at least 120dp tall) and `_attribution` (a
+`TextView` saying "Ad"). Then register it by name in `MyApp.onCreate`:
+
+```kotlin
+NativeTemplates.register("promo", R.layout.my_native_ad)
+```
+
+Use it by default for an ad (`HomeNative(AdProfile.native(layout = "promo"))`), or switch any native ad to it from
+Firebase: `{ "style": "promo" }`. Its shimmer is built from your layout automatically: the whole card shimmers, with a
+block over each view inside it. [Native: your own layout](NATIVE.md#your-own-layout-picked-by-name) has the details.
 
 ### Native ads in a RecyclerView
 
@@ -840,7 +890,9 @@ in `AdSettings`. `"splash": true` can only be set in `AppAds`.
 }
 ```
 
-`style`: `small`, `medium` or `large`.
+`style`: any of the 11 styles (`small`, `medium`, `large`, `small_button_bottom`, `small_button_top`,
+`small_button_end`, `large_button_bottom`, `large_button_top`, `large_compact`, `side_media_button_bottom`,
+`side_media_button_top`), or the name of your own registered layout.
 
 ### Settings for every ad (`AdSettings`)
 

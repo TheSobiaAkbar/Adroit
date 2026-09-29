@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.company.admob.NativeAdLayout
+import com.company.admob.NativeStyle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -20,11 +21,8 @@ import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 class NativeTemplatesTest {
-    private val templates = mapOf(
-        "small" to NativeTemplates.Small,
-        "medium" to NativeTemplates.Medium,
-        "large" to NativeTemplates.Large,
-    )
+    /** Every library style's template, by the style's Firebase name. */
+    private val templates = NativeStyle.entries.associate { it.name.lowercase() to NativeTemplates.forStyle(it) }
 
     private fun NativeAdLayout.assetIds(): List<Int> = listOf(
         headlineId, bodyId, callToActionId, iconId, mediaContainerId, advertiserId, starRatingId, priceId, storeId,
@@ -47,6 +45,13 @@ class NativeTemplatesTest {
         assertEquals(4, NativeTemplates.Small.assetIds().size)
         assertEquals(10, NativeTemplates.Medium.assetIds().size)
         assertEquals(10, NativeTemplates.Large.assetIds().size)
+        assertEquals("one template per style", NativeStyle.entries.size, templates.values.toSet().size)
+        for (style in listOf(NativeStyle.SMALL_BUTTON_BOTTOM, NativeStyle.SMALL_BUTTON_TOP, NativeStyle.SMALL_BUTTON_END)) {
+            assertEquals(style.name, 5, NativeTemplates.forStyle(style).assetIds().size)
+        }
+        for (style in NativeStyle.entries.filter { it.name.startsWith("LARGE_") || it.name.startsWith("SIDE_") }) {
+            assertEquals(style.name, 6, NativeTemplates.forStyle(style).assetIds().size)
+        }
     }
 
     @Test
@@ -60,7 +65,7 @@ class NativeTemplatesTest {
     @Test
     fun `RTL-safe - the templates use start and end, never left or right`() {
         val layouts = File("src/main/res/layout").listFiles { file -> file.name.startsWith("company_admob_native_") }!!
-        assertEquals(3, layouts.size)
+        assertEquals("11 templates and their 3 shared parts", 14, layouts.size)
         // paddingLeft=, layout_marginRight=, layout_alignParentLeft=, gravity="left", gravity="center|right", ...
         val sided = Regex("""(Left|Right)[A-Za-z]*="|"(left|right)"|\|(left|right)\b|\b(left|right)\|""")
         for (file in layouts) {

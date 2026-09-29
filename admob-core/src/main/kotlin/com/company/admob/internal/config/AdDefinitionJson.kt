@@ -6,6 +6,7 @@ import com.company.admob.NativeStyle
 import com.company.admob.config.AdDefinition
 import com.company.admob.config.AdProfile
 import com.company.admob.config.AdSettings
+import com.company.admob.config.NativeLayoutNames
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -67,7 +68,7 @@ internal object AdDefinitionJson {
                     }
                 }
             is AdProfile.Banner -> json.put("style", bannerStyle(profile.style))
-            is AdProfile.Native -> json.put("style", nativeStyle(profile.style))
+            is AdProfile.Native -> json.put("style", profile.layoutName ?: nativeStyle(profile.style))
                 .apply { if (!firebase) put("poolSize", profile.poolSize) }
         }
         if (profile !is AdProfile.Banner) json.put("loadAgain", profile.loadAgain)
@@ -118,5 +119,5 @@ internal object AdDefinitionJson {
         is BannerSize.InlineAdaptive -> "inline_adaptive"
     }
 
-    private fun nativeStyle(style: NativeStyle): String = style.name.lowercase()
+    private fun nativeStyle(style: NativeStyle): String = NativeLayoutNames.of(style)
 }

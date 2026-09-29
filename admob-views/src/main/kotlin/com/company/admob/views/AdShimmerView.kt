@@ -6,35 +6,60 @@ import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.TextView
 import com.company.admob.InternalCompanyAdMobApi
+import com.company.admob.NativeAdLayout
 import com.company.admob.NativeStyle
 import kotlin.math.max
+import kotlin.math.min
 
 /**
- * The loading placeholder of a banner or native ad (PROMPT 29C): grey blocks shaped like the ad that will appear,
- * with a highlight sweeping across them. [showBanner] sizes it like a banner of a given height; [showNative] like a
- * native template. Colors come from `company_admob_shimmer_base` and `company_admob_shimmer_highlight` (with night
- * variants), which an app can override. The animation runs only while the view is attached and visible. For the
- * library's own views and composables; main thread only.
+ * The loading placeholder of a banner or native ad: the whole ad area as a card, with grey blocks shaped like the ad
+ * that will appear, and a highlight sweeping across both.
+ *
+ * - [showLayout] shapes it like a native layout, any layout: a library template or an app's own. It inflates the
+ *   layout itself, never draws it, and draws a block over each of its views: one per line of text, one per image,
+ *   button, badge and media area, at their real positions and sizes. So the shimmer is the ad's exact size, and a
+ *   new layout needs nothing more.
+ * - [showBanner] shapes it like a banner of a given height.
+ *
+ * Colors come from `company_admob_shimmer_card` (the card), `company_admob_shimmer_base` (the blocks) and
+ * `company_admob_shimmer_highlight` (the sweep), with night variants, which an app can override. The animation runs
+ * only while the view is attached and shown. For the library's own views and composables; main thread only.
  */
 @InternalCompanyAdMobApi
 public class AdShimmerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : View(context, attrs) {
+) : FrameLayout(context, attrs) {
     private sealed interface Shape {
         data class Banner(val heightPx: Int) : Shape
-        data class Native(val style: NativeStyle) : Shape
+        data class Layout(val layout: NativeAdLayout) : Shape
     }
 
-    private var shape: Shape = Shape.Native(NativeStyle.MEDIUM)
+    private class Bone(val rect: RectF, val radius: Float)
+
+    private var shape: Shape? = null
+
+    /** The inflated native layout: measured and laid out for its views' positions, never drawn. */
+    private var skeleton: View? = null
     private val density = resources.displayMetrics.density
-    private val bones = mutableListOf<RectF>()
+    private val bones = mutableListOf<Bone>()
+    private val card = RectF()
+    private var cardRadius = 0f
+    private val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = context.getColor(R.color.company_admob_shimmer_card)
+    }
     private val basePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = context.getColor(R.color.company_admob_shimmer_base)
     }
@@ -52,9 +77,15 @@ public class AdShimmerView @JvmOverloads constructor(
         }
     }
 
+    init {
+        setWillNotDraw(false)
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+    }
+
     /** Shapes it like a banner [heightPx] tall. Does nothing if it already is. */
     public fun showBanner(heightPx: Int) {
         if (shape == Shape.Banner(heightPx)) return
+        dropSkeleton()
         shape = Shape.Banner(heightPx)
         requestLayout()
         invalidate()
@@ -62,23 +93,57 @@ public class AdShimmerView @JvmOverloads constructor(
 
     /** Shapes it like the native template of [style]. Does nothing if it already is. */
     public fun showNative(style: NativeStyle) {
-        if (shape == Shape.Native(style)) return
-        shape = Shape.Native(style)
+        showLayout(NativeTemplates.forStyle(style))
+    }
+
+    /**
+     * Shapes it like [layout], a library template or an app's own: blocks over its views, at their real positions.
+     * Does nothing if it already is.
+     */
+    public fun showLayout(layout: NativeAdLayout) {
+        if (shape == Shape.Layout(layout)) return
+        dropSkeleton()
+        shape = Shape.Layout(layout)
+        val view = try {
+            LayoutInflater.from(context).inflate(layout.layoutRes, this, false)
+        } catch (e: RuntimeException) {
+            // A layout that can't inflate here (a custom view needing more): a plain card of a usual height.
+            null
+        }
+        if (view != null) {
+            fillPlaceholders(view, layout)
+            addView(view)
+            skeleton = view
+        }
         requestLayout()
         invalidate()
     }
 
+    private fun dropSkeleton() {
+        skeleton?.let(::removeView)
+        skeleton = null
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val width = MeasureSpec.getSize(widthMeasureSpec)
-        val height = when (val s = shape) {
-            is Shape.Banner -> s.heightPx
-            is Shape.Native -> dp(nativeHeightDp(s.style))
+        val s = shape
+        if (s is Shape.Layout && skeleton != null) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            return
         }
-        setMeasuredDimension(width, resolveSize(height, heightMeasureSpec))
+        val height = when (s) {
+            is Shape.Banner -> s.heightPx
+            else -> dp(FALLBACK_NATIVE_HEIGHT_DP)
+        }
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), resolveSize(height, heightMeasureSpec))
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        layoutBones()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        layoutBones(w.toFloat(), h.toFloat())
+        super.onSizeChanged(w, h, oldw, oldh)
         shinePaint.shader = LinearGradient(
             0f, 0f, w * SHINE_WIDTH, 0f,
             intArrayOf(0x00FFFFFF and highlightColor, highlightColor, 0x00FFFFFF and highlightColor),
@@ -86,13 +151,15 @@ public class AdShimmerView @JvmOverloads constructor(
         )
     }
 
-    override fun onDraw(canvas: Canvas) {
-        val radius = dp(4).toFloat()
-        bones.forEach { canvas.drawRoundRect(it, radius, radius, basePaint) }
-        // The highlight enters from the left edge and leaves past the right one.
+    // The skeleton's own drawing is skipped: only the card and the blocks show.
+    override fun dispatchDraw(canvas: Canvas) {
+        if (card.isEmpty) return
+        canvas.drawRoundRect(card, cardRadius, cardRadius, cardPaint)
+        bones.forEach { canvas.drawRoundRect(it.rect, it.radius, it.radius, basePaint) }
+        // The highlight enters from the left edge and leaves past the right one, over the card and its blocks.
         shineMatrix.setTranslate(-width * SHINE_WIDTH + progress * width * (1 + SHINE_WIDTH), 0f)
         shinePaint.shader?.setLocalMatrix(shineMatrix)
-        bones.forEach { canvas.drawRoundRect(it, radius, radius, shinePaint) }
+        canvas.drawRoundRect(card, cardRadius, cardRadius, shinePaint)
     }
 
     override fun onAttachedToWindow() {
@@ -118,48 +185,95 @@ public class AdShimmerView @JvmOverloads constructor(
         }
     }
 
-    private fun layoutBones(w: Float, h: Float) {
+    private fun layoutBones() {
         bones.clear()
+        val w = width.toFloat()
+        val h = height.toFloat()
         val pad = dp(8).toFloat()
         when (val s = shape) {
-            is Shape.Banner -> when {
-                h <= dp(64) -> compactRow(w, h, pad)
-                h < dp(200) -> textBanner(w, h, pad)
-                else -> tallBanner(w, h, pad)
-            }
-            is Shape.Native -> when (s.style) {
-                NativeStyle.SMALL -> compactRow(w, h, pad)
-                NativeStyle.MEDIUM -> {
-                    var y = header(w, pad, pad, dp(40).toFloat())
-                    bones += RectF(pad, y, w * 0.9f, y + dp(12)); y += dp(12) + pad
-                    bones += RectF(pad, y, w - pad, y + dp(180)); y += dp(180) + pad
-                    bones += RectF(pad, y, w - pad, y + dp(40))
-                }
-                NativeStyle.LARGE -> {
-                    var y = pad
-                    bones += RectF(pad, y, w - pad, y + dp(220)); y += dp(220) + pad
-                    y = header(w, pad, y, dp(48).toFloat())
-                    bones += RectF(pad, y, w * 0.9f, y + dp(12)); y += dp(12) + dp(6)
-                    bones += RectF(pad, y, w * 0.7f, y + dp(12)); y += dp(12) + pad
-                    bones += RectF(pad, y, w - pad, y + dp(40))
+            is Shape.Banner -> {
+                card.set(0f, 0f, w, h)
+                cardRadius = 0f
+                when {
+                    h <= dp(64) -> compactRow(w, h, pad)
+                    h < dp(200) -> textBanner(w, h, pad)
+                    else -> tallBanner(w, h, pad)
                 }
             }
+            is Shape.Layout -> {
+                cardRadius = resources.getDimension(R.dimen.company_admob_native_card_corner_radius)
+                val root = skeleton
+                if (root == null) {
+                    card.set(0f, 0f, w, h)
+                    return
+                }
+                card.set(root.left.toFloat(), root.top.toFloat(), root.right.toFloat(), root.bottom.toFloat())
+                collectBones(root, s.layout)
+            }
+            null -> card.setEmpty()
         }
     }
 
-    /** Icon, two text lines and a button in one row: small native ads and ordinary banners. */
+    /** A block per visible view of [view]'s tree: per text line, or over the whole view. */
+    private fun collectBones(view: View, layout: NativeAdLayout) {
+        if (view.visibility != VISIBLE || view.width == 0 || view.height == 0) return
+        val id = view.id
+        when {
+            id != NO_ID && id == layout.mediaContainerId -> addBone(view, dp(6).toFloat())
+            view is ViewGroup -> for (i in 0 until view.childCount) collectBones(view.getChildAt(i), layout)
+            view is TextView && !isSolid(view, layout) -> addTextLines(view)
+            else -> addBone(view, min(dp(6).toFloat(), view.height / 2f))
+        }
+    }
+
+    /** A button, badge or any text on a background of its own: one block over it all. */
+    private fun isSolid(view: TextView, layout: NativeAdLayout): Boolean =
+        view.id == layout.callToActionId || view.id == layout.attributionId || view.background != null
+
+    private fun addBone(view: View, radius: Float) {
+        val r = Rect(0, 0, view.width, view.height)
+        offsetDescendantRectToMyCoords(view, r)
+        bones += Bone(RectF(r), radius)
+    }
+
+    /** One block per laid-out line of [view], as wide as its text and a little shorter than the line. */
+    private fun addTextLines(view: TextView) {
+        val text = view.layout
+        if (text == null || text.lineCount == 0) {
+            addBone(view, dp(4).toFloat())
+            return
+        }
+        val origin = Rect(0, 0, 0, 0)
+        offsetDescendantRectToMyCoords(view, origin)
+        val left = origin.left + view.compoundPaddingLeft
+        val top = origin.top + view.totalPaddingTop
+        val maxRight = origin.left + view.width - view.compoundPaddingRight
+        for (line in 0 until text.lineCount) {
+            val lineTop = top + text.getLineTop(line)
+            val lineBottom = top + text.getLineBottom(line)
+            val inset = (lineBottom - lineTop) * 0.2f
+            val start = left + text.getLineLeft(line)
+            val end = min(left + max(text.getLineRight(line), text.getLineLeft(line) + dp(24)), maxRight.toFloat())
+            bones += Bone(RectF(start, lineTop + inset, end, lineBottom - inset), dp(4).toFloat())
+        }
+    }
+
+    /** Icon, two text lines and a button in one row: ordinary banners. */
     private fun compactRow(w: Float, h: Float, pad: Float) {
         val icon = max(h - 2 * pad, 0f)
         val button = dp(64).toFloat()
-        bones += RectF(pad, pad, pad + icon, pad + icon)
+        bones += Bone(RectF(pad, pad, pad + icon, pad + icon), dp(4).toFloat())
         val textStart = pad + icon + pad
         val textEnd = w - pad - button - pad
         val line = dp(12).toFloat()
         val top = h / 2 - line - dp(2)
-        bones += RectF(textStart, top, textStart + (textEnd - textStart) * 0.8f, top + line)
-        bones += RectF(textStart, top + line + dp(4), textStart + (textEnd - textStart) * 0.5f, top + 2 * line + dp(4))
+        bones += Bone(RectF(textStart, top, textStart + (textEnd - textStart) * 0.8f, top + line), dp(4).toFloat())
+        bones += Bone(
+            RectF(textStart, top + line + dp(4), textStart + (textEnd - textStart) * 0.5f, top + 2 * line + dp(4)),
+            dp(4).toFloat(),
+        )
         val buttonHeight = minOf(dp(32).toFloat(), h - 2 * pad)
-        bones += RectF(w - pad - button, (h - buttonHeight) / 2, w - pad, (h + buttonHeight) / 2)
+        bones += Bone(RectF(w - pad - button, (h - buttonHeight) / 2, w - pad, (h + buttonHeight) / 2), dp(4).toFloat())
     }
 
     /** A large adaptive banner: a headline, two text lines and a button, like the ad itself. */
@@ -169,10 +283,11 @@ public class AdShimmerView @JvmOverloads constructor(
         val textEnd = w - pad - button - 2 * pad
         val block = dp(16) + dp(10) + dp(12) + dp(6) + dp(12)
         var y = (h - block) / 2
-        bones += RectF(pad, y, pad + (textEnd - pad) * 0.8f, y + dp(16)); y += dp(16) + dp(10)
-        bones += RectF(pad, y, textEnd, y + dp(12)); y += dp(12) + dp(6)
-        bones += RectF(pad, y, pad + (textEnd - pad) * 0.6f, y + dp(12))
-        bones += RectF(w - pad - button, (h - buttonHeight) / 2, w - pad, (h + buttonHeight) / 2)
+        val r = dp(4).toFloat()
+        bones += Bone(RectF(pad, y, pad + (textEnd - pad) * 0.8f, y + dp(16)), r); y += dp(16) + dp(10)
+        bones += Bone(RectF(pad, y, textEnd, y + dp(12)), r); y += dp(12) + dp(6)
+        bones += Bone(RectF(pad, y, pad + (textEnd - pad) * 0.6f, y + dp(12)), r)
+        bones += Bone(RectF(w - pad - button, (h - buttonHeight) / 2, w - pad, (h + buttonHeight) / 2), r)
     }
 
     /** A medium rectangle or inline banner: media, a text line and a button. */
@@ -180,21 +295,41 @@ public class AdShimmerView @JvmOverloads constructor(
         val button = dp(32).toFloat()
         val line = dp(12).toFloat()
         val mediaBottom = h - pad - button - pad - line - pad
-        bones += RectF(pad, pad, w - pad, mediaBottom)
-        bones += RectF(pad, mediaBottom + pad, w * 0.7f, mediaBottom + pad + line)
-        bones += RectF(pad, h - pad - button, w - pad, h - pad)
-    }
-
-    /** An icon and two text lines from [top]; returns the y below them. */
-    private fun header(w: Float, pad: Float, top: Float, icon: Float): Float {
-        bones += RectF(pad, top, pad + icon, top + icon)
-        val start = pad + icon + pad
-        bones += RectF(start, top + dp(4), start + (w - start - pad) * 0.7f, top + dp(16))
-        bones += RectF(start, top + dp(22), start + (w - start - pad) * 0.4f, top + dp(32))
-        return top + icon + pad
+        val r = dp(4).toFloat()
+        bones += Bone(RectF(pad, pad, w - pad, mediaBottom), r)
+        bones += Bone(RectF(pad, mediaBottom + pad, w * 0.7f, mediaBottom + pad + line), r)
+        bones += Bone(RectF(pad, h - pad - button, w - pad, h - pad), r)
     }
 
     private fun dp(value: Int): Int = (value * density).toInt()
+
+    /**
+     * Gives the skeleton the content a typical ad has, so it lays out like one: a one-line headline, a two-line body,
+     * a button label, an icon and media of a usual size. Assets most ads lack (advertiser, stars, price, store) are
+     * left out.
+     */
+    private fun fillPlaceholders(root: View, layout: NativeAdLayout) {
+        fun <T : View> find(id: Int): T? = if (id == 0) null else root.findViewById(id)
+        find<TextView>(layout.headlineId)?.text = PLACEHOLDER_HEADLINE
+        find<TextView>(layout.bodyId)?.text = PLACEHOLDER_BODY
+        find<TextView>(layout.callToActionId)?.let { if (it.text.isNullOrEmpty()) it.text = PLACEHOLDER_CTA }
+        find<View>(layout.iconId)?.let { icon ->
+            val lp = icon.layoutParams
+            if (lp != null && (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT || lp.height == ViewGroup.LayoutParams.WRAP_CONTENT)) {
+                icon.minimumWidth = dp(40)
+                icon.minimumHeight = dp(40)
+                (icon as? ImageView)?.adjustViewBounds = false
+            }
+        }
+        find<View>(layout.mediaContainerId)?.let { media ->
+            if (media.layoutParams?.height == ViewGroup.LayoutParams.WRAP_CONTENT && media.minimumHeight == 0) {
+                media.minimumHeight = dp(FALLBACK_MEDIA_HEIGHT_DP)
+            }
+        }
+        for (id in listOf(layout.advertiserId, layout.starRatingId, layout.priceId, layout.storeId)) {
+            find<View>(id)?.visibility = GONE
+        }
+    }
 
     /** Sizes for the library's views. */
     @InternalCompanyAdMobApi
@@ -207,10 +342,11 @@ public class AdShimmerView @JvmOverloads constructor(
         /** The highlight's width, as a share of the view's. */
         private const val SHINE_WIDTH = 0.4f
 
-        private fun nativeHeightDp(style: NativeStyle): Int = when (style) {
-            NativeStyle.SMALL -> 72
-            NativeStyle.MEDIUM -> 312
-            NativeStyle.LARGE -> 378
-        }
+        private const val FALLBACK_NATIVE_HEIGHT_DP = 120
+        private const val FALLBACK_MEDIA_HEIGHT_DP = 160
+        private const val PLACEHOLDER_HEADLINE = "Sponsored app headline"
+        private const val PLACEHOLDER_BODY =
+            "A short description of the advertised app or product, long enough for two lines of text in most layouts."
+        private const val PLACEHOLDER_CTA = "Install"
     }
 }

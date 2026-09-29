@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    The call-to-action button. Change its color (company_admob_native_cta) and corners
+    (company_admob_native_cta_corner_radius), or replace the whole drawable: one with this name in your app.
+-->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?android:attr/colorControlHighlight">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="?android:attr/colorAccent" />
-            <corners android:radius="@dimen/company_admob_native_corner_radius" />
+            <solid android:color="@color/company_admob_native_cta" />
+            <corners android:radius="@dimen/company_admob_native_cta_corner_radius" />
         </shape>
     </item>
 </ripple>

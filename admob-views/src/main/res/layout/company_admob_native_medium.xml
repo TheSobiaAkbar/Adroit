@@ -118,7 +118,7 @@
             android:maxLines="1"
             android:textAppearance="?attr/company_admob_nativeTextAppearanceCaption" />
 
-        <Button
+        <android.widget.Button
             android:id="@+id/company_admob_native_cta"
             style="@style/CompanyAdMob.Native.Cta"
             android:layout_width="wrap_content"

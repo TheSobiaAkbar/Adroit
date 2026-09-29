@@ -180,7 +180,7 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | app_open | `maxPerSession` | 0 = no limit |
 | app_open | `excludedActivities` | File only. Activity class names never covered by an app open ad, for example your splash screen |
 | banner | `style` | `adaptive` (default), `collapsible_bottom`, `collapsible_top`, `rectangle` (300×250), `standard` (320×50) or `inline_adaptive` |
-| native | `style` | `small`, `medium` (default) or `large`: the library's templates |
+| native | `style` | A library style: `small`, `medium` (default), `large`, `small_button_bottom`, `small_button_top`, `small_button_end`, `large_button_bottom`, `large_button_top`, `large_compact`, `side_media_button_bottom` or `side_media_button_top` ([Native](NATIVE.md#templates-and-custom-layouts)). Or the name of your own layout, registered with `NativeTemplates.register` ([Native](NATIVE.md#your-own-layout-picked-by-name)). |
 | native | `poolSize` | File only. Ads kept loaded, 1 to 3 (default 1) |
 
 ### Settings
@@ -253,13 +253,14 @@ override fun onResume() {
   the ad opens, and also when the show fails, times out, or the user leaves the screen. The splash ad never gets one:
   the splash is its loading screen. To change its look, declare a layout named `company_admob_loading_ad` in your app
   (and the text with a `company_admob_loading_ad` string); the library only inflates it.
-- **Shimmer.** With `showLoading`, a banner or native ad shows a shimmer while it loads: grey blocks shaped like the
-  ad that will appear, with a highlight sweeping across. A banner's shimmer has the banner's height (adaptive,
-  collapsible, standard, rectangle or inline, as its `style` says now); a native ad's follows its template (`small`,
-  `medium` or `large`). A Firebase change of style or format changes the shimmer too. It goes when the ad appears,
+- **Shimmer.** With `showLoading`, a banner or native ad shows a shimmer while it loads: the ad's whole area as a
+  card, with grey blocks shaped like the ad that will appear, and a highlight sweeping across both. A banner's
+  shimmer has the banner's height (adaptive, collapsible, standard, rectangle or inline, as its `style` says now); a
+  native ad's is built at runtime from the layout it will show in, any style or your own layout, with a block over
+  each of its views ([Native](NATIVE.md#the-shimmer)). A Firebase change of style or format changes the shimmer too. It goes when the ad appears,
   and when the load fails (the slot then collapses as before). This works in `AdSlotView`, `AdBannerView`,
   `AdNativeView`, `attachBanner`, `attachNativeAd`, `NativeAdHolder`, and the `AdSlot`, `AdBanner` and `AdNative`
-  composables; a composable's own `placeholder` replaces it. Its colours are the `company_admob_shimmer_base` and
+  composables; a composable's own `placeholder` replaces it. Its colours are the `company_admob_shimmer_card`, `company_admob_shimmer_base` and
   `company_admob_shimmer_highlight` colour resources (with night variants), which your app can override.
 - An ad that expires unshown (after an hour for most formats) isn't replaced until the next `AdSlots.load`.
 - After a show, an ad with **`loadAgain`** set loads the next one straight away: with `adUnitIds` of `[A, B]`, showing

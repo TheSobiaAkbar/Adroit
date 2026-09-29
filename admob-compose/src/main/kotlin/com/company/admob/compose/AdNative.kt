@@ -21,12 +21,12 @@ import com.company.admob.NativeAdResult
 import com.company.admob.NativePlacement
 import com.company.admob.compose.internal.ComposeRuntime
 import com.company.admob.compose.internal.NativeShimmer
-import com.company.admob.compose.internal.styleOf
+import com.company.admob.compose.internal.layoutFor
 import com.company.admob.views.NativeTemplates
 
 /**
  * A native ad for [placement], rendered with [layout] (one of [NativeTemplates], or your own `NativeAdLayout`). With no
- * [layout], the template matching the placement's configured style is used ([NativeTemplates.forStyle]), so the
+ * [layout], the placement's configured layout is used ([NativeTemplates.forPlacement]: its style's template, or a registered app layout), so the
  * configuration (or Firebase) can change it.
  *
  * The ad comes from [rememberNativeAd]: it's loaded once per ([placement], [slotKey]) and kept by the screen's
@@ -82,15 +82,12 @@ public fun AdNative(
     when (val current = result) {
         null -> when {
             placeholder != null -> Box(modifier) { placeholder() }
-            ComposeRuntime.showsLoading(placement.key) -> NativeShimmer(
-                layout?.let(::styleOf) ?: ComposeRuntime.client.native.style(placement),
-                modifier,
-            )
+            ComposeRuntime.showsLoading(placement.key) -> NativeShimmer(layout ?: layoutFor(placement), modifier)
         }
         is NativeAdResult.Loaded -> RenderedNativeAd(
             current.handle,
             modifier,
-            layout ?: NativeTemplates.forStyle(ComposeRuntime.client.native.style(placement)),
+            layout ?: layoutFor(placement),
             renderer,
             onReplaced = retainer::onReplaced,
         )

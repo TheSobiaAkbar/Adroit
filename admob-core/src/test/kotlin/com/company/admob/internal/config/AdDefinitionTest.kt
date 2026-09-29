@@ -283,4 +283,17 @@ class AdDefinitionTest {
         assertEquals(AdBehavior(showLoading = false), remote.overrides.placements.getValue("B").behavior)
         assertTrue(remote.issues.single().contains("full-screen ads only"))
     }
+
+    @Test
+    fun `a native profile can show a registered app layout, by name`() {
+        val promo = AdProfile.native(layout = " My_Promo ", loadAgain = true)
+        assertEquals("my_promo", promo.layoutName)
+        assertTrue(promo.toJson(), "\"style\":\"my_promo\"" in promo.toJson())
+        val config = adMobConfig { profiles(listOf(definition("Promo", promo))) }
+        val native = config.placements.single() as NativePlacementConfig
+        assertEquals("my_promo", native.layoutName)
+        assertEquals(NativeStyle.MEDIUM, native.style)
+        assertEquals("\"small_button_end\"", "\"" + AdProfile.native(style = NativeStyle.SMALL_BUTTON_END).toJson().substringAfter("\"style\":\"").substringBefore("\"") + "\"")
+        assertThrows(IllegalArgumentException::class.java) { AdProfile.native(layout = "not valid!") }
+    }
 }

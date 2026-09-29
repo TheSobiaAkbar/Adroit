@@ -546,6 +546,7 @@ public final class com/company/admob/CompanyAdMobInternal {
 	public static final fun detachRenderedView (Lcom/company/admob/NativeAdHandle;)V
 	public static final fun installForTesting (Lcom/company/admob/AdsClient;)Lkotlin/jvm/functions/Function0;
 	public static final fun log (Lcom/company/admob/logging/LogLevel;Ljava/lang/String;)V
+	public static final fun nativeLayoutName (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun parseRemoteProfiles (Ljava/util/Map;Ljava/util/Map;Ljava/lang/String;)Lcom/company/admob/config/remote/AdOverrides;
 	public static final fun showsLoading (Ljava/lang/String;)Z
 }
@@ -783,8 +784,16 @@ public final class com/company/admob/NativePlacement : com/company/admob/AdPlace
 
 public final class com/company/admob/NativeStyle : java/lang/Enum {
 	public static final field LARGE Lcom/company/admob/NativeStyle;
+	public static final field LARGE_BUTTON_BOTTOM Lcom/company/admob/NativeStyle;
+	public static final field LARGE_BUTTON_TOP Lcom/company/admob/NativeStyle;
+	public static final field LARGE_COMPACT Lcom/company/admob/NativeStyle;
 	public static final field MEDIUM Lcom/company/admob/NativeStyle;
+	public static final field SIDE_MEDIA_BUTTON_BOTTOM Lcom/company/admob/NativeStyle;
+	public static final field SIDE_MEDIA_BUTTON_TOP Lcom/company/admob/NativeStyle;
 	public static final field SMALL Lcom/company/admob/NativeStyle;
+	public static final field SMALL_BUTTON_BOTTOM Lcom/company/admob/NativeStyle;
+	public static final field SMALL_BUTTON_END Lcom/company/admob/NativeStyle;
+	public static final field SMALL_BUTTON_TOP Lcom/company/admob/NativeStyle;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/NativeStyle;
 	public static fun values ()[Lcom/company/admob/NativeStyle;
@@ -1087,6 +1096,12 @@ public abstract class com/company/admob/config/AdProfile {
 	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;)Lcom/company/admob/config/AdProfile$Interstitial;
 	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;)Lcom/company/admob/config/AdProfile$Interstitial;
 	public static final fun native ()Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/lang/String;)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/lang/String;Ljava/util/List;)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/lang/String;Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/lang/String;Ljava/util/List;ZI)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/lang/String;Ljava/util/List;ZIZ)Lcom/company/admob/config/AdProfile$Native;
+	public static final fun native (Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;)Lcom/company/admob/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;)Lcom/company/admob/config/AdProfile$Native;
@@ -1168,12 +1183,19 @@ public final class com/company/admob/config/AdProfile$Companion {
 	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;)Lcom/company/admob/config/AdProfile$Interstitial;
 	public static synthetic fun interstitial$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/company/admob/config/AdProfile$Interstitial;
 	public final fun native ()Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/lang/String;)Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/lang/String;Ljava/util/List;)Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/lang/String;Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/lang/String;Ljava/util/List;ZI)Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/lang/String;Ljava/util/List;ZIZ)Lcom/company/admob/config/AdProfile$Native;
+	public final fun native (Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;)Lcom/company/admob/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;Z)Lcom/company/admob/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;)Lcom/company/admob/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;I)Lcom/company/admob/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;IZ)Lcom/company/admob/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;ZLcom/company/admob/NativeStyle;IZLjava/lang/Boolean;)Lcom/company/admob/config/AdProfile$Native;
+	public static synthetic fun native$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;ILjava/lang/Object;)Lcom/company/admob/config/AdProfile$Native;
 	public static synthetic fun native$default (Lcom/company/admob/config/AdProfile$Companion;Ljava/util/List;ZLcom/company/admob/NativeStyle;IZLjava/lang/Boolean;ILjava/lang/Object;)Lcom/company/admob/config/AdProfile$Native;
 	public final fun rewarded ()Lcom/company/admob/config/AdProfile$Rewarded;
 	public final fun rewarded (Ljava/util/List;)Lcom/company/admob/config/AdProfile$Rewarded;
@@ -1216,6 +1238,7 @@ public final class com/company/admob/config/AdProfile$Native : com/company/admob
 	public fun getAdUnitIds ()Ljava/util/List;
 	public fun getEnabled ()Z
 	public fun getFormat ()Lcom/company/admob/AdFormat;
+	public final fun getLayoutName ()Ljava/lang/String;
 	public fun getLoadAgain ()Z
 	public final fun getPoolSize ()I
 	public fun getShowLoading ()Ljava/lang/Boolean;
@@ -1449,6 +1472,7 @@ public final class com/company/admob/config/NativePlacementBuilder : com/company
 }
 
 public final class com/company/admob/config/NativePlacementConfig : com/company/admob/config/PlacementConfig {
+	public synthetic fun <init> (Lcom/company/admob/AdPlacement;Ljava/util/List;ZLcom/company/admob/config/FrequencyRule;Lcom/company/admob/config/PreloadStrategy;Lcom/company/admob/config/RetryPolicy;Lkotlin/time/Duration;ILcom/company/admob/NativeStyle;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getFormat ()Lcom/company/admob/AdFormat;
 	public final fun getPoolSize ()I
 	public final fun getStyle ()Lcom/company/admob/NativeStyle;

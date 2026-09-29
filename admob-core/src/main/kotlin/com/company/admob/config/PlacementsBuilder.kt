@@ -266,7 +266,10 @@ public class NativePlacementBuilder internal constructor(placement: NativePlacem
     /** See [NativePlacementConfig.style]. */
     public var style: NativeStyle = NativeStyle.MEDIUM
 
+    /** An ad profile's registered app layout, shown instead of [style]; see `AdProfile.Native.layoutName`. */
+    internal var layoutName: String? = null
+
     internal fun build(): NativePlacementConfig = NativePlacementConfig(
-        placement, adUnitIds, enabled, frequency, preload, retry, expiry, poolSize, style,
+        placement, adUnitIds, enabled, frequency, preload, retry, expiry, poolSize, style, layoutName,
     )
 }

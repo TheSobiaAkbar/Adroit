@@ -204,13 +204,17 @@ public class NativePlacementConfig internal constructor(
     expiry: Duration?,
     public val poolSize: Int,
     public val style: NativeStyle,
+    /** An ad profile's registered app layout, shown instead of [style]; null for a library template. */
+    internal val layoutName: String? = null,
 ) : PlacementConfig(placement, adUnitIds, enabled, frequency, preload, retry, expiry) {
     override val format: AdFormat get() = AdFormat.NATIVE
 
     override fun extrasEqual(other: PlacementConfig): Boolean =
-        other is NativePlacementConfig && other.poolSize == poolSize && other.style == style
+        other is NativePlacementConfig && other.poolSize == poolSize && other.style == style &&
+            other.layoutName == layoutName
 
-    override fun extrasHashCode(): Int = 31 * poolSize + style.hashCode()
+    override fun extrasHashCode(): Int = 31 * (31 * poolSize + style.hashCode()) + layoutName.hashCode()
 
-    override fun extrasToString(): String = ", poolSize=$poolSize, style=$style"
+    override fun extrasToString(): String =
+        ", poolSize=$poolSize, style=$style" + (layoutName?.let { ", layoutName=$it" } ?: "")
 }

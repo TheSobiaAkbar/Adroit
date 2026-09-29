@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon, "Ad" badge and headline, and the body: a template part, merged into a horizontal LinearLayout. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ImageView
+        android:id="@+id/company_admob_native_icon"
+        style="@style/CompanyAdMob.Native.Icon"
+        android:layout_marginEnd="@dimen/company_admob_native_spacing" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/company_admob_native_attribution"
+                style="@style/CompanyAdMob.Native.Attribution"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/company_admob_native_spacing_small" />
+
+            <TextView
+                android:id="@+id/company_admob_native_headline"
+                style="@style/CompanyAdMob.Native.Headline"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/company_admob_native_body"
+            style="@style/CompanyAdMob.Native.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+
+</merge>

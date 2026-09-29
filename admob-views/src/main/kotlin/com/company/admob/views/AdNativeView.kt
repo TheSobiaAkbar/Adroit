@@ -11,6 +11,7 @@ import com.company.admob.NativeAdHandle
 import com.company.admob.NativeAdLayout
 import com.company.admob.NativeAdResult
 import com.company.admob.NativePlacement
+import com.company.admob.NativeStyle
 import com.company.admob.views.internal.ViewsRuntime
 
 /**
@@ -63,12 +64,10 @@ public class AdNativeView @JvmOverloads constructor(
             layout = if (customLayout != 0) {
                 NativeTemplates.forLayout(customLayout)
             } else {
-                when (a.getInt(R.styleable.CompanyAdmobAdNativeView_company_admob_template, TEMPLATE_FROM_STYLE)) {
-                    TEMPLATE_SMALL -> NativeTemplates.Small
-                    TEMPLATE_MEDIUM -> NativeTemplates.Medium
-                    TEMPLATE_LARGE -> NativeTemplates.Large
-                    else -> null
-                }
+                // The enum's values are NativeStyle's ordinals (company_admob_attrs.xml).
+                a.getInt(R.styleable.CompanyAdmobAdNativeView_company_admob_template, TEMPLATE_FROM_STYLE)
+                    .takeIf { it in NativeStyle.entries.indices }
+                    ?.let { NativeTemplates.forStyle(NativeStyle.entries[it]) }
             }
             a.getString(R.styleable.CompanyAdmobAdNativeView_company_admob_placement)?.let { key ->
                 placement = try {
@@ -174,10 +173,6 @@ public class AdNativeView @JvmOverloads constructor(
     }
 
     private companion object {
-        private const val TEMPLATE_SMALL = 0
-        private const val TEMPLATE_MEDIUM = 1
-        private const val TEMPLATE_LARGE = 2
-
         /** No template attribute: the placement's configured style decides. */
         private const val TEMPLATE_FROM_STYLE = -1
     }

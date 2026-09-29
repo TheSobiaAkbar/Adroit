@@ -37,7 +37,7 @@ with that owner. An unknown key logs an error and the view stays `GONE`; it neve
 | Attribute | Values |
 |---|---|
 | `company_admob_placement` | a native placement key (required) |
-| `company_admob_template` | `small`, `medium` (default), `large` |
+| `company_admob_template` | A library style: `small`, `medium`, `large`, `small_button_bottom`, `small_button_top`, `small_button_end`, `large_button_bottom`, `large_button_top`, `large_compact`, `side_media_button_bottom` or `side_media_button_top`. Without it, the placement's style decides ([Native](NATIVE.md#templates-and-custom-layouts)). |
 | `company_admob_layout` | your own layout, using the standard template IDs (`company_admob_native_headline`, `_body`, `_cta`, `_icon`, `_media`, `_advertiser`, `_stars`, `_price`, `_store`, `_attribution`) |
 
 From code: `setPlacement(placement)` or `setPlacement(placement, layout)`. It loads when attached, renders, and is
@@ -91,4 +91,4 @@ Fragment, pass `requireActivity()`. Show them from click handlers or ViewModel e
   ViewModel, the rewarded interstitial intro as a `DialogFragment`, and a settings screen with the privacy options
   button.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29

@@ -16,6 +16,7 @@ import com.company.admob.UnavailableReason
 import com.company.admob.sample.xml.PremiumStore
 import com.company.admob.sample.xml.R
 import com.company.admob.sample.xml.databinding.FragmentSettingsBinding
+import com.company.admob.sample.xml.styles.NativeStylesActivity
 import kotlinx.coroutines.launch
 
 /**
@@ -47,6 +48,9 @@ class SettingsFragment : Fragment() {
             CompanyAdMob.diagnostics.openAdInspector(requireActivity()) { error ->
                 error?.let { toast(getString(R.string.ad_inspector_error, it.message)) }
             }
+        }
+        binding.nativeStyles.setOnClickListener {
+            startActivity(android.content.Intent(requireContext(), NativeStylesActivity::class.java))
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

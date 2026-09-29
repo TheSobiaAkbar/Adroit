@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Applied by every native template (android:theme on its root). Override it to restyle the templates. -->
+    <!--
+        Applied by every native template (android:theme on its root). The simplest way to restyle the templates is to
+        override the colors, dimens and drawables these items use (docs/NATIVE.md, "Styling"); overriding this style
+        in your app replaces them all at once.
+    -->
     <style name="CompanyAdMob.ThemeOverlay.Native" parent="">
-        <item name="company_admob_nativeBackground">@color/company_admob_native_background</item>
+        <item name="company_admob_nativeBackground">@drawable/company_admob_native_card</item>
         <item name="company_admob_nativeCtaBackground">@drawable/company_admob_native_cta_background</item>
-        <item name="company_admob_nativeCtaTextColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="company_admob_nativeCtaTextColor">@color/company_admob_native_cta_text</item>
         <item name="company_admob_nativeAttributionBackground">@drawable/company_admob_native_attribution_background</item>
         <item name="company_admob_nativeTextAppearanceHeadline">@style/CompanyAdMob.TextAppearance.Native.Headline</item>
         <item name="company_admob_nativeTextAppearanceBody">@style/CompanyAdMob.TextAppearance.Native.Body</item>
@@ -12,34 +16,42 @@
         <item name="company_admob_nativeTextAppearanceAttribution">@style/CompanyAdMob.TextAppearance.Native.Attribution</item>
     </style>
 
-    <!-- Theme-derived colors, so the templates follow light and dark themes. -->
+    <!-- Colors from res/color, which follow the light and dark themes until your app overrides them. -->
     <style name="CompanyAdMob.TextAppearance.Native.Headline" parent="@android:style/TextAppearance.Material.Subhead">
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textColor">@color/company_admob_native_headline</item>
+        <item name="android:textSize">@dimen/company_admob_native_headline_text_size</item>
         <item name="android:textStyle">bold</item>
     </style>
 
     <style name="CompanyAdMob.TextAppearance.Native.Body" parent="@android:style/TextAppearance.Material.Body1">
-        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:textColor">@color/company_admob_native_body</item>
+        <item name="android:textSize">@dimen/company_admob_native_body_text_size</item>
     </style>
 
     <style name="CompanyAdMob.TextAppearance.Native.Caption" parent="@android:style/TextAppearance.Material.Caption">
-        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:textColor">@color/company_admob_native_body</item>
+        <item name="android:textSize">@dimen/company_admob_native_caption_text_size</item>
     </style>
 
     <style name="CompanyAdMob.TextAppearance.Native.Attribution" parent="@android:style/TextAppearance.Material.Caption">
-        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textColor">@color/company_admob_native_attribution_text</item>
+        <item name="android:textSize">@dimen/company_admob_native_attribution_text_size</item>
         <item name="android:textStyle">bold</item>
     </style>
 
     <style name="CompanyAdMob.Native.Cta" parent="">
         <item name="android:background">?attr/company_admob_nativeCtaBackground</item>
         <item name="android:textColor">?attr/company_admob_nativeCtaTextColor</item>
+        <item name="android:textSize">@dimen/company_admob_native_cta_text_size</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:minHeight">@dimen/company_admob_native_cta_min_height</item>
         <item name="android:paddingStart">@dimen/company_admob_native_spacing_large</item>
         <item name="android:paddingEnd">@dimen/company_admob_native_spacing_large</item>
+        <item name="android:gravity">center</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
+        <item name="android:stateListAnimator">@null</item>
     </style>
 
     <style name="CompanyAdMob.Native.Attribution" parent="">
@@ -51,5 +63,26 @@
         <item name="android:paddingStart">@dimen/company_admob_native_spacing_small</item>
         <item name="android:paddingEnd">@dimen/company_admob_native_spacing_small</item>
         <item name="android:text">@string/company_admob_ad_attribution</item>
+    </style>
+
+    <!-- The headline, body and icon of the new templates, shared so they look alike. -->
+    <style name="CompanyAdMob.Native.Headline" parent="">
+        <item name="android:textAppearance">?attr/company_admob_nativeTextAppearanceHeadline</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="CompanyAdMob.Native.Body" parent="">
+        <item name="android:textAppearance">?attr/company_admob_nativeTextAppearanceBody</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="CompanyAdMob.Native.Icon" parent="">
+        <item name="android:layout_width">@dimen/company_admob_native_icon_size</item>
+        <item name="android:layout_height">@dimen/company_admob_native_icon_size</item>
+        <item name="android:contentDescription">@null</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:scaleType">fitCenter</item>
     </style>
 </resources>

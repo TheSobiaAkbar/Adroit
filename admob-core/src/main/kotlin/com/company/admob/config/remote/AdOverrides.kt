@@ -116,6 +116,12 @@ public class PlacementOverride(
     internal var behavior: AdBehavior? = null
 
     /**
+     * An ad profile's `"style"` naming a registered app layout instead of a [NativeStyle]; it replaces the ad's own
+     * style or layout. Set only by the library's parser.
+     */
+    internal var nativeLayoutName: String? = null
+
+    /**
      * An override that may swap the placement's [format]. The other parameters are those of the primary constructor,
      * which is kept without [format] so code compiled against 1.0.0-rc1 keeps working.
      */
@@ -140,7 +146,7 @@ public class PlacementOverride(
             other.maxPerSession == maxPerSession && other.preload == preload && other.adUnitId == adUnitId &&
             other.adUnitIds == adUnitIds && other.counter == counter && other.bannerSize == bannerSize &&
             other.nativeStyle == nativeStyle && other.splashTimeout == splashTimeout && other.format == format &&
-            other.loadAgain == loadAgain && other.behavior == behavior
+            other.loadAgain == loadAgain && other.behavior == behavior && other.nativeLayoutName == nativeLayoutName
 
     override fun hashCode(): Int {
         var result = enabled.hashCode()
@@ -155,13 +161,15 @@ public class PlacementOverride(
         result = 31 * result + splashTimeout.hashCode()
         result = 31 * result + format.hashCode()
         result = 31 * result + loadAgain.hashCode()
+        result = 31 * result + nativeLayoutName.hashCode()
         return 31 * result + behavior.hashCode()
     }
 
     override fun toString(): String =
         "PlacementOverride(enabled=$enabled, minInterval=$minInterval, maxPerSession=$maxPerSession, " +
             "preload=$preload, adUnitId=$adUnitId, adUnitIds=$adUnitIds, counter=$counter, bannerSize=$bannerSize, " +
-            "nativeStyle=$nativeStyle, splashTimeout=$splashTimeout, format=$format, loadAgain=$loadAgain, behavior=$behavior)"
+            "nativeStyle=$nativeStyle, splashTimeout=$splashTimeout, format=$format, loadAgain=$loadAgain, behavior=$behavior" +
+            (nativeLayoutName?.let { ", nativeLayoutName=$it" } ?: "") + ")"
 
     /** This override with its ad units replaced by [ids] (null removes them), keeping every other field. */
     internal fun withAdUnitIds(ids: List<String>?): PlacementOverride = PlacementOverride(
@@ -170,6 +178,7 @@ public class PlacementOverride(
     ).also {
         it.loadAgain = loadAgain
         it.behavior = behavior
+        it.nativeLayoutName = nativeLayoutName
     }
 
     /** This override without its format swap, keeping every other field. */
@@ -179,7 +188,11 @@ public class PlacementOverride(
     ).also {
         it.loadAgain = loadAgain
         it.behavior = behavior
+        it.nativeLayoutName = nativeLayoutName
     }
+
+    /** Whether it sets a native look: a style, or a registered app layout. */
+    internal val setsNativeLook: Boolean get() = nativeStyle != null || nativeLayoutName != null
 
     /** The ad units this override sets, in rotation order, or null when it sets none. */
     internal val effectiveAdUnitIds: List<String>? get() = adUnitIds ?: adUnitId?.let(::listOf)

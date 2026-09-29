@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Every size of the native templates. Override any of them in your app with a dimen of the same name. -->
 <resources>
     <dimen name="company_admob_banner_inline_max_height">250dp</dimen>
 
@@ -15,5 +16,22 @@
     <!-- About 16:9 at phone widths, and above Google's 120x120dp minimum for video. -->
     <dimen name="company_admob_native_media_min_height">180dp</dimen>
     <dimen name="company_admob_native_media_min_height_large">220dp</dimen>
+    <!-- The media height of large_button_bottom and large_button_top. -->
+    <dimen name="company_admob_native_media_height">160dp</dimen>
+    <!-- The media height of large_compact and the side_media styles. Keep it at least 120dp: Google's video minimum. -->
+    <dimen name="company_admob_native_media_height_compact">120dp</dimen>
     <dimen name="company_admob_native_corner_radius">4dp</dimen>
+
+    <!-- The card behind each template (drawable company_admob_native_card). -->
+    <dimen name="company_admob_native_card_corner_radius">8dp</dimen>
+    <dimen name="company_admob_native_card_stroke_width">1dp</dimen>
+    <dimen name="company_admob_native_cta_corner_radius">6dp</dimen>
+    <dimen name="company_admob_native_attribution_corner_radius">2dp</dimen>
+
+    <!-- Text sizes. -->
+    <dimen name="company_admob_native_headline_text_size">15sp</dimen>
+    <dimen name="company_admob_native_body_text_size">13sp</dimen>
+    <dimen name="company_admob_native_caption_text_size">12sp</dimen>
+    <dimen name="company_admob_native_cta_text_size">14sp</dimen>
+    <dimen name="company_admob_native_attribution_text_size">10sp</dimen>
 </resources>

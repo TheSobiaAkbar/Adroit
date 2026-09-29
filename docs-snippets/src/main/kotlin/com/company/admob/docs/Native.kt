@@ -2,6 +2,7 @@
 
 package com.company.admob.docs
 
+import android.app.Application
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
@@ -22,6 +23,8 @@ import com.company.admob.NativeAdLayout
 import com.company.admob.NativeAdRenderer
 import com.company.admob.NativeAdResult
 import com.company.admob.compose.AdNative
+import com.company.admob.config.AdDefinition
+import com.company.admob.config.AdProfile
 import com.company.admob.compose.rememberNativeAd
 import com.company.admob.views.NativeAdHolder
 import com.company.admob.views.NativeTemplates
@@ -115,5 +118,21 @@ val ArticleAdRenderer = NativeAdRenderer { root, assets ->
 @Composable
 fun CustomNativeAd() {
     AdNative(Placements.FeedNative, layout = ArticleAdLayout, renderer = ArticleAdRenderer)
+}
+// endregion
+
+// region native-register
+class PromoAdsApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        // Your own layout under a name: ad profiles and Firebase can now pick it with "style": "promo".
+        NativeTemplates.register("promo", ArticleAdLayout)
+        // Or, for a layout using the standard IDs: NativeTemplates.register("promo", R.layout.my_native_ad)
+    }
+}
+
+/** An ad shown in the registered layout by default; Firebase can still switch it to any style or layout. */
+enum class PromoAds(override val defaults: AdProfile) : AdDefinition {
+    PromoNative(AdProfile.native(layout = "promo")),
 }
 // endregion

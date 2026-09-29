@@ -21,6 +21,14 @@ internal object ViewsRuntime {
     @Volatile
     var showsLoadingOverride: ((String) -> Boolean)? = null
 
+    /** For this module's tests: the registered layout name of each native key. */
+    @Volatile
+    var nativeLayoutNameOverride: ((String) -> String?)? = null
+
+    /** The registered app layout the native ad [key] shows now, or null for its style's template. */
+    fun nativeLayoutName(key: String): String? =
+        nativeLayoutNameOverride?.let { return it(key) } ?: CompanyAdMobInternal.nativeLayoutName(key)
+
     /** Whether the ad [key] shows a shimmer while it loads (its `showLoading`). */
     fun showsLoading(key: String): Boolean = showsLoadingOverride?.invoke(key) ?: CompanyAdMobInternal.showsLoading(key)
 

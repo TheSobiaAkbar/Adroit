@@ -33,6 +33,9 @@
         <activity
             android:name=".DetailsActivity"
             android:exported="false" />
+        <activity
+            android:name=".styles.NativeStylesActivity"
+            android:exported="false" />
 
         <!-- Required by the Google Mobile Ads and UMP SDKs. Injected from Gradle: Google's sample app ID by default. -->
         <meta-data

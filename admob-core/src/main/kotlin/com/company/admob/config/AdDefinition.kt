@@ -186,6 +186,8 @@ public sealed class AdProfile {
      * A native ad.
      *
      * @property style the library template.
+     * @property layoutName the name of an app layout registered with `NativeTemplates.register` (admob-views), used
+     *   instead of [style]; null for a library template. An unregistered name shows the [style] template.
      * @property poolSize ads kept loaded, 1 to 3.
      * @property loadAgain see [AdProfile.loadAgain]; for a native ad, "shown" means handed to a view.
      */
@@ -196,6 +198,7 @@ public sealed class AdProfile {
         public val poolSize: Int,
         override val loadAgain: Boolean,
         override val showLoading: Boolean?,
+        public val layoutName: String? = null,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.NATIVE
     }
@@ -307,6 +310,25 @@ public sealed class AdProfile {
             loadAgain: Boolean = false,
             showLoading: Boolean? = null,
         ): Native = Native(ids.toList(), enabled, style, poolSize, loadAgain, showLoading)
+
+        /**
+         * A native profile shown in the app's own layout, registered under [layout] with `NativeTemplates.register`
+         * (admob-views), for example `AdProfile.native(layout = "promo")`. Firebase can switch it to a library style,
+         * or to another registered layout, with `"style"`. Until the name is registered, the Medium template shows.
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun native(
+            layout: String,
+            ids: List<String> = emptyList(),
+            enabled: Boolean = true,
+            poolSize: Int = 1,
+            loadAgain: Boolean = false,
+            showLoading: Boolean? = null,
+        ): Native = Native(
+            ids.toList(), enabled, NativeStyle.MEDIUM, poolSize, loadAgain, showLoading,
+            layoutName = NativeLayoutNames.normalize(layout),
+        )
     }
 }
 

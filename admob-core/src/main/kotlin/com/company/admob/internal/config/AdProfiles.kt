@@ -11,6 +11,7 @@ import com.company.admob.NativeStyle
 import com.company.admob.RewardedInterstitialPlacement
 import com.company.admob.RewardedPlacement
 import com.company.admob.config.FrequencyRule
+import com.company.admob.config.NativeLayoutNames
 import com.company.admob.config.PlacementConfig
 import com.company.admob.config.PlacementsBuilder
 import com.company.admob.config.PreloadStrategy
@@ -200,7 +201,10 @@ internal object AdProfiles {
             }
             AdFormat.NATIVE -> builder.native(NativePlacement(key), ids) {
                 this.enabled = enabled
-                fields.nativeStyle()?.let { style = it }
+                fields.nativeLook()?.let { look ->
+                    look.style?.let { style = it }
+                    layoutName = look.layoutName
+                }
                 fields.count("poolSize")?.let { poolSize = it }
                 this.preload = preload
             }
@@ -255,6 +259,7 @@ internal object AdProfiles {
         }
         // A swapped ad keeps its own frequency rules (counter, timer, caps); only its style follows the new format.
         val styleFormat = swapTo ?: format
+        val look = if (styleFormat == AdFormat.NATIVE) fields.nativeLook() else null
         val fullScreenFrequency = format == AdFormat.INTERSTITIAL || format == AdFormat.REWARDED_INTERSTITIAL
         return PlacementOverride(
             enabled = fields.boolean("enabled"),
@@ -265,11 +270,12 @@ internal object AdProfiles {
             adUnitIds = fields.adUnitIds()?.ifEmpty { null },
             counter = if (fullScreenFrequency) fields.count("counter") else null,
             bannerSize = if (styleFormat == AdFormat.BANNER) fields.bannerSize() else null,
-            nativeStyle = if (styleFormat == AdFormat.NATIVE) fields.nativeStyle() else null,
+            nativeStyle = look?.style,
             splashTimeout = if (format == AdFormat.INTERSTITIAL) fields.count("splashTimeoutSeconds")?.seconds else null,
             format = swapTo,
         ).also {
             if (format != AdFormat.BANNER) it.loadAgain = fields.boolean("loadAgain")
+            it.nativeLayoutName = look?.layoutName
             it.behavior = behaviorOf(json, format, issue)
         }
     }
@@ -370,14 +376,14 @@ internal object AdProfiles {
             }
         }
 
-        fun nativeStyle(): NativeStyle? {
-            val style = string("style") ?: return null
-            return when (style.trim().lowercase()) {
-                "small" -> NativeStyle.SMALL
-                "medium" -> NativeStyle.MEDIUM
-                "large" -> NativeStyle.LARGE
-                else -> wrong("style", "small, medium or large")
-            }
+        /** A library style, or the name of an app layout registered with `NativeTemplates.register`. */
+        fun nativeLook(): NativeLook? {
+            val raw = string("style") ?: return null
+            val name = raw.trim().lowercase()
+            NativeLayoutNames.styleNamed(name)?.let { return NativeLook(it, null) }
+            if (NativeLayoutNames.isValid(name)) return NativeLook(null, name)
+            wrong("style", "${NativeLayoutNames.styleNames}, or a registered layout's name (letters, digits, _)")
+            return null
         }
 
         private fun wrong(name: String, expected: String): Nothing? {
@@ -386,3 +392,6 @@ internal object AdProfiles {
         }
     }
 }
+
+/** A native ad's `"style"`: a library [style], or the [layoutName] of an app layout (exactly one is set). */
+internal class NativeLook(val style: NativeStyle?, val layoutName: String?)

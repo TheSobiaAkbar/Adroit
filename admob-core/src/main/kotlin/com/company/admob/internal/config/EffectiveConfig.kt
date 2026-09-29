@@ -180,6 +180,12 @@ internal class EffectiveConfig private constructor(
                 splashTimeout = override?.splashTimeout ?: (config as? InterstitialPlacementConfig)?.splashTimeout,
                 loadAgain = config.format != AdFormat.BANNER && (override?.loadAgain ?: loadAgain),
                 behavior = behavior,
+                // A remote style or layout replaces the ad's own look as a whole.
+                nativeLayoutName = if (override?.setsNativeLook == true) {
+                    override.nativeLayoutName
+                } else {
+                    (config as? NativePlacementConfig)?.layoutName
+                },
             )
         }
 
@@ -230,6 +236,7 @@ internal class EffectiveConfig private constructor(
                 splash = primary.isSplash,
                 loadAgain = format != AdFormat.BANNER && primary.loadAgain,
                 behavior = primary.behavior,
+                nativeLayoutName = override?.nativeLayoutName?.takeIf { format == AdFormat.NATIVE },
             )
         }
     }
@@ -271,6 +278,8 @@ internal class EffectivePlacement(
     val loadAgain: Boolean = false,
     /** An ad profile's loading behaviour (load timeout, loading screen, shimmer); null for other placements. */
     val behavior: AdBehavior? = null,
+    /** A native placement's registered app layout, shown instead of [nativeStyle] (remote override first). */
+    val nativeLayoutName: String? = (config as? NativePlacementConfig)?.layoutName,
 ) {
     val placement: AdPlacement get() = config.placement
     val format: AdFormat get() = config.format

@@ -45,6 +45,14 @@ public object CompanyAdMobInternal {
         CompanyAdMob.liveRuntime?.liveConfig?.current?.active(key)?.behavior?.showLoading == true
 
     /**
+     * The registered app layout a native ad [key] shows now (its ad profile's, or its Firebase `"style"`), or null
+     * for a library template (`NativeApi.style`). For admob-views and admob-compose; any thread.
+     */
+    @JvmStatic
+    public fun nativeLayoutName(key: String): String? =
+        CompanyAdMob.liveRuntime?.liveConfig?.current?.active(key)?.nativeLayoutName
+
+    /**
      * Each configured placement's format, by placement key: the ad keys whose remote values admob-firebase reads.
      * Empty before `initialize()`. Any thread.
      */

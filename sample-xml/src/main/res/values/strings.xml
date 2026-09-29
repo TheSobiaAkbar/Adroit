@@ -21,4 +21,7 @@
     <string name="ad_inspector_error">Ad Inspector: %1$s</string>
     <string name="details_title">Details</string>
     <string name="details_body">You reached this screen whether or not an interstitial was shown.</string>
+    <string name="native_styles">Native styles</string>
+    <string name="native_styles_show_shimmers">Show the shimmers</string>
+    <string name="native_styles_show_ads">Show the ads</string>
 </resources>

@@ -7,6 +7,7 @@ import android.util.Log
 import com.company.admob.CompanyAdMob
 import com.company.admob.sample.xml.ads.SampleAdsConfig
 import com.company.admob.firebase.RemoteConfigSession
+import com.company.admob.views.NativeTemplates
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
 
@@ -18,6 +19,8 @@ class SampleApplication : Application() {
         // Cheap and synchronous: no network, no Google calls. Consent and SDK init happen in SplashActivity.
         val configStart = SystemClock.elapsedRealtimeNanos()
         val config = SampleAdsConfig.create(this, BuildConfig.BUILD_TYPE, BuildConfig.TEST_DEVICE_IDS)
+        // The app's own native layout, which SampleAds or Firebase can pick by name: {"style": "sample_promo"}.
+        NativeTemplates.register("sample_promo", R.layout.sample_native_promo)
         val initializeStart = SystemClock.elapsedRealtimeNanos()
         CompanyAdMob.initialize(this, config)
         // A premium user from an earlier launch: no ads, before any screen asks for one.

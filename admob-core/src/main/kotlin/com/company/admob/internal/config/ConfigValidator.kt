@@ -277,7 +277,7 @@ internal object ConfigValidator {
             if (override.bannerSize != null && targetFormat != null && targetFormat != AdFormat.BANNER) {
                 problem(ConfigIssueCode.FORMAT_MISMATCH, "a banner size is set for a $targetFormat placement.")
             }
-            if (override.nativeStyle != null && targetFormat != null && targetFormat != AdFormat.NATIVE) {
+            if (override.setsNativeLook && targetFormat != null && targetFormat != AdFormat.NATIVE) {
                 problem(ConfigIssueCode.FORMAT_MISMATCH, "a native style is set for a $targetFormat placement.")
             }
             var checked = if (swapTo == null && override.format != null) override.withoutSwap() else override

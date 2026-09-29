@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- large_button_top: the "Ad" strip, a full-width call to action, icon, headline and body, then full-width media. -->
+<!-- Overdraw: the template is embedded in your screen, not a window root. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/company_admob_nativeBackground"
+    android:orientation="vertical"
+    android:padding="@dimen/company_admob_native_spacing"
+    android:theme="@style/CompanyAdMob.ThemeOverlay.Native"
+    tools:ignore="Overdraw">
+
+    <include layout="@layout/company_admob_native_part_strip" />
+
+    <android.widget.Button
+        android:id="@+id/company_admob_native_cta"
+        style="@style/CompanyAdMob.Native.Cta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/company_admob_native_spacing_small" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/company_admob_native_spacing"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <include layout="@layout/company_admob_native_part_header_plain" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/company_admob_native_media"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/company_admob_native_media_height"
+        android:layout_marginTop="@dimen/company_admob_native_spacing"
+        android:contentDescription="@string/company_admob_native_media_description" />
+
+</LinearLayout>

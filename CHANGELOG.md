@@ -11,6 +11,16 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `privacy { debugGeography }` says otherwise, and the device is made a UMP test device automatically (the MD5 of
   its Android ID), so it works on a phone too. `privacy { debugBuildGeography = DebugGeography.DISABLED }` uses the
   real location. `PrivacyOptions.debugBuildGeography`.
+- Eight more native styles, each with its template: `SMALL_BUTTON_BOTTOM`, `SMALL_BUTTON_TOP`, `SMALL_BUTTON_END`,
+  `LARGE_BUTTON_BOTTOM`, `LARGE_BUTTON_TOP`, `LARGE_COMPACT`, `SIDE_MEDIA_BUTTON_BOTTOM` and `SIDE_MEDIA_BUTTON_TOP`
+  (`"style": "small_button_top"`, ... in Firebase; `company_admob_template` in XML).
+- The app's own native layouts by name: `NativeTemplates.register(name, layout)`, then `AdProfile.native(layout =
+  name)` or `{"style": "name"}` in Firebase. `NativeTemplates.forPlacement(placement)` returns the layout an ad shows
+  in now.
+- Native template styling by resources: colors (`company_admob_native_headline`, `_body`, `_cta`, `_cta_text`,
+  `_attribution`, `_attribution_text`, `_stroke`, `_background`), dimens (corners, text sizes, icon and media
+  sizes) and drawables (`company_admob_native_card`, `_cta_background`, `_attribution_background`), each replaced by
+  an app resource of the same name.
 - `docs/NEW_APP_XML.md`: adding the plugin to a new Kotlin + XML app, step by step, with a sample Firebase value
   for every kind of ad.
 - `RemoteValue` (admob-firebase): the app's own Remote Config parameters, with in-app defaults:
@@ -63,6 +73,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   after its show unless another placement shares its ad unit.
 
 ### Changed
+- The loading shimmer of a native ad is built at runtime from the layout it will show in, any template or an app's
+  own layout, with a block over each of its views; the whole card shimmers too, and a banner's whole area. New color
+  `company_admob_shimmer_card`.
+- The native templates draw a card with a thin border by default (`company_admob_native_card`); their call-to-action
+  buttons are framework `Button`s, so a Material theme no longer repaints them.
 - An ad without ad unit IDs (in a definition or an ads file) uses Google's test ad unit for its format instead of
   being a configuration error. PRODUCTION logs a warning for it.
 
