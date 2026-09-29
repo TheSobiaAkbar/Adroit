@@ -42,6 +42,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   an app resource of the same name.
 - `docs/NEW_APP_XML.md`: adding the plugin to a new Kotlin + XML app, step by step, with a sample Firebase value
   for every kind of ad.
+- `docs/NEW_APP_COMPOSE.md`: the same for a new Jetpack Compose app (splash Activity, Navigation Compose, `AdSlot`,
+  `AdBanner`, `AdNative` in a `LazyColumn`, the full-screen launcher).
+- `sample-compose` is now the XML sample's app in Compose (replacing the AdMob Playground): splash with consent and
+  the splash ad, Home, Feed, Settings, Details and Native styles destinations, the same `SampleAds` and Firebase
+  parameters. Firebase turns on once `google-services.json` is added for `com.company.admob.sample.compose`.
 - `RemoteValue` (admob-firebase): the app's own Remote Config parameters, with in-app defaults:
   `RemoteValue.boolean`, `long`, `double`, `string`, `json` and `custom`. `.value` never waits and reads as the
   default when Firebase doesn't set a valid value; `updates()` follows activations.

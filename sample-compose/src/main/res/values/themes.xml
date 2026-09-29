@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Compose draws the UI; this theme only colors the window and the native ad views (light). -->
-    <style name="Theme.Playground" parent="@android:style/Theme.Material.Light.NoActionBar" />
+    <style name="Theme.AdsPlugin" parent="@android:style/Theme.Material.Light.NoActionBar" />
 </resources>

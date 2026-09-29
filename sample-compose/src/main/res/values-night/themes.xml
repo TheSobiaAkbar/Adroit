@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Dark: native ad views follow the Compose dark theme. -->
-    <style name="Theme.Playground" parent="@android:style/Theme.Material.NoActionBar" />
+    <style name="Theme.AdsPlugin" parent="@android:style/Theme.Material.NoActionBar" />
 </resources>

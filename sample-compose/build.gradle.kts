@@ -2,10 +2,20 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.companyadmob.android.sample.compose)
+    // Applied below only when google-services.json is here: see the comment there.
+    alias(libs.plugins.companyadmob.android.firebase) apply false
 }
 
 /**
- * Test device IDs for the STAGING profile, from `local.properties` (never committed):
+ * Firebase (project `sample-ads-plugin`, the same Remote Config parameters as sample-xml) once this app is registered
+ * there: Firebase console → Project settings → Add app → Android, package `com.company.admob.sample.compose`, then
+ * download `google-services.json` into this folder. Without the file the app builds and runs on SampleAds' defaults,
+ * and logs that Firebase isn't set up (SampleApplication).
+ */
+if (file("google-services.json").isFile) apply(plugin = "companyadmob.android.firebase")
+
+/**
+ * Test device IDs for the `staging` build, from `local.properties` (never committed):
  * `companyAdmob.sample.testDeviceIds=33BE2250B43518CCDA7DE426D04EE231,…`. Empty by default. Logcat prints a device's
  * ID the first time it requests an ad.
  */
@@ -25,13 +35,25 @@ android {
             testDeviceIds.joinToString(prefix = "{", postfix = "}") { "\"$it\"" },
         )
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
     buildFeatures {
         buildConfig = true
+    }
+    buildTypes {
+        // Like debug (debuggable, not minified), but configured as a tester's build: STAGING (see SampleAdsConfig).
+        create("staging") {
+            initWith(getByName("debug"))
+            matchingFallbacks += "debug"
+        }
     }
 }
 
 dependencies {
     implementation(project(":admob-compose"))
+    // Remote Config and Analytics (Firebase BoM, from admob-firebase); Firebase itself starts from google-services.json.
+    implementation(project(":admob-firebase"))
 
     // Sample-only UI libraries. The CompanyAdMob libraries themselves never depend on these.
     implementation(libs.androidx.core.ktx)
@@ -44,6 +66,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     debugImplementation(libs.leakcanary.android)
+
+    testImplementation(libs.robolectric)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)

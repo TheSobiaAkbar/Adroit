@@ -199,8 +199,7 @@ object AdsModule {
 }
 ```
 
-(The Hilt module isn't compiled with the other snippets, because this repository doesn't use Hilt. It's the same
-binding as `sample-compose`'s `AppContainer`.)
+(The Hilt module isn't compiled with the other snippets, because this repository doesn't use Hilt.)
 
 ## Next steps
 

@@ -69,12 +69,13 @@ Apps using AdMob Mediation must exclude the legacy `play-services-ads`: see [Med
   [Rewarded interstitial](docs/REWARDED_INTERSTITIAL.md) · [App open](docs/APP_OPEN.md) · [Native](docs/NATIVE.md)
 - UI toolkits: [Compose](docs/COMPOSE.md) · [XML and Views](docs/XML.md)
 - **New Kotlin + XML app, step by step: [Adding ads to a new Kotlin + XML app](docs/NEW_APP_XML.md)**
+- **New Jetpack Compose app, step by step: [Adding ads to a new Jetpack Compose app](docs/NEW_APP_COMPOSE.md)**
 - [Integration guide](docs/INTEGRATION_GUIDE.md) · [Ad profiles](docs/AD_PROFILES.md) · [Splash screen](docs/SPLASH.md) · [Mediation](docs/MEDIATION.md) · [Analytics](docs/ANALYTICS.md) ·
   [Remote config](docs/REMOTE_CONFIG.md) ·
   [Testing](docs/TESTING.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Migration](docs/MIGRATION.md) ·
   [Releasing](docs/RELEASE.md) · [Changelog](CHANGELOG.md)
-- Samples: `sample-xml` (Views and Fragments), `sample-compose` (the AdMob Playground), `sample-mixed` (both, plus
-  mediation).
+- Samples: `sample-xml` (Views and Fragments), `sample-compose` (the same app in Jetpack Compose, with Navigation
+  Compose), `sample-mixed` (both, plus mediation).
 
 ## Policy
 

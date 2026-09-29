@@ -1,27 +1,25 @@
 package com.company.admob.sample.compose
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.company.admob.sample.compose.ui.PlaygroundApp
-import kotlin.system.exitProcess
+import com.company.admob.AdSlots
+import com.company.admob.sample.compose.ads.SampleAds
+import com.company.admob.sample.compose.ui.SampleApp
+import com.company.admob.sample.compose.ui.SampleTheme
 
+/**
+ * Every screen after the splash, as navigation destinations ([SampleApp]): Home, Feed and Settings in a bottom bar,
+ * then Details and Native styles. Each destination's banners and native ads follow its own lifecycle.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val container = appContainer
-        // Gathers consent and initializes the SDK. Called again after a rotation, start() joins the work in progress.
-        container.ads.start(this)
-        setContent { PlaygroundApp(container, onRestart = ::restartApp) }
-    }
-
-    /** Restarts the process, so a new configuration profile is applied by `initialize`. Debug tool only. */
-    private fun restartApp() {
-        val restart = Intent.makeRestartActivityTask(checkNotNull(intent.component))
-        startActivity(restart)
-        exitProcess(0)
+        enableEdgeToEdge()
+        setContent { SampleTheme { SampleApp() } }
+        // Ads load only when asked: the app open ad now, for the user's first return to the app. It has loadAgain,
+        // so each later return finds a new one. Nothing happens if it's loaded already.
+        AdSlots.load(SampleAds.AppOpenAd)
     }
 }

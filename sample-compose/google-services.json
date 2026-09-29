@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "502941475684",
+    "project_id": "sample-ads-plugin",
+    "storage_bucket": "sample-ads-plugin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502941475684:android:bf2100a62559646de89071",
+        "android_client_info": {
+          "package_name": "com.company.admob.sample.compose"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB3N9s9nAvVz3smcYNaReNCZWvVJazeFc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502941475684:android:51ad67a9d117f31be89071",
+        "android_client_info": {
+          "package_name": "com.company.admob.sample.xml"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB3N9s9nAvVz3smcYNaReNCZWvVJazeFc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

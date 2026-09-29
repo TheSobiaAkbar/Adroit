@@ -1,7 +1,8 @@
 # Integration guide: ads in a new app, step by step
 
 Starting a new Kotlin + XML app? [Adding ads to a new Kotlin + XML app](NEW_APP_XML.md) covers the same steps with
-complete files for every screen, and a sample Firebase value for every kind of ad.
+complete files for every screen, and a sample Firebase value for every kind of ad. A Jetpack Compose app:
+[Adding ads to a new Jetpack Compose app](NEW_APP_COMPOSE.md).
 
 This page is a checklist for adding the ads library to a new app, from nothing to ads you can tune from Firebase
 without a release. Every step says what to do and how to check it worked. You write one Kotlin file listing your ads,

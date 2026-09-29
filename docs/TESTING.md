@@ -87,6 +87,7 @@ class LevelFlowTest {
 - Test consent with `debugGeography` and `resetConsentForTesting()` ([Consent](CONSENT.md#testing-consent)).
 - `CompanyAdMob.diagnostics.snapshot()` (for example on a debug screen) shows the state of every placement, and
   `openAdInspector` shows what the Google SDK received.
-- The AdMob Playground (`sample-compose`) lets you exercise every format, rotation, offline mode and remote overrides.
+- `sample-xml` and `sample-compose` (the same app, in Views and in Compose) exercise every format, the splash,
+  rotation, offline mode and Firebase overrides.
 
 Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26

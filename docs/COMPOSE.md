@@ -1,7 +1,26 @@
 # Jetpack Compose
 
-`com.company:admob-compose` adds five APIs on top of `admob-core`. It depends on no design system (no Material),
+`com.company:admob-compose` adds six APIs on top of `admob-core`. It depends on no design system (no Material),
 navigation or DI library.
+
+Adding ads to a new Compose app, step by step, with the splash screen and every format:
+[Adding ads to a new Jetpack Compose app](NEW_APP_COMPOSE.md).
+
+## `AdSlot`
+
+```kotlin
+@Composable
+fun AdSlot(
+    definition: AdDefinition,                          // or key: String, the ad's name
+    modifier: Modifier = Modifier,
+    placeholder: (@Composable () -> Unit)? = null,
+    refreshKey: Any? = null,                           // change it to ask for a new ad
+)
+```
+
+A banner or a native ad, whichever format the ad has now: a Firebase value can swap an ad between banner and native,
+and the slot follows. Size and template come from the ad's style. It's [`AdBanner`](#adbanner) or
+[`AdNative`](#adnative-and-remembernativead) underneath.
 
 ## `AdBanner`
 
@@ -12,12 +31,15 @@ fun AdBanner(
     modifier: Modifier = Modifier,
     options: BannerOptions = BannerOptions(),          // size, and whether to reserve the expected height
     placeholder: (@Composable () -> Unit)? = null,     // shown over the reserved space while loading
+    refreshKey: Any?,                                  // optional overload: change it to ask for a new banner
     onStateChange: (BannerState) -> Unit = {},         // main thread, each new state
 )
 ```
 
 - One banner per (`placement`, `options`, Activity), reused across recompositions: recomposition never reloads it.
 - Destroyed when it leaves the composition or one of those changes. A configuration change creates a new one.
+- A changed `refreshKey` loads a new banner in the background; the shown one stays until it's loaded, and stays if
+  it fails.
 - Needs an Activity in `LocalContext`; without one it logs an error and shows nothing.
 - Don't put banners in lazy lists; see [Banner](BANNER.md).
 
@@ -28,10 +50,11 @@ fun AdBanner(
 fun AdNative(
     placement: NativePlacement,
     modifier: Modifier = Modifier,
-    layout: NativeAdLayout = NativeTemplates.Medium,
+    layout: NativeAdLayout? = null,                    // null: the ad's style (NativeTemplates.forPlacement)
     slotKey: Any = Unit,                               // distinct and stable per ad on a screen (list item key)
     renderer: NativeAdRenderer? = null,                // styling after the standard binding
     placeholder: (@Composable () -> Unit)? = null,
+    refreshKey: Any?,                                  // optional overload: change it to ask for a new ad
 )
 
 @Composable
@@ -95,6 +118,7 @@ fun WatchAdButton(onReward: (RewardResult.Earned) -> Unit) {
   `privacy.isPrivacyOptionsRequired`, and `handle.state` for banners and native ads.
 - Grant rewards and keep results in ViewModels, not in composables: a rotation recreates the composition, and
   `rememberSaveable` state is the only composition state that survives it.
-- `sample-compose` (the AdMob Playground) exercises every API on its screens, including rotation and navigation.
+- `sample-compose` uses every API: a splash Activity, then Navigation Compose destinations with banners, native ads
+  in a `LazyColumn`, full-screen ads and a native style gallery.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29

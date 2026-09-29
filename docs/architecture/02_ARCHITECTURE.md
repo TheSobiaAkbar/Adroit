@@ -77,7 +77,7 @@ AdsPlugin/
 ├── admob-testing/     → com.company:admob-testing      (package com.company.admob.testing)
 ├── admob-firebase/    → com.company:admob-firebase     (optional, package com.company.admob.firebase)
 ├── sample-xml/        (existing :app, renamed): Activity + Fragment + ViewBinding + AppCompat
-├── sample-compose/    the "AdMob Playground" developer app (all screens)
+├── sample-compose/    sample-xml's app in Compose: splash Activity + Navigation Compose destinations
 ├── sample-mixed/      Compose screens hosted in an XML app, plus a mediation-exclusion demo
 └── docs/
 ```
