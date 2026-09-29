@@ -78,7 +78,7 @@ AdsPlugin/
 ├── admob-firebase/    → com.company:admob-firebase     (optional, package com.company.admob.firebase)
 ├── sample-xml/        (existing :app, renamed): Activity + Fragment + ViewBinding + AppCompat
 ├── sample-compose/    sample-xml's app in Compose: splash Activity + Navigation Compose destinations
-├── sample-mixed/      Compose screens hosted in an XML app, plus a mediation-exclusion demo
+├── sample-mixed/      the same app with XML and Compose screens side by side, plus a mediation-exclusion demo
 └── docs/
 ```
 

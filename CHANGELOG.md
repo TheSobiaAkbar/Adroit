@@ -47,6 +47,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 - `sample-compose` is now the XML sample's app in Compose (replacing the AdMob Playground): splash with consent and
   the splash ad, Home, Feed, Settings, Details and Native styles destinations, the same `SampleAds` and Firebase
   parameters. Firebase turns on once `google-services.json` is added for `com.company.admob.sample.compose`.
+- `docs/NEW_APP_MIXED.md`: the same for an app with both XML and Compose screens: one setup for both, which API
+  where, Compose in a Fragment or an XML layout, XML in a Compose screen, and mediation.
+- `sample-mixed` is now the same app with both toolkits (replacing its two interop screens): XML splash, Home and
+  Settings, a Compose feed in a Fragment, a Compose Details screen embedding an XML native ad; Firebase, the same
+  `SampleAds` and parameters, and the `-PwithMediation=true` build as before.
 - `RemoteValue` (admob-firebase): the app's own Remote Config parameters, with in-app defaults:
   `RemoteValue.boolean`, `long`, `double`, `string`, `json` and `custom`. `.value` never waits and reads as the
   default when Firebase doesn't set a valid value; `updates()` follows activations.

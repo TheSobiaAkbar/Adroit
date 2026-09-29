@@ -1,38 +1,53 @@
 package com.company.admob.sample.mixed
 
-import android.content.Intent
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import com.company.admob.CompanyAdMob
+import com.company.admob.AdSlots
+import com.company.admob.sample.mixed.ads.SampleAds
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
 import com.company.admob.sample.mixed.databinding.ActivityMainBinding
-import kotlinx.coroutines.launch
+import com.company.admob.sample.mixed.feed.FeedFragment
+import com.company.admob.sample.mixed.home.HomeFragment
+import com.company.admob.sample.mixed.settings.SettingsFragment
 
-/** The launcher (XML). Starts CompanyAdMob once for the whole app, then opens either integration style. */
+/**
+ * Bottom navigation over three Fragments: Home and Settings in XML, Feed in Compose (a ComposeView). Each Fragment's
+ * ads follow its view lifecycle, whichever toolkit draws them.
+ */
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityMainBinding.inflate(layoutInflater)
+        enableEdgeToEdge()
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Gathers consent and initializes the SDK. Called again after a rotation, start() joins the work in progress.
-        CompanyAdMob.start(this)
-
-        binding.mediation.text = getString(
-            if (BuildConfig.WITH_MEDIATION) R.string.mediation_on else R.string.mediation_off,
-        )
-        binding.openLegacyXml.setOnClickListener { startActivity(Intent(this, LegacyXmlActivity::class.java)) }
-        binding.openComposeHost.setOnClickListener { startActivity(Intent(this, ComposeHostActivity::class.java)) }
-        binding.adInspector.setOnClickListener {
-            // Lists the mediation adapters (AppLovin with -PwithMediation=true) and their initialization status.
-            CompanyAdMob.diagnostics.openAdInspector(this)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
         }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                CompanyAdMob.state.collect { binding.state.text = getString(R.string.ads_state, it.toString()) }
-            }
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            show(
+                when (item.itemId) {
+                    R.id.nav_feed -> FeedFragment()
+                    R.id.nav_settings -> SettingsFragment()
+                    else -> HomeFragment()
+                },
+            )
+            true
         }
+        if (savedInstanceState == null) show(HomeFragment())
+        // Ads load only when asked: the app open ad now, for the user's first return to the app. It has loadAgain,
+        // so each later return finds a new one. Nothing happens if it's loaded already.
+        AdSlots.load(SampleAds.AppOpenAd)
+    }
+
+    private fun show(fragment: Fragment) {
+        supportFragmentManager.commit { replace(R.id.fragment_container, fragment) }
     }
 }

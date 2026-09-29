@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A classic XML layout, embedded in ComposeHostActivity through AndroidView. -->
+<!-- A classic XML layout, embedded in DetailsActivity's Compose screen through AndroidView. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -9,13 +9,13 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/classic_article_body" />
+        android:text="@string/details_body" />
 
-    <!-- Loads and renders for the view tree's lifecycle owner (the hosting Activity); GONE if nothing loads. -->
+    <!-- Loads for the view tree's lifecycle owner (the hosting Activity); GONE if nothing loads. -->
     <com.company.admob.views.AdNativeView
+        android:id="@+id/details_native"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        app:company_admob_placement="mixed_xml_in_compose_native"
-        app:company_admob_template="small_button_end" />
+        android:layout_marginTop="16dp"
+        app:company_admob_placement="ArticleNative" />
 </LinearLayout>

@@ -73,7 +73,8 @@ release, so the exclusion must apply to all of them. `configurations.configureEa
 
 1. Install the mediation build and register the device as a test device (its hashed ID is printed in Logcat the
    first time it requests an ad).
-2. Open the app and tap **Open Ad Inspector** on the first screen (`CompanyAdMob.diagnostics.openAdInspector`).
+2. Open the app, go to the **Settings** tab (it also says whether the build has the adapter) and tap
+   **Open Ad Inspector** (`CompanyAdMob.diagnostics.openAdInspector`).
 3. Under the ad units, open a mediation group: AppLovin should be listed with its adapter version and initialization
    status. Ad Inspector can also send single-network test requests.
 

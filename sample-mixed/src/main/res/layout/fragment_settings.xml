@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Visible only while UMP requires a privacy options entry point. -->
+    <Button
+        android:id="@+id/privacy_options"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/privacy_options"
+        android:visibility="gone" />
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/ad_free"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ad_free" />
+
+    <Button
+        android:id="@+id/ad_inspector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ad_inspector" />
+
+    <Button
+        android:id="@+id/native_styles"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/native_styles" />
+
+    <!-- Whether this build has the AppLovin mediation adapter (-PwithMediation=true, MEDIATION_DEMO.md). -->
+    <TextView
+        android:id="@+id/mediation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+</LinearLayout>
