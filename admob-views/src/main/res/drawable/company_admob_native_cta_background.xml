@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The call-to-action button. Change its color (company_admob_native_cta) and corners
-    (company_admob_native_cta_corner_radius), or replace the whole drawable: one with this name in your app.
+    The call-to-action button: a left-to-right gradient from company_admob_native_cta to company_admob_native_cta_end
+    (the same color by default), with company_admob_native_cta_corner_radius corners. Change those, or replace the
+    whole drawable with one of this name in your app. A Firebase "ctaColors" value recolors this shape at runtime.
 -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?android:attr/colorControlHighlight">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/company_admob_native_cta" />
+            <gradient
+                android:angle="0"
+                android:endColor="@color/company_admob_native_cta_end"
+                android:startColor="@color/company_admob_native_cta"
+                android:type="linear" />
             <corners android:radius="@dimen/company_admob_native_cta_corner_radius" />
         </shape>
     </item>

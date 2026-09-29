@@ -783,17 +783,11 @@ public final class com/company/admob/NativePlacement : com/company/admob/AdPlace
 }
 
 public final class com/company/admob/NativeStyle : java/lang/Enum {
-	public static final field LARGE Lcom/company/admob/NativeStyle;
 	public static final field LARGE_BUTTON_BOTTOM Lcom/company/admob/NativeStyle;
-	public static final field LARGE_BUTTON_TOP Lcom/company/admob/NativeStyle;
 	public static final field LARGE_COMPACT Lcom/company/admob/NativeStyle;
-	public static final field MEDIUM Lcom/company/admob/NativeStyle;
-	public static final field SIDE_MEDIA_BUTTON_BOTTOM Lcom/company/admob/NativeStyle;
-	public static final field SIDE_MEDIA_BUTTON_TOP Lcom/company/admob/NativeStyle;
-	public static final field SMALL Lcom/company/admob/NativeStyle;
+	public static final field MEDIA_START Lcom/company/admob/NativeStyle;
 	public static final field SMALL_BUTTON_BOTTOM Lcom/company/admob/NativeStyle;
 	public static final field SMALL_BUTTON_END Lcom/company/admob/NativeStyle;
-	public static final field SMALL_BUTTON_TOP Lcom/company/admob/NativeStyle;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/company/admob/NativeStyle;
 	public static fun values ()[Lcom/company/admob/NativeStyle;

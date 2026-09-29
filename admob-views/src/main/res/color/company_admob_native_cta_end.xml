@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The end color of the call-to-action gradient (company_admob_native_cta is its start). The same color by default: a
+    solid button. Override it in your app with <color name="company_admob_native_cta_end">#...</color> for a gradient.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?android:attr/colorPrimary" />
+</selector>

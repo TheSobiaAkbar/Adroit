@@ -25,7 +25,7 @@ exactly once, test-ad safety, analytics events and remote kill switches. No Goog
 
 ```kotlin
 // build.gradle.kts
-dependencies { implementation("com.company:admob-compose:1.0.0-rc1") }
+dependencies { implementation("com.company:admob-compose:1.0.0-rc2") }
 
 // Application.onCreate
 CompanyAdMob.initialize(this, adMobConfig {

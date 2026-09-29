@@ -87,13 +87,13 @@ private enum class NativeTab(val title: String) { Templates("Templates"), Feed("
 private fun TemplatesTab() {
     ScreenColumn {
         Section("Small") {
-            AdNative(Placements.TemplatesNative, layout = NativeTemplates.Small, slotKey = "small", placeholder = { Loading() })
+            AdNative(Placements.TemplatesNative, layout = NativeTemplates.SmallButtonEnd, slotKey = "small", placeholder = { Loading() })
         }
         Section("Medium") {
-            AdNative(Placements.TemplatesNative, layout = NativeTemplates.Medium, slotKey = "medium", placeholder = { Loading() })
+            AdNative(Placements.TemplatesNative, layout = NativeTemplates.LargeButtonBottom, slotKey = "medium", placeholder = { Loading() })
         }
         Section("Large") {
-            AdNative(Placements.TemplatesNative, layout = NativeTemplates.Large, slotKey = "large", placeholder = { Loading() })
+            AdNative(Placements.TemplatesNative, layout = NativeTemplates.LargeCompact, slotKey = "large", placeholder = { Loading() })
         }
     }
 }
@@ -111,7 +111,7 @@ private fun FeedTab() {
                 AdNative(
                     placement = Placements.FeedNative,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    layout = NativeTemplates.Small,
+                    layout = NativeTemplates.SmallButtonEnd,
                     slotKey = key,
                 )
             } else {

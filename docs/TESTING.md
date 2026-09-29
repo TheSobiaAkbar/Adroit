@@ -6,7 +6,7 @@
 screens that show ads can be tested on the JVM or with Robolectric.
 
 ```kotlin
-testImplementation("com.company:admob-testing:1.0.0-rc1")
+testImplementation("com.company:admob-testing:1.0.0-rc2")
 ```
 
 ### `FakeAdsClient`

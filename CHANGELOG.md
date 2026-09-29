@@ -18,9 +18,12 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 - The native templates' sizes use sdp and text sizes ssp (com.intuit.sdp and com.intuit.ssp, new `admob-views`
   dependencies), scaling with the screen width. New dimens `company_admob_native_spacing_tiny`,
   `company_admob_shimmer_corner_radius` and `company_admob_shimmer_padding`.
-- Eight more native styles, each with its template: `SMALL_BUTTON_BOTTOM`, `SMALL_BUTTON_TOP`, `SMALL_BUTTON_END`,
-  `LARGE_BUTTON_BOTTOM`, `LARGE_BUTTON_TOP`, `LARGE_COMPACT`, `SIDE_MEDIA_BUTTON_BOTTOM` and `SIDE_MEDIA_BUTTON_TOP`
-  (`"style": "small_button_top"`, ... in Firebase; `company_admob_template` in XML).
+- Native styles `SMALL_BUTTON_END`, `SMALL_BUTTON_BOTTOM`, `LARGE_BUTTON_BOTTOM` (the default), `LARGE_COMPACT`
+  and `MEDIA_START`, each with its template (`NativeTemplates.SmallButtonEnd`, ...; `"style": "media_start"` in
+  Firebase; `company_admob_template` in XML).
+- Native colors from Firebase: `ctaColors` (one color, or two for a gradient), `ctaTextColor`, `attributionColor`
+  and `attributionTextColor`, in an ad's value or in `AdSettings`. The template button is a gradient from
+  `company_admob_native_cta` to the new `company_admob_native_cta_end` (the same color by default).
 - The app's own native layouts by name: `NativeTemplates.register(name, layout)`, then `AdProfile.native(layout =
   name)` or `{"style": "name"}` in Firebase. `NativeTemplates.forPlacement(placement)` returns the layout an ad shows
   in now.
@@ -79,7 +82,16 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `SplashTimings` and `AdOverrides.splash`) and the splash ad, and never gets stuck. A splash ad isn't reloaded
   after its show unless another placement shares its ad unit.
 
+### Removed
+- Before 1.0.0, so in 1.0.0-rc2 (the rc1 API changes here): the native styles `SMALL`, `MEDIUM` and `LARGE` and
+  their templates `NativeTemplates.Small`, `Medium` and `Large`. `LARGE_BUTTON_BOTTOM` is the default style now. A
+  Firebase `"style"` of `small`, `medium` or `large` is read as an unregistered layout name, and shows the ad's style.
+
 ### Changed
+- A missing optional view in a native layout (advertiser, stars, price, store) is logged at debug level, no longer
+  as a warning.
+- The template call-to-action and "Ad" badge default to the theme's `colorPrimary` (they used `colorAccent`, which a
+  Material 3 theme maps to its muted secondary color).
 - The loading shimmer of a native ad is built at runtime from the layout it will show in, any template or an app's
   own layout, with a block over each of its views; the whole card shimmers too, and a banner's whole area. New color
   `company_admob_shimmer_card`.

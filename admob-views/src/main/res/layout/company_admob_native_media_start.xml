@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    media_start: the media at the start; beside it, the "Ad" badge and headline, the body and a full-width call to
+    action. No icon. The headline row keeps its end free (paddingEnd) for the AdChoices icon in the top corner.
+-->
+<!-- Overdraw: the template is embedded in your screen, not a window root. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/company_admob_nativeBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="@dimen/company_admob_native_spacing"
+    android:theme="@style/CompanyAdMob.ThemeOverlay.Native"
+    tools:ignore="Overdraw">
+
+    <!-- At least 120dp tall: Google's minimum for video. -->
+    <FrameLayout
+        android:id="@+id/company_admob_native_media"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/company_admob_native_media_height_compact"
+        android:layout_weight="1"
+        android:contentDescription="@string/company_admob_native_media_description" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/company_admob_native_spacing"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingEnd="@dimen/company_admob_native_adchoices_space">
+
+            <TextView
+                android:id="@+id/company_admob_native_attribution"
+                style="@style/CompanyAdMob.Native.Attribution"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/company_admob_native_spacing_small" />
+
+            <TextView
+                android:id="@+id/company_admob_native_headline"
+                style="@style/CompanyAdMob.Native.Headline"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/company_admob_native_body"
+            style="@style/CompanyAdMob.Native.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/company_admob_native_spacing_small" />
+
+        <android.widget.Button
+            android:id="@+id/company_admob_native_cta"
+            style="@style/CompanyAdMob.Native.Cta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/company_admob_native_spacing" />
+    </LinearLayout>
+</LinearLayout>

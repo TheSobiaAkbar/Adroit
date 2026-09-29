@@ -21,63 +21,33 @@ import java.util.concurrent.ConcurrentHashMap
  * `company_admob_layout`. With a [NativeAdLayout] of your own IDs, register that instead.
  */
 public object NativeTemplates {
-    /** Icon, headline and call to action in one row. */
-    public val Small: NativeAdLayout = NativeAdLayout(
-        layoutRes = R.layout.company_admob_native_small,
-        headlineId = R.id.company_admob_native_headline,
-        callToActionId = R.id.company_admob_native_cta,
-        iconId = R.id.company_admob_native_icon,
-        attributionId = R.id.company_admob_native_attribution,
-    )
+    /** Icon, "Ad" badge, headline and body, with the call to action at the end of the row. No media. */
+    public val SmallButtonEnd: NativeAdLayout = basic(R.layout.company_admob_native_small_button_end, icon = true, media = false)
 
-    /** Header, body, 16:9 media, store, price and call to action. */
-    public val Medium: NativeAdLayout = forLayout(R.layout.company_admob_native_medium)
+    /** Icon, "Ad" badge, headline and body, with a full-width call to action below. No media. */
+    public val SmallButtonBottom: NativeAdLayout =
+        basic(R.layout.company_admob_native_small_button_bottom, icon = true, media = false)
 
-    /** Full-width media first, then every asset and a full-width call to action. */
-    public val Large: NativeAdLayout = forLayout(R.layout.company_admob_native_large)
-
-    /** Icon, headline and body, with a full-width call to action below. No media. */
-    public val SmallButtonBottom: NativeAdLayout = basic(R.layout.company_admob_native_small_button_bottom, media = false)
-
-    /** A full-width call to action, with the icon, headline and body below it. No media. */
-    public val SmallButtonTop: NativeAdLayout = basic(R.layout.company_admob_native_small_button_top, media = false)
-
-    /** Icon, headline and body, with the call to action at the end of the row. No media. */
-    public val SmallButtonEnd: NativeAdLayout = basic(R.layout.company_admob_native_small_button_end, media = false)
-
-    /** Icon, headline and body, then full-width media and a full-width call to action. */
-    public val LargeButtonBottom: NativeAdLayout = basic(R.layout.company_admob_native_large_button_bottom, media = true)
-
-    /** A full-width call to action, then the icon, headline and body, then full-width media. */
-    public val LargeButtonTop: NativeAdLayout = basic(R.layout.company_admob_native_large_button_top, media = true)
+    /** Icon, "Ad" badge, headline and body, then full-width media and a full-width call to action. The default. */
+    public val LargeButtonBottom: NativeAdLayout =
+        basic(R.layout.company_admob_native_large_button_bottom, icon = true, media = true)
 
     /** Like [LargeButtonBottom], with a larger icon and shorter media. */
-    public val LargeCompact: NativeAdLayout = basic(R.layout.company_admob_native_large_compact, media = true)
+    public val LargeCompact: NativeAdLayout = basic(R.layout.company_admob_native_large_compact, icon = true, media = true)
 
-    /** Icon, headline and body beside the media, with a full-width call to action below. */
-    public val SideMediaButtonBottom: NativeAdLayout =
-        basic(R.layout.company_admob_native_side_media_button_bottom, media = true)
-
-    /** A full-width call to action, with the icon, headline and body beside the media below it. */
-    public val SideMediaButtonTop: NativeAdLayout =
-        basic(R.layout.company_admob_native_side_media_button_top, media = true)
+    /** Media at the start; the "Ad" badge, headline, body and call to action beside it. No icon. */
+    public val MediaStart: NativeAdLayout = basic(R.layout.company_admob_native_media_start, icon = false, media = true)
 
     private val registered = ConcurrentHashMap<String, NativeAdLayout>()
     private val warnedNames = ConcurrentHashMap.newKeySet<String>()
 
     /** The template for [style]. */
     public fun forStyle(style: NativeStyle): NativeAdLayout = when (style) {
-        NativeStyle.SMALL -> Small
-        NativeStyle.MEDIUM -> Medium
-        NativeStyle.LARGE -> Large
-        NativeStyle.SMALL_BUTTON_BOTTOM -> SmallButtonBottom
-        NativeStyle.SMALL_BUTTON_TOP -> SmallButtonTop
         NativeStyle.SMALL_BUTTON_END -> SmallButtonEnd
+        NativeStyle.SMALL_BUTTON_BOTTOM -> SmallButtonBottom
         NativeStyle.LARGE_BUTTON_BOTTOM -> LargeButtonBottom
-        NativeStyle.LARGE_BUTTON_TOP -> LargeButtonTop
         NativeStyle.LARGE_COMPACT -> LargeCompact
-        NativeStyle.SIDE_MEDIA_BUTTON_BOTTOM -> SideMediaButtonBottom
-        NativeStyle.SIDE_MEDIA_BUTTON_TOP -> SideMediaButtonTop
+        NativeStyle.MEDIA_START -> MediaStart
     }
 
     /**
@@ -143,13 +113,13 @@ public object NativeTemplates {
         attributionId = R.id.company_admob_native_attribution,
     )
 
-    /** The new templates: headline, body, call to action, icon and attribution, with or without media. */
-    private fun basic(@LayoutRes layoutRes: Int, media: Boolean): NativeAdLayout = NativeAdLayout(
+    /** The templates: headline, body, call to action and attribution, with or without an icon and media. */
+    private fun basic(@LayoutRes layoutRes: Int, icon: Boolean, media: Boolean): NativeAdLayout = NativeAdLayout(
         layoutRes = layoutRes,
         headlineId = R.id.company_admob_native_headline,
         bodyId = R.id.company_admob_native_body,
         callToActionId = R.id.company_admob_native_cta,
-        iconId = R.id.company_admob_native_icon,
+        iconId = if (icon) R.id.company_admob_native_icon else 0,
         mediaContainerId = if (media) R.id.company_admob_native_media else 0,
         attributionId = R.id.company_admob_native_attribution,
     )

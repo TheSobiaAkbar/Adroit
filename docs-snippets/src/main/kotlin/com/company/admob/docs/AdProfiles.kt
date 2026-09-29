@@ -44,7 +44,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
             style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM),
         ),
     ),
-    FeedNative(AdProfile.native(ids = listOf("ca-app-pub-0000000000000000/0000000005"), style = NativeStyle.LARGE)),
+    FeedNative(AdProfile.native(ids = listOf("ca-app-pub-0000000000000000/0000000005"), style = NativeStyle.LARGE_COMPACT)),
 }
 // endregion
 

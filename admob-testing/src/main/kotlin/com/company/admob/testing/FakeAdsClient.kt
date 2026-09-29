@@ -336,7 +336,7 @@ public class FakeAdsClient @JvmOverloads constructor(
         override suspend fun load(placement: NativePlacement): NativeAdResult = nextNative(placement)
 
         override fun style(placement: NativePlacement): NativeStyle =
-            synchronized(lock) { nativeStyles[placement.key] } ?: NativeStyle.MEDIUM
+            synchronized(lock) { nativeStyles[placement.key] } ?: NativeStyle.LARGE_BUTTON_BOTTOM
 
         /**
          * Inflates [layout] into [container] (replacing its children) and fills the asset views, hiding those the ad
@@ -402,7 +402,7 @@ public class FakeAdsClient @JvmOverloads constructor(
 
     // --- Consent scripting ---
 
-    /** Sets what `native.style(placement)` reports. Every placement starts [NativeStyle.MEDIUM]. */
+    /** Sets what `native.style(placement)` reports. Every placement starts [NativeStyle.LARGE_BUTTON_BOTTOM]. */
     public fun setNativeStyle(placement: NativePlacement, style: NativeStyle) {
         synchronized(lock) { nativeStyles[placement.key] = style }
     }

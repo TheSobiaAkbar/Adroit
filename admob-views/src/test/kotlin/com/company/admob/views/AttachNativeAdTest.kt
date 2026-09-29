@@ -46,7 +46,7 @@ class AttachNativeAdTest {
         idle()
 
         assertTrue(results.single() is NativeAdResult.Loaded)
-        assertEquals(NativeTemplates.Medium, client.native.renders.single().layout)
+        assertEquals(NativeTemplates.LargeButtonBottom, client.native.renders.single().layout)
         val headline = container.findViewById<TextView>(com.company.admob.views.R.id.company_admob_native_headline)
         assertEquals("Fake headline", headline.text.toString())
         assertEquals(View.VISIBLE, container.visibility)
@@ -57,10 +57,10 @@ class AttachNativeAdTest {
 
     @Test
     fun `without a layout, the template follows the placement's configured style`() {
-        client.native.style = NativeStyle.LARGE
+        client.native.style = NativeStyle.LARGE_COMPACT
         container.attachNativeAd(controller.get(), FEED) { results += it }
         idle()
-        assertEquals(NativeTemplates.Large, client.native.renders.single().layout)
+        assertEquals(NativeTemplates.LargeCompact, client.native.renders.single().layout)
     }
 
     @Test
@@ -108,7 +108,7 @@ class AttachNativeAdTest {
         controller.get().setContentView(R.layout.company_admob_test_natives)
         idle()
         assertEquals(
-            listOf(NativeTemplates.Small, NativeTemplates.forLayout(R.layout.company_admob_test_custom_native)),
+            listOf(NativeTemplates.SmallButtonEnd, NativeTemplates.forLayout(R.layout.company_admob_test_custom_native)),
             client.native.renders.map { it.layout },
         )
         controller.pause().stop().destroy()

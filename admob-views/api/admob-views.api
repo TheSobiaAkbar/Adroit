@@ -77,17 +77,11 @@ public final class com/company/admob/views/NativeTemplates {
 	public static final field INSTANCE Lcom/company/admob/views/NativeTemplates;
 	public static final fun forPlacement (Lcom/company/admob/NativePlacement;)Lcom/company/admob/NativeAdLayout;
 	public final fun forStyle (Lcom/company/admob/NativeStyle;)Lcom/company/admob/NativeAdLayout;
-	public final fun getLarge ()Lcom/company/admob/NativeAdLayout;
 	public final fun getLargeButtonBottom ()Lcom/company/admob/NativeAdLayout;
-	public final fun getLargeButtonTop ()Lcom/company/admob/NativeAdLayout;
 	public final fun getLargeCompact ()Lcom/company/admob/NativeAdLayout;
-	public final fun getMedium ()Lcom/company/admob/NativeAdLayout;
-	public final fun getSideMediaButtonBottom ()Lcom/company/admob/NativeAdLayout;
-	public final fun getSideMediaButtonTop ()Lcom/company/admob/NativeAdLayout;
-	public final fun getSmall ()Lcom/company/admob/NativeAdLayout;
+	public final fun getMediaStart ()Lcom/company/admob/NativeAdLayout;
 	public final fun getSmallButtonBottom ()Lcom/company/admob/NativeAdLayout;
 	public final fun getSmallButtonEnd ()Lcom/company/admob/NativeAdLayout;
-	public final fun getSmallButtonTop ()Lcom/company/admob/NativeAdLayout;
 	public static final fun register (Ljava/lang/String;I)V
 	public static final fun register (Ljava/lang/String;Lcom/company/admob/NativeAdLayout;)V
 	public static final fun registered (Ljava/lang/String;)Lcom/company/admob/NativeAdLayout;

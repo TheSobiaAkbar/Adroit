@@ -17,7 +17,7 @@ fun ArticleFooterAd() {
     AdNative(
         placement = Placements.FeedNative,
         modifier = Modifier.fillMaxWidth(),
-        layout = NativeTemplates.Medium,
+        layout = NativeTemplates.LargeButtonBottom,
     )
 }
 ```
@@ -34,7 +34,7 @@ fun Feed(articles: List<String>) {
             if (index % 6 == 5) {
                 val slot = "ad-${index / 6}"
                 // A distinct, stable slotKey per ad item: scrolling away and back doesn't reload it.
-                item(key = slot) { AdNative(Placements.FeedNative, layout = NativeTemplates.Small, slotKey = slot) }
+                item(key = slot) { AdNative(Placements.FeedNative, layout = NativeTemplates.SmallButtonEnd, slotKey = slot) }
             }
         }
     }
@@ -66,7 +66,7 @@ fun SponsoredHeadline() {
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:company_admob_placement="feed_native"
-    app:company_admob_template="medium" />
+    app:company_admob_template="large_button_bottom" />
 ```
 
 ### A container from code
@@ -77,7 +77,7 @@ class ArticleFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         view.findViewById<FrameLayout>(R.id.banner_container)
-            .attachNativeAd(viewLifecycleOwner, Placements.FeedNative, NativeTemplates.Large)
+            .attachNativeAd(viewLifecycleOwner, Placements.FeedNative, NativeTemplates.LargeCompact)
     }
 }
 ```
@@ -99,7 +99,7 @@ class FeedViewModel : ViewModel() {
 
 // In the adapter's onBindViewHolder, for an ad row:
 fun bindAdRow(viewModel: FeedViewModel, slot: Int, container: ViewGroup, viewLifecycleOwner: LifecycleOwner) {
-    viewModel.adHolder(slot).bindTo(container, viewLifecycleOwner, NativeTemplates.Small)
+    viewModel.adHolder(slot).bindTo(container, viewLifecycleOwner, NativeTemplates.SmallButtonEnd)
 }
 ```
 
@@ -109,17 +109,11 @@ The library has one template per style:
 
 | Style (`NativeStyle`, Firebase name) | Template (`NativeTemplates`) | Layout |
 |---|---|---|
-| `SMALL`, `small` | `Small` | Icon, "Ad" badge and headline, call to action at the end. One row. |
-| `MEDIUM`, `medium` (default) | `Medium` | Header (icon, headline, advertiser, rating), body, 16:9 media, store, price and call to action. |
-| `LARGE`, `large` | `Large` | Full-width media first, then every asset and a full-width call to action. |
+| `SMALL_BUTTON_END`, `small_button_end` | `SmallButtonEnd` | Icon, "Ad" badge, headline and body, call to action at the end of the row. No media. |
 | `SMALL_BUTTON_BOTTOM`, `small_button_bottom` | `SmallButtonBottom` | Icon, badge, headline and body, full-width call to action below. No media. |
-| `SMALL_BUTTON_TOP`, `small_button_top` | `SmallButtonTop` | Full-width call to action on top, then icon, headline and body. No media. |
-| `SMALL_BUTTON_END`, `small_button_end` | `SmallButtonEnd` | Icon, badge, headline and body, call to action at the end of the row. No media. |
-| `LARGE_BUTTON_BOTTOM`, `large_button_bottom` | `LargeButtonBottom` | Icon, badge, headline and body, then full-width media and call to action. |
-| `LARGE_BUTTON_TOP`, `large_button_top` | `LargeButtonTop` | Call to action on top, then icon, headline and body, then full-width media. |
+| `LARGE_BUTTON_BOTTOM`, `large_button_bottom` (default) | `LargeButtonBottom` | Icon, badge, headline and body, then full-width media and call to action. |
 | `LARGE_COMPACT`, `large_compact` | `LargeCompact` | Like `large_button_bottom`, with a larger icon and shorter (120dp) media. |
-| `SIDE_MEDIA_BUTTON_BOTTOM`, `side_media_button_bottom` | `SideMediaButtonBottom` | Icon, headline and body beside the media, call to action below. |
-| `SIDE_MEDIA_BUTTON_TOP`, `side_media_button_top` | `SideMediaButtonTop` | Call to action on top, then icon, headline and body beside the media. |
+| `MEDIA_START`, `media_start` | `MediaStart` | Media at the start; badge, headline, body and call to action beside it. No icon. |
 
 They use framework widgets only, follow the light and dark themes, support RTL, include the required "Ad" badge,
 and keep a top corner free for the AdChoices icon.
@@ -127,7 +121,7 @@ and keep a top corner free for the AdChoices icon.
 When the code passes no layout (`AdSlotView`, `AdNativeView` without `company_admob_template`, `attachNativeAd`,
 `NativeAdHolder.bindTo`, `AdSlot`, `AdNative`), an ad shows in the layout its `style` names now: a style's template,
 or [your own registered layout](#your-own-layout-picked-by-name). The configuration, the
-[ad profile](AD_PROFILES.md) or Firebase (`{"style": "side_media_button_top"}`) sets it, so it can change without a
+[ad profile](AD_PROFILES.md) or Firebase (`{"style": "media_start"}`) sets it, so it can change without a
 release. `NativeTemplates.forPlacement(placement)` returns that layout, and `NativeTemplates.forStyle(style)` a style's
 template.
 
@@ -152,21 +146,21 @@ your app (for example in `res/values/ads_style.xml`); yours replaces the library
 | `color/company_admob_native_stroke` | the text color at 12% | The card's border |
 | `color/company_admob_native_headline` | `?android:textColorPrimary` | Headline text |
 | `color/company_admob_native_body` | `?android:textColorSecondary` | Body, advertiser, store and price text |
-| `color/company_admob_native_cta` | `?android:colorAccent` | The call-to-action button |
+| `color/company_admob_native_cta`, `_cta_end` | `?android:colorPrimary`, the same | The call-to-action button: a left-to-right gradient from `_cta` to `_cta_end`. Set only `_cta` for a solid button. |
 | `color/company_admob_native_cta_text` | `?android:textColorPrimaryInverse` | Its text |
-| `color/company_admob_native_attribution` | `?android:colorAccent` | The "Ad" badge |
+| `color/company_admob_native_attribution` | `?android:colorPrimary` | The "Ad" badge |
 | `color/company_admob_native_attribution_text` | `?android:textColorPrimaryInverse` | Its text |
 | `dimen/company_admob_native_card_corner_radius`, `_card_stroke_width` | `_7sdp`, 1dp | The card's corners and border |
 | `dimen/company_admob_native_cta_corner_radius`, `_attribution_corner_radius` | `_5sdp`, `_2sdp` | The button's and the badge's corners |
 | `dimen/company_admob_native_headline_text_size`, `_body_text_size`, `_caption_text_size`, `_cta_text_size`, `_attribution_text_size` | `_12ssp`, `_11ssp`, `_10ssp`, `_12ssp`, `_8ssp` | Text sizes |
 | `dimen/company_admob_native_icon_size`, `_icon_size_large` | `_34sdp`, `_40sdp` | The icon |
 | `dimen/company_admob_native_cta_min_height` | `_33sdp` | The button's height |
-| `dimen/company_admob_native_media_height`, `_media_height_compact` | `_133sdp`, 120dp | Media in the new large and side-media styles. Keep it at least 120dp, Google's minimum for video. |
+| `dimen/company_admob_native_media_height`, `_media_height_compact` | `_133sdp`, 120dp | Media in `large_button_bottom`; in `large_compact` and `media_start`. Keep it at least 120dp, Google's minimum for video. |
 | `dimen/company_admob_native_spacing`, `_spacing_small`, `_spacing_tiny`, `_spacing_large` | `_7sdp`, `_3sdp`, `_2sdp`, `_13sdp` | Padding and gaps |
 | `color/company_admob_shimmer_card`, `_shimmer_base`, `_shimmer_highlight` | light greys (dark in night mode) | The [shimmer](#the-shimmer): its card, its blocks, the sweep |
 | `dimen/company_admob_shimmer_corner_radius`, `_shimmer_padding` | `_3sdp`, `_7sdp` | The shimmer's block corners, and a banner shimmer's padding |
 | `drawable/company_admob_native_card` | a rounded card with a border | The whole background shape |
-| `drawable/company_admob_native_cta_background` | a rounded button with a ripple | The whole button shape |
+| `drawable/company_admob_native_cta_background` | a rounded gradient button with a ripple | The whole button shape |
 | `drawable/company_admob_native_attribution_background` | a rounded rectangle | The whole badge shape |
 | `string/company_admob_ad_attribution` | `Ad` | The badge text: translate it in `values-xx` |
 
@@ -175,9 +169,36 @@ screen's width; `admob-views` brings both. Each default matches the dp size a 36
 look the same there and scale on smaller and larger screens. Your overrides can use sdp and ssp too, or plain dp and
 sp. The few kept in dp are set by Google: the AdChoices corner, the badge's 16dp minimum, and the 120dp media minimum.
 
-Replace a drawable to change a shape itself, for example a gradient button or a badge with a border. The colors
+Replace a drawable to change a shape itself, for example a badge with a border. The colors
 follow the light and dark themes until you override them; to override them per theme, put yours in `values` and
 `values-night`. Overriding the `CompanyAdMob.ThemeOverlay.Native` style replaces its items all at once.
+
+### Colors from Firebase
+
+A native ad's button and badge colors can also come from Firebase, without a release. Add them to the ad's JSON
+value (for one ad), or to `AdSettings` (for every native ad that doesn't set its own):
+
+```json
+{
+  "ctaColors": ["#FF6D00", "#FFC107"],
+  "ctaTextColor": "#FFFFFF",
+  "attributionColor": "#FFC107",
+  "attributionTextColor": "#FFFFFF"
+}
+```
+
+| Field | Value | What |
+|---|---|---|
+| `ctaColors` | one color, or a list of two | The button's background: one color is solid, two a left-to-right gradient. |
+| `ctaTextColor` | a color | The button's text |
+| `attributionColor` | a color | The "Ad" badge's background |
+| `attributionTextColor` | a color | The badge's text |
+
+Colors are `"#RRGGBB"`, or `"#AARRGGBB"` with transparency. Each field left out keeps the ad's own look: the
+`AdSettings` value, then your app's resources above. A wrong value is ignored with a warning in the log. The colors
+apply to every template and to your own layouts, on the views with the standard call-to-action and badge IDs (or the
+ones your `NativeAdLayout` maps): a background that's a shape keeps its shape and corners, with the new colors. A
+`NativeAdRenderer` runs after them, so it can still change them.
 
 ### Your own layout, picked by name
 

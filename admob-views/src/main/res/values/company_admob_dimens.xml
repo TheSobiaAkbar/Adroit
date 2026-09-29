@@ -22,9 +22,9 @@
     <!-- About 16:9 at phone widths, and above Google's 120x120dp minimum for video. -->
     <dimen name="company_admob_native_media_min_height">@dimen/_150sdp</dimen>
     <dimen name="company_admob_native_media_min_height_large">@dimen/_183sdp</dimen>
-    <!-- The media height of large_button_bottom and large_button_top. -->
+    <!-- The media height of large_button_bottom. -->
     <dimen name="company_admob_native_media_height">@dimen/_133sdp</dimen>
-    <!-- The media height of large_compact and the side_media styles: Google's 120dp minimum for video, in dp so it
+    <!-- The media height of large_compact and media_start: Google's 120dp minimum for video, in dp so it
          never drops below it on small screens. -->
     <dimen name="company_admob_native_media_height_compact">120dp</dimen>
     <dimen name="company_admob_native_corner_radius">@dimen/_3sdp</dimen>

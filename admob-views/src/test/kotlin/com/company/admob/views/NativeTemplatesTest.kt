@@ -42,16 +42,14 @@ class NativeTemplatesTest {
                 assertNotNull("$name: ${root.resources.getResourceEntryName(id)}", root.findViewById<View>(id))
             }
         }
-        assertEquals(4, NativeTemplates.Small.assetIds().size)
-        assertEquals(10, NativeTemplates.Medium.assetIds().size)
-        assertEquals(10, NativeTemplates.Large.assetIds().size)
         assertEquals("one template per style", NativeStyle.entries.size, templates.values.toSet().size)
-        for (style in listOf(NativeStyle.SMALL_BUTTON_BOTTOM, NativeStyle.SMALL_BUTTON_TOP, NativeStyle.SMALL_BUTTON_END)) {
-            assertEquals(style.name, 5, NativeTemplates.forStyle(style).assetIds().size)
-        }
-        for (style in NativeStyle.entries.filter { it.name.startsWith("LARGE_") || it.name.startsWith("SIDE_") }) {
-            assertEquals(style.name, 6, NativeTemplates.forStyle(style).assetIds().size)
-        }
+        // Headline, body, call to action and badge; the icon, and the media, where the template has them.
+        assertEquals(5, NativeTemplates.SmallButtonEnd.assetIds().size)
+        assertEquals(5, NativeTemplates.SmallButtonBottom.assetIds().size)
+        assertEquals(6, NativeTemplates.LargeButtonBottom.assetIds().size)
+        assertEquals(6, NativeTemplates.LargeCompact.assetIds().size)
+        assertEquals("no icon", 5, NativeTemplates.MediaStart.assetIds().size)
+        assertEquals(0, NativeTemplates.MediaStart.iconId)
     }
 
     @Test
@@ -65,7 +63,7 @@ class NativeTemplatesTest {
     @Test
     fun `RTL-safe - the templates use start and end, never left or right`() {
         val layouts = File("src/main/res/layout").listFiles { file -> file.name.startsWith("company_admob_native_") }!!
-        assertEquals("11 templates and their 3 shared parts", 14, layouts.size)
+        assertEquals("5 templates and their shared header", 6, layouts.size)
         // paddingLeft=, layout_marginRight=, layout_alignParentLeft=, gravity="left", gravity="center|right", ...
         val sided = Regex("""(Left|Right)[A-Za-z]*="|"(left|right)"|\|(left|right)\b|\b(left|right)\|""")
         for (file in layouts) {
@@ -80,10 +78,22 @@ class NativeTemplatesTest {
             val root = inflate(activity(), layout)
             assertEquals(name, "Ad", root.findViewById<TextView>(layout.attributionId).text.toString())
             assertTrue(name, root.findViewById<View>(layout.callToActionId) is Button)
-            assertEquals(name, View.IMPORTANT_FOR_ACCESSIBILITY_NO, root.findViewById<View>(layout.iconId).importantForAccessibility)
+            if (layout.iconId != 0) {
+                assertEquals(name, View.IMPORTANT_FOR_ACCESSIBILITY_NO, root.findViewById<View>(layout.iconId).importantForAccessibility)
+            }
             if (layout.mediaContainerId != 0) {
                 assertEquals(name, "Ad media", root.findViewById<View>(layout.mediaContainerId).contentDescription)
             }
         }
+    }
+
+    @Test
+    fun `the call to action is a two-color gradient shape inside a ripple, the same color by default`() {
+        val root = inflate(activity(), NativeTemplates.LargeButtonBottom)
+        val ripple = root.findViewById<View>(NativeTemplates.LargeButtonBottom.callToActionId).background
+        val shape = (ripple as android.graphics.drawable.RippleDrawable).getDrawable(0) as android.graphics.drawable.GradientDrawable
+        val colors = checkNotNull(shape.colors)
+        assertEquals(2, colors.size)
+        assertEquals("company_admob_native_cta_end defaults to the start color", colors[0], colors[1])
     }
 }

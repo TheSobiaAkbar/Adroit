@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:company_admob_placement="feed"
-        app:company_admob_template="small" />
+        app:company_admob_template="small_button_end" />
 
     <com.company.admob.views.AdNativeView
         android:id="@+id/company_admob_test_native_custom"

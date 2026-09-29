@@ -23,7 +23,7 @@ internal class NativeApiImpl(
     private val hardwareAcceleration: HardwareAccelerationCheck,
     private val styleOf: (NativePlacement) -> NativeStyle? = { null },
 ) : NativeApi {
-    override fun style(placement: NativePlacement): NativeStyle = styleOf(placement) ?: NativeStyle.MEDIUM
+    override fun style(placement: NativePlacement): NativeStyle = styleOf(placement) ?: NativeStyle.DEFAULT
 
     override fun preload(placement: NativePlacement) = runOnMain { engine.preload(placement) }
 

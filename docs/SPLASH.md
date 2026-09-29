@@ -65,7 +65,6 @@ override fun onCreate(savedInstanceState: Bundle?) {
         }
     }
 }
-
 ```
 
 - Call `CompanyAdMob.setAdFree(true)` for premium users as well, so no other screen shows ads.

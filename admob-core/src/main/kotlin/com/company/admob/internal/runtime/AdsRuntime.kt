@@ -222,7 +222,11 @@ internal class AdsRuntime(
             liveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log, hardwareAcceleration,
             adUnitRotation, bannerPreloader,
         ),
-        native = NativeApiImpl(nativeEngine, NativeAdBinder(deps.nativeRenderPort, log), hardwareAcceleration) {
+        native = NativeApiImpl(
+            nativeEngine,
+            NativeAdBinder(deps.nativeRenderPort, log) { key -> liveConfig.current.active(key)?.behavior },
+            hardwareAcceleration,
+        ) {
             liveConfig.current.placement(it)?.nativeStyle
         },
         diagnostics = DiagnosticsApiImpl(

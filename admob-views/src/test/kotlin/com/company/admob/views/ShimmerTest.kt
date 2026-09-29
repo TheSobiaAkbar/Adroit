@@ -197,15 +197,15 @@ class ShimmerTest {
 
     @Test
     fun `a native ad's shimmer follows its registered layout`() {
-        NativeTemplates.register("promo", NativeTemplates.SideMediaButtonTop)
+        NativeTemplates.register("promo", NativeTemplates.MediaStart)
         ViewsRuntime.nativeLayoutNameOverride = { "promo" }
         try {
             client.native.deliverImmediately = false
             container.attachNativeAd(controller.get(), FEED)
-            assertEquals(NativeTemplates.SideMediaButtonTop, NativeTemplates.forPlacement(FEED))
+            assertEquals(NativeTemplates.MediaStart, NativeTemplates.forPlacement(FEED))
             client.native.deliverPending()
             idle()
-            assertEquals(NativeTemplates.SideMediaButtonTop, client.native.renders.single().layout)
+            assertEquals(NativeTemplates.MediaStart, client.native.renders.single().layout)
         } finally {
             ViewsRuntime.nativeLayoutNameOverride = null
         }
@@ -224,9 +224,9 @@ class ShimmerTest {
 
     @Test
     fun `a layout name must be valid and can't be a library style's`() {
-        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { NativeTemplates.register("my promo", NativeTemplates.Small) }
-        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { NativeTemplates.register("Large", NativeTemplates.Small) }
-        NativeTemplates.register(" My_Promo ", NativeTemplates.Small)
-        assertEquals(NativeTemplates.Small, NativeTemplates.registered("my_promo"))
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { NativeTemplates.register("my promo", NativeTemplates.SmallButtonEnd) }
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { NativeTemplates.register("Large_Compact", NativeTemplates.SmallButtonEnd) }
+        NativeTemplates.register(" My_Promo ", NativeTemplates.SmallButtonEnd)
+        assertEquals(NativeTemplates.SmallButtonEnd, NativeTemplates.registered("my_promo"))
     }
 }

@@ -31,8 +31,8 @@ plugins {
     id("com.google.gms.google-services") // reads google-services.json
 }
 dependencies {
-    implementation("com.company:admob-views:1.0.0-rc1") // or admob-compose for Compose apps
-    implementation("com.company:admob-firebase:1.0.0-rc1") // Remote Config and Analytics; brings Firebase itself
+    implementation("com.company:admob-views:1.0.0-rc2") // or admob-compose for Compose apps
+    implementation("com.company:admob-firebase:1.0.0-rc2") // Remote Config and Analytics; brings Firebase itself
 }
 ```
 
@@ -77,7 +77,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
             style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM),
         ),
     ),
-    FeedNative(AdProfile.native(ids = listOf("ca-app-pub-0000000000000000/0000000005"), style = NativeStyle.LARGE)),
+    FeedNative(AdProfile.native(ids = listOf("ca-app-pub-0000000000000000/0000000005"), style = NativeStyle.LARGE_COMPACT)),
 }
 ```
 
@@ -241,7 +241,7 @@ for example:
 | Wait 60 s between two shows of an ad | the ad's | `{ "timerSeconds": 60 }` |
 | Use two ad units in turn | the ad's | `{ "adUnitIds": ["ca-app-pub-…/111", "ca-app-pub-…/222"] }` |
 | Make a banner collapsible | the banner's | `{ "style": "collapsible_bottom" }` |
-| Show a native ad instead of a banner | the banner's | `{ "format": "native", "style": "large", "adUnitIds": ["<a native ad unit>"] }` |
+| Show a native ad instead of a banner | the banner's | `{ "format": "native", "style": "large_button_bottom", "adUnitIds": ["<a native ad unit>"] }` |
 | Show an app open ad instead of an interstitial | the interstitial's | `{ "format": "app_open", "adUnitIds": ["<an app open ad unit>"] }` |
 | Lengthen the splash to 13 s | `AdSettings` | `{ "splashSeconds": 13 }` |
 | Load the next ad right after each show | the ad's | `{ "loadAgain": true }` |

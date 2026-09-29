@@ -3,4 +3,19 @@
     <!-- View tags: the banner or native ad attachBanner / attachNativeAd put in a container (one per placement). -->
     <item name="company_admob_attached_banner" type="id" />
     <item name="company_admob_attached_native" type="id" />
+
+    <!--
+        The standard IDs of a native ad layout's views: every template uses them, and so can your own layouts
+        (docs/NATIVE.md, "Your own layout"). Only the headline is required.
+    -->
+    <item name="company_admob_native_headline" type="id" />
+    <item name="company_admob_native_body" type="id" />
+    <item name="company_admob_native_cta" type="id" />
+    <item name="company_admob_native_icon" type="id" />
+    <item name="company_admob_native_media" type="id" />
+    <item name="company_admob_native_attribution" type="id" />
+    <item name="company_admob_native_advertiser" type="id" />
+    <item name="company_admob_native_stars" type="id" />
+    <item name="company_admob_native_price" type="id" />
+    <item name="company_admob_native_store" type="id" />
 </resources>

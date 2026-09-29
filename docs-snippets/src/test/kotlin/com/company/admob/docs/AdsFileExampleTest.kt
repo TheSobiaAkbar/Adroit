@@ -31,7 +31,7 @@ class AdsFileExampleTest {
             BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM),
             (ads.getValue("HomeBanner") as BannerPlacementConfig).size,
         )
-        assertEquals(NativeStyle.LARGE, (ads.getValue("FeedNative") as NativePlacementConfig).style)
+        assertEquals(NativeStyle.LARGE_COMPACT, (ads.getValue("FeedNative") as NativePlacementConfig).style)
         assertEquals(Int.MAX_VALUE, config.frequency.maxInterstitialsPerSession)
     }
 

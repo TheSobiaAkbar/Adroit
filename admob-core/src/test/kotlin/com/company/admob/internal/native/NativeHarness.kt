@@ -19,6 +19,7 @@ import com.company.admob.fakes.FakeNativeRenderPort
 import com.company.admob.fakes.FakeReadiness
 import com.company.admob.fakes.TestClock
 import com.company.admob.internal.HardwareAccelerationCheck
+import com.company.admob.internal.config.AdBehavior
 import com.company.admob.internal.config.EffectiveConfig
 import com.company.admob.internal.config.LiveConfig
 import com.company.admob.internal.events.EventBus
@@ -77,14 +78,25 @@ internal class NativeHarness(
     val foreground = FakeAppForegroundSource(isInForeground = true)
     val clock = TestClock(scope.testScheduler)
     val infoLogs = mutableListOf<String>()
-    val log = AdLog({ level, _, message, _ -> if (level.ordinal >= LogLevel.INFO.ordinal) infoLogs += message }, LogLevel.VERBOSE)
+
+    /** Every message, whatever its level. */
+    val allLogs = mutableListOf<String>()
+    val log = AdLog(
+        { level, _, message, _ ->
+            allLogs += message
+            if (level.ordinal >= LogLevel.INFO.ordinal) infoLogs += message
+        },
+        LogLevel.VERBOSE,
+    )
     val events = EventBus(AdLog({ _, _, _, _ -> }, LogLevel.NONE))
     val engine = NativeAdLoaderEngine(
         live, adsSdk, readiness, foreground, RetryScheduler(scope.backgroundScope, foreground, log, Random(0)),
         events, clock, scope.backgroundScope, log,
     ).also { it.start() }
     val port = FakeNativeRenderPort()
-    val binder = NativeAdBinder(port, log)
+    /** The look the binder applies: an ad's colors from its profile, Firebase or settings. */
+    var look: AdBehavior? = null
+    val binder = NativeAdBinder(port, log) { look }
     val api = NativeApiImpl(engine, binder, HardwareAccelerationCheck(log)) { effective.placement(it)?.nativeStyle }
     val results = mutableListOf<NativeAdResult>()
 

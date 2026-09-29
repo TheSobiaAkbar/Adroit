@@ -1,5 +1,6 @@
 package com.company.admob.internal.config
 
+import android.graphics.Color
 import com.company.admob.AdFormat
 import com.company.admob.BannerPlacement
 import com.company.admob.BannerSize
@@ -41,7 +42,7 @@ class AdProfilesTest {
             "Open": { "format": "app_open", "timerSeconds": 60, "adUnitIds": ["${TestIds.unit(5)}"],
                       "excludedActivities": ["com.example.SplashActivity"] },
             "HomeBanner": { "format": "banner", "style": "collapsible_bottom", "adUnitIds": ["${TestIds.unit(6)}"] },
-            "FeedNative": { "format": "native", "style": "large", "enabled": false, "poolSize": 2,
+            "FeedNative": { "format": "native", "style": "large_compact", "enabled": false, "poolSize": 2,
                             "adUnitIds": ["${TestIds.unit(7)}"] }
           }
         }
@@ -77,7 +78,7 @@ class AdProfilesTest {
             (byKey.getValue("HomeBanner") as BannerPlacementConfig).size,
         )
         val feed = byKey.getValue("FeedNative") as NativePlacementConfig
-        assertEquals(NativeStyle.LARGE, feed.style)
+        assertEquals(NativeStyle.LARGE_COMPACT, feed.style)
         assertEquals(2, feed.poolSize)
         assertFalse(feed.enabled)
 
@@ -168,7 +169,7 @@ class AdProfilesTest {
                 "HistoryAd" to """{ "counter": 5, "timerSeconds": 30, "maxPerSession": 0,
                                     "adUnitIds": ["${TestIds.unit(8)}", "${TestIds.unit(9)}"] }""",
                 "HomeBanner" to """{ "style": "rectangle" }""",
-                "FeedNative" to """{ "enabled": false, "style": "small" }""",
+                "FeedNative" to """{ "enabled": false, "style": "small_button_end" }""",
                 "NotInTheApp" to """{ "enabled": false }""",
             ),
             settings = """{ "adsEnabled": false, "maxInterstitialsPerSession": 0, "minSecondsBetweenFullScreenAds": 15 }""",
@@ -183,7 +184,7 @@ class AdProfilesTest {
         assertEquals(listOf(TestIds.unit(8), TestIds.unit(9)), history.adUnitIds)
         assertNull(history.enabled)
         assertEquals(PlacementOverride(bannerSize = BannerSize.MediumRectangle), o.placements.getValue("HomeBanner"))
-        assertEquals(PlacementOverride(enabled = false, nativeStyle = NativeStyle.SMALL), o.placements.getValue("FeedNative"))
+        assertEquals(PlacementOverride(enabled = false, nativeStyle = NativeStyle.SMALL_BUTTON_END), o.placements.getValue("FeedNative"))
         assertEquals(false, o.adsEnabled)
         assertEquals(Int.MAX_VALUE, o.maxInterstitialsPerSession)
         assertEquals(15.seconds, o.minIntervalBetweenFullScreenAds)
@@ -258,19 +259,19 @@ class AdProfilesTest {
     fun `a native style is a library style's name or a registered layout's name`() {
         val file = """
             { "ads": {
-                "Top": { "format": "native", "style": "small_button_top" },
-                "Side": { "format": "native", "style": "Side_Media_Button_Bottom" },
+                "Top": { "format": "native", "style": "small_button_bottom" },
+                "Side": { "format": "native", "style": "Media_Start" },
                 "Promo": { "format": "native", "style": "my_promo" },
                 "Bad": { "format": "native", "style": "not a name!" }
             } }
         """.trimIndent()
         val parsed = AdProfiles.parseFile(file)
         val byKey = parsed.placements.associateBy { it.placement.key }.mapValues { it.value as NativePlacementConfig }
-        assertEquals(NativeStyle.SMALL_BUTTON_TOP, byKey.getValue("Top").style)
+        assertEquals(NativeStyle.SMALL_BUTTON_BOTTOM, byKey.getValue("Top").style)
         assertNull(byKey.getValue("Top").layoutName)
-        assertEquals("case doesn't matter", NativeStyle.SIDE_MEDIA_BUTTON_BOTTOM, byKey.getValue("Side").style)
+        assertEquals("case doesn't matter", NativeStyle.MEDIA_START, byKey.getValue("Side").style)
         assertEquals("my_promo", byKey.getValue("Promo").layoutName)
-        assertEquals("the fallback template", NativeStyle.MEDIUM, byKey.getValue("Promo").style)
+        assertEquals("the fallback template", NativeStyle.LARGE_BUTTON_BOTTOM, byKey.getValue("Promo").style)
         assertNull(byKey.getValue("Bad").layoutName)
         assertEquals(1, parsed.issues.size)
         assertTrue(parsed.issues.single(), "style" in parsed.issues.single())
@@ -293,5 +294,33 @@ class AdProfilesTest {
         assertNull(a.nativeStyle)
         assertEquals(NativeStyle.LARGE_BUTTON_BOTTOM, parsed.overrides.placements.getValue("B").nativeStyle)
         assertEquals("a banner swapped to native takes the layout", "promo", parsed.overrides.placements.getValue("C").nativeLayoutName)
+    }
+
+    @Test
+    fun `native colors come from an ad's Firebase value or the settings, and are checked`() {
+        val parsed = AdProfiles.parseRemote(
+            mapOf("Feed" to AdFormat.NATIVE, "Bad" to AdFormat.NATIVE, "Inter" to AdFormat.INTERSTITIAL),
+            mapOf(
+                "Feed" to """{ "ctaColors": ["#FF6D00", "#FFC107"], "ctaTextColor": "#FFFFFF", "attributionColor": "#80FFC107" }""",
+                "Bad" to """{ "ctaColors": ["#FF6D00", "#FFC107", "#000000"], "attributionColor": "gold" }""",
+                "Inter" to """{ "ctaColors": "#FF6D00" }""",
+            ),
+            settings = """{ "ctaColors": "#123456", "attributionTextColor": "#000000" }""",
+        )
+        val feed = checkNotNull(parsed.overrides.placements.getValue("Feed").behavior)
+        assertEquals(listOf(Color.parseColor("#FF6D00"), Color.parseColor("#FFC107")), feed.ctaColors)
+        assertEquals(Color.WHITE, feed.ctaTextColor)
+        assertEquals(Color.parseColor("#80FFC107"), feed.attributionColor)
+        assertNull("three colors and a color name are rejected", parsed.overrides.placements["Bad"]?.behavior)
+        assertTrue(parsed.issues.toString(), parsed.issues.any { "Bad" in it && "ctaColors" in it })
+        assertTrue(parsed.issues.any { "Bad" in it && "attributionColor" in it })
+        assertTrue(parsed.issues.any { "Inter" in it && "native ads only" in it })
+        val settings = checkNotNull(parsed.overrides.behavior)
+        assertEquals("a single color is a one-color list", listOf(Color.parseColor("#123456")), settings.ctaColors)
+
+        // The ad's own colors win; what it leaves out comes from the settings.
+        val resolved = feed.orElse(settings)
+        assertEquals(feed.ctaColors, resolved.ctaColors)
+        assertEquals(Color.BLACK, resolved.attributionTextColor)
     }
 }

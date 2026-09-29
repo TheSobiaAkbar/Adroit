@@ -24,17 +24,11 @@
         <!-- A library template; without it (and without company_admob_layout), the placement's style decides.
              The values are NativeStyle's ordinals: keep them in its order. -->
         <attr name="company_admob_template" format="enum">
-            <enum name="small" value="0" />
-            <enum name="medium" value="1" />
-            <enum name="large" value="2" />
-            <enum name="small_button_bottom" value="3" />
-            <enum name="small_button_top" value="4" />
-            <enum name="small_button_end" value="5" />
-            <enum name="large_button_bottom" value="6" />
-            <enum name="large_button_top" value="7" />
-            <enum name="large_compact" value="8" />
-            <enum name="side_media_button_bottom" value="9" />
-            <enum name="side_media_button_top" value="10" />
+            <enum name="small_button_end" value="0" />
+            <enum name="small_button_bottom" value="1" />
+            <enum name="large_button_bottom" value="2" />
+            <enum name="large_compact" value="3" />
+            <enum name="media_start" value="4" />
         </attr>
         <!-- Your own layout. It must use the standard template ids (company_admob_native_headline, ...). -->
         <attr name="company_admob_layout" format="reference" />

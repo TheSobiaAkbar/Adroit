@@ -83,7 +83,7 @@ class FirebaseRemoteConfigProviderTest {
             "HistoryAd" to """{ "enabled": true, "counter": 3, "timerSeconds": 25, "maxPerSession": 4,
                                 "adUnitIds": ["ca-app-pub-1234567890123456/0000000001", "ca-app-pub-1234567890123456/0000000002"] }""",
             "HomeBanner" to """{ "style": "collapsible_top" }""",
-            "FeedNative" to """{ "enabled": false, "style": "large" }""",
+            "FeedNative" to """{ "enabled": false, "style": "large_compact" }""",
             "AdSettings" to """{ "adsEnabled": true, "maxInterstitialsPerSession": 6, "minSecondsBetweenFullScreenAds": 20 }""",
         )
         assertEquals(
@@ -100,7 +100,7 @@ class FirebaseRemoteConfigProviderTest {
             PlacementOverride(bannerSize = BannerSize.Collapsible(CollapsibleBannerPosition.TOP)),
             overrides.placements.getValue("HomeBanner"),
         )
-        assertEquals(PlacementOverride(enabled = false, nativeStyle = NativeStyle.LARGE), overrides.placements.getValue("FeedNative"))
+        assertEquals(PlacementOverride(enabled = false, nativeStyle = NativeStyle.LARGE_COMPACT), overrides.placements.getValue("FeedNative"))
         assertEquals(true, overrides.adsEnabled)
         assertEquals(6, overrides.maxInterstitialsPerSession)
         assertEquals(20.seconds, overrides.minIntervalBetweenFullScreenAds)

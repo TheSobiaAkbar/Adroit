@@ -34,11 +34,11 @@ class NativeProfilesTest {
 
     @Test
     fun `style comes from the placement, a remote override wins, and an unknown placement is MEDIUM`() = runTest {
-        val h = NativeHarness(this, nativeConfig { placements { native(FEED, TestIds.unit(1)) { style = NativeStyle.SMALL } } })
-        assertEquals(NativeStyle.SMALL, h.api.style(FEED))
-        h.live.update(h.live.current.withOverrides(AdOverrides(placements = mapOf("feed" to PlacementOverride(nativeStyle = NativeStyle.LARGE)))))
-        assertEquals(NativeStyle.LARGE, h.api.style(FEED))
-        assertEquals(NativeStyle.MEDIUM, h.api.style(NativePlacement("other")))
+        val h = NativeHarness(this, nativeConfig { placements { native(FEED, TestIds.unit(1)) { style = NativeStyle.SMALL_BUTTON_END } } })
+        assertEquals(NativeStyle.SMALL_BUTTON_END, h.api.style(FEED))
+        h.live.update(h.live.current.withOverrides(AdOverrides(placements = mapOf("feed" to PlacementOverride(nativeStyle = NativeStyle.LARGE_COMPACT)))))
+        assertEquals(NativeStyle.LARGE_COMPACT, h.api.style(FEED))
+        assertEquals(NativeStyle.LARGE_BUTTON_BOTTOM, h.api.style(NativePlacement("other")))
     }
 
     @Test

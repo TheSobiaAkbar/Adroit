@@ -37,7 +37,7 @@ fun ArticleFooterAd() {
     AdNative(
         placement = Placements.FeedNative,
         modifier = Modifier.fillMaxWidth(),
-        layout = NativeTemplates.Medium,
+        layout = NativeTemplates.LargeButtonBottom,
     )
 }
 // endregion
@@ -51,7 +51,7 @@ fun Feed(articles: List<String>) {
             if (index % 6 == 5) {
                 val slot = "ad-${index / 6}"
                 // A distinct, stable slotKey per ad item: scrolling away and back doesn't reload it.
-                item(key = slot) { AdNative(Placements.FeedNative, layout = NativeTemplates.Small, slotKey = slot) }
+                item(key = slot) { AdNative(Placements.FeedNative, layout = NativeTemplates.SmallButtonEnd, slotKey = slot) }
             }
         }
     }
@@ -75,7 +75,7 @@ class ArticleFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         view.findViewById<FrameLayout>(R.id.banner_container)
-            .attachNativeAd(viewLifecycleOwner, Placements.FeedNative, NativeTemplates.Large)
+            .attachNativeAd(viewLifecycleOwner, Placements.FeedNative, NativeTemplates.LargeCompact)
     }
 }
 // endregion
@@ -94,7 +94,7 @@ class FeedViewModel : ViewModel() {
 
 // In the adapter's onBindViewHolder, for an ad row:
 fun bindAdRow(viewModel: FeedViewModel, slot: Int, container: ViewGroup, viewLifecycleOwner: LifecycleOwner) {
-    viewModel.adHolder(slot).bindTo(container, viewLifecycleOwner, NativeTemplates.Small)
+    viewModel.adHolder(slot).bindTo(container, viewLifecycleOwner, NativeTemplates.SmallButtonEnd)
 }
 // endregion
 

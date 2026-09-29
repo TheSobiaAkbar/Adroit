@@ -51,10 +51,10 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
     DetailsBanner(AdProfile.banner(style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM))),
 
     /** In the feed, every few articles: each ad shown is replaced, ready for the next slot. */
-    FeedNative(AdProfile.native(style = NativeStyle.SMALL, loadAgain = true)),
+    FeedNative(AdProfile.native(style = NativeStyle.SMALL_BUTTON_END, loadAgain = true)),
 
     /** Inside an article. */
-    ArticleNative(AdProfile.native(style = NativeStyle.LARGE)),
+    ArticleNative(AdProfile.native(style = NativeStyle.LARGE_COMPACT)),
     ;
 
     companion object {

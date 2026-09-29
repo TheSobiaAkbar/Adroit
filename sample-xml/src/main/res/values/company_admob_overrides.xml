@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Restyling the library's native templates: a resource with the same name as one of the library's replaces it
-    (docs/NATIVE.md, "Styling"). This sample changes only the "Ad" badge; the rest follow the app's theme.
+    (docs/NATIVE.md, "Styling"). This sample changes the "Ad" badge and the button; the rest follow the app's theme.
 -->
 <resources>
     <color name="company_admob_native_attribution">#FFC107</color>
     <color name="company_admob_native_attribution_text">#FFFFFF</color>
+    <!-- The button: a gradient from _cta to _cta_end (set only _cta for a solid button). Firebase can change both. -->
+    <color name="company_admob_native_cta">#FF6D00</color>
+    <color name="company_admob_native_cta_end">#FFA000</color>
+    <color name="company_admob_native_cta_text">#FFFFFF</color>
 
     <!-- More you can override, for example:
-    <color name="company_admob_native_cta">#FF6D00</color>
-    <color name="company_admob_native_cta_text">#FFFFFF</color>
     <color name="company_admob_native_headline">#212121</color>
     <color name="company_admob_native_body">#757575</color>
     <color name="company_admob_native_background">#FFFFFF</color>

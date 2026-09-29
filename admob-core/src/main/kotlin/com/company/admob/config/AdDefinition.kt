@@ -305,7 +305,7 @@ public sealed class AdProfile {
         public fun native(
             ids: List<String> = emptyList(),
             enabled: Boolean = true,
-            style: NativeStyle = NativeStyle.MEDIUM,
+            style: NativeStyle = NativeStyle.DEFAULT,
             poolSize: Int = 1,
             loadAgain: Boolean = false,
             showLoading: Boolean? = null,
@@ -326,7 +326,7 @@ public sealed class AdProfile {
             loadAgain: Boolean = false,
             showLoading: Boolean? = null,
         ): Native = Native(
-            ids.toList(), enabled, NativeStyle.MEDIUM, poolSize, loadAgain, showLoading,
+            ids.toList(), enabled, NativeStyle.DEFAULT, poolSize, loadAgain, showLoading,
             layoutName = NativeLayoutNames.normalize(layout),
         )
     }

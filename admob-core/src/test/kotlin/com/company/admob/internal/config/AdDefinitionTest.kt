@@ -37,7 +37,7 @@ class AdDefinitionTest {
         SplashAd(AdProfile.interstitial(ids = listOf(TestIds.unit(1)), splash = true, splashTimeoutSeconds = 6)),
         HistoryAd(AdProfile.interstitial(ids = listOf(TestIds.unit(2), TestIds.unit(3)), counter = 3, timerSeconds = 25)),
         HomeBanner(AdProfile.banner(ids = listOf(TestIds.unit(4)), style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM))),
-        FeedNative(AdProfile.native(ids = listOf(TestIds.unit(5)), style = NativeStyle.LARGE, poolSize = 2)),
+        FeedNative(AdProfile.native(ids = listOf(TestIds.unit(5)), style = NativeStyle.LARGE_COMPACT, poolSize = 2)),
         NoIdsBanner(AdProfile.banner()),
         NoIdsRewarded(AdProfile.rewarded(ids = emptyList())),
     }
@@ -69,7 +69,7 @@ class AdDefinitionTest {
             (byKey.getValue("HomeBanner") as BannerPlacementConfig).size,
         )
         val native = byKey.getValue("FeedNative") as NativePlacementConfig
-        assertEquals(NativeStyle.LARGE, native.style)
+        assertEquals(NativeStyle.LARGE_COMPACT, native.style)
         assertEquals(2, native.poolSize)
         assertEquals(4, config.frequency.maxInterstitialsPerSession)
         assertEquals(10.seconds, config.frequency.minIntervalBetweenFullScreenAds)
@@ -292,7 +292,7 @@ class AdDefinitionTest {
         val config = adMobConfig { profiles(listOf(definition("Promo", promo))) }
         val native = config.placements.single() as NativePlacementConfig
         assertEquals("my_promo", native.layoutName)
-        assertEquals(NativeStyle.MEDIUM, native.style)
+        assertEquals(NativeStyle.LARGE_BUTTON_BOTTOM, native.style)
         assertEquals("\"small_button_end\"", "\"" + AdProfile.native(style = NativeStyle.SMALL_BUTTON_END).toJson().substringAfter("\"style\":\"").substringBefore("\"") + "\"")
         assertThrows(IllegalArgumentException::class.java) { AdProfile.native(layout = "not valid!") }
     }

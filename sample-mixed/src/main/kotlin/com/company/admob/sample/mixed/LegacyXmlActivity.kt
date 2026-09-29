@@ -40,7 +40,7 @@ class LegacyXmlActivity : AppCompatActivity() {
                     AdNative(
                         placement = Placements.ComposeInXmlNative,
                         modifier = Modifier.fillMaxWidth(),
-                        layout = NativeTemplates.Medium,
+                        layout = NativeTemplates.LargeButtonBottom,
                     )
                 }
             }

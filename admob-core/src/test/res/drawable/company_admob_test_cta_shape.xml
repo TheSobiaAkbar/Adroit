@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A rounded call-to-action background inside a ripple, as the templates have. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#33000000">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF0000FF" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</ripple>

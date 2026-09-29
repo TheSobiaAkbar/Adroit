@@ -21,7 +21,7 @@ import com.company.admob.views.internal.ViewsRuntime
  *     android:layout_width="match_parent"
  *     android:layout_height="wrap_content"
  *     app:company_admob_placement="feed_native"
- *     app:company_admob_template="medium" />
+ *     app:company_admob_template="large_button_bottom" />
  * ```
  * When attached to a window, it loads and renders the ad for its view tree's `LifecycleOwner` (the Fragment's view
  * lifecycle inside a Fragment) and destroys it with that owner. It's GONE if the load fails.

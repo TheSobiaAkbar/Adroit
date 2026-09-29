@@ -60,7 +60,7 @@ class AdNativeTest {
         rule.setContent {
             Column {
                 BasicText("tick $tick")
-                AdNative(FEED, layout = NativeTemplates.Small)
+                AdNative(FEED, layout = NativeTemplates.SmallButtonEnd)
             }
         }
         rule.waitForIdle()
@@ -73,15 +73,15 @@ class AdNativeTest {
         rule.onNodeWithText("tick 100").assertExists()
         assertEquals(1, client.native.loadCount)
         assertEquals(1, client.native.renders.size)
-        assertEquals(NativeTemplates.Small, client.native.renders.single().layout)
+        assertEquals(NativeTemplates.SmallButtonEnd, client.native.renders.single().layout)
     }
 
     @Test
     fun `without a layout, the template follows the placement's configured style`() {
-        client.native.style = NativeStyle.SMALL
+        client.native.style = NativeStyle.SMALL_BUTTON_END
         rule.setContent { AdNative(FEED) }
         rule.waitForIdle()
-        assertEquals(NativeTemplates.Small, client.native.renders.single().layout)
+        assertEquals(NativeTemplates.SmallButtonEnd, client.native.renders.single().layout)
     }
 
     @Test

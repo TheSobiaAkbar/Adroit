@@ -1,5 +1,8 @@
 package com.company.admob.internal.native
 
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.view.View
 import android.widget.ImageView
 import android.widget.RatingBar
@@ -8,6 +11,7 @@ import com.company.admob.NativeAdAssets
 import com.company.admob.NativeAdLayout
 import com.company.admob.fakes.FakeLoadedNativeAd
 import com.company.admob.fakes.FakeNativeRenderPort
+import com.company.admob.internal.config.AdBehavior
 import com.company.admob.internal.google.NextGenNativeAdBinder
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.logging.LogLevel
@@ -106,7 +110,7 @@ class NativeAdBinderTest {
     }
 
     @Test
-    fun `missing optional views are logged once and skipped`() = runTest {
+    fun `missing optional views are logged once, at debug level, and skipped`() = runTest {
         val (n, handle) = handle()
         val layout = NativeAdLayout(
             layoutRes = R.layout.company_admob_test_native_no_headline,
@@ -115,7 +119,8 @@ class NativeAdBinderTest {
         )
         n.api.render(handle, n.container(), layout)
         n.api.render(handle, n.container(), layout)
-        assertEquals(1, n.infoLogs.count { "company_admob_test_price" in it })
+        assertEquals(1, n.allLogs.count { "company_admob_test_price" in it })
+        assertEquals("not a warning: optional views are optional", 0, n.infoLogs.count { "company_admob_test_price" in it })
         assertNull(n.port.registrations.last().views.price)
     }
 
@@ -139,5 +144,42 @@ class NativeAdBinderTest {
         assertEquals("NativeAdView", adView.javaClass.simpleName)
         assertEquals("MediaView", mediaView.javaClass.simpleName)
         port.release(adView)
+    }
+
+    @Test
+    fun `Firebase colors paint the call to action as a gradient, and the badge, keeping a shape's corners`() = runTest {
+        val (n, handle) = handle()
+        val orange = Color.parseColor("#FF6D00")
+        val amber = Color.parseColor("#FFC107")
+        n.look = AdBehavior(ctaColors = listOf(orange, amber), ctaTextColor = Color.WHITE, attributionColor = amber)
+        val root = n.api.render(handle, n.container(), FULL_LAYOUT)
+
+        val cta = root.findViewById<TextView>(R.id.company_admob_test_cta)
+        val gradient = cta.background as GradientDrawable
+        assertEquals(listOf(orange, amber), gradient.colors!!.toList())
+        assertEquals(Color.WHITE, cta.currentTextColor)
+        val badge = root.findViewById<TextView>(R.id.company_admob_test_attribution).background as GradientDrawable
+        assertEquals(listOf(amber, amber), badge.colors!!.toList())
+
+        // A background holding a shape (here a ripple) keeps it, corners and all, with the new colors.
+        val shaped = NativeAdLayout(
+            layoutRes = R.layout.company_admob_test_native_shaped,
+            headlineId = R.id.company_admob_test_headline,
+            callToActionId = R.id.company_admob_test_cta,
+        )
+        n.look = AdBehavior(ctaColors = listOf(orange))
+        val ripple = n.api.render(handle, n.container(), shaped).findViewById<View>(R.id.company_admob_test_cta).background
+        val shape = (ripple as RippleDrawable).getDrawable(0) as GradientDrawable
+        assertEquals(listOf(orange, orange), shape.colors!!.toList())
+        assertEquals(12 * root.resources.displayMetrics.density, shape.cornerRadius, 0.5f)
+    }
+
+    @Test
+    fun `without colors the layout keeps its own look`() = runTest {
+        val (n, handle) = handle()
+        n.look = AdBehavior(showLoading = true)
+        val root = n.api.render(handle, n.container(), FULL_LAYOUT)
+        // The theme's own button background, not a painted one.
+        assertTrue(root.findViewById<View>(R.id.company_admob_test_cta).background !is GradientDrawable)
     }
 }

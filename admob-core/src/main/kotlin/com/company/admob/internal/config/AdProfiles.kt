@@ -1,5 +1,6 @@
 package com.company.admob.internal.config
 
+import android.graphics.Color
 import com.company.admob.AdFormat
 import com.company.admob.AppOpenPlacement
 import com.company.admob.BannerPlacement
@@ -213,8 +214,10 @@ internal object AdProfiles {
     }
 
     /**
-     * The loading fields of an ad of [format], or of the settings (null format): `loadTimeoutSeconds` and
-     * `loadingSeconds` apply to full-screen ads only, `showLoading` to every ad. Null when none is set.
+     * The loading and look fields of an ad of [format], or of the settings (null format): `loadTimeoutSeconds` and
+     * `loadingSeconds` apply to full-screen ads only, `showLoading` to every ad, and the colors (`ctaColors`,
+     * `ctaTextColor`, `attributionColor`, `attributionTextColor`) to native ads, and to a banner that becomes one.
+     * Null when none is set.
      */
     private fun behaviorOf(json: JSONObject, format: AdFormat?, issue: (String) -> Unit): AdBehavior? {
         val fields = Fields(json, issue)
@@ -224,10 +227,18 @@ internal object AdProfiles {
                 if (json.has(name)) issue("\"$name\" applies to full-screen ads only; ignored")
             }
         }
+        val colored = format == null || inline
+        if (!colored) {
+            for (name in COLOR_FIELDS) if (json.has(name)) issue("\"$name\" applies to native ads only; ignored")
+        }
         return AdBehavior(
             loadTimeout = if (inline) null else fields.count("loadTimeoutSeconds")?.seconds,
             showLoading = fields.boolean("showLoading"),
             loadingTime = if (inline) null else fields.count("loadingSeconds")?.seconds,
+            ctaColors = if (colored) fields.colors("ctaColors") else null,
+            ctaTextColor = if (colored) fields.color("ctaTextColor") else null,
+            attributionColor = if (colored) fields.color("attributionColor") else null,
+            attributionTextColor = if (colored) fields.color("attributionTextColor") else null,
         ).takeIfSet()
     }
 
@@ -300,6 +311,8 @@ internal object AdProfiles {
     }
 
     private val KEY_PATTERN = Regex("[A-Za-z0-9_]{1,40}")
+    private val COLOR_PATTERN = Regex("#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})")
+    private val COLOR_FIELDS = listOf("ctaColors", "ctaTextColor", "attributionColor", "attributionTextColor")
 
     /** Typed reads of one JSON object; a wrong type is reported through [issue] and read as absent. */
     private class Fields(private val json: JSONObject, private val issue: (String) -> Unit) {
@@ -336,6 +349,37 @@ internal object AdProfiles {
                     ?: null.also { issue("\"$name\" item ${i + 1} isn't text; ignored") }
             }
             else -> wrong(name, "a list of strings")
+        }
+
+        /** A color: `"#RRGGBB"` or `"#AARRGGBB"`. */
+        fun color(name: String): Int? {
+            val text = string(name) ?: return null
+            return parseColor(text) ?: wrong(name, "a color, \"#RRGGBB\" or \"#AARRGGBB\"")
+        }
+
+        /** One or two colors (a gradient from start to end): a list, or a single color as text. */
+        fun colors(name: String): List<Int>? {
+            val texts = when (val value = raw(name)) {
+                null -> return null
+                is String -> listOf(value)
+                is JSONArray -> (0 until value.length()).map { value.opt(it) as? String ?: "" }
+                else -> return wrong(name, "one or two colors, [\"#RRGGBB\", \"#RRGGBB\"]")
+            }
+            val parsed = texts.map(::parseColor)
+            if (texts.size !in 1..2 || parsed.any { it == null }) {
+                return wrong(name, "one or two colors, [\"#RRGGBB\", \"#RRGGBB\"]")
+            }
+            return parsed.filterNotNull()
+        }
+
+        private fun parseColor(text: String): Int? {
+            val trimmed = text.trim()
+            if (!COLOR_PATTERN.matches(trimmed)) return null
+            return try {
+                Color.parseColor(trimmed)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
         }
 
         /** `adUnitIds` as a list; a single string is accepted as a one-item list. Blank entries are dropped. */

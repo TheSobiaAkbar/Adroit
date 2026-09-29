@@ -30,7 +30,7 @@
     "FeedNative": {
       "format": "native",
       "enabled": true,
-      "style": "large",
+      "style": "large_compact",
       "adUnitIds": ["ca-app-pub-0000000000000000/0000000005"]
     }
   }

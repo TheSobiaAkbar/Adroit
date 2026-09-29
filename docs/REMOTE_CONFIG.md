@@ -61,7 +61,7 @@ The optional `com.company:admob-firebase` module provides `FirebaseRemoteConfigP
 Firebase itself (the google-services plugin); the module doesn't apply it.
 
 ```kotlin
-implementation("com.company:admob-firebase:1.0.0-rc1")
+implementation("com.company:admob-firebase:1.0.0-rc2")
 ```
 
 <!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Firebase.kt#firebase-setup -->

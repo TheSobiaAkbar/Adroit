@@ -27,7 +27,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
             style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM),
         ),
     ),
-    FeedNative(AdProfile.native(ids = listOf("ca-app-pub-0000000000000000/0000000005"), style = NativeStyle.LARGE)),
+    FeedNative(AdProfile.native(ids = listOf("ca-app-pub-0000000000000000/0000000005"), style = NativeStyle.LARGE_COMPACT)),
 }
 ```
 
@@ -140,7 +140,7 @@ The ads file, and what `AdDefinitions.firebaseTemplate` writes for each ad, look
     "FeedNative": {
       "format": "native",
       "enabled": true,
-      "style": "large",
+      "style": "large_compact",
       "adUnitIds": ["ca-app-pub-0000000000000000/0000000005"]
     }
   }
@@ -180,7 +180,9 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | app_open | `maxPerSession` | 0 = no limit |
 | app_open | `excludedActivities` | File only. Activity class names never covered by an app open ad, for example your splash screen |
 | banner | `style` | `adaptive` (default), `collapsible_bottom`, `collapsible_top`, `rectangle` (300×250), `standard` (320×50) or `inline_adaptive` |
-| native | `style` | A library style: `small`, `medium` (default), `large`, `small_button_bottom`, `small_button_top`, `small_button_end`, `large_button_bottom`, `large_button_top`, `large_compact`, `side_media_button_bottom` or `side_media_button_top` ([Native](NATIVE.md#templates-and-custom-layouts)). Or the name of your own layout, registered with `NativeTemplates.register` ([Native](NATIVE.md#your-own-layout-picked-by-name)). |
+| native | `style` | A library style: `small_button_end`, `small_button_bottom`, `large_button_bottom` (default), `large_compact` or `media_start` ([Native](NATIVE.md#templates-and-custom-layouts)). Or the name of your own layout, registered with `NativeTemplates.register` ([Native](NATIVE.md#your-own-layout-picked-by-name)). |
+| native | `ctaColors` | One color, or two for a left-to-right gradient: the call-to-action's background, `["#FF6D00", "#FFC107"]` |
+| native | `ctaTextColor`, `attributionColor`, `attributionTextColor` | The button's text, and the "Ad" badge's background and text: `"#RRGGBB"` or `"#AARRGGBB"` ([Native](NATIVE.md#colors-from-firebase)) |
 | native | `poolSize` | File only. Ads kept loaded, 1 to 3 (default 1) |
 
 ### Settings
@@ -197,6 +199,7 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | `loadTimeoutSeconds` | number | `8` | The load timeout of every full-screen ad that doesn't set its own |
 | `showLoading` | true/false | `true` | The loading screen and shimmer of every ad that doesn't set its own |
 | `loadingSeconds` | number | `1` | The loading screen's minimum time for every full-screen ad that doesn't set its own |
+| `ctaColors`, `ctaTextColor`, `attributionColor`, `attributionTextColor` | colors | the app's resources | The button and "Ad" badge colors of every native ad that doesn't set its own ([Native](NATIVE.md#colors-from-firebase)) |
 
 Unknown fields are ignored, so an older app version accepts newer JSON.
 
@@ -410,7 +413,7 @@ so an interstitial unit can't show an app open ad:
 - The app's own app open ad, swapped to an interstitial, shows that interstitial when the user returns to the app,
   with the same rules (excluded screens, launch count, cooldown).
 - `AdSlotView` and `AdSlot` replace the banner with a native ad, or back, as soon as the swap arrives.
-- `style` in the value is read for the new format: `{ "format": "native", "style": "large", "adUnitIds": [...] }`.
+- `style` in the value is read for the new format: `{ "format": "native", "style": "large_compact", "adUnitIds": [...] }`.
 - `AdSlots.currentFormat(key)` and `AdSlots.formatChanges(key)` tell you an ad's format now.
 
 AdMob intends app open ads for app launch and returns to the app. Showing one at another moment, by swapping an

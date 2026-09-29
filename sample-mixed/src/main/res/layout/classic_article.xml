@@ -17,5 +17,5 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         app:company_admob_placement="mixed_xml_in_compose_native"
-        app:company_admob_template="small" />
+        app:company_admob_template="small_button_end" />
 </LinearLayout>

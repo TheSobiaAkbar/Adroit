@@ -264,7 +264,7 @@ public class NativePlacementBuilder internal constructor(placement: NativePlacem
     public var poolSize: Int = FormatDefaults.NATIVE_POOL_SIZE
 
     /** See [NativePlacementConfig.style]. */
-    public var style: NativeStyle = NativeStyle.MEDIUM
+    public var style: NativeStyle = NativeStyle.DEFAULT
 
     /** An ad profile's registered app layout, shown instead of [style]; see `AdProfile.Native.layoutName`. */
     internal var layoutName: String? = null

@@ -178,7 +178,7 @@ internal class InertAdApis(private val error: AdError, private val warn: (String
             renderer: NativeAdRenderer?,
         ): View = throw IllegalStateException("No native ad can exist here (${error.message})")
 
-        override fun style(placement: NativePlacement): NativeStyle = NativeStyle.MEDIUM
+        override fun style(placement: NativePlacement): NativeStyle = NativeStyle.DEFAULT
     }
 }
 

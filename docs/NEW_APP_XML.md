@@ -1,26 +1,35 @@
 # Adding ads to a new Kotlin + XML app
 
-This page takes a brand-new Android Studio project (Kotlin, XML layouts, no Compose) to a finished ad setup:
+This page takes a new Android Studio project (Kotlin, XML layouts) to a complete ad setup:
 
 - consent on the splash screen;
 - a splash ad;
 - interstitial, rewarded, rewarded interstitial and app open ads;
-- banners and native ads;
+- banners and native ads, which can load before their screen opens;
+- native ads in your own layouts and colors;
 - a "remove ads" purchase;
 - every ad, and any other value you choose, controlled from Firebase without a new release.
 
-Follow the steps in order. Each one ends with a way to check that it worked.
+Your app needs two of the plugin's modules: `admob-views` (banners and native ads in XML) and `admob-firebase`
+(Firebase Remote Config). They bring everything else: `admob-core`, Google's ads and consent SDKs, and the
+[sdp/ssp](https://github.com/intuit/sdp) sizes. Don't add `admob-compose`, `admob-testing`, the sample apps,
+`play-services-ads` or `ads-mobile-sdk`.
 
-Your app needs only two of the plugin's modules, and Gradle downloads the third by itself:
+## What changes from one project to the next
 
-| Module | Why |
-|---|---|
-| `admob-views` | Banners and native ads in XML layouts. |
-| `admob-firebase` | Firebase Remote Config and Analytics. |
-| `admob-core` | Everything else. Comes automatically with both modules above. |
+Most of the setup is the same in every app: copy it once, then change only this.
 
-Don't add `admob-compose`, `admob-testing`, the sample apps, `play-services-ads` or `ads-mobile-sdk`. The plugin
-brings the Google Mobile Ads and consent (UMP) SDKs itself.
+| File | What you change in each project | Step |
+|---|---|---|
+| `settings.gradle.kts` | Add `mavenLocal()` | [2](#2-get-the-plugin-onto-your-computer) |
+| `build.gradle.kts` (root) and `app/build.gradle.kts` | Add the Google services plugin and 2 dependencies | [3](#3-connect-firebase), [4](#4-add-the-dependencies) |
+| `app/google-services.json` | This app's file, from its Firebase project | [3](#3-connect-firebase) |
+| `AndroidManifest.xml` | This app's AdMob app ID | [7](#7-the-manifest) |
+| `ads/AppAds.kt` | This app's ads and their ad unit IDs | [5](#5-list-your-ads-appadskt) |
+| `MyApp.kt`, `SplashActivity.kt`, `activity_splash.xml` | Copy them. Change only the `package` line (and the splash's look, if you like). | [6](#6-start-everything-the-application-class), [8](#8-the-splash-screen) |
+| `res/values/ads_style.xml` | Optional: this app's ad colors | [10](#10-colors) |
+| Your screens | One line or one XML view per ad | [9](#9-show-the-ads) |
+| Firebase console | This app's parameters, one per ad | [13](#13-firebase-the-parameters-and-sample-values) |
 
 **Contents**
 
@@ -31,12 +40,14 @@ brings the Google Mobile Ads and consent (UMP) SDKs itself.
 5. [List your ads: AppAds.kt](#5-list-your-ads-appadskt)
 6. [Start everything: the Application class](#6-start-everything-the-application-class)
 7. [The manifest](#7-the-manifest)
-8. [The splash screen: consent, timer, splash ad](#8-the-splash-screen-consent-timer-splash-ad)
+8. [The splash screen](#8-the-splash-screen)
 9. [Show the ads](#9-show-the-ads)
-10. [Your own Firebase values](#10-your-own-firebase-values)
-11. [Firebase: the parameters and sample values](#11-firebase-the-parameters-and-sample-values)
-12. [Test it](#12-test-it)
-13. [Before release](#13-before-release)
+10. [Colors](#10-colors)
+11. [Your own native ad layout](#11-your-own-native-ad-layout)
+12. [Your own Firebase values](#12-your-own-firebase-values)
+13. [Firebase: the parameters and sample values](#13-firebase-the-parameters-and-sample-values)
+14. [Test it](#14-test-it)
+15. [Before release](#15-before-release)
 
 ## 1. What you need
 
@@ -44,25 +55,25 @@ brings the Google Mobile Ads and consent (UMP) SDKs itself.
 |---|---|---|
 | Your app's package name | `applicationId` in `app/build.gradle.kts` | `com.example.myapp` |
 | An AdMob app ID | AdMob → Apps → your app → App settings | `ca-app-pub-1234567890123456~1234567890` |
-| One ad unit ID per ad | AdMob → Apps → your app → Ad units. Create each with the right format. | `ca-app-pub-1234567890123456/1234567890` |
+| One ad unit ID per ad | AdMob → Apps → your app → Ad units, each of the right format | `ca-app-pub-1234567890123456/1234567890` |
 | A Firebase project | [console.firebase.google.com](https://console.firebase.google.com) | |
-| This plugin's project | The AdsPlugin repository, opened or cloned on your computer | |
+| The AdsPlugin project | Cloned or opened on your computer | |
 
-You can start without ad unit IDs. An ad without IDs shows Google's test ads, and debug builds always show test ads.
+You can start without ad unit IDs: an ad without IDs shows Google's test ads, and debug builds always do.
 
 ## 2. Get the plugin onto your computer
 
-Until the plugin is released to a shared repository, publish it to your computer's local Maven folder (`~/.m2`).
-In a terminal, **in the AdsPlugin project folder**, run:
+Until the plugin is published to a shared repository, publish it to your computer's local Maven folder. In a
+terminal, **in the AdsPlugin folder**:
 
 ```bash
 ./gradlew publishToMavenLocal
 ```
 
-(On Windows `cmd`, run `gradlew publishToMavenLocal`.) This publishes version `1.0.0-rc1`, the version set in
-AdsPlugin's `gradle.properties` (`companyAdmob.version`). Run the command again whenever you update the plugin.
+(`gradlew publishToMavenLocal` in Windows `cmd`.) This publishes version `1.0.0-rc2`, the `companyAdmob.version` in
+AdsPlugin's `gradle.properties`. Run it again whenever the plugin changes.
 
-Then, **in your app's project**, open `settings.gradle.kts` and add `mavenLocal()` to the repositories:
+**In your app**, add `mavenLocal()` to `settings.gradle.kts`:
 
 ```kotlin
 dependencyResolutionManagement {
@@ -75,19 +86,17 @@ dependencyResolutionManagement {
 }
 ```
 
-Once the plugin is released to GitHub Packages or the company repository, replace `mavenLocal()` with that
-repository ([Getting started](GETTING_STARTED.md#1-add-the-repository)). Nothing else changes.
+Once the plugin is released to GitHub Packages or the company repository, use that repository instead
+([Getting started](GETTING_STARTED.md#1-add-the-repository)). Nothing else changes.
 
 ## 3. Connect Firebase
 
-1. In the [Firebase console](https://console.firebase.google.com), create a project (or open yours). Google
-   Analytics can stay on.
-2. **Add app** → Android. Enter your **exact** package name (`com.example.myapp`), then **Register app**.
-3. Download `google-services.json` and put it in your project's `app/` folder, next to `app/build.gradle.kts`.
-4. Skip the SDK steps the console shows next: the plugin adds the Firebase libraries. You only add the Gradle plugin
-   below.
+1. In the [Firebase console](https://console.firebase.google.com), create a project, or open yours.
+2. **Add app** → Android, with your **exact** package name, then **Register app**.
+3. Download `google-services.json` into your project's `app/` folder.
+4. Skip the console's SDK steps: the plugin brings the Firebase libraries.
 
-In the **project's** `build.gradle.kts` (the one at the root):
+In the root `build.gradle.kts`:
 
 ```kotlin
 plugins {
@@ -96,12 +105,11 @@ plugins {
 }
 ```
 
-If your project uses a version catalog (`gradle/libs.versions.toml`), add the plugin there instead, as Android
-Studio does for its other plugins.
+With a version catalog (`gradle/libs.versions.toml`), add the plugin there, as Android Studio does for the others.
 
 ## 4. Add the dependencies
 
-In **`app/build.gradle.kts`**:
+In `app/build.gradle.kts`:
 
 ```kotlin
 plugins {
@@ -115,14 +123,14 @@ android {
         minSdk = 24 // the plugin needs 24 or higher
     }
     buildFeatures {
-        viewBinding = true // optional, used in the examples below
-        buildConfig = true // needed for BuildConfig.DEBUG
+        viewBinding = true // used in the examples below
+        buildConfig = true // for BuildConfig.DEBUG
     }
 }
 
 dependencies {
-    implementation("com.company:admob-views:1.0.0-rc1")
-    implementation("com.company:admob-firebase:1.0.0-rc1")
+    implementation("com.company:admob-views:1.0.0-rc2")
+    implementation("com.company:admob-firebase:1.0.0-rc2")
 
     // Your usual AndroidX libraries (Android Studio adds most of them):
     implementation("androidx.appcompat:appcompat:1.7.1")
@@ -134,13 +142,12 @@ dependencies {
 }
 ```
 
-**Check:** *Sync Project with Gradle Files* succeeds. If `com.company:admob-views` isn't found, step 2's
-`publishToMavenLocal` didn't run, or `mavenLocal()` is missing.
+**Check:** *Sync Project with Gradle Files* succeeds. If `com.company:admob-views` isn't found, run step 2's command,
+and check `mavenLocal()` is in `settings.gradle.kts`.
 
 ## 5. List your ads: AppAds.kt
 
-All your ads live in **one file**. Create `app/src/main/java/com/example/myapp/ads/AppAds.kt`, with one entry per
-place that shows an ad:
+Every ad of the app is one line of **one file**, `app/src/main/java/com/example/myapp/ads/AppAds.kt`:
 
 ```kotlin
 package com.example.myapp.ads
@@ -171,8 +178,9 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
     DetailsBanner(AdProfile.banner(style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM))),
 
     // Native ads
-    HomeNative(AdProfile.native(style = NativeStyle.MEDIUM)),
-    FeedNative(AdProfile.native(style = NativeStyle.SMALL, loadAgain = true)),
+    HomeNative(AdProfile.native(style = NativeStyle.LARGE_BUTTON_BOTTOM)),
+    FeedNative(AdProfile.native(style = NativeStyle.SMALL_BUTTON_END, loadAgain = true)),
+    PromoNative(AdProfile.native(layout = "promo")), // your own layout, registered in MyApp
     ;
 
     companion object {
@@ -182,17 +190,20 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 }
 ```
 
-The rules:
-
 - **The entry name is the ad's name everywhere:** in code (`AppAds.HomeBanner`), in XML (`"HomeBanner"`) and in
-  Firebase (a parameter called `HomeBanner`). Never rename an entry after release.
-- **The format** comes from the function: `AdProfile.interstitial`, `rewarded`, `rewardedInterstitial`, `appOpen`,
-  `banner` or `native`.
-- **Ad unit IDs:** add `ids = listOf("ca-app-pub-…/…")` when you have them. Leave `ids` out to get Google's test
-  ads. Two or more IDs are used in turn, one per load. You can also set the IDs later, from Firebase only
-  ([step 11](#11-firebase-the-parameters-and-sample-values)).
-- **One splash ad at most** (`splash = true`).
-- **`excludedActivities`** lists screens the app open ad must never cover. Always include your splash screen.
+  Firebase (a parameter called `HomeBanner`). Never rename one after release.
+- **The format** is the function: `AdProfile.interstitial`, `rewarded`, `rewardedInterstitial`, `appOpen`, `banner`
+  or `native`.
+- **Ad unit IDs:** add `ids = listOf("ca-app-pub-…/…")` when you have them, or set them in Firebase only
+  ([step 13](#13-firebase-the-parameters-and-sample-values)). No IDs: Google's test ads. Two IDs or more are used in
+  turn.
+- **One splash ad at most** (`splash = true`). **`excludedActivities`** lists the screens the app open ad must never
+  cover: always your splash.
+- **Native styles:** `NativeStyle.SMALL_BUTTON_END`, `SMALL_BUTTON_BOTTOM`, `LARGE_BUTTON_BOTTOM` (the default),
+  `LARGE_COMPACT` or `MEDIA_START` ([what each looks like](#native-styles)), or your own layout:
+  `AdProfile.native(layout = "promo")` ([step 11](#11-your-own-native-ad-layout)).
+- **Banner styles:** `BannerSize.AnchoredAdaptive` (default, full width), `BannerSize.Collapsible(…BOTTOM)`,
+  `BannerSize.MediumRectangle` (300×250) or `BannerSize.Standard` (320×50).
 - Every argument is optional. The main ones:
 
 | Argument | Formats | Meaning |
@@ -200,27 +211,19 @@ The rules:
 | `counter = 3` | interstitial, rewarded interstitial | Shows an ad only on every 3rd `show` call. |
 | `timerSeconds = 60` | interstitial, rewarded interstitial, app open | At least 60 s between two shows of this ad. |
 | `maxPerSession = 5` | full-screen ads | At most 5 shows per app launch. |
-| `loadAgain = true` | all but banners | Loads the next ad right after each show. Use it for ads shown again and again. |
-| `loadTimeoutSeconds = 8` | full-screen ads | How long a show waits for an ad that isn't loaded yet. Default 8. |
+| `loadAgain = true` | all but banners | Loads the next ad right after each show. For ads shown again and again. |
+| `loadTimeoutSeconds = 8` | full-screen ads | How long a show waits for an ad that isn't loaded yet. |
 | `showLoading = false` | all | No "Loading ad…" screen before this full-screen ad, and no shimmer on this banner or native ad. |
-| `style = …` | banner, native | Banner size or native template (below). |
 | `enabled = false` | all | Turns this ad off. |
 
-Banner `style`: `BannerSize.AnchoredAdaptive` (default, full width), `BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM)`,
-`BannerSize.MediumRectangle` (300×250), `BannerSize.Standard` (320×50). Native `style`: one of 11 layouts, for example
-`NativeStyle.SMALL_BUTTON_BOTTOM` or `NativeStyle.SIDE_MEDIA_BUTTON_TOP` ([the list](NATIVE.md#templates-and-custom-layouts)),
-or `AdProfile.native(layout = "promo")` for your own layout ([step 9](#native-styles-colors-and-your-own-layouts)).
-
-`AdSettings` holds what every ad shares. The main settings:
-
-- `splashSeconds`: the splash timer, default 11.
-- `minSecondsBetweenFullScreenAds`: the gap between any two full-screen ads.
-- `maxInterstitialsPerSession`: at most this many interstitials per launch.
-- `loadTimeoutSeconds`, `showLoading` and `loadingSeconds`: the defaults of the arguments above.
+`AdSettings` holds what every ad shares: `splashSeconds` (the splash timer, default 11),
+`minSecondsBetweenFullScreenAds`, `maxInterstitialsPerSession`, and the defaults of `loadTimeoutSeconds`,
+`showLoading` and `loadingSeconds`.
 
 ## 6. Start everything: the Application class
 
-Create `MyApp.kt` next to your activities:
+`MyApp.kt`, next to your activities. Copy it; change only the `package` line and, if you have your own native
+layouts, step 3:
 
 ```kotlin
 package com.example.myapp
@@ -233,6 +236,7 @@ import com.company.admob.config.adMobConfig
 import com.company.admob.firebase.FirebaseRemoteConfigProvider
 import com.company.admob.firebase.RemoteConfigSession
 import com.company.admob.logging.LogLevel
+import com.company.admob.views.NativeTemplates
 import com.example.myapp.ads.AppAds
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
@@ -262,7 +266,10 @@ class MyApp : Application() {
             },
         )
 
-        // 3. A user who bought "remove ads": no ads at all.
+        // 3. Your own native layouts, by name (only if you have any).
+        NativeTemplates.register("promo", R.layout.ad_promo)
+
+        // 4. A user who bought "remove ads": no ads at all.
         if (Premium.isPremium(this)) CompanyAdMob.setAdFree(true)
     }
 }
@@ -279,13 +286,12 @@ object Premium {
 }
 ```
 
-- **Debug builds** (`DEVELOPMENT`) show only Google's test ads, whatever IDs you set. You can't click your own real
-  ads by mistake. They also ask for consent as if you were in Europe ([step 8](#8-the-splash-screen-consent-timer-splash-ad)).
-- **Release builds** (`PRODUCTION`) show your real ads.
-- Name the Firebase variable anything **except** `remoteConfig`. Inside `adMobConfig { }`, `remoteConfig` is the
-  plugin's setting, and a variable with that name hides it.
-- Replace `Premium` with your real purchase check (Google Play Billing). What matters is calling
-  `CompanyAdMob.setAdFree(true)` for a premium user, at startup and right after a purchase.
+- **Debug builds** (`DEVELOPMENT`) show only Google's test ads, and ask for consent as in Europe (step 8).
+  **Release builds** (`PRODUCTION`) show your real ads.
+- Name the Firebase variable anything **except** `remoteConfig`: inside `adMobConfig { }` that name is the plugin's
+  setting, and a variable called that hides it.
+- Replace `Premium` with your real purchase check. What matters is `CompanyAdMob.setAdFree(true)` for a premium user,
+  at startup and right after a purchase.
 
 ## 7. The manifest
 
@@ -314,24 +320,22 @@ In `app/src/main/AndroidManifest.xml`:
 </application>
 ```
 
-Remove the `intent-filter` from `MainActivity` if Android Studio put it there. You don't need to add the `INTERNET`
-permission: the plugin adds it.
+Remove the `intent-filter` from `MainActivity` if Android Studio put it there. The plugin adds the `INTERNET`
+permission itself.
 
-**Check:** run the app in debug and filter logcat by `CompanyAdMob`. You see one line `Firebase parameter <Name>: {…}`
-per ad. Without the app ID, the log says `APP_ID_MISSING` instead.
+**Check:** run a debug build and filter logcat by `CompanyAdMob`: one line `Firebase parameter <Name>: {…}` per ad.
 
-## 8. The splash screen: consent, timer, splash ad
+## 8. The splash screen
 
-The splash screen does everything at app start, in this order, and always ends on your main screen:
+The splash does everything at app start, and always ends on your main screen:
 
-1. **Consent.** It shows Google's consent form when the user's region requires it (Europe, the UK, some US states).
-2. **The timer.** A progress bar runs for `splashSeconds` (13 in `AppAds.settings`). Offline or premium users get 3
-   seconds.
-3. **The splash ad.** It shows if it loads before the timer ends.
+1. **Consent:** Google's consent form, when the user's region needs it.
+2. **The timer:** a progress bar for `splashSeconds` (13 in `AppAds.settings`); 3 seconds offline or for premium users.
+3. **The splash ad,** if it loads before the timer ends.
 
-The splash screen never gets stuck, even offline. Premium users skip consent and the ad.
+It never gets stuck, even offline. Copy these two files as they are; change the layout's look if you like.
 
-**Layout** `res/layout/activity_splash.xml`: your logo and name, and a progress bar, hidden at first:
+`res/layout/activity_splash.xml`:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -375,7 +379,7 @@ The splash screen never gets stuck, even offline. Premium users skip consent and
 </androidx.constraintlayout.widget.ConstraintLayout>
 ```
 
-**Code** `SplashActivity.kt`: a small ViewModel (so a rotation doesn't restart the splash) and the Activity:
+`SplashActivity.kt`:
 
 ```kotlin
 package com.example.myapp
@@ -448,30 +452,22 @@ class SplashActivity : AppCompatActivity() {
 }
 ```
 
-**Consent in debug builds.** A debug build always behaves as if you were in Europe, so the consent form shows on the
-splash on your emulator or phone, wherever you are. Once you answer it, it doesn't show again. To see it again,
-clear the app's storage (Settings → Apps → MyApp → Storage → Clear storage), or call
-`CompanyAdMob.privacy.resetConsentForTesting()` from a debug button and restart the app. To test with your real
-location instead, add `privacy { debugBuildGeography = DebugGeography.DISABLED }` inside `adMobConfig { }`.
-Release builds always use the user's real location.
+**Consent in debug builds.** A debug build behaves as if you were in Europe, so the consent form shows on your phone
+or emulator wherever you are. Once answered, it doesn't show again: to see it again, clear the app's storage
+(Settings → Apps → MyApp → Storage → Clear storage). Release builds use the user's real location. The form itself
+comes from AdMob: publish a GDPR message in **AdMob → Privacy & messaging**, or no form shows.
 
-The form itself comes from AdMob: publish a GDPR message in **AdMob → Privacy & messaging** for your app, or no form
-shows.
-
-**Check:** launch a debug build. The consent form shows first. The progress bar then runs, and a test ad shows before
-your main screen. Launch again: no form this time, the bar runs, and the test ad shows again.
+**Check:** launch a debug build: the consent form, then the progress bar, then a test ad, then your main screen.
 
 ## 9. Show the ads
 
 Two rules cover every ad:
 
-1. **Ads load only when you ask.** Ask when the screen that shows them opens (`AdSlots.load` in `onResume`). Banners
-   and native ads in a layout ask by themselves.
-2. **Every show calls you back, whether an ad showed or not.** Always continue your app's flow inside the callback.
+1. **Ads load when you ask.** Ask when the screen that shows them opens: `AdSlots.load` in `onResume`. Banners and
+   native ads in a layout ask by themselves.
+2. **Every show calls you back, whether an ad showed or not.** Continue your app's flow inside the callback.
 
 ### Interstitial
-
-Load in `onResume`, and show where the ad belongs:
 
 ```kotlin
 override fun onResume() {
@@ -481,6 +477,8 @@ override fun onResume() {
     AdSlots.load(AppAds.LevelCompleteAd)
     AdSlots.load(AppAds.ExtraLifeRewarded)
     AdSlots.load(AppAds.BonusRewardedInterstitial)
+    // The Details screen's banner, loaded ahead: it shows the moment Details opens.
+    AdSlots.load(AppAds.DetailsBanner)
 }
 ```
 
@@ -493,18 +491,13 @@ binding.levelComplete.setOnClickListener {
 }
 ```
 
-What happens on a show:
-
 | Situation | What the user sees |
 |---|---|
-| The ad is loaded | "Loading ad…" for about 1 second, then the ad. Your callback runs when it closes. |
-| It's still loading | "Loading ad…" while it finishes, for at most `loadTimeoutSeconds` (8). Then the ad, or your callback if it didn't come in time. An ad that arrives later is kept for the next show. |
+| The ad is loaded | "Loading ad…" for about a second, then the ad. Your callback runs when it closes. |
+| It's still loading | "Loading ad…" for at most `loadTimeoutSeconds` (8), then the ad, or your callback if it didn't come. |
 | The load failed, or the user is offline | Your callback runs at once. |
-| `counter = 2` and this is the 1st call | No ad; your callback runs at once. The 2nd, 4th, 6th… calls show an ad. |
-| `timerSeconds`, `maxPerSession`, the gap between ads, or a premium user | No ad; your callback runs at once. |
-
-`result` says what happened (`FullScreenResult.Dismissed` or `NotShown(reason)`), if you want to log it. You don't
-need it to continue.
+| `counter = 2` and this is the 1st call | No ad; your callback runs. The 2nd, 4th, 6th… calls show an ad. |
+| A limit (`timerSeconds`, `maxPerSession`, the gap between ads) or a premium user | No ad; your callback runs. |
 
 ### Rewarded
 
@@ -522,13 +515,10 @@ binding.extraLife.setOnClickListener {
 }
 ```
 
-To disable the button while no ad is ready, collect
-`CompanyAdMob.rewarded.availability(AppAds.ExtraLifeRewarded.rewardedPlacement())` ([Rewarded](REWARDED.md)).
-
 ### Rewarded interstitial
 
-Google requires an intro screen first: tell the user what they will get, with a way to say no. Show the ad only
-after they accept:
+Google requires an intro screen first, which offers the reward and lets the user say no. Show the ad after they
+accept:
 
 ```kotlin
 CompanyAdMob.rewardedInterstitial.show(this, AppAds.BonusRewardedInterstitial.rewardedInterstitialPlacement()) { result ->
@@ -538,20 +528,13 @@ CompanyAdMob.rewardedInterstitial.show(this, AppAds.BonusRewardedInterstitial.re
 
 ### App open
 
-It shows by itself when the user comes back to the app, never over the screens in `excludedActivities`. Load it
-once, when your main screen opens:
+It shows by itself when the user comes back to the app, never over `excludedActivities`. Load it once, when your
+main screen opens: `AdSlots.load(AppAds.AppOpenAd)`. With `loadAgain = true`, the next one loads after each show.
 
-```kotlin
-// MainActivity.onCreate
-AdSlots.load(AppAds.AppOpenAd)
-```
+### Banners and native ads: one view in the layout
 
-With `loadAgain = true` (as in `AppAds`), a new one loads after each show, ready for the next return. It waits 4
-minutes between two shows (`timerSeconds`).
-
-### Banner in a layout
-
-Put an `AdSlotView` in the XML with the ad's name. The size comes from the ad's `style`:
+Put an `AdSlotView` in the XML with the ad's name. It shows a banner or a native ad, whichever the ad is (Firebase
+can even swap them), in its style, with a shimmer while it loads:
 
 ```xml
 <com.company.admob.views.AdSlotView
@@ -561,146 +544,39 @@ Put an `AdSlotView` in the XML with the ad's name. The size comes from the ad's 
     app:company_admob_placement="HomeBanner" />
 ```
 
-That's all:
+(`xmlns:app="http://schemas.android.com/apk/res-auto"` on the layout's root.) That's all. It loads by itself, hides
+itself if no ad comes, never requests a second ad while it has one, and destroys its ad with the screen. To replace
+the ad with a new one: `binding.homeBanner.load(refresh = true)`. The current one stays until the new one arrives.
 
-- **Loading:** it loads by itself and shows a grey shimmer shaped like the ad until it arrives.
-- **No ad:** if the load fails, it hides itself (`GONE`).
-- **Cleanup:** it destroys the ad with the screen.
-- **One ad at a time:** it never asks for a second ad while it has one. Rotating the screen or coming back to it
-  keeps the same ad.
-
-Put the root layout's `xmlns:app="http://schemas.android.com/apk/res-auto"` in place for the `app:` attribute.
-
-**Refresh:** to replace the banner with a new one, call `load(refresh = true)`. The current banner stays on screen
-(no shimmer) until the new one has loaded; if the new one fails, the current one stays.
+A banner from code, into an empty `FrameLayout`:
 
 ```kotlin
-binding.refreshBanner.setOnClickListener { binding.homeBanner.load(refresh = true) }
+findViewById<FrameLayout>(R.id.banner_container).attachBanner(this, AppAds.DetailsBanner.bannerPlacement())
 ```
 
-### Banner from code
-
-Put an empty `FrameLayout` in the layout (`@+id/banner_container`) and attach the banner to it:
-
-```kotlin
-class DetailsActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_details)
-        // A banner added from code into an empty FrameLayout. It's destroyed with this screen.
-        findViewById<FrameLayout>(R.id.banner_container).attachBanner(this, AppAds.DetailsBanner.bannerPlacement())
-    }
-}
-```
-
-In a Fragment, pass `viewLifecycleOwner` instead of `this`.
-
-### Native ad in a layout
-
-The same `AdSlotView`, with a native ad's name. The layout comes from its `style`:
-
-```xml
-<com.company.admob.views.AdSlotView
-    android:id="@+id/home_native"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    app:company_admob_placement="HomeNative" />
-```
-
-Refresh works the same way: `binding.homeNative.load(refresh = true)`.
-
-`AdSlotView` also follows a format swap from Firebase: if you change `HomeBanner` to a native ad in the console, the
-same view shows a native ad, with no new release ([step 11](#swap-a-format)).
-
-### Native styles, colors and your own layouts
-
-A native ad's `style` picks its layout. The 11 built-in ones:
-
-| Firebase `"style"` | Layout |
-|---|---|
-| `small` | Icon, headline and button in one row |
-| `medium` | Header, body, media, store, price and button |
-| `large` | Media first, then everything else |
-| `small_button_bottom` | Icon, headline and body, button below. No media. |
-| `small_button_top` | Button on top, then icon, headline and body. No media. |
-| `small_button_end` | Icon, headline and body, button at the end of the row. No media. |
-| `large_button_bottom` | Icon, headline and body, media, button below |
-| `large_button_top` | Button on top, icon, headline and body, media |
-| `large_compact` | Like `large_button_bottom`, with shorter media |
-| `side_media_button_bottom` | Text beside the media, button below |
-| `side_media_button_top` | Button on top, text beside the media |
-
-**Colors and shapes.** Every color, size and shape is a resource you override by declaring one with the same name in
-your app. For example, a golden "Ad" badge and an orange button, in `res/values/ads_style.xml`:
-
-```xml
-<resources>
-    <color name="company_admob_native_attribution">#FFC107</color>
-    <color name="company_admob_native_attribution_text">#FFFFFF</color>
-    <color name="company_admob_native_cta">#FF6D00</color>
-    <color name="company_admob_native_cta_text">#FFFFFF</color>
-    <color name="company_admob_native_background">#FFFFFF</color>
-    <dimen name="company_admob_native_card_corner_radius">12dp</dimen>
-</resources>
-```
-
-Every resource you can override is listed in [Native: Styling](NATIVE.md#styling). You can also replace a whole shape:
-the card background is the drawable `company_admob_native_card`, the button `company_admob_native_cta_background`, and
-the badge `company_admob_native_attribution_background`.
-
-Sizes use `sdp` and text sizes `ssp` (`@dimen/_8sdp`, `@dimen/_12ssp`), so the ads scale with the screen like the rest
-of your app; your overrides can use them too, for example
-`<dimen name="company_admob_native_headline_text_size">@dimen/_11ssp</dimen>`.
-
-**Shimmer colors.** The loading shimmer (of native ads and banners) has three colors. Override them the same way,
-and in `res/values-night/` for dark mode:
-
-```xml
-<color name="company_admob_shimmer_card">#FFF3F0FF</color>      <!-- the whole ad area -->
-<color name="company_admob_shimmer_base">#FFE0D8FF</color>      <!-- the blocks -->
-<color name="company_admob_shimmer_highlight">#FFFFFFFF</color> <!-- the moving shine -->
-```
-
-**Your own layout.** Design any layout with ordinary views (no `NativeAdView` or `MediaView`: the plugin adds them).
-Give its views these IDs: `@id/company_admob_native_headline`, `_body`, `_cta` (write it as
-`<android.widget.Button>`), `_icon`, `_media` (an empty `FrameLayout`, at least 120dp tall) and `_attribution` (a
-`TextView` saying "Ad"). Then register it by name in `MyApp.onCreate`:
-
-```kotlin
-NativeTemplates.register("promo", R.layout.my_native_ad)
-```
-
-Use it by default for an ad (`HomeNative(AdProfile.native(layout = "promo"))`), or switch any native ad to it from
-Firebase: `{ "style": "promo" }`. Its shimmer is built from your layout automatically: the whole card shimmers, with a
-block over each view inside it. [Native: your own layout](NATIVE.md#your-own-layout-picked-by-name) has the details.
+(In a Fragment, pass `viewLifecycleOwner` instead of `this`.)
 
 ### Load banners and native ads before their screen
 
-Banners and native ads load by themselves when their view appears. To have them ready the moment a screen opens,
-load them earlier, for example from the previous screen, with the same `AdSlots.load` as full-screen ads:
+`AdSlots.load` works for banners and native ads too: load the next screen's ads early, and its views show them the
+moment it opens.
 
 ```kotlin
-// Home screen, onResume: the Details screen's ads, loaded now.
 AdSlots.load(AppAds.DetailsBanner)
 AdSlots.load(AppAds.HomeNative)
 ```
 
-Then show them as usual (an `AdSlotView` in the layout, `attachBanner`, a `NativeAdHolder`…):
-
 | When the view appears | What happens |
 |---|---|
 | The ad is loaded | It shows at once. No shimmer, no new request. |
-| The ad is still loading | The shimmer shows, then that same ad when it arrives. No second request. |
-| It wasn't loaded, or its load failed | The view loads it now, with the shimmer, as without `AdSlots.load`. |
+| It's still loading | The shimmer, then that same ad when it arrives. No second request. |
+| It wasn't loaded, or failed | The view loads it now, as it would without `AdSlots.load`. |
 
-A banner is loaded for a full-width banner (the screen's width); a banner view of another width loads its own. Each
-ad waits at most an hour. `AdSlots.load` does nothing for an ad already loaded or loading, so calling it on every
-`onResume` is fine.
+A banner loaded ahead is sized for the full screen width; a banner view of another width loads its own.
 
 ### Native ads in a RecyclerView
 
-Keep one `NativeAdHolder` per ad row in a ViewModel, and bind it to the row's container. Scrolling back shows the
-same ad; it never loads a new one:
+Keep one `NativeAdHolder` per ad row in the ViewModel, and bind it to the row's container:
 
 ```kotlin
 /** Keeps one native ad per ad row, across scrolling and rotation. */
@@ -716,42 +592,33 @@ class FeedViewModel : ViewModel() {
 }
 ```
 
-The ad row's layout is just a container:
-
-```xml
-<!-- A list row for a native ad: the ad is drawn inside this container. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/ad_container"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="8dp" />
-```
-
-and in the adapter's `onBindViewHolder`:
-
 ```kotlin
-// Binding again (scrolling back) shows the same ad; it never loads a new one.
+// In onBindViewHolder, for an ad row whose layout is an empty FrameLayout (R.id.ad_container):
 viewModel.adFor(position).bindTo(holder.itemView.findViewById<FrameLayout>(R.id.ad_container), owner)
 ```
 
-`owner` is the Activity, or `viewLifecycleOwner` in a Fragment. With `loadAgain = true` on `FeedNative`, the next ad
-starts loading as soon as one is shown, so the next ad row gets it faster.
+`owner` is the Activity, or `viewLifecycleOwner` in a Fragment. Scrolling back shows the same ad; it never reloads.
 
-### Remove ads (premium)
+### Native styles
 
-After a successful purchase:
+A native ad's `style` picks its layout. Change it in `AppAds`, or from Firebase with `"style"`:
 
-```kotlin
-Premium.setPremium(this, true) // saves it and calls CompanyAdMob.setAdFree(true)
-```
+| Style | Layout |
+|---|---|
+| `small_button_end` | Icon, "Ad" badge, headline and body, button at the end of the row. No media. |
+| `small_button_bottom` | Icon, badge, headline and body, full-width button below. No media. |
+| `large_button_bottom` (default) | Icon, badge, headline and body, then media, then a full-width button. |
+| `large_compact` | Like `large_button_bottom`, with a larger icon and shorter media. |
+| `media_start` | Media at the start; badge, headline, body and button beside it. |
 
-Every ad stops at once: banners and native ads hide, and full-screen shows call back without an ad. On the next
-launch, the splash lasts 3 seconds with no consent form and no ad.
+### Remove ads
 
-### Privacy options button
+After a purchase, `Premium.setPremium(this, true)`: every ad stops at once, and the next launch has a 3-second splash
+without consent or ads.
 
-When the user is in a region with consent, Google requires a way to change their choice later. Add a button (in
-Settings, say) that shows only when needed:
+### Privacy options
+
+Google requires a way to change consent later, where consent applies. A button that shows only then:
 
 ```kotlin
 binding.privacyOptions.setOnClickListener { CompanyAdMob.privacy.showPrivacyOptions(this) }
@@ -762,10 +629,183 @@ lifecycleScope.launch {
 }
 ```
 
-## 10. Your own Firebase values
+## 10. Colors
 
-Any other value you want to change from Firebase (a flag, a number, a text, a JSON object) goes in one `object`,
-with the value to use until Firebase sets one:
+**In the app.** One file, `res/values/ads_style.xml`. Each value replaces the plugin's value of the same name, in
+every template:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The ads' look in this app: each value replaces the plugin's value of the same name. -->
+<resources>
+    <color name="company_admob_native_attribution">#FFC107</color>
+    <color name="company_admob_native_attribution_text">#FFFFFF</color>
+    <color name="company_admob_native_cta">#FF6D00</color>
+    <color name="company_admob_native_cta_end">#FFA000</color>
+    <color name="company_admob_native_cta_text">#FFFFFF</color>
+    <color name="company_admob_shimmer_card">#FFF5F5F5</color>
+</resources>
+```
+
+| Name | What |
+|---|---|
+| `company_admob_native_cta`, `company_admob_native_cta_end` | The button: a gradient from the first to the second. Set only the first for a solid button. |
+| `company_admob_native_cta_text` | The button's text |
+| `company_admob_native_attribution`, `_attribution_text` | The "Ad" badge, and its text |
+| `company_admob_native_background`, `_stroke` | The card's fill (transparent) and border |
+| `company_admob_native_headline`, `_body` | The texts |
+| `company_admob_shimmer_card`, `_shimmer_base`, `_shimmer_highlight` | The loading shimmer: the ad area, its blocks, the moving shine |
+
+Dark mode: the same names in `res/values-night/ads_style.xml`. Sizes (text sizes, corners, the button's height…) are
+`dimen`s you override the same way, in `sdp` and `ssp` if you like: the full list is in
+[Native: Styling](NATIVE.md#styling).
+
+**From Firebase, without a release.** In a native ad's value (for that ad), or in `AdSettings` (for all of them):
+
+```json
+{
+  "ctaColors": ["#FF6D00", "#FFC107"],
+  "ctaTextColor": "#FFFFFF",
+  "attributionColor": "#FFC107",
+  "attributionTextColor": "#FFFFFF"
+}
+```
+
+`ctaColors` takes one color (a solid button) or two (a left-to-right gradient). Colors are `"#RRGGBB"` or
+`"#AARRGGBB"`. A field left out keeps the app's color; a wrong value is ignored.
+
+## 11. Your own native ad layout
+
+When no style fits, use your own layout. It's three small changes, and everything else (loading, the shimmer, the
+colors, Firebase, clicks and impressions) works with it as with a built-in style.
+
+**1. Write the layout,** for example `res/layout/ad_promo.xml`. Rules:
+
+- Ordinary views only: **no `NativeAdView`, no `MediaView`**. The plugin wraps your layout and adds the media itself.
+  (Converting an old layout: delete those two tags, keep what's inside, and turn the `MediaView` into a `FrameLayout`.)
+- Give the views the plugin fills these IDs, written `@id/…` (they're the plugin's; no `+`):
+
+| ID | View | |
+|---|---|---|
+| `company_admob_native_headline` | `TextView` | Required |
+| `company_admob_native_attribution` | `TextView` saying "Ad" | Required by Google |
+| `company_admob_native_body` | `TextView` | |
+| `company_admob_native_cta` | `android.widget.Button` | Write the full name, so a Material theme doesn't repaint it |
+| `company_admob_native_icon` | `ImageView` | |
+| `company_admob_native_media` | an empty `FrameLayout`, at least 120dp tall | The image or video goes inside |
+| `company_admob_native_advertiser`, `_stars` (`RatingBar`), `_price`, `_store` | | Optional extras |
+
+- Leave the top-right corner free (about 24dp): the SDK puts the AdChoices icon there.
+- Views an ad has no content for are hidden. Everything else (sizes, backgrounds, fonts) is up to you. Use the
+  plugin's colors (`@color/company_admob_native_cta_text`…) and drawables if you want Firebase colors and your
+  `ads_style.xml` to apply to it too.
+
+A complete example:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Your own native ad layout. Ordinary views only (no NativeAdView, no MediaView): the plugin adds those.
+    The views the plugin fills use its IDs: @id/company_admob_native_... Everything else is up to you.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/ad_promo_card"
+    android:orientation="vertical"
+    android:padding="@dimen/_8sdp">
+
+    <!-- The top-right corner stays free: the SDK puts the AdChoices icon there. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingEnd="24dp">
+
+        <ImageView
+            android:id="@id/company_admob_native_icon"
+            android:layout_width="@dimen/_36sdp"
+            android:layout_height="@dimen/_36sdp"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@id/company_admob_native_attribution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_6sdp"
+            android:background="@drawable/company_admob_native_attribution_background"
+            android:paddingHorizontal="@dimen/_4sdp"
+            android:text="Ad"
+            android:textColor="@color/company_admob_native_attribution_text"
+            android:textSize="@dimen/_8ssp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@id/company_admob_native_headline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_6sdp"
+            android:layout_weight="1"
+            android:maxLines="2"
+            android:textSize="@dimen/_12ssp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@id/company_admob_native_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_4sdp"
+        android:maxLines="2"
+        android:textSize="@dimen/_10ssp" />
+
+    <!-- The image or video goes in here. At least 120dp tall: the video minimum. -->
+    <FrameLayout
+        android:id="@id/company_admob_native_media"
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:layout_marginTop="@dimen/_6sdp" />
+
+    <!-- Written as android.widget.Button, so a Material theme keeps its background. -->
+    <android.widget.Button
+        android:id="@id/company_admob_native_cta"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_34sdp"
+        android:layout_marginTop="@dimen/_6sdp"
+        android:background="@drawable/company_admob_native_cta_background"
+        android:textAllCaps="false"
+        android:textColor="@color/company_admob_native_cta_text"
+        android:textSize="@dimen/_12ssp"
+        android:textStyle="bold" />
+</LinearLayout>
+```
+
+**2. Register it under a name,** one line in `MyApp.onCreate` (already in step 6):
+
+```kotlin
+NativeTemplates.register("promo", R.layout.ad_promo)
+```
+
+The name is yours: letters, digits and `_`, not one of the style names.
+
+**3. Use it,** in any of these ways:
+
+| To… | Do this |
+|---|---|
+| Show an ad in it by default | In `AppAds`: `PromoNative(AdProfile.native(layout = "promo"))`, then an `AdSlotView` with `app:company_admob_placement="PromoNative"`. |
+| Switch any native ad to it from Firebase | That ad's value: `{ "style": "promo" }`. Back with `{ "style": "large_button_bottom" }`. |
+| Use it in one view only | `<com.company.admob.views.AdNativeView app:company_admob_placement="HomeNative" app:company_admob_layout="@layout/ad_promo" … />` |
+
+Its loading shimmer is built from your layout automatically: the whole card shimmers, with a block over each view.
+
+To **use the same layout in another project**, copy the XML file (and any drawable it uses), and the `register` line.
+Nothing else.
+
+## 12. Your own Firebase values
+
+Anything else you want to change from Firebase (a flag, a number, a text, JSON) goes in one `object`, with the value
+to use until Firebase sets one:
 
 ```kotlin
 package com.example.myapp.ads
@@ -783,56 +823,27 @@ object AppConfig {
 }
 ```
 
-Read `.value` anywhere:
+Read `.value` anywhere: `if (AppConfig.showRateDialog.value) showRateDialog()`. It never waits. A missing or wrong
+value gives your default. More in [Remote configuration](REMOTE_CONFIG.md#your-apps-own-values).
 
-```kotlin
-binding.welcome.text = AppConfig.welcomeText.value
-if (level >= AppConfig.freeLevels.value) openPaywall()
-if (AppConfig.showRateDialog.value) showRateDialog()
-val chatEnabled = AppConfig.features.value.optBoolean("chat")
-```
+## 13. Firebase: the parameters and sample values
 
-- `.value` never waits. It's the value from the latest fetch: this launch's once it lands, before that the last
-  launch's, and your default on the very first launch.
-- A parameter missing from Firebase, or with a wrong value (text in a number), gives your default.
-- For a JSON object with a fixed shape, read it into your own class with `RemoteValue.custom`
-  ([Remote configuration](REMOTE_CONFIG.md#your-apps-own-values)).
+Each ad has one Remote Config parameter, named like its entry in `AppAds`, of type **JSON**, plus `AdSettings` for
+what they share. A value needs only the fields you change; the rest keep `AppAds`'s values.
 
-## 11. Firebase: the parameters and sample values
+**To add one:** Firebase console → **Remote Config** → **Add parameter**: the entry's name, data type **JSON**, the
+JSON as the default value → **Save**. When all are added, **Publish changes**. Users get them on their next launch.
 
-Each ad has one Remote Config parameter, named exactly like its entry in `AppAds`, of type **JSON**. One more,
-`AdSettings`, holds the shared settings. A parameter only needs the fields you want to change. The rest keep the
-values from `AppAds`.
+Replace each `ca-app-pub-XXXXXXXXXXXXXXXX/…` with your ad unit ID **of that format**, or remove `adUnitIds` to keep
+the IDs from `AppAds`.
 
-**To add a parameter:** Firebase console → **Remote Config** → **Add parameter** (or **Create configuration** the
-first time).
-
-1. **Parameter name:** the entry name, for example `LevelCompleteAd`.
-2. **Data type:** JSON.
-3. **Default value:** the JSON.
-4. **Save**, and when all are added, **Publish changes**.
-
-Users get the new values on their next launch. Debug builds, with `minimumFetchIntervalInSeconds = 0`, do too.
-Release builds may keep Firebase's cached values for up to 12 hours.
-
-Below is a complete value for each kind of ad. Replace each `ca-app-pub-XXXXXXXXXXXXXXXX/…` with your real ad unit
-ID of **that format**, or remove `adUnitIds` to keep the IDs from `AppAds`. An ID that isn't valid is skipped.
-
-### Splash ad (`SplashAd`)
+**Splash ad** (`SplashAd`):
 
 ```json
-{
-  "format": "interstitial",
-  "enabled": true,
-  "adUnitIds": ["ca-app-pub-XXXXXXXXXXXXXXXX/1111111111"],
-  "splashTimeoutSeconds": 8
-}
+{ "format": "interstitial", "enabled": true, "adUnitIds": ["ca-app-pub-XXXXXXXXXXXXXXXX/1111111111"], "splashTimeoutSeconds": 8 }
 ```
 
-`splashTimeoutSeconds` is how long the splash waits for this ad after the timer. The timer itself is `splashSeconds`
-in `AdSettings`. `"splash": true` can only be set in `AppAds`.
-
-### Interstitial (`LevelCompleteAd`)
+**Interstitial** (`LevelCompleteAd`):
 
 ```json
 {
@@ -849,7 +860,7 @@ in `AdSettings`. `"splash": true` can only be set in `AppAds`.
 }
 ```
 
-### Rewarded (`ExtraLifeRewarded`)
+**Rewarded** (`ExtraLifeRewarded`):
 
 ```json
 {
@@ -864,7 +875,7 @@ in `AdSettings`. `"splash": true` can only be set in `AppAds`.
 }
 ```
 
-### Rewarded interstitial (`BonusRewardedInterstitial`)
+**Rewarded interstitial** (`BonusRewardedInterstitial`):
 
 ```json
 {
@@ -874,14 +885,13 @@ in `AdSettings`. `"splash": true` can only be set in `AppAds`.
   "counter": 0,
   "timerSeconds": 0,
   "maxPerSession": 0,
-  "loadAgain": false,
   "loadTimeoutSeconds": 8,
   "showLoading": true,
   "loadingSeconds": 1
 }
 ```
 
-### App open (`AppOpenAd`)
+**App open** (`AppOpenAd`):
 
 ```json
 {
@@ -896,9 +906,8 @@ in `AdSettings`. `"splash": true` can only be set in `AppAds`.
 }
 ```
 
-`excludedActivities` can only be set in `AppAds`.
-
-### Banner (`HomeBanner`, `DetailsBanner`)
+**Banner** (`HomeBanner`, `DetailsBanner`). `style`: `adaptive`, `collapsible_bottom`, `collapsible_top`,
+`rectangle`, `standard` or `inline_adaptive`.
 
 ```json
 {
@@ -910,27 +919,25 @@ in `AdSettings`. `"splash": true` can only be set in `AppAds`.
 }
 ```
 
-`style`: `adaptive`, `collapsible_bottom`, `collapsible_top`, `rectangle` (300×250), `standard` (320×50) or
-`inline_adaptive`.
-
-### Native (`HomeNative`, `FeedNative`)
+**Native** (`HomeNative`, `FeedNative`, `PromoNative`). `style`: `small_button_end`, `small_button_bottom`,
+`large_button_bottom`, `large_compact`, `media_start`, or your own layout's name.
 
 ```json
 {
   "format": "native",
   "enabled": true,
   "adUnitIds": ["ca-app-pub-XXXXXXXXXXXXXXXX/8888888888"],
-  "style": "medium",
+  "style": "large_button_bottom",
   "loadAgain": false,
-  "showLoading": true
+  "showLoading": true,
+  "ctaColors": ["#FF6D00", "#FFC107"],
+  "ctaTextColor": "#FFFFFF",
+  "attributionColor": "#FFC107",
+  "attributionTextColor": "#FFFFFF"
 }
 ```
 
-`style`: any of the 11 styles (`small`, `medium`, `large`, `small_button_bottom`, `small_button_top`,
-`small_button_end`, `large_button_bottom`, `large_button_top`, `large_compact`, `side_media_button_bottom`,
-`side_media_button_top`), or the name of your own registered layout.
-
-### Settings for every ad (`AdSettings`)
+**Every ad** (`AdSettings`):
 
 ```json
 {
@@ -943,38 +950,23 @@ in `AdSettings`. `"splash": true` can only be set in `AppAds`.
   "consentTimeoutSeconds": 8,
   "loadTimeoutSeconds": 8,
   "showLoading": true,
-  "loadingSeconds": 1
+  "loadingSeconds": 1,
+  "ctaColors": ["#FF6D00", "#FFC107"],
+  "attributionColor": "#FFC107"
 }
 ```
 
-`0` means "no limit" for `maxInterstitialsPerSession`. An ad's own `loadTimeoutSeconds`, `showLoading` and
-`loadingSeconds` override the ones here.
+**Your own values** (step 12) are ordinary parameters of their own type:
 
-### Your own values (step 10)
-
-These are ordinary parameters with the matching data type, not JSON objects:
-
-| Parameter name | Data type | Example value |
+| Parameter | Data type | Example |
 |---|---|---|
 | `show_rate_dialog` | Boolean | `true` |
 | `free_levels` | Number | `10` |
 | `coin_price` | Number | `1.49` |
 | `welcome_text` | String | `Hello again!` |
-| `features` | JSON | `{"chat": true, "limit": 3}` |
+| `features` | JSON | `{"chat": true}` |
 
-### Swap a format
-
-An ad can change format from Firebase within these pairs: interstitial ↔ app open, banner ↔ native. Rewarded ads
-never change. Give ad unit IDs **of the new format** in the same value, because an AdMob ad unit serves one format
-only:
-
-```json
-{ "format": "native", "style": "large", "adUnitIds": ["ca-app-pub-XXXXXXXXXXXXXXXX/9999999999"] }
-```
-
-`AdSlotView` and `AdSlots.showFullScreen` follow the swap. Remove `format` to swap back.
-
-### Quick changes
+**Quick changes:**
 
 | To… | Parameter | Value |
 |---|---|---|
@@ -982,42 +974,38 @@ only:
 | Turn every ad off | `AdSettings` | `{ "adsEnabled": false }` |
 | Interstitial on every 3rd tap | the ad's | `{ "counter": 3 }` |
 | At least 60 s between two shows of an ad | the ad's | `{ "timerSeconds": 60 }` |
-| At least 30 s between any two full-screen ads | `AdSettings` | `{ "minSecondsBetweenFullScreenAds": 30 }` |
 | Use two ad units in turn | the ad's | `{ "adUnitIds": ["ca-app-pub-…/111", "ca-app-pub-…/222"] }` |
-| Collapsible banner | the banner's | `{ "style": "collapsible_bottom" }` |
-| Splash of 13 seconds | `AdSettings` | `{ "splashSeconds": 13 }` |
-| Wait at most 5 s for a full-screen ad | `AdSettings` | `{ "loadTimeoutSeconds": 5 }` |
-| No "Loading ad…" screen before one ad, or no shimmer on one banner | the ad's | `{ "showLoading": false }` |
-| Load the next ad right after each show | the ad's | `{ "loadAgain": true }` |
+| Another native layout | the native ad's | `{ "style": "media_start" }` (or your own layout's name) |
+| An orange-to-amber button | a native ad's, or `AdSettings` | `{ "ctaColors": ["#FF6D00", "#FFC107"] }` |
+| A golden "Ad" badge | a native ad's, or `AdSettings` | `{ "attributionColor": "#FFC107" }` |
+| A native ad instead of a banner | the banner's | `{ "format": "native", "style": "large_button_bottom", "adUnitIds": ["<a native ad unit>"] }` |
+| A 13-second splash | `AdSettings` | `{ "splashSeconds": 13 }` |
+| No shimmer or "Loading ad…" for one ad | the ad's | `{ "showLoading": false }` |
 
-A value with a mistake is ignored (with a warning in the log), and the ad keeps working with its previous settings.
-Every field is described in [Ad profiles](AD_PROFILES.md#the-json).
+A value with a mistake is ignored (with a warning in the log), and the ad keeps its previous settings. Every field is
+in [Ad profiles](AD_PROFILES.md#the-json).
 
-## 12. Test it
+## 14. Test it
 
-Run a debug build on a phone or an emulator:
+A debug build on a phone or an emulator:
 
-- [ ] Logcat (filter `CompanyAdMob`) shows `Firebase parameter <Name>: {…}` for each ad, and later `Remote Config
-  fetched`.
-- [ ] The splash shows the consent form (first launch), then the progress bar, then a test ad.
-- [ ] Every ad is labelled "Test Ad".
-- [ ] Full-screen ads show "Loading ad…" first. Banners and native ads show a shimmer while they load.
-- [ ] Changing a parameter in Firebase (for example `{ "enabled": false }` on `HomeBanner`) and relaunching twice
-  changes the app. The first launch fetches, the second uses the value, or the first if the fetch is quick.
-- [ ] Airplane mode: the splash lasts 3 seconds and the app works without ads.
+- [ ] Logcat (`CompanyAdMob`): `Firebase parameter <Name>: {…}` per ad, then `Remote Config fetched`.
+- [ ] The consent form (first launch), the progress bar, a test ad, then your main screen.
+- [ ] Every ad is labelled "Test Ad". Full-screen ads show "Loading ad…" first; banners and native ads, a shimmer.
+- [ ] Your `ads_style.xml` colors show on the native ads, and your own layout shows where you use it.
+- [ ] A Firebase change (for example `{ "style": "media_start" }` on a native ad) shows after one or two relaunches.
+- [ ] In airplane mode, the splash lasts 3 seconds and the app works without ads.
 
-## 13. Before release
+## 15. Before release
 
-- [ ] Every entry in `AppAds` has its real ad unit IDs, in `AppAds` or in Firebase. A release build logs a warning
-  for each ad still on test ads.
-- [ ] The manifest has **your** AdMob app ID, not Google's sample one.
-- [ ] A GDPR message (and a US states message if you need one) is published in AdMob → Privacy & messaging.
+- [ ] Every ad in `AppAds` has its real ad unit IDs, in `AppAds` or in Firebase.
+- [ ] The manifest has **your** AdMob app ID.
+- [ ] A GDPR message is published in AdMob → Privacy & messaging.
 - [ ] `app-ads.txt` is set up in AdMob.
-- [ ] Install a release build: it shows real ads (a new ad unit can take a few hours to serve). Don't click your own
-  ads.
+- [ ] A release build shows real ads (a new ad unit can take a few hours). Don't click your own ads.
 - [ ] A premium user sees no ad and a 3-second splash.
 
-Problems? See [Troubleshooting](TROUBLESHOOTING.md). Each part in depth: [Ad profiles](AD_PROFILES.md),
-[Splash screen](SPLASH.md), [Consent](CONSENT.md), [Remote configuration](REMOTE_CONFIG.md), [XML and Views](XML.md).
+Problems? See [Troubleshooting](TROUBLESHOOTING.md). In depth: [Ad profiles](AD_PROFILES.md),
+[Native ads](NATIVE.md), [Splash screen](SPLASH.md), [Consent](CONSENT.md), [Remote configuration](REMOTE_CONFIG.md).
 
 Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29

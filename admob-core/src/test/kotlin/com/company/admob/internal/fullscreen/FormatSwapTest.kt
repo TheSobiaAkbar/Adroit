@@ -49,10 +49,10 @@ class FormatSwapTest {
         assertEquals(emptyList<String>(), inter.issues)
         assertEquals(AdFormat.APP_OPEN, inter.overrides.placements.getValue("Inter").format)
 
-        val banner = parse("Banner", """{"format": "native", "style": "large"}""")
+        val banner = parse("Banner", """{"format": "native", "style": "large_compact"}""")
         assertEquals(emptyList<String>(), banner.issues)
         assertEquals(AdFormat.NATIVE, banner.overrides.placements.getValue("Banner").format)
-        assertEquals(NativeStyle.LARGE, banner.overrides.placements.getValue("Banner").nativeStyle)
+        assertEquals(NativeStyle.LARGE_COMPACT, banner.overrides.placements.getValue("Banner").nativeStyle)
 
         val native = parse("Native", """{"format": "banner", "style": "collapsible_bottom"}""")
         assertEquals(emptyList<String>(), native.issues)

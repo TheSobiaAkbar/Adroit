@@ -1,5 +1,8 @@
 package com.company.admob.internal.native
 
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +13,7 @@ import android.widget.TextView
 import com.company.admob.NativeAdAssets
 import com.company.admob.NativeAdLayout
 import com.company.admob.NativeAdRenderer
+import com.company.admob.internal.config.AdBehavior
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.port.NativeAssetViews
 import com.company.admob.internal.port.NativeRenderPort
@@ -20,7 +24,12 @@ import java.util.Locale
  * view, its asset views are found by ID and filled, a media view goes into the media container, and the views are
  * registered with the SDK through [port]. Hosts never reference Google classes. Main thread only.
  */
-internal class NativeAdBinder(private val port: NativeRenderPort, private val log: AdLog) {
+internal class NativeAdBinder(
+    private val port: NativeRenderPort,
+    private val log: AdLog,
+    /** An ad's resolved look ([AdBehavior] colors from its profile, Firebase or settings), by placement key. */
+    private val behaviorOf: (String) -> AdBehavior? = { null },
+) {
     /** (layout, view ID) pairs already warned about, so a missing optional view is logged once. */
     private val warnedMissing = mutableSetOf<Pair<Int, Int>>()
 
@@ -59,6 +68,7 @@ internal class NativeAdBinder(private val port: NativeRenderPort, private val lo
             }
         }
         port.register(adView, handle.ad, views, mediaView)
+        behaviorOf(handle.placement.key)?.takeIf { it.setsNativeColors }?.let { applyColors(adView, layout, it) }
         renderer?.onBind(adView, assets)
 
         container.removeAllViews()
@@ -71,9 +81,49 @@ internal class NativeAdBinder(private val port: NativeRenderPort, private val lo
         if (id == 0) return null
         val view = adView.findViewById<View>(id)
         if (view == null && warnedMissing.add(layout.layoutRes to id)) {
-            log.w { "Native ad layout ${resourceName(adView, layout.layoutRes)} has no view ${resourceName(adView, id)}" }
+            // Debug, not a warning: optional views are optional, and a layout registered by resource maps every
+            // standard ID whether it uses it or not.
+            log.d { "Native ad layout ${resourceName(adView, layout.layoutRes)} has no view ${resourceName(adView, id)}; skipped" }
         }
         return view
+    }
+
+    /**
+     * The colors a Firebase value (or the settings) gives the call to action and the "Ad" badge. A background that's
+     * a shape (or holds one, like a ripple) keeps its shape and corners, with the new color or gradient; any other
+     * background is replaced by a rounded one. The app's renderer runs after this, so it can still change them.
+     */
+    private fun applyColors(adView: ViewGroup, layout: NativeAdLayout, look: AdBehavior) {
+        fun find(id: Int): View? = if (id == 0) null else adView.findViewById(id)
+        find(layout.callToActionId)?.let { cta ->
+            look.ctaColors?.let { paint(cta, it) }
+            look.ctaTextColor?.let { (cta as? TextView)?.setTextColor(it) }
+        }
+        find(layout.attributionId)?.let { badge ->
+            look.attributionColor?.let { paint(badge, listOf(it)) }
+            look.attributionTextColor?.let { (badge as? TextView)?.setTextColor(it) }
+        }
+    }
+
+    /** [colors]: one color fills [view]'s background; two make a left-to-right gradient. */
+    private fun paint(view: View, colors: List<Int>) {
+        val fill = if (colors.size >= 2) intArrayOf(colors[0], colors[1]) else intArrayOf(colors[0], colors[0])
+        val shape = shapeIn(view.background?.mutate())
+        if (shape != null) {
+            shape.orientation = GradientDrawable.Orientation.LEFT_RIGHT
+            shape.colors = fill
+            return
+        }
+        view.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, fill).apply {
+            cornerRadius = FALLBACK_CORNER_DP * view.resources.displayMetrics.density
+        }
+    }
+
+    /** The shape inside [drawable]: itself, or the first one among a ripple's or layer list's layers. */
+    private fun shapeIn(drawable: Drawable?): GradientDrawable? = when (drawable) {
+        is GradientDrawable -> drawable
+        is LayerDrawable -> (0 until drawable.numberOfLayers).firstNotNullOfOrNull { shapeIn(drawable.getDrawable(it)) }
+        else -> null
     }
 
     private fun setText(view: View, text: String?, hideWhenNull: Boolean = true) {
@@ -106,4 +156,9 @@ internal class NativeAdBinder(private val port: NativeRenderPort, private val lo
 
     private fun resourceName(view: View, id: Int): String =
         runCatching { view.resources.getResourceName(id) }.getOrDefault("0x" + Integer.toHexString(id))
+
+    private companion object {
+        /** The corners of a background the colors replace, when the view's own had no shape to keep. */
+        const val FALLBACK_CORNER_DP = 6f
+    }
 }

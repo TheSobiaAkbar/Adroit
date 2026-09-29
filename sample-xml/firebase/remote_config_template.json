@@ -58,14 +58,14 @@
     },
     "FeedNative": {
       "defaultValue": {
-        "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"small\",\"loadAgain\":true}"
+        "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"small_button_end\",\"loadAgain\":true}"
       },
       "valueType": "JSON",
       "description": "Ad FeedNative (docs\/AD_PROFILES.md)"
     },
     "ArticleNative": {
       "defaultValue": {
-        "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"large\",\"loadAgain\":false}"
+        "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"large_compact\",\"loadAgain\":false}"
       },
       "valueType": "JSON",
       "description": "Ad ArticleNative (docs\/AD_PROFILES.md)"

@@ -135,7 +135,7 @@ internal class FakeNativeApi : NativeApi {
     var failWith: AdError? = null
 
     /** What `style()` reports: the template the helpers pick when the code passes no layout. */
-    var style: NativeStyle = NativeStyle.MEDIUM
+    var style: NativeStyle = NativeStyle.LARGE_BUTTON_BOTTOM
     val handles = mutableListOf<FakeNativeHandle>()
     val renders = mutableListOf<Render>()
     var loadCount = 0
