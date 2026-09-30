@@ -1,6 +1,6 @@
 [versions]
 # Build toolchain
-agp = "9.1.1"
+agp = "9.4.1"
 kotlin = "2.4.20"
 compileSdk = "37"
 minSdk = "24"
