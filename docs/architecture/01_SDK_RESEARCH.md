@@ -3,7 +3,7 @@
 **Research date:** 2026-09-25
 **Method:** Every fact below comes from official Google developer documentation or Google's Maven repository, fetched on the research date. Nothing here is from memory. Google changes these SDKs often, so re-check this page before each GMA upgrade (see `RELEASE.md` → "Google SDK upgrade checklist").
 
-> **Policy statement.** CompanyAdMob follows Google's documented requirements as of 2026-09-25. The host application is still responsible for its own AdMob account settings, Privacy & messaging configuration, Play Console data-safety disclosures, and how the product uses ads. This library does not guarantee AdMob or Google Play policy compliance.
+> **Policy statement.** Adroit follows Google's documented requirements as of 2026-09-25. The host application is still responsible for its own AdMob account settings, Privacy & messaging configuration, Play Console data-safety disclosures, and how the product uses ads. This library does not guarantee AdMob or Google Play policy compliance.
 
 ---
 
@@ -123,7 +123,7 @@ Related:
 
 ## 1.8 Decision: which SDK
 
-**Decision: build CompanyAdMob on the GMA Next-Gen SDK (`ads-mobile-sdk` 1.x) only. Don't ship a legacy adapter in v1.**
+**Decision: build Adroit on the GMA Next-Gen SDK (`ads-mobile-sdk` 1.x) only. Don't ship a legacy adapter in v1.**
 
 Why:
 1. **Timeline (F1, F3, F4).** Legacy is in maintenance mode. A library built on it today would need a forced migration before 2027-06-30, and every app would have to be on the new version before 2028-06-30. Next-Gen v1 is supported into 2028 and has a predictable yearly major-version cadence.
@@ -135,8 +135,8 @@ Accepted risks, which each need an explicit mitigation:
 
 | Risk | Mitigation |
 |---|---|
-| A host app, or another SDK in it, already pulls in `play-services-ads`, causing duplicate classes | `MEDIATION.md` and `TROUBLESHOOTING.md` document the required global exclusion. `sample-mixed` shows it. |
-| A mediation platform the company uses isn't Next-Gen compatible (F7) | Check before adopting. The adapter seam allows a legacy adapter later. Record this as an open question for the business. |
+| A host app, or another SDK in it, already pulls in `play-services-ads`, causing duplicate classes | `MEDIATION.md` and `TROUBLESHOOTING.md` document the required global exclusion. |
+| A mediation platform the app uses isn't Next-Gen compatible (F7) | Check before adopting. The adapter seam allows a legacy adapter later. Record this as an open question for the business. |
 | Callbacks arrive on background threads | The adapter marshals **every** callback to the main thread before it reaches engine code (see Architecture §Concurrency). |
 | The SDK's own preloader is still beta | The library uses the **single-load APIs with its own cache**. The Google preloader is noted as a future optimisation behind the same internal interface. |
 | App ID lives in two places | The library reads the manifest meta-data, which UMP requires anyway, and uses it as the single source of truth. If `AdMobConfig` also sets it, the two must match. |

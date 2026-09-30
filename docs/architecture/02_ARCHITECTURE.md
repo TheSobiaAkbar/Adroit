@@ -1,9 +1,9 @@
-# Part 2: CompanyAdMob architecture
+# Part 2: Adroit architecture
 
 Status: **Approved design baseline, v0.1 (2026-09-25).** Changes to this document need an ADR entry in §32.
 Research that backs this design: [01_SDK_RESEARCH.md](01_SDK_RESEARCH.md). Public API detail: [03_PUBLIC_API.md](03_PUBLIC_API.md).
 
-Naming: `CompanyAdMob`, package `com.company.admob`, and Maven group `com.company` are **placeholders**. §20.4 describes the one-time rename.
+Naming: `Adroit`, package `io.github.thesobiaakbar.adroit`, Maven group `io.github.thesobiaakbar` (see `NAMING.md`).
 
 Priority order for every decision: **correctness > maintainability > API stability > reliability > simplicity > convenience.**
 
@@ -11,7 +11,7 @@ Priority order for every decision: **correctness > maintainability > API stabili
 
 ## 1. Goals
 
-1. One reusable Android library that any company app can integrate in under an hour, whether it's XML, Compose, mixed, Hilt, or non-Hilt.
+1. One reusable Android library that any app can integrate in under an hour, whether it's XML, Compose, mixed, Hilt, or non-Hilt.
 2. A small, stable, Kotlin-first public API with **no Google SDK types**, except behind an explicit opt-in escape hatch.
 3. Privacy first: no ad request is ever made before UMP consent handling is complete and `canRequestAds()` is true.
 4. Failure first: ads never block the host app. Every show call ends with exactly one deterministic result.
@@ -34,16 +34,16 @@ Priority order for every decision: **correctness > maintainability > API stabili
 
 | Requirement | Where it's satisfied |
 |---|---|
-| XML, Compose, legacy, and modern apps | `admob-views`, `admob-compose`, core API works without either (§7) |
-| Hilt / no Hilt | `AdsClient` interface plus the `CompanyAdMob` facade. No DI framework dependency (§9) |
-| Firebase optional | `AdConfigProvider` and `AdEventListener` interfaces. Optional `admob-firebase` module (§21–22) |
+| XML, Compose, legacy, and modern apps | `adroit-views`, `adroit-compose`, core API works without either (§7) |
+| Hilt / no Hilt | `AdsClient` interface plus the `Adroit` facade. No DI framework dependency (§9) |
+| Firebase optional | `AdConfigProvider` and `AdEventListener` interfaces. Optional `adroit-firebase` module (§21–22) |
 | Multiple apps, multiple environments | `AdMobConfig` DSL, `AdEnvironment`, placement registry (§20) |
 | Consent / UMP | `ConsentCoordinator` (§11, §30) |
 | Lifecycle | `ActivityTracker`, `FullScreenCoordinator`, `AppOpenController`, lifecycle-bound banner and native handles (§12–19) |
 | Preload / cache / expiry / retry | `FullScreenAdEngine` + `AdCache` + `RetryPolicy` (§12, §25) |
 | Frequency / cooldown | `FrequencyGate` (§20.6) |
 | Analytics / logging / diagnostics | `AdEvent` stream, `AdEventListener`, `AdLogger`, `AdDiagnostics` (§22–23) |
-| API stability | explicit API mode, `apiCheck` (BCV dump engine), `@ExperimentalCompanyAdMobApi`, `@GoogleSdkEscapeHatch` (§31) |
+| API stability | explicit API mode, `apiCheck` (BCV dump engine), `@ExperimentalAdroitApi`, `@GoogleSdkEscapeHatch` (§31) |
 
 ## 4. SDK research (summary)
 
@@ -55,8 +55,8 @@ See 01. The key facts:
 
 ## 5. SDK version decision
 
-- `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.4.0`, pinned in `gradle/libs.versions.toml`. It's declared as an **`implementation`** dependency of `admob-core` (never `api`). It still ends up on the consumer's runtime classpath, which it must, but its classes aren't on the consumer's compile classpath. That keeps Google types from leaking into host code by accident.
-- UMP comes in transitively through Next-Gen. `admob-core` also declares `com.google.android.ump:user-messaging-platform:4.0.0` directly, because the library calls its API and relying on another artifact's transitive dependency for a direct call would be fragile.
+- `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.4.0`, pinned in `gradle/libs.versions.toml`. It's declared as an **`implementation`** dependency of `adroit-core` (never `api`). It still ends up on the consumer's runtime classpath, which it must, but its classes aren't on the consumer's compile classpath. That keeps Google types from leaking into host code by accident.
+- UMP comes in transitively through Next-Gen. `adroit-core` also declares `com.google.android.ump:user-messaging-platform:4.0.0` directly, because the library calls its API and relying on another artifact's transitive dependency for a direct call would be fragile.
 - Toolchain (verified in Prompt 01): AGP 9.1.1 with built-in Kotlin. The Kotlin Gradle plugin is pinned to 2.4.20 through `build-logic`, overriding AGP's bundled 2.2.10. compileSdk 37 (installed, and required by the samples' `androidx.core` 1.19). **Library minSdk 24**, which Next-Gen requires. The library itself has **no targetSdk**; samples target 36. **JVM target 11**, the lowest Next-Gen supports, which maximises host compatibility and avoids the "cannot inline JVM 17 bytecode into 11" error in older hosts. **`languageVersion`/`apiVersion` = 2.2** and **`coreLibrariesVersion` = 2.2.0** (ADR-010). Kotlin 2.4 deprecates language version 2.1, and Kotlin compilers read metadata one version ahead, so hosts on Kotlin 2.1+ can still consume the library. Library dependency versions stay conservative because they become consumer minimums: for example, coroutines 1.10.2 (built with Kotlin 2.1), not 1.11.0 (built with 2.2.20).
 
 ## 6. Next-Gen SDK decision
@@ -69,30 +69,29 @@ See 01. The key facts:
 ## 7. Module architecture
 
 ```
-AdsPlugin/
+Adroit/
 ├── build-logic/                    # included build: convention plugins (library, compose, publishing)
-├── admob-core/        → com.company:admob-core         (package com.company.admob)
-├── admob-views/       → com.company:admob-views        (package com.company.admob.views)
-├── admob-compose/     → com.company:admob-compose      (package com.company.admob.compose)
-├── admob-testing/     → com.company:admob-testing      (package com.company.admob.testing)
-├── admob-firebase/    → com.company:admob-firebase     (optional, package com.company.admob.firebase)
+├── adroit-core/        → io.github.thesobiaakbar:adroit-core         (package io.github.thesobiaakbar.adroit)
+├── adroit-views/       → io.github.thesobiaakbar:adroit-views        (package io.github.thesobiaakbar.adroit.views)
+├── adroit-compose/     → io.github.thesobiaakbar:adroit-compose      (package io.github.thesobiaakbar.adroit.compose)
+├── adroit-testing/     → io.github.thesobiaakbar:adroit-testing      (package io.github.thesobiaakbar.adroit.testing)
+├── adroit-firebase/    → io.github.thesobiaakbar:adroit-firebase     (optional, package io.github.thesobiaakbar.adroit.firebase)
 ├── sample-xml/        (existing :app, renamed): Activity + Fragment + ViewBinding + AppCompat
 ├── sample-compose/    sample-xml's app in Compose: splash Activity + Navigation Compose destinations
-├── sample-mixed/      the same app with XML and Compose screens side by side, plus a mediation-exclusion demo
 └── docs/
 ```
 
 | Module | Contains | Deps (runtime) | Why it's separate |
 |---|---|---|---|
-| **admob-core** | Public facade and API interfaces, config DSL, domain models (state, events, errors, placements), consent coordinator, init state machine, full-screen engine, app-open controller, banner controller (View-based, framework only), native loader and view binder, internal Google adapter, internal UMP adapter | `ads-mobile-sdk`, `user-messaging-platform`, `androidx.lifecycle:lifecycle-process` + `lifecycle-runtime`, `kotlinx-coroutines-android` (already transitive through Next-Gen), `androidx.annotation` | The only module that touches Google. No Compose, AppCompat, Material, Fragment, or layout resources. |
-| **admob-views** | `AdBannerView` (XML-inflatable), `attachBanner(...)` lifecycle helpers, `AdNativeView` + default native templates (`company_admob_native_small/medium/large.xml`), `NativeAdHolder` for ViewModels | core, `lifecycle-runtime` | Resources and XML attrs stay out of core. Fragment support comes through `LifecycleOwner` (`viewLifecycleOwner`), so there's **no `androidx.fragment` dependency**. |
-| **admob-compose** | `AdBanner()`, `AdNative()`, `rememberNativeAd()`, `rememberAdAvailability()`, `rememberFullScreenAdLauncher()` | core, views (templates), Compose `runtime`/`ui`/`foundation`, `lifecycle-runtime-compose`, `lifecycle-viewmodel-compose` | Compose stays optional. No Material or Material3. |
-| **admob-testing** | `FakeAdsClient` implementing the public `AdsClient` interface, scripted results, event recording | core | Lets host apps unit-test ViewModels without Google. |
-| **admob-firebase** (optional, last) | `FirebaseRemoteConfigProvider : AdConfigProvider`, `FirebaseAnalyticsEventListener : AdEventListener` | core, Firebase BoM (`config`, `analytics`) | Keeps Firebase out of core. Built only if the company uses Firebase. |
+| **adroit-core** | Public facade and API interfaces, config DSL, domain models (state, events, errors, placements), consent coordinator, init state machine, full-screen engine, app-open controller, banner controller (View-based, framework only), native loader and view binder, internal Google adapter, internal UMP adapter | `ads-mobile-sdk`, `user-messaging-platform`, `androidx.lifecycle:lifecycle-process` + `lifecycle-runtime`, `kotlinx-coroutines-android` (already transitive through Next-Gen), `androidx.annotation` | The only module that touches Google. No Compose, AppCompat, Material, Fragment, or layout resources. |
+| **adroit-views** | `AdBannerView` (XML-inflatable), `attachBanner(...)` lifecycle helpers, `AdNativeView` + default native templates (`adroit_native_small/medium/large.xml`), `NativeAdHolder` for ViewModels | core, `lifecycle-runtime` | Resources and XML attrs stay out of core. Fragment support comes through `LifecycleOwner` (`viewLifecycleOwner`), so there's **no `androidx.fragment` dependency**. |
+| **adroit-compose** | `AdBanner()`, `AdNative()`, `rememberNativeAd()`, `rememberAdAvailability()`, `rememberFullScreenAdLauncher()` | core, views (templates), Compose `runtime`/`ui`/`foundation`, `lifecycle-runtime-compose`, `lifecycle-viewmodel-compose` | Compose stays optional. No Material or Material3. |
+| **adroit-testing** | `FakeAdsClient` implementing the public `AdsClient` interface, scripted results, event recording | core | Lets host apps unit-test ViewModels without Google. |
+| **adroit-firebase** (optional, last) | `FirebaseRemoteConfigProvider : AdConfigProvider`, `FirebaseAnalyticsEventListener : AdEventListener` | core, Firebase BoM (`config`, `analytics`) | Keeps Firebase out of core. Built only if the company uses Firebase. |
 
 **Modules we decided not to create:**
 - **`admob-ump`**: consent is mandatory for correct ad requests, Next-Gen already pulls in UMP, and splitting it would force the consent interface to be public.
-- **`admob-google` adapter module**: as a separate artifact, the adapter interfaces would have to be public, which widens the API. The adapter lives in `com.company.admob.internal.google`, behind internal interfaces that core tests fake.
+- **`admob-google` adapter module**: as a separate artifact, the adapter interfaces would have to be public, which widens the API. The adapter lives in `io.github.thesobiaakbar.adroit.internal.google`, behind internal interfaces that core tests fake.
 - **Per-network mediation modules**: adapters are one Gradle line in the host, so they're documented instead.
 
 ## 8. Dependency graph
@@ -102,11 +101,11 @@ graph TD
   subgraph Host app
     APP[app]
   end
-  APP --> CORE[admob-core]
-  APP -.optional.-> VIEWS[admob-views]
-  APP -.optional.-> COMPOSE[admob-compose]
-  APP -.optional.-> FB[admob-firebase]
-  APP -.testImplementation.-> TESTING[admob-testing]
+  APP --> CORE[adroit-core]
+  APP -.optional.-> VIEWS[adroit-views]
+  APP -.optional.-> COMPOSE[adroit-compose]
+  APP -.optional.-> FB[adroit-firebase]
+  APP -.testImplementation.-> TESTING[adroit-testing]
   VIEWS --> CORE
   COMPOSE --> CORE
   COMPOSE --> VIEWS
@@ -125,7 +124,7 @@ Forbidden edges, enforced in Prompt 01 with a Gradle check task and again in the
 
 ```mermaid
 graph TD
-  API["Public API<br/>CompanyAdMob facade · AdsClient · *Api interfaces · config DSL · models"]
+  API["Public API<br/>Adroit facade · AdsClient · *Api interfaces · config DSL · models"]
   ENG["Engines (internal, pure Kotlin, main-thread confined)<br/>InitCoordinator · ConsentCoordinator · FullScreenAdEngine · AppOpenController · BannerController · NativeAdLoader · FrequencyGate · RetryScheduler · EventBus · Diagnostics"]
   PORTS["Internal ports (interfaces)<br/>AdsSdk · ConsentSdk · ActivityTracker · AppForegroundSource · Clock · KeyValueStore"]
   GOOGLE["internal.google adapter<br/>NextGenAdsSdk · UmpConsentSdk · ErrorMapper · ResponseInfoMapper"]
@@ -144,23 +143,23 @@ graph TD
 | `ActivityTracker` | Know the resumed Activity without leaking it | `LifecycleActivityTracker` (ActivityLifecycleCallbacks) | fake |
 | `AppForegroundSource` | App-open trigger | `ProcessLifecycleForegroundSource` | fake emitting events |
 | `Clock` | Expiry, cooldown, and backoff testable with virtual time | `SystemClock.elapsedRealtime` | `FakeClock` |
-| `KeyValueStore` | Persist the **launch count only**, for the app-open first-launch rule | SharedPreferences `company_admob_state` | in-memory |
+| `KeyValueStore` | Persist the **launch count only**, for the app-open first-launch rule | SharedPreferences `adroit_state` | in-memory |
 
 The public interfaces `AdLogger`, `AdEventListener`, and `AdConfigProvider` are also seams, but hosts implement them.
 
-**Composition root:** `internal class AdsRuntime(config, deps)` builds the object graph by hand (no DI framework). `CompanyAdMob` holds one `AdsRuntime`. Tests build `AdsRuntime` with fakes.
+**Composition root:** `internal class AdsRuntime(config, deps)` builds the object graph by hand (no DI framework). `Adroit` holds one `AdsRuntime`. Tests build `AdsRuntime` with fakes.
 
 ## 10. Public API (summary; full spec in 03)
 
 ```kotlin
-CompanyAdMob.initialize(application, adMobConfig { ... })  // Application.onCreate: cheap, sync, no network
-CompanyAdMob.start(activity)                               // first Activity: consent → SDK init → Ready
-CompanyAdMob.state: StateFlow<AdsState>
-CompanyAdMob.privacy.showPrivacyOptions(activity) { }
-CompanyAdMob.interstitial.show(activity, Placements.LevelComplete) { result -> continueFlow() }
-CompanyAdMob.rewarded.show(activity, Placements.ExtraLife) { result -> if (result is RewardResult.Earned) grant(result.reward) }
-CompanyAdMob.appOpen.showOnColdStart(activity, maxWait = 4.seconds) { goToMain() }
-CompanyAdMob.native.load(Placements.ArticleNative) { result -> }
+Adroit.initialize(application, adMobConfig { ... })  // Application.onCreate: cheap, sync, no network
+Adroit.start(activity)                               // first Activity: consent → SDK init → Ready
+Adroit.state: StateFlow<AdsState>
+Adroit.privacy.showPrivacyOptions(activity) { }
+Adroit.interstitial.show(activity, Placements.LevelComplete) { result -> continueFlow() }
+Adroit.rewarded.show(activity, Placements.ExtraLife) { result -> if (result is RewardResult.Earned) grant(result.reward) }
+Adroit.appOpen.showOnColdStart(activity, maxWait = 4.seconds) { goToMain() }
+Adroit.native.load(Placements.ArticleNative) { result -> }
 // views:   binding.bannerContainer.attachBanner(viewLifecycleOwner, Placements.HomeBanner)
 // compose: AdBanner(Placements.HomeBanner, Modifier.fillMaxWidth())
 ```
@@ -182,7 +181,7 @@ Two explicit phases, because UMP needs an **Activity** while library setup belon
 ```mermaid
 sequenceDiagram
   participant Host as Host Activity
-  participant AM as CompanyAdMob
+  participant AM as Adroit
   participant CC as ConsentCoordinator
   participant UMP as UMP SDK
   participant IC as InitCoordinator
@@ -369,7 +368,7 @@ Gates, all required:
 - Refresh is owned by the AdMob UI setting. The library does **not** implement its own refresh. If a load fails, it retries with the banner retry policy **only when the view is attached and visible**.
 - Lifecycle: the handle is bound to a `LifecycleOwner` and calls `destroy()` on `ON_DESTROY`. For a Fragment, pass `viewLifecycleOwner`. `destroy()` is idempotent: it removes the view from its parent, calls `adView.destroy()`, and clears references.
 - State: `StateFlow<BannerState>` with `Loading`, `Loaded`, `Failed(error)`, `Hidden(reason)`. The host can collapse the container on `Hidden`/`Failed`.
-- Placeholder/shimmer: the core exposes state only. `admob-views` and `admob-compose` take an optional placeholder view or composable.
+- Placeholder/shimmer: the core exposes state only. `adroit-views` and `adroit-compose` take an optional placeholder view or composable.
 - Ad-free or consent revoked: the handle destroys its ad view and switches to `Hidden(AdFree)`.
 
 ## 17. Native architecture
@@ -385,26 +384,26 @@ Gates, all required:
   6. Calls `registerNativeAd(nativeAd, mediaView)`.
 - Customisation hook: `NativeAdRenderer` (public, `fun interface`) with `onBind(root: View, assets: NativeAdAssets)`. It runs after the standard binding, for custom styling. **It must not add click listeners**; Google forbids custom click handlers on native assets, and the docs say so.
 - Policy: an ad attribution label is required (the template includes an "Ad" badge). The AdChoices overlay is added by the SDK, so templates leave corner space. Hardware acceleration is needed for video.
-- Default templates live in `admob-views`: `company_admob_native_small` (icon + headline + CTA), `medium` (+ body + rating/store + media 16:9), and `large` (full media + advertiser + price). They use only framework widgets. Colors, dimens, and styles are prefixed `company_admob_` and overridable through theme attributes.
+- Default templates live in `adroit-views`: `adroit_native_small` (icon + headline + CTA), `medium` (+ body + rating/store + media 16:9), and `large` (full media + advertiser + price). They use only framework widgets. Colors, dimens, and styles are prefixed `adroit_` and overridable through theme attributes.
 - Memory: `handle.destroy()` is called on the owner's `ON_DESTROY`, on replacement, and on pool expiry. Pool entries are destroyed on expiry (55 min), ad-free, or consent revocation. Mediation requests always use `numberOfAds = 1`.
 
 ## 18. Compose architecture
 
 - `@Composable AdBanner(placement, modifier, options, placeholder: (@Composable () -> Unit)?, onStateChange)`:
   - `val activity = LocalContext.current.findActivity()` (unwraps `ContextWrapper`).
-  - `val handle = remember(placement.key, activity) { CompanyAdMob.banner.create(activity, placement, options) }`: one AdView per composition key.
+  - `val handle = remember(placement.key, activity) { Adroit.banner.create(activity, placement, options) }`: one AdView per composition key.
   - `DisposableEffect(handle) { onDispose { handle.destroy() } }`.
   - `AndroidView(factory = { handle.view }, modifier)`. The factory returns the **same** view, and the `update` lambda is a no-op, so recomposition never reloads.
   - State is read through `handle.state.collectAsStateWithLifecycle()`. Height is reserved from `handle.expectedHeightDp`.
-- `@Composable AdNative(placement, modifier, layout = NativeTemplates.Medium, renderer?, placeholder?)`: uses `rememberNativeAd(placement, slotKey)`, which keeps the handle in a small **`NativeAdRetainer` ViewModel** (`viewModel(key = "company_admob_native_${placement.key}_$slotKey")`) so a configuration change does **not** reload or destroy the ad. The ViewModel destroys handles in `onCleared()`. The ViewModel store owner comes from `LocalViewModelStoreOwner`, which navigation destinations scope correctly. Rendering is an `AndroidView` whose factory builds the view-based native layout, re-registering the retained ad with the new view after rotation.
+- `@Composable AdNative(placement, modifier, layout = NativeTemplates.Medium, renderer?, placeholder?)`: uses `rememberNativeAd(placement, slotKey)`, which keeps the handle in a small **`NativeAdRetainer` ViewModel** (`viewModel(key = "adroit_native_${placement.key}_$slotKey")`) so a configuration change does **not** reload or destroy the ad. The ViewModel destroys handles in `onCleared()`. The ViewModel store owner comes from `LocalViewModelStoreOwner`, which navigation destinations scope correctly. Rendering is an `AndroidView` whose factory builds the view-based native layout, re-registering the retained ad with the new view after rotation.
 - `rememberAdAvailability(placement): State<AdAvailability>` for enabling "Watch ad" buttons.
 - `rememberFullScreenAdLauncher()` returns a launcher bound to `LocalActivity`/`findActivity()` with `showInterstitial(placement, onResult)` and `showRewarded(placement, onResult)`. It captures no Activity across recompositions.
-- Lazy lists: `AdNative` inside `LazyColumn` items with a stable `slotKey`. The pool feeds items, and items disposed by scrolling keep their retained ad until the ViewModel clears. `AdBanner` works the same way: banners are retained per (placement, options, slotKey) and, off screen, keep their loaded ad without a view or Activity (`CompanyAdMobInternal.parkBanner` / `showBannerIn`).
+- Lazy lists: `AdNative` inside `LazyColumn` items with a stable `slotKey`. The pool feeds items, and items disposed by scrolling keep their retained ad until the ViewModel clears. `AdBanner` works the same way: banners are retained per (placement, options, slotKey) and, off screen, keep their loaded ad without a view or Activity (`AdroitInternal.parkBanner` / `showBannerIn`).
 - Verified behaviours, with tests in Prompt 15: no reload on recomposition, no duplicate AdView, destroy on leaving composition, and no reload of native ads on rotation.
 
 ## 19. XML / View architecture
 
-- `AdBannerView` (a `FrameLayout` subclass) is usable in XML: `<com.company.admob.views.AdBannerView app:company_admob_placement="home_banner" app:company_admob_bannerSize="anchoredAdaptive"/>`. It finds its `LifecycleOwner` through `findViewTreeLifecycleOwner()` in `onAttachedToWindow`, which gives the correct Fragment view lifecycle. It creates the handle lazily, and destroys it on lifecycle `ON_DESTROY` or when `detach` happens with `destroyOnDetach=true`.
+- `AdBannerView` (a `FrameLayout` subclass) is usable in XML: `<io.github.thesobiaakbar.adroit.views.AdBannerView app:adroit_placement="home_banner" app:adroit_bannerSize="anchoredAdaptive"/>`. It finds its `LifecycleOwner` through `findViewTreeLifecycleOwner()` in `onAttachedToWindow`, which gives the correct Fragment view lifecycle. It creates the handle lazily, and destroys it on lifecycle `ON_DESTROY` or when `detach` happens with `destroyOnDetach=true`.
 - Programmatic: `ViewGroup.attachBanner(lifecycleOwner, placement, options): BannerAdHandle`. In a Fragment: `binding.adContainer.attachBanner(viewLifecycleOwner, Placements.HomeBanner)`.
 - Native: `AdNativeView` (FrameLayout) plus `ViewGroup.attachNativeAd(lifecycleOwner, placement, layout)`. `NativeAdHolder` is a small class hosts put in a ViewModel to survive configuration changes (`holder.bindTo(container, lifecycleOwner)`, `holder.clear()` in `onCleared`).
 - Full-screen formats need only an `Activity`. From a Fragment, pass `requireActivity()`, and the library validates lifecycle state. **No `androidx.fragment` dependency.**
@@ -473,7 +472,7 @@ Extra runtime checks:
 
 ### 20.4 Rename / branding
 
-The package, facade name, group ID, and resource prefix are defined once in `gradle.properties` (`companyAdmob.group`, `companyAdmob.resourcePrefix`) and in the Kotlin package declarations. Prompt 01 includes a checklist for the one-time rename. Android `resourcePrefix` is enforced through the convention plugin, so lint fails on unprefixed resources.
+The package, facade name, group ID, and resource prefix are defined once in `gradle.properties` (`adroit.group`, `adroit.resourcePrefix`) and in the Kotlin package declarations. `NAMING.md` lists every name. Android `resourcePrefix` is enforced through the convention plugin, so lint fails on unprefixed resources.
 
 ### 20.5 Retry and expiry config
 
@@ -499,7 +498,7 @@ public data class AdOverrides(
 ```
 
 - Core collects `overrides()` in its scope and applies the latest value atomically on the main thread. Overrides are **validated with the same `ConfigValidator`**, and anything invalid (for example a demo ID in PRODUCTION) is ignored with an error log.
-- Built in: `StaticConfigProvider` (no overrides). Optional module: `FirebaseRemoteConfigProvider`, which maps documented Remote Config keys (`company_admob_enabled`, `company_admob_placement_<key>_enabled`, and so on) or reads a JSON blob key.
+- Built in: `StaticConfigProvider` (no overrides). Optional module: `FirebaseRemoteConfigProvider`, which maps documented Remote Config keys (`adroit_enabled`, `adroit_placement_<key>_enabled`, and so on) or reads a JSON blob key.
 - Override precedence: `AD_FREE_USER` > remote `adsEnabled=false` > remote placement override > local config.
 - The core has no Firebase dependency.
 
@@ -508,13 +507,13 @@ public data class AdOverrides(
 - `AdEvent` is a sealed interface, all subtypes immutable, with common fields `placementKey`, `format`, `timestampMillis` (wall clock, for analytics), and `adUnitIdSuffix` (the last 4 digits only in production logs; the full ID is available in the event). The subtypes are `LoadRequested`, `Loaded(loadLatencyMs, adSource)`, `LoadFailed(error, attempt, willRetry)`, `ShowRequested`, `NotShown(error)`, `Shown`, `Impression`, `Clicked`, `Dismissed`, `RewardEarned(reward, rewardId)`, `Paid(AdRevenue(valueMicros, currencyCode, precision), adSource)`, `Expired`, `Destroyed`, `ConsentUpdated(ConsentState)`, `StateChanged(AdsState)`, and `ConfigurationWarning(message)`.
 - `AdSourceInfo(name, id, instanceName, instanceId, adapterClassName, responseId, mediationGroupName, abTestName, abTestVariant)` is mapped from `ResponseInfo`.
 - Delivery:
-  1. `CompanyAdMob.events: SharedFlow<AdEvent>` with `extraBufferCapacity = 64` and `DROP_OLDEST`, so a slow collector never blocks the engine.
+  1. `Adroit.events: SharedFlow<AdEvent>` with `extraBufferCapacity = 64` and `DROP_OLDEST`, so a slow collector never blocks the engine.
   2. `AdEventListener` (a `fun interface`) instances registered in the config are called synchronously on the main thread, and exceptions are caught and logged.
-- `Paid` events map directly to Firebase `ad_impression` / `logEvent` in `admob-firebase`. Impression-level ad revenue must also be enabled in the AdMob UI; the docs cover this.
+- `Paid` events map directly to Firebase `ad_impression` / `logEvent` in `adroit-firebase`. Impression-level ad revenue must also be enabled in the AdMob UI; the docs cover this.
 
 ## 23. Logging
 
-- `AdLogger` is a public `fun interface`: `log(level, tag, message, throwable?)`. The default `AndroidAdLogger` writes to `android.util.Log` with tag `CompanyAdMob`. `LogLevel` has `VERBOSE, DEBUG, INFO, WARN, ERROR, NONE`. The default is `DEBUG` in DEVELOPMENT/STAGING and `WARN` in PRODUCTION.
+- `AdLogger` is a public `fun interface`: `log(level, tag, message, throwable?)`. The default `AndroidAdLogger` writes to `android.util.Log` with tag `Adroit`. `LogLevel` has `VERBOSE, DEBUG, INFO, WARN, ERROR, NONE`. The default is `DEBUG` in DEVELOPMENT/STAGING and `WARN` in PRODUCTION.
 - Messages are built lazily (`inline fun AdLog.d(msg: () -> String)`), so a disabled level costs nothing.
 - Never logged: consent strings (TC/GPP), advertising IDs, reward custom data, or user identifiers. Ad unit IDs are logged in full only below PRODUCTION.
 - No `println`. A CI grep check forbids `println(` anywhere in library sources, and `android.util.Log` outside `AndroidAdLogger`.
@@ -574,10 +573,10 @@ Rules:
 
 ## 27. Publishing
 
-- The built-in `maven-publish` with AGP `publishing { singleVariant("release") { withSourcesJar(); withJavadocJar() } }` in a `companyadmob.publishing` convention plugin. No third-party publish plugin is needed for private repositories.
-- Coordinates: `com.company:admob-{core,views,compose,testing,firebase}:<version>`. The version comes from `gradle.properties` `companyAdmob.version` (SemVer).
-- The POM carries name, description, URL, license (internal/proprietary, placeholder), SCM (`https://github.com/TheSobiaAkbar/AdsPlugin`), and developers.
-- Repositories, selected by properties or env: `mavenLocal` (dev), GitHub Packages (`https://maven.pkg.github.com/<owner>/<repo>`, token from env), and a company Artifactory/Nexus (URL and credentials from env). Credentials are **never** in the repo.
+- The built-in `maven-publish` with AGP `publishing { singleVariant("release") { withSourcesJar(); withJavadocJar() } }` in a `adroit.publishing` convention plugin. No third-party publish plugin is needed for private repositories.
+- Coordinates: `io.github.thesobiaakbar:adroit-{core,views,compose,testing,firebase}:<version>`. The version comes from `gradle.properties` `adroit.version` (SemVer).
+- The POM carries name, description, URL, license (internal/proprietary, placeholder), SCM (`https://github.com/TheSobiaAkbar/Adroit`), and developers.
+- Repositories, selected by properties or env: `mavenLocal` (dev), GitHub Packages (`https://maven.pkg.github.com/<owner>/<repo>`, token from env). Credentials are **never** in the repo.
 - Signing is optional, enabled when a key is present in env.
 - There's a BOM-like `admob-bom`? **Rejected** for now: 4–5 modules released in lockstep can share one version constant, and docs pin all of them. Revisit if the module count grows.
 
@@ -586,13 +585,13 @@ Rules:
 GitHub Actions (the remote is GitHub):
 - `ci.yml` (PR + main): JDK 17, Gradle cache, then `./gradlew build lint apiCheck testDebugUnitTest :sample-compose:assembleRelease :sample-xml:assembleRelease publishToMavenLocal`, the dependency-direction check, and the forbidden-API grep. Lint reports and test results are uploaded.
 - `instrumentation.yml` (nightly + manual): emulator matrix API 24 + API 36 via `reactivecircus/android-emulator-runner`, running `connectedDebugAndroidTest` on the samples, including leak tests.
-- `release.yml` (tag `v*`): verifies the tag matches `companyAdmob.version` and that CHANGELOG has the version section, runs the full CI, publishes to GitHub Packages (and to Artifactory when secrets exist), and creates a GitHub Release with the CHANGELOG excerpt.
+- `release.yml` (tag `v*`): verifies the tag matches `adroit.version` and that CHANGELOG has the version section, runs the full CI, publishes to GitHub Packages (and to Artifactory when secrets exist), and creates a GitHub Release with the CHANGELOG excerpt.
 - Dependabot/Renovate: weekly, **excluding** `ads-mobile-sdk` and `user-messaging-platform`. Those upgrades go through the manual upgrade checklist.
 
 ## 29. Security
 
 - The AdMob app ID and ad unit IDs are **public identifiers, not secrets**. They ship in every APK. They're treated as configuration and never described as credentials.
-- The library contains no API keys, backend URLs, credentials, or company secrets. Publishing credentials live only in CI secrets and env vars.
+- The library contains no API keys, backend URLs, credentials, or secrets. Publishing credentials live only in CI secrets and env vars.
 - No persistent user identifiers are created. `rewardId` is a random UUID per session and isn't stored.
 - Logging redaction is described in §23.
 - The library adds no network calls of its own.
@@ -600,7 +599,7 @@ GitHub Actions (the remote is GitHub):
 
 ## 30. Privacy
 
-- `ConsentState(status: ConsentStatus {UNKNOWN, REQUIRED, NOT_REQUIRED, OBTAINED}, canRequestAds, privacyOptionsRequired, lastError: AdError?)` is exposed as `CompanyAdMob.privacy.consentState: StateFlow<ConsentState>`.
+- `ConsentState(status: ConsentStatus {UNKNOWN, REQUIRED, NOT_REQUIRED, OBTAINED}, canRequestAds, privacyOptionsRequired, lastError: AdError?)` is exposed as `Adroit.privacy.consentState: StateFlow<ConsentState>`.
 - `requestConsentInfoUpdate` runs on **every** `start()` (every launch). The library **never caches consent itself**; it always asks UMP.
 - `canRequestAds()` is checked after the update, after the form, and after a consent error (falling back to the previous session). An `AtomicBoolean` prevents double SDK init.
 - `privacy.showPrivacyOptions(activity, onDismissed)` checks `privacyOptionsRequired` and shows the form. Afterwards, `canRequestAds()` is re-evaluated. If it's true and the SDK isn't initialized, the SDK initializes. If it's false, the state becomes `Unavailable(CONSENT_NOT_OBTAINED)`, all cached ads are destroyed, and banners and native ads hide.
@@ -614,14 +613,14 @@ GitHub Actions (the remote is GitHub):
 ## 31. Migration and versioning
 
 - SemVer for the library: `MAJOR` means a public API break **or** a raised consumer requirement (minSdk, Kotlin, or Java). `MINOR` means additive API or a Google SDK upgrade with no consumer-visible change. `PATCH` means fixes only.
-- Pre-1.0 (`0.x`) while the API stabilised inside the company. `1.0.0-rc1` freezes it (Prompt 27, ADR-019, `docs/audits/API_STABILITY_AUDIT.md`); `1.0.0` comes after the final production audit passes.
+- Pre-1.0 (`0.x`) while the API stabilised. `1.0.0-rc1` freezes it (Prompt 27, ADR-019, `docs/audits/API_STABILITY_AUDIT.md`); `1.0.0` comes after the final production audit passes.
 - **Stability tools:**
   - Kotlin explicit API mode in all library modules.
   - `.api` dumps committed (`./gradlew apiDump`), and `apiCheck` wired into `check` and CI. **Neither the BCV plugin nor KGP's `abiValidation` works with AGP 9 built-in Kotlin**: both rely on `kotlin-android` extension points that AGP doesn't register ([KT-83410](https://youtrack.jetbrains.com/issue/KT-83410)). BCV registers no tasks, and KGP produces empty dumps (both verified in Prompt 01). So `build-logic/.../ApiValidation.kt` feeds the release variant's classes (AGP `ScopedArtifacts`) into **BCV 0.18.2's own JVM dump engine** in an isolated worker. The output is the standard BCV `.api` format. Switch to KGP `abiValidation` once KT-83410 is fixed (ADR-007).
-  - `@ExperimentalCompanyAdMobApi` (`RequiresOptIn`) for new surfaces.
+  - `@ExperimentalAdroitApi` (`RequiresOptIn`) for new surfaces.
   - `@GoogleSdkEscapeHatch` (`RequiresOptIn`, level ERROR) for anything that exposes Google types.
 - Google upgrades follow the checklist in RELEASE.md: read the release notes, check deprecations, update 01_SDK_RESEARCH, run the full CI plus nightly instrumentation, check the API dump for no public change, and add a CHANGELOG "Google SDK" section.
-- MIGRATION.md covers migrating an existing app from hand-rolled legacy AdMob code to CompanyAdMob, including removing `play-services-ads`.
+- MIGRATION.md covers migrating an existing app from hand-rolled legacy AdMob code to Adroit, including removing `play-services-ads`.
 
 ## 32. Architecture decision records (ADR log)
 
@@ -638,12 +637,12 @@ GitHub Actions (the remote is GitHub):
 | 009 | Suspend rewarded API with an unclaimed-results channel for cancellation safety | Accepted |
 | 010 | JVM 11 bytecode; Kotlin language/API version 2.2 with `coreLibrariesVersion` 2.2.0 (2.1 is deprecated by the Kotlin 2.4 compiler); consumers need Kotlin 2.1+ | Accepted (revised in Prompt 01) |
 | 011 | Data-class policy: `data class`/`data object` only for small value types whose fields are frozen by design (`Reward`, `AdRevenue`, `SdkErrorDetails`, single-field states, results, and errors). Types likely to gain properties (`ConsentState`, `BannerOptions`, `RewardedShowOptions`, `NativeAdLayout`, `NativeAdAssets`, `AdSourceInfo`, `DiagnosticsReport`, all `AdEvent`s) are regular classes with hand-written `toString` (and `equals`/`hashCode` where value comparison matters), so no `copy`/`componentN` becomes binary API. Library modules compile with `jvmDefault = NO_COMPATIBILITY`, so interfaces don't emit legacy `DefaultImpls` classes. | Accepted (Prompt 02) |
-| 012 | Cross-module hooks: `admob-views`/`admob-compose` reach core only through public API, plus a few hooks in `CompanyAdMobInternal` marked `@InternalCompanyAdMobApi` (a `RequiresOptIn` at level ERROR, so apps don't use them by accident; compiler-enforced, unlike `@RestrictTo`, which only lint checks). XML placement keys need no lookup hook: placements are value objects equal by format and key, so `BannerPlacement(key)` from an attribute *is* the configured placement, and core rejects unknown keys safely at `create()`/`load()`. The hooks: `detachRenderedView(handle)` lets `NativeAdHolder` drop the rendered view (and its Context) between binds without destroying the ad, and `log(level, message)` sends the views and Compose modules' logs through the host's configured logger and level (Prompt 22; before, they wrote to Logcat directly and ignored `LogLevel.NONE` or a custom logger). | Accepted (Prompt 13, extended in Prompt 22) |
-| 013 | Java interop: Kotlin-first, with a defined Java surface. Java can call `CompanyAdMob.initialize`/`getClient()`, `start`, every `show`/`preload`/`isReady`, banner `create`, native `load`, privacy, diagnostics, the XML views and extensions (`@JvmOverloads`), and the configuration builder, including `profiles(context, resId)`. `kotlin.time.Duration` stays the only duration type in the API; its mangled members (`awaitReady`, the config builders' timing setters, `AdError.FrequencyCapped.retryAfter`) are Kotlin-only, and Java apps set timings in the ads file (ADR-018), which covers every per-ad timer. The one exception is a facade entry point Java apps call directly: `AppOpenApi.showOnColdStart(activity, maxWaitMillis, onResult)`, a default method over the `Duration` form. Callbacks stay Kotlin function types rather than new SAM interfaces: Kotlin callers keep passing function values, and a Java lambda returns `Unit.INSTANCE`. `CompanyAdMob`'s `AdsClient` members can't be `@JvmStatic` (they override the interface), so Java goes through `CompanyAdMob.getClient()`. Compose is Kotlin-only. `admob-core`'s `JavaFacadeCalls.java` test source compiles the whole Java surface. | Accepted (Prompt 27) |
+| 012 | Cross-module hooks: `adroit-views`/`adroit-compose` reach core only through public API, plus a few hooks in `AdroitInternal` marked `@InternalAdroitApi` (a `RequiresOptIn` at level ERROR, so apps don't use them by accident; compiler-enforced, unlike `@RestrictTo`, which only lint checks). XML placement keys need no lookup hook: placements are value objects equal by format and key, so `BannerPlacement(key)` from an attribute *is* the configured placement, and core rejects unknown keys safely at `create()`/`load()`. The hooks: `detachRenderedView(handle)` lets `NativeAdHolder` drop the rendered view (and its Context) between binds without destroying the ad, and `log(level, message)` sends the views and Compose modules' logs through the host's configured logger and level (Prompt 22; before, they wrote to Logcat directly and ignored `LogLevel.NONE` or a custom logger). | Accepted (Prompt 13, extended in Prompt 22) |
+| 013 | Java interop: Kotlin-first, with a defined Java surface. Java can call `Adroit.initialize`/`getClient()`, `start`, every `show`/`preload`/`isReady`, banner `create`, native `load`, privacy, diagnostics, the XML views and extensions (`@JvmOverloads`), and the configuration builder, including `profiles(context, resId)`. `kotlin.time.Duration` stays the only duration type in the API; its mangled members (`awaitReady`, the config builders' timing setters, `AdError.FrequencyCapped.retryAfter`) are Kotlin-only, and Java apps set timings in the ads file (ADR-018), which covers every per-ad timer. The one exception is a facade entry point Java apps call directly: `AppOpenApi.showOnColdStart(activity, maxWaitMillis, onResult)`, a default method over the `Duration` form. Callbacks stay Kotlin function types rather than new SAM interfaces: Kotlin callers keep passing function values, and a Java lambda returns `Unit.INSTANCE`. `Adroit`'s `AdsClient` members can't be `@JvmStatic` (they override the interface), so Java goes through `Adroit.getClient()`. Compose is Kotlin-only. `adroit-core`'s `JavaFacadeCalls.java` test source compiles the whole Java surface. | Accepted (Prompt 27) |
 | 014 | The dependency guard checks AppCompat/Fragment against **direct** dependencies only, because Next-Gen's `play-services-basement` pulls `androidx.fragment` and `appcompat-resources` transitively. The legacy SDK (`play-services-ads`, `-lite`, `-api`) is checked on **every** runtime classpath (debug, release, staging, tests), so a mediation adapter passes only with the global exclusion (Prompt 19). Compose, Material, Firebase, Dagger, and project edges are checked transitively on the release classpath. | Accepted (Prompt 01, extended in Prompt 19) |
-| 015 | Compose: core types used as composable parameters (placements, `BannerOptions`, `BannerSize`, `NativeAdLayout`) are declared stable in `admob-compose/compose_stability.conf` instead of annotating core, which stays Compose-free. Native ads are retained by one `NativeAdRetainer` ViewModel per `ViewModelStoreOwner` (key `company_admob_native`), keyed internally by (placement, slotKey), so the `maxRetainedPerScreen` bound (3, LRU, preferring off-screen slots) spans the whole screen. The Activity is resolved with `LocalContext.findActivity()`, not `LocalActivity`, to avoid an `activity-compose` dependency. | Accepted (Prompt 14) |
-| 016 | Test install hook: `CompanyAdMobInternal.installForTesting(client)` (behind the ADR-012 `@InternalCompanyAdMobApi` opt-in, not `@RestrictTo`, because the opt-in is compiler-enforced) lets admob-testing's `CompanyAdMobTestRule` make the whole `CompanyAdMob` facade, `state` and `events` included, a `FakeAdsClient` and restore it afterwards. Injecting `AdsClient` stays the recommended way to test. | Accepted (Prompt 16) |
-| 017 | `admob-firebase` is the one module allowed vendor types in its public API: its constructors take `FirebaseRemoteConfig` / `FirebaseAnalytics` (plus convenience constructors with the default instances), because the module exists only for Firebase and hosts with several Firebase apps must pass their instance. Firebase is `api` there and forbidden everywhere else by the dependency guard. The host initializes Firebase (google-services); the module adds no consent logic (UMP handles Consent Mode). `Paid` maps to Firebase `ad_impression` behind an option, because AdMob apps linked to Firebase already log it. Since Prompt 25A, the Remote Config provider reads one parameter per ad (ADR-018) instead of the `company_admob_*` keys, which were never released. | Accepted (Prompt 24, revised in Prompt 25A) |
+| 015 | Compose: core types used as composable parameters (placements, `BannerOptions`, `BannerSize`, `NativeAdLayout`) are declared stable in `adroit-compose/compose_stability.conf` instead of annotating core, which stays Compose-free. Native ads are retained by one `NativeAdRetainer` ViewModel per `ViewModelStoreOwner` (key `adroit_native`), keyed internally by (placement, slotKey), so the `maxRetainedPerScreen` bound (3, LRU, preferring off-screen slots) spans the whole screen. The Activity is resolved with `LocalContext.findActivity()`, not `LocalActivity`, to avoid an `activity-compose` dependency. | Accepted (Prompt 14) |
+| 016 | Test install hook: `AdroitInternal.installForTesting(client)` (behind the ADR-012 `@InternalAdroitApi` opt-in, not `@RestrictTo`, because the opt-in is compiler-enforced) lets adroit-testing's `AdroitTestRule` make the whole `Adroit` facade, `state` and `events` included, a `FakeAdsClient` and restore it afterwards. Injecting `AdsClient` stays the recommended way to test. | Accepted (Prompt 16) |
+| 017 | `adroit-firebase` is the one module allowed vendor types in its public API: its constructors take `FirebaseRemoteConfig` / `FirebaseAnalytics` (plus convenience constructors with the default instances), because the module exists only for Firebase and hosts with several Firebase apps must pass their instance. Firebase is `api` there and forbidden everywhere else by the dependency guard. The host initializes Firebase (google-services); the module adds no consent logic (UMP handles Consent Mode). `Paid` maps to Firebase `ad_impression` behind an option, because AdMob apps linked to Firebase already log it. Since Prompt 25A, the Remote Config provider reads one parameter per ad (ADR-018) instead of the `adroit_*` keys, which were never released. | Accepted (Prompt 24, revised in Prompt 25A) |
 | 018 | Ad profiles: every ad is defined in one JSON file (`res/raw/ads_config.json`) and can be overridden by one Firebase Remote Config parameter per ad, plus a settings parameter. Placements take a list of ad unit IDs, rotated per load request. A counter (which takes priority over the per-ad timer), an overall interstitial limit per session (splash excluded, winning over per-ad limits), a splash interstitial show, and a remotely chosen banner size and native template. Debug builds rely on the DEVELOPMENT test-ID substitution. See `05_AD_PROFILES.md`. | Accepted (Prompt 25A) |
 | 019 | API evolution rules from `1.0.0-rc1` (docs/RELEASE.md "API stability"): deprecate in minor N with `ReplaceWith`, remove no earlier than the next major; never add a parameter to an existing public function (add an overload, or a property on an options class), and `@JvmOverloads` on public constructors and top-level functions with defaults; members added to library-implemented interfaces (`AdsClient`, the format APIs, the handles) always get a default body, which `jvmDefault = NO_COMPATIBILITY` turns into a Java default method, so hand-written fakes still link (chosen over `@SubclassOptInRequired`, which would break hosts' own test fakes today); host-implemented interfaces stay `fun interface`s; every sealed type and enum states in its KDoc whether it may grow. `PublicKDocTest` fails on any public declaration without KDoc. | Accepted (Prompt 27) |
 
@@ -663,7 +662,7 @@ GitHub Actions (the remote is GitHub):
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | Next-Gen API churn inside 1.x | M | M | Adapter isolation, pinned version, upgrade checklist |
-| Host has legacy `play-services-ads` transitively | M | H (build break) | Docs, `sample-mixed`, troubleshooting entry with the duplicate-class error text |
+| Host has legacy `play-services-ads` transitively | M | H (build break) | Docs, troubleshooting entry with the duplicate-class error text |
 | Background callback misuse causes `CalledFromWrongThreadException` | M | H | Adapter posts every callback to main, and a unit test asserts the engine is invoked via the main dispatcher |
 | App-open loops or showing over billing | M | H (UX/policy) | Gates in §15, `skipNextForeground()`, suppression after full-screen ads, tests |
 | Reward lost on configuration change | M | H | §14 unclaimed channel, docs |

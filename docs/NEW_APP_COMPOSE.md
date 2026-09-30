@@ -11,12 +11,12 @@ This page takes a new Android Studio project (Kotlin, Jetpack Compose) to a comp
 - a "remove ads" purchase;
 - every ad, and any other value you choose, controlled from Firebase without a new release.
 
-Your app needs two of the plugin's modules: `admob-compose` (the composables) and `admob-firebase` (Firebase Remote
-Config). They bring everything else: `admob-core`, `admob-views` (the native ad templates), Google's ads and consent
-SDKs, and the [sdp/ssp](https://github.com/intuit/sdp) sizes. Don't add `admob-testing`, the sample apps,
+Your app needs two of the plugin's modules: `adroit-compose` (the composables) and `adroit-firebase` (Firebase Remote
+Config). They bring everything else: `adroit-core`, `adroit-views` (the native ad templates), Google's ads and consent
+SDKs, and the [sdp/ssp](https://github.com/intuit/sdp) sizes. Don't add `adroit-testing`, the sample apps,
 `play-services-ads` or `ads-mobile-sdk`.
 
-The finished result is the `sample-compose` app in the AdsPlugin project: every step below is taken from it. For a
+The finished result is the `sample-compose` app in the Adroit project: every step below is taken from it. For a
 Kotlin + XML app, see [Adding ads to a new Kotlin + XML app](NEW_APP_XML.md) instead.
 
 ## What changes from one project to the next
@@ -25,7 +25,7 @@ Most of the setup is the same in every app: copy it once, then change only this.
 
 | File | What you change in each project | Step |
 |---|---|---|
-| `settings.gradle.kts` | Add `mavenLocal()` | [2](#2-get-the-plugin-onto-your-computer) |
+| `settings.gradle.kts` | Add the Adroit repository | [2](#2-add-the-adroit-repository) |
 | `build.gradle.kts` (root) and `app/build.gradle.kts` | Add the Google services plugin and the dependencies | [3](#3-connect-firebase), [4](#4-add-the-dependencies) |
 | `app/google-services.json` | This app's file, from its Firebase project | [3](#3-connect-firebase) |
 | `AndroidManifest.xml` | This app's AdMob app ID | [7](#7-the-manifest) |
@@ -38,7 +38,7 @@ Most of the setup is the same in every app: copy it once, then change only this.
 **Contents**
 
 1. [What you need](#1-what-you-need)
-2. [Get the plugin onto your computer](#2-get-the-plugin-onto-your-computer)
+2. [Add the Adroit repository](#2-add-the-adroit-repository)
 3. [Connect Firebase](#3-connect-firebase)
 4. [Add the dependencies](#4-add-the-dependencies)
 5. [List your ads: AppAds.kt](#5-list-your-ads-appadskt)
@@ -61,37 +61,40 @@ Most of the setup is the same in every app: copy it once, then change only this.
 | An AdMob app ID | AdMob → Apps → your app → App settings | `ca-app-pub-1234567890123456~1234567890` |
 | One ad unit ID per ad | AdMob → Apps → your app → Ad units, each of the right format | `ca-app-pub-1234567890123456/1234567890` |
 | A Firebase project | [console.firebase.google.com](https://console.firebase.google.com) | |
-| The AdsPlugin project | Cloned or opened on your computer | |
+| Access to Adroit | An invite and a GitHub token: [Getting access](ACCESS.md) | |
 
 You can start without ad unit IDs: an ad without IDs shows Google's test ads, and debug builds always do.
 
-## 2. Get the plugin onto your computer
+## 2. Add the Adroit repository
 
-Until the plugin is published to a shared repository, publish it to your computer's local Maven folder. In a
-terminal, **in the AdsPlugin folder**:
+Adroit is private: you need an invite and a GitHub token first ([Getting access](ACCESS.md)). Put the token in
+`~/.gradle/gradle.properties` on your computer (`C:\Users\<you>\.gradle\gradle.properties` on Windows), never in the
+project:
 
-```bash
-./gradlew publishToMavenLocal
+```properties
+gpr.user=<your GitHub user name>
+gpr.key=<your token with read:packages>
 ```
 
-(`gradlew publishToMavenLocal` in Windows `cmd`.) This publishes version `1.0.0-rc2`, the `companyAdmob.version` in
-AdsPlugin's `gradle.properties`. Run it again whenever the plugin changes.
-
-**In your app**, add `mavenLocal()` to `settings.gradle.kts`:
+**In your app**, add the repository to `settings.gradle.kts`:
 
 ```kotlin
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        mavenLocal() // the ads plugin, from ./gradlew publishToMavenLocal
         google()
         mavenCentral()
+        maven("https://maven.pkg.github.com/TheSobiaAkbar/Adroit") {
+            credentials {
+                username = providers.gradleProperty("gpr.user").get()
+                password = providers.gradleProperty("gpr.key").get()
+            }
+        }
     }
 }
 ```
 
-Once the plugin is released to GitHub Packages or the company repository, use that repository instead
-([Getting started](GETTING_STARTED.md#1-add-the-repository)). Nothing else changes.
+Working on Adroit itself? Run `./gradlew publishToMavenLocal` in the Adroit folder and use `mavenLocal()` instead.
 
 ## 3. Connect Firebase
 
@@ -135,8 +138,8 @@ android {
 }
 
 dependencies {
-    implementation("com.company:admob-compose:1.0.0-rc2")
-    implementation("com.company:admob-firebase:1.0.0-rc2")
+    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc2")
+    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc2")
 
     // Your usual Compose libraries (Android Studio's "Empty Activity" template adds most of them):
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))
@@ -149,11 +152,11 @@ dependencies {
 }
 ```
 
-`admob-compose` needs a `compileSdk` of 37 (its Compose version asks for it). With an older one, the build says so:
+`adroit-compose` needs a `compileSdk` of 37 (its Compose version asks for it). With an older one, the build says so:
 raise `compileSdk` in `android { }`.
 
-**Check:** *Sync Project with Gradle Files* succeeds. If `com.company:admob-compose` isn't found, run step 2's
-command, and check `mavenLocal()` is in `settings.gradle.kts`.
+**Check:** *Sync Project with Gradle Files* succeeds. If `io.github.thesobiaakbar:adroit-compose` isn't found, check step 2: the repository
+in `settings.gradle.kts`, and `gpr.user` and `gpr.key` in `~/.gradle/gradle.properties`.
 
 ## 5. List your ads: AppAds.kt
 
@@ -162,12 +165,12 @@ Every ad of the app is one line of **one file**, `app/src/main/java/com/example/
 ```kotlin
 package com.example.myapp.ads
 
-import com.company.admob.BannerSize
-import com.company.admob.CollapsibleBannerPosition
-import com.company.admob.NativeStyle
-import com.company.admob.config.AdDefinition
-import com.company.admob.config.AdProfile
-import com.company.admob.config.AdSettings
+import io.github.thesobiaakbar.adroit.BannerSize
+import io.github.thesobiaakbar.adroit.CollapsibleBannerPosition
+import io.github.thesobiaakbar.adroit.NativeStyle
+import io.github.thesobiaakbar.adroit.config.AdDefinition
+import io.github.thesobiaakbar.adroit.config.AdProfile
+import io.github.thesobiaakbar.adroit.config.AdSettings
 
 /** Every ad in the app. Each entry's name is also its Firebase Remote Config parameter. */
 enum class AppAds(override val defaults: AdProfile) : AdDefinition {
@@ -241,13 +244,13 @@ package com.example.myapp
 
 import android.app.Application
 import android.content.Context
-import com.company.admob.CompanyAdMob
-import com.company.admob.config.AdEnvironment
-import com.company.admob.config.adMobConfig
-import com.company.admob.firebase.FirebaseRemoteConfigProvider
-import com.company.admob.firebase.RemoteConfigSession
-import com.company.admob.logging.LogLevel
-import com.company.admob.views.NativeTemplates
+import io.github.thesobiaakbar.adroit.Adroit
+import io.github.thesobiaakbar.adroit.config.AdEnvironment
+import io.github.thesobiaakbar.adroit.config.adMobConfig
+import io.github.thesobiaakbar.adroit.firebase.FirebaseRemoteConfigProvider
+import io.github.thesobiaakbar.adroit.firebase.RemoteConfigSession
+import io.github.thesobiaakbar.adroit.logging.LogLevel
+import io.github.thesobiaakbar.adroit.views.NativeTemplates
 import com.example.myapp.ads.AppAds
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
@@ -267,7 +270,7 @@ class MyApp : Application() {
         RemoteConfigSession.start(this, firebaseConfig)
 
         // 2. The ads library.
-        CompanyAdMob.initialize(
+        Adroit.initialize(
             this,
             adMobConfig {
                 environment = if (BuildConfig.DEBUG) AdEnvironment.DEVELOPMENT else AdEnvironment.PRODUCTION
@@ -281,7 +284,7 @@ class MyApp : Application() {
         NativeTemplates.register("promo", R.layout.ad_promo)
 
         // 4. A user who bought "remove ads": no ads at all.
-        if (Premium.isPremium(this)) CompanyAdMob.setAdFree(true)
+        if (Premium.isPremium(this)) Adroit.setAdFree(true)
     }
 }
 
@@ -292,7 +295,7 @@ object Premium {
 
     fun setPremium(context: Context, premium: Boolean) {
         context.getSharedPreferences("premium", Context.MODE_PRIVATE).edit().putBoolean("premium", premium).apply()
-        CompanyAdMob.setAdFree(premium)
+        Adroit.setAdFree(premium)
     }
 }
 ```
@@ -301,7 +304,7 @@ object Premium {
   **Release builds** (`PRODUCTION`) show your real ads.
 - Name the Firebase variable anything **except** `remoteConfig`: inside `adMobConfig { }` that name is the plugin's
   setting, and a variable called that hides it.
-- Replace `Premium` with your real purchase check. What matters is `CompanyAdMob.setAdFree(true)` for a premium user,
+- Replace `Premium` with your real purchase check. What matters is `Adroit.setAdFree(true)` for a premium user,
   at startup and right after a purchase.
 - It's the same file as in an XML app: nothing in it depends on Compose.
 
@@ -336,7 +339,7 @@ In `app/src/main/AndroidManifest.xml`:
 Move the `intent-filter` Android Studio put on `MainActivity` to `SplashActivity`. The plugin adds the `INTERNET`
 permission itself.
 
-**Check:** run a debug build and filter logcat by `CompanyAdMob`: one line `Firebase parameter <Name>: {…}` per ad.
+**Check:** run a debug build and filter logcat by `Adroit`: one line `Firebase parameter <Name>: {…}` per ad.
 
 ## 8. The splash screen
 
@@ -379,8 +382,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.company.admob.splash.SplashFlow
-import com.company.admob.splash.SplashState
+import io.github.thesobiaakbar.adroit.splash.SplashFlow
+import io.github.thesobiaakbar.adroit.splash.SplashState
 import com.example.myapp.ads.AppAds
 import kotlinx.coroutines.launch
 
@@ -486,7 +489,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.company.admob.AdSlots
+import io.github.thesobiaakbar.adroit.AdSlots
 import com.example.myapp.ads.AppAds
 
 class MainActivity : ComponentActivity() {
@@ -537,13 +540,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.company.admob.AdSlots
-import com.company.admob.compose.AdNative
-import com.company.admob.compose.AdSlot
-import com.company.admob.compose.rememberFullScreenAdLauncher
-import com.company.admob.config.nativePlacement
-import com.company.admob.config.rewardedInterstitialPlacement
-import com.company.admob.config.rewardedPlacement
+import io.github.thesobiaakbar.adroit.AdSlots
+import io.github.thesobiaakbar.adroit.compose.AdNative
+import io.github.thesobiaakbar.adroit.compose.AdSlot
+import io.github.thesobiaakbar.adroit.compose.rememberFullScreenAdLauncher
+import io.github.thesobiaakbar.adroit.config.nativePlacement
+import io.github.thesobiaakbar.adroit.config.rewardedInterstitialPlacement
+import io.github.thesobiaakbar.adroit.config.rewardedPlacement
 import com.example.myapp.ads.AppAds
 
 @Composable
@@ -628,8 +631,8 @@ package com.example.myapp
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.company.admob.CompanyAdMob
-import com.company.admob.RewardResult
+import io.github.thesobiaakbar.adroit.Adroit
+import io.github.thesobiaakbar.adroit.RewardResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.merge
@@ -643,7 +646,7 @@ class CoinsViewModel : ViewModel() {
     init {
         // A reward that arrived after its screen was gone (the user rotated or left during the ad).
         viewModelScope.launch {
-            merge(CompanyAdMob.rewarded.unclaimedResults, CompanyAdMob.rewardedInterstitial.unclaimedResults)
+            merge(Adroit.rewarded.unclaimedResults, Adroit.rewardedInterstitial.unclaimedResults)
                 .collect(::onRewardResult)
         }
     }
@@ -741,8 +744,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.company.admob.compose.AdBanner
-import com.company.admob.config.bannerPlacement
+import io.github.thesobiaakbar.adroit.compose.AdBanner
+import io.github.thesobiaakbar.adroit.config.bannerPlacement
 import com.example.myapp.ads.AppAds
 
 @Composable
@@ -793,10 +796,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
-import com.company.admob.compose.AdBanner
-import com.company.admob.compose.AdNative
-import com.company.admob.config.bannerPlacement
-import com.company.admob.config.nativePlacement
+import io.github.thesobiaakbar.adroit.compose.AdBanner
+import io.github.thesobiaakbar.adroit.compose.AdNative
+import io.github.thesobiaakbar.adroit.config.bannerPlacement
+import io.github.thesobiaakbar.adroit.config.nativePlacement
 import com.example.myapp.ads.AppAds
 
 @Composable
@@ -853,14 +856,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.company.admob.CompanyAdMob
+import io.github.thesobiaakbar.adroit.Adroit
 
 @Composable
 fun PrivacyOptionsButton() {
     val activity = LocalActivity.current ?: return
-    val required by CompanyAdMob.privacy.isPrivacyOptionsRequired.collectAsStateWithLifecycle()
+    val required by Adroit.privacy.isPrivacyOptionsRequired.collectAsStateWithLifecycle()
     if (required) {
-        Button(onClick = { CompanyAdMob.privacy.showPrivacyOptions(activity) }) { Text("Privacy options") }
+        Button(onClick = { Adroit.privacy.showPrivacyOptions(activity) }) { Text("Privacy options") }
     }
 }
 ```
@@ -874,23 +877,23 @@ every template. Compose apps use it too: native ads are drawn by Google's native
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The ads' look in this app: each value replaces the plugin's value of the same name. -->
 <resources>
-    <color name="company_admob_native_attribution">#FFC107</color>
-    <color name="company_admob_native_attribution_text">#FFFFFF</color>
-    <color name="company_admob_native_cta">#FF6D00</color>
-    <color name="company_admob_native_cta_end">#FFA000</color>
-    <color name="company_admob_native_cta_text">#FFFFFF</color>
-    <color name="company_admob_shimmer_card">#FFF5F5F5</color>
+    <color name="adroit_native_attribution">#FFC107</color>
+    <color name="adroit_native_attribution_text">#FFFFFF</color>
+    <color name="adroit_native_cta">#FF6D00</color>
+    <color name="adroit_native_cta_end">#FFA000</color>
+    <color name="adroit_native_cta_text">#FFFFFF</color>
+    <color name="adroit_shimmer_card">#FFF5F5F5</color>
 </resources>
 ```
 
 | Name | What |
 |---|---|
-| `company_admob_native_cta`, `company_admob_native_cta_end` | The button: a gradient from the first to the second. Set only the first for a solid button. |
-| `company_admob_native_cta_text` | The button's text |
-| `company_admob_native_attribution`, `_attribution_text` | The "Ad" badge, and its text |
-| `company_admob_native_background`, `_stroke` | The card's fill (transparent) and border |
-| `company_admob_native_headline`, `_body` | The texts |
-| `company_admob_shimmer_card`, `_shimmer_base`, `_shimmer_highlight` | The loading shimmer: the ad area, its blocks, the moving shine |
+| `adroit_native_cta`, `adroit_native_cta_end` | The button: a gradient from the first to the second. Set only the first for a solid button. |
+| `adroit_native_cta_text` | The button's text |
+| `adroit_native_attribution`, `_attribution_text` | The "Ad" badge, and its text |
+| `adroit_native_background`, `_stroke` | The card's fill (transparent) and border |
+| `adroit_native_headline`, `_body` | The texts |
+| `adroit_shimmer_card`, `_shimmer_base`, `_shimmer_highlight` | The loading shimmer: the ad area, its blocks, the moving shine |
 
 Dark mode: the same names in `res/values-night/ads_style.xml`. Sizes (text sizes, corners, the button's height…) are
 `dimen`s you override the same way, in `sdp` and `ssp` if you like: the full list is in
@@ -927,17 +930,17 @@ Firebase, clicks and impressions) works with it as with a built-in style.
 
 | ID | View | |
 |---|---|---|
-| `company_admob_native_headline` | `TextView` | Required |
-| `company_admob_native_attribution` | `TextView` saying "Ad" | Required by Google |
-| `company_admob_native_body` | `TextView` | |
-| `company_admob_native_cta` | `android.widget.Button` | Write the full name, so a Material theme doesn't repaint it |
-| `company_admob_native_icon` | `ImageView` | |
-| `company_admob_native_media` | an empty `FrameLayout`, at least 120dp tall | The image or video goes inside |
-| `company_admob_native_advertiser`, `_stars` (`RatingBar`), `_price`, `_store` | | Optional extras |
+| `adroit_native_headline` | `TextView` | Required |
+| `adroit_native_attribution` | `TextView` saying "Ad" | Required by Google |
+| `adroit_native_body` | `TextView` | |
+| `adroit_native_cta` | `android.widget.Button` | Write the full name, so a Material theme doesn't repaint it |
+| `adroit_native_icon` | `ImageView` | |
+| `adroit_native_media` | an empty `FrameLayout`, at least 120dp tall | The image or video goes inside |
+| `adroit_native_advertiser`, `_stars` (`RatingBar`), `_price`, `_store` | | Optional extras |
 
 - Leave the top-right corner free (about 24dp): the SDK puts the AdChoices icon there.
 - Views an ad has no content for are hidden. Everything else (sizes, backgrounds, fonts) is up to you. Use the
-  plugin's colors (`@color/company_admob_native_cta_text`…) and drawables if you want Firebase colors and your
+  plugin's colors (`@color/adroit_native_cta_text`…) and drawables if you want Firebase colors and your
   `ads_style.xml` to apply to it too.
 
 A complete example:
@@ -946,7 +949,7 @@ A complete example:
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Your own native ad layout. Ordinary views only (no NativeAdView, no MediaView): the plugin adds those.
-    The views the plugin fills use its IDs: @id/company_admob_native_... Everything else is up to you.
+    The views the plugin fills use its IDs: @id/adroit_native_... Everything else is up to you.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -964,25 +967,25 @@ A complete example:
         android:paddingEnd="24dp">
 
         <ImageView
-            android:id="@id/company_admob_native_icon"
+            android:id="@id/adroit_native_icon"
             android:layout_width="@dimen/_36sdp"
             android:layout_height="@dimen/_36sdp"
             android:contentDescription="@null" />
 
         <TextView
-            android:id="@id/company_admob_native_attribution"
+            android:id="@id/adroit_native_attribution"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/_6sdp"
-            android:background="@drawable/company_admob_native_attribution_background"
+            android:background="@drawable/adroit_native_attribution_background"
             android:paddingHorizontal="@dimen/_4sdp"
             android:text="Ad"
-            android:textColor="@color/company_admob_native_attribution_text"
+            android:textColor="@color/adroit_native_attribution_text"
             android:textSize="@dimen/_8ssp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@id/company_admob_native_headline"
+            android:id="@id/adroit_native_headline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/_6sdp"
@@ -993,7 +996,7 @@ A complete example:
     </LinearLayout>
 
     <TextView
-        android:id="@id/company_admob_native_body"
+        android:id="@id/adroit_native_body"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/_4sdp"
@@ -1002,20 +1005,20 @@ A complete example:
 
     <!-- The image or video goes in here. At least 120dp tall: the video minimum. -->
     <FrameLayout
-        android:id="@id/company_admob_native_media"
+        android:id="@id/adroit_native_media"
         android:layout_width="match_parent"
         android:layout_height="140dp"
         android:layout_marginTop="@dimen/_6sdp" />
 
     <!-- Written as android.widget.Button, so a Material theme keeps its background. -->
     <android.widget.Button
-        android:id="@id/company_admob_native_cta"
+        android:id="@id/adroit_native_cta"
         android:layout_width="match_parent"
         android:layout_height="@dimen/_34sdp"
         android:layout_marginTop="@dimen/_6sdp"
-        android:background="@drawable/company_admob_native_cta_background"
+        android:background="@drawable/adroit_native_cta_background"
         android:textAllCaps="false"
-        android:textColor="@color/company_admob_native_cta_text"
+        android:textColor="@color/adroit_native_cta_text"
         android:textSize="@dimen/_12ssp"
         android:textStyle="bold" />
 </LinearLayout>
@@ -1064,7 +1067,7 @@ to use until Firebase sets one:
 ```kotlin
 package com.example.myapp.ads
 
-import com.company.admob.firebase.RemoteValue
+import io.github.thesobiaakbar.adroit.firebase.RemoteValue
 import org.json.JSONObject
 
 /** The app's own Firebase values (not ads), each with the value used until Firebase sets one. */
@@ -1243,7 +1246,7 @@ in [Ad profiles](AD_PROFILES.md#the-json).
 
 A debug build on a phone or an emulator:
 
-- [ ] Logcat (`CompanyAdMob`): `Firebase parameter <Name>: {…}` per ad, then `Remote Config fetched`.
+- [ ] Logcat (`Adroit`): `Firebase parameter <Name>: {…}` per ad, then `Remote Config fetched`.
 - [ ] The consent form (first launch), the progress bar, a test ad, then your main screen.
 - [ ] Every ad is labelled "Test Ad". Full-screen ads show "Loading ad…" first; banners and native ads, a shimmer.
 - [ ] Switching tabs, scrolling a list away and back, or rotating the phone doesn't reload a banner or a native ad,

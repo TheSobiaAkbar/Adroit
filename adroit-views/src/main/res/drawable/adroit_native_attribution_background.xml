@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The "Ad" badge. Change its color (adroit_native_attribution) and corners
+    (adroit_native_attribution_corner_radius), or replace the whole shape: a drawable with this name in your app.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/adroit_native_attribution" />
+    <corners android:radius="@dimen/adroit_native_attribution_corner_radius" />
+</shape>

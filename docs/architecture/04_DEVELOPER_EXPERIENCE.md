@@ -1,6 +1,6 @@
 # Part 7: Developer integration experience (target state after 1.0.0)
 
-This is what a developer at the company does to integrate the released AAR. Every step below is a requirement the implementation must meet.
+This is what a developer does to integrate the released AAR. Every step below is a requirement the implementation must meet.
 
 ## 1. Gradle
 
@@ -9,7 +9,7 @@ This is what a developer at the company does to integrate the released AAR. Ever
 dependencyResolutionManagement {
   repositories {
     google(); mavenCentral()
-    maven("https://maven.pkg.github.com/<org>/AdsPlugin") {          // or the company Artifactory URL
+    maven("https://maven.pkg.github.com/TheSobiaAkbar/Adroit") {
       credentials { username = providers.gradleProperty("gpr.user").get(); password = providers.gradleProperty("gpr.key").get() }
     }
   }
@@ -17,10 +17,10 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-  implementation("com.company:admob-core:1.0.0")
-  implementation("com.company:admob-views:1.0.0")     // XML / View apps
-  implementation("com.company:admob-compose:1.0.0")   // Compose apps (brings views for templates)
-  testImplementation("com.company:admob-testing:1.0.0")
+  implementation("io.github.thesobiaakbar:adroit-core:1.0.0")
+  implementation("io.github.thesobiaakbar:adroit-views:1.0.0")     // XML / View apps
+  implementation("io.github.thesobiaakbar:adroit-compose:1.0.0")   // Compose apps (brings views for templates)
+  testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0")
 }
 // Only if you add mediation adapters (the Next-Gen SDK requires this):
 configurations.configureEach {
@@ -55,7 +55,7 @@ object Placements {
 class MyApp : Application() {
   override fun onCreate() {
     super.onCreate()
-    CompanyAdMob.initialize(this, adMobConfig {
+    Adroit.initialize(this, adMobConfig {
       environment = if (BuildConfig.DEBUG) AdEnvironment.DEVELOPMENT else AdEnvironment.PRODUCTION
       privacy { maxAdContentRating = MaxAdContentRating.T }
       placements {
@@ -80,8 +80,8 @@ In debug builds, every placement automatically uses Google's demo ad units, so d
 class SplashActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    CompanyAdMob.start(this)                                        // UMP form if required → SDK init
-    CompanyAdMob.appOpen.showOnColdStart(this, maxWait = 4.seconds) { goToMain() }  // optional
+    Adroit.start(this)                                        // UMP form if required → SDK init
+    Adroit.appOpen.showOnColdStart(this, maxWait = 4.seconds) { goToMain() }  // optional
   }
 }
 ```
@@ -90,10 +90,10 @@ class SplashActivity : AppCompatActivity() {
 
 ```kotlin
 // Interstitial: the app flow continues whatever happens
-CompanyAdMob.showInterstitial(activity, Placements.LevelComplete) { openNextLevel() }
+Adroit.showInterstitial(activity, Placements.LevelComplete) { openNextLevel() }
 
 // Rewarded: deterministic result, reward granted exactly once
-CompanyAdMob.showRewarded(activity, Placements.ExtraLife) { result ->
+Adroit.showRewarded(activity, Placements.ExtraLife) { result ->
   when (result) {
     is RewardResult.Earned -> viewModel.grantLife(result.rewardId, result.reward.amount)
     RewardResult.NotEarned, is RewardResult.Failed -> Unit
@@ -101,15 +101,15 @@ CompanyAdMob.showRewarded(activity, Placements.ExtraLife) { result ->
 }
 
 // Or with coroutines (safe across rotation: see unclaimedResults)
-lifecycleScope.launch { val result = CompanyAdMob.rewarded.showAndAwait(this@GameActivity, Placements.ExtraLife) }
+lifecycleScope.launch { val result = Adroit.rewarded.showAndAwait(this@GameActivity, Placements.ExtraLife) }
 ```
 
 ## 7. Banner and native
 
 ```kotlin
 // XML
-<com.company.admob.views.AdBannerView android:layout_width="match_parent" android:layout_height="wrap_content"
-    app:company_admob_placement="home_banner"/>
+<io.github.thesobiaakbar.adroit.views.AdBannerView android:layout_width="match_parent" android:layout_height="wrap_content"
+    app:adroit_placement="home_banner"/>
 
 // Fragment (programmatic)
 binding.adContainer.attachBanner(viewLifecycleOwner, Placements.HomeBanner)
@@ -123,14 +123,14 @@ AdNative(Placements.ArticleNative, Modifier.padding(16.dp), layout = NativeTempl
 ## 8. Privacy options (settings screen)
 
 ```kotlin
-val required by CompanyAdMob.privacy.isPrivacyOptionsRequired.collectAsStateWithLifecycle()
-if (required) TextButton(onClick = { CompanyAdMob.privacy.showPrivacyOptions(activity) }) { Text("Privacy options") }
+val required by Adroit.privacy.isPrivacyOptionsRequired.collectAsStateWithLifecycle()
+if (required) TextButton(onClick = { Adroit.privacy.showPrivacyOptions(activity) }) { Text("Privacy options") }
 ```
 
 ## 9. Premium users
 
 ```kotlin
-billingRepository.isPremium.collect { CompanyAdMob.setAdFree(it) }   // hides banners/native, stops all loading
+billingRepository.isPremium.collect { Adroit.setAdFree(it) }   // hides banners/native, stops all loading
 ```
 
 ## 10. Analytics and remote config (optional)
@@ -138,7 +138,7 @@ billingRepository.isPremium.collect { CompanyAdMob.setAdFree(it) }   // hides ba
 ```kotlin
 adMobConfig {
   eventListeners += AdEventListener { event -> if (event is AdEvent.Paid) analytics.logRevenue(event.revenue) }
-  remoteConfig = FirebaseRemoteConfigProvider(Firebase.remoteConfig)   // from admob-firebase, optional
+  remoteConfig = FirebaseRemoteConfigProvider(Firebase.remoteConfig)   // from adroit-firebase, optional
 }
 ```
 
@@ -146,15 +146,15 @@ adMobConfig {
 
 ```kotlin
 @Module @InstallIn(SingletonComponent::class)
-object AdsModule { @Provides fun ads(): AdsClient = CompanyAdMob.client }
-// ViewModel tests: inject FakeAdsClient from admob-testing
+object AdsModule { @Provides fun ads(): AdsClient = Adroit.client }
+// ViewModel tests: inject FakeAdsClient from adroit-testing
 ```
 
 ## 12. Diagnostics
 
 ```kotlin
-Log.d("Ads", CompanyAdMob.diagnostics.snapshot().toString())   // redacted in PRODUCTION
-CompanyAdMob.diagnostics.openAdInspector(activity)             // test devices only
+Log.d("Ads", Adroit.diagnostics.snapshot().toString())   // redacted in PRODUCTION
+Adroit.diagnostics.openAdInspector(activity)             // test devices only
 ```
 
 ## What developers never touch

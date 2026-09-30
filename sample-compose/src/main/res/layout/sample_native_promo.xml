@@ -2,7 +2,7 @@
 <!--
     The sample's own native layout, registered as "sample_promo" (SampleApplication), so SampleAds or Firebase can pick
     it: {"style": "sample_promo"}. It uses the standard IDs, and ordinary views only: no NativeAdView or MediaView (the
-    library wraps it and adds the media into company_admob_native_media). Its look is its own: a tinted card, a
+    library wraps it and adds the media into adroit_native_media). Its look is its own: a tinted card, a
     golden "AD" badge, media on the side and a rounded button. Its shimmer is built from it at runtime.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -25,7 +25,7 @@
             android:paddingEnd="8dp">
 
             <TextView
-                android:id="@id/company_admob_native_attribution"
+                android:id="@id/adroit_native_attribution"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="#FFC107"
@@ -46,14 +46,14 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@id/company_admob_native_icon"
+                    android:id="@id/adroit_native_icon"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:contentDescription="@null"
                     android:importantForAccessibility="no" />
 
                 <TextView
-                    android:id="@id/company_admob_native_headline"
+                    android:id="@id/adroit_native_headline"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -66,7 +66,7 @@
             </LinearLayout>
 
             <TextView
-                android:id="@id/company_admob_native_body"
+                android:id="@id/adroit_native_body"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
@@ -77,16 +77,16 @@
         </LinearLayout>
 
         <FrameLayout
-            android:id="@id/company_admob_native_media"
+            android:id="@id/adroit_native_media"
             android:layout_width="0dp"
             android:layout_height="130dp"
             android:layout_marginEnd="20dp"
             android:layout_weight="1.2"
-            android:contentDescription="@string/company_admob_native_media_description" />
+            android:contentDescription="@string/adroit_native_media_description" />
     </LinearLayout>
 
     <android.widget.Button
-        android:id="@id/company_admob_native_cta"
+        android:id="@id/adroit_native_cta"
         android:layout_width="match_parent"
         android:layout_height="44dp"
         android:layout_marginTop="8dp"

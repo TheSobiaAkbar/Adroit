@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shown before a full-screen ad while it opens or finishes loading. -->
+    <string name="adroit_loading_ad">Loading ad…</string>
+
+    <!-- The loading screen's scrim, over the app while the ad opens. -->
+    <color name="adroit_loading_ad_scrim">#99000000</color>
+
+    <!-- A full-screen, transparent window over the Activity. Dark colours in values-night. -->
+    <style name="Adroit.LoadingAd" parent="@android:style/Theme.DeviceDefault.Light.Dialog.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@color/adroit_loading_ad_scrim</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+    </style>
+</resources>

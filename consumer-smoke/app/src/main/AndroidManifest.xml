@@ -4,7 +4,7 @@
     <application
         android:name=".SmokeApplication"
         android:allowBackup="false"
-        android:label="CompanyAdMob consumer smoke"
+        android:label="Adroit consumer smoke"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:name=".MainActivity"

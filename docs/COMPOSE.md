@@ -1,11 +1,10 @@
 # Jetpack Compose
 
-`com.company:admob-compose` adds six APIs on top of `admob-core`. It depends on no design system (no Material),
+`io.github.thesobiaakbar:adroit-compose` adds six APIs on top of `adroit-core`. It depends on no design system (no Material),
 navigation or DI library.
 
 Adding ads to a new Compose app, step by step, with the splash screen and every format:
-[Adding ads to a new Jetpack Compose app](NEW_APP_COMPOSE.md). An app with XML screens too:
-[Adding ads to a new app with XML and Compose screens](NEW_APP_MIXED.md).
+[Adding ads to a new Jetpack Compose app](NEW_APP_COMPOSE.md).
 
 ## `AdSlot`
 
@@ -105,7 +104,7 @@ Shows full-screen ads from event handlers over the composition's Activity. It ho
 stable across recompositions. Every `onResult` is called exactly once, on the main thread. Without an Activity the
 result is `NotShown(ActivityUnavailable)` or `Failed(ActivityUnavailable)`.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#rewarded-compose -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#rewarded-compose -->
 ```kotlin
 @Composable
 fun WatchAdButton(onReward: (RewardResult.Earned) -> Unit) {
@@ -120,7 +119,7 @@ fun WatchAdButton(onReward: (RewardResult.Earned) -> Unit) {
 
 ## State and configuration changes
 
-- Observe library state with `collectAsStateWithLifecycle()`: `CompanyAdMob.state`, `privacy.consentState`,
+- Observe library state with `collectAsStateWithLifecycle()`: `Adroit.state`, `privacy.consentState`,
   `privacy.isPrivacyOptionsRequired`, and `handle.state` for banners and native ads.
 - Grant rewards and keep results in ViewModels, not in composables: a rotation recreates the composition, and
   `rememberSaveable` state is the only composition state that survives it.

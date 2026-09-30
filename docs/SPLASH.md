@@ -35,7 +35,7 @@ The splash ad is an ad definition with `splash = true` (see [Ad profiles](AD_PRO
 
 Keep the flow in a ViewModel:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Splash.kt#splash-viewmodel -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Splash.kt#splash-viewmodel -->
 ```kotlin
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
     // Survives rotation: consent, the timer and the splash ad run once per launch.
@@ -47,7 +47,7 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
 
 Draw its state:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Splash.kt#splash-activity -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Splash.kt#splash-activity -->
 ```kotlin
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -69,7 +69,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
 }
 ```
 
-- Call `CompanyAdMob.setAdFree(true)` for premium users as well, so no other screen shows ads.
+- Call `Adroit.setAdFree(true)` for premium users as well, so no other screen shows ads.
 - Exclude the splash Activity from automatic app open ads (`AdProfile.appOpen(excludedActivities = ...)`).
 - `start` is safe to call from every `onCreate`: after a rotation, it hands the new Activity to the running flow.
 

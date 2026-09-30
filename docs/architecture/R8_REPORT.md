@@ -7,12 +7,12 @@ Device: Pixel 7a, Android 17 (API 37), over adb.
 
 | Module | Rules | Why |
 |---|---|---|
-| `admob-core` | 1 rule: `-keepclassmembers class * extends androidx.room.RoomDatabase { <init>(); }` | Fixes a launch crash in every minified app (§3.1). Not needed by the library's own code. |
-| `admob-views` | none | Its custom views are kept by AAPT (§4). |
-| `admob-compose` | none | No reflection. |
-| `admob-testing` | none | Test-only artifact. |
+| `adroit-core` | 1 rule: `-keepclassmembers class * extends androidx.room.RoomDatabase { <init>(); }` | Fixes a launch crash in every minified app (§3.1). Not needed by the library's own code. |
+| `adroit-views` | none | Its custom views are kept by AAPT (§4). |
+| `adroit-compose` | none | No reflection. |
+| `adroit-testing` | none | Test-only artifact. |
 
-No broad `-keep class com.company.admob.** { *; }`, and no `-dontwarn` in any library.
+No broad `-keep class io.github.thesobiaakbar.adroit.** { *; }`, and no `-dontwarn` in any library.
 
 The samples' `proguard-rules.pro` files contain no library-specific rules. sample-xml has two rule files that apply
 only to its instrumented-test setup, never to release (§5).
@@ -34,7 +34,7 @@ Neither covers the Room issue below, which comes from a transitive dependency.
 
 ## 3. R8 findings
 
-### 3.1 Launch crash from Room 2.2.5's rules (fixed in admob-core)
+### 3.1 Launch crash from Room 2.2.5's rules (fixed in adroit-core)
 
 Every minified sample crashed in `Application` startup, before any library code ran:
 
@@ -83,7 +83,7 @@ consistent) and log text.
 ## 4. XML inflation under R8
 
 AAPT generates `-keep` rules for every class referenced from a layout, so `AdBannerView` and `AdNativeView` keep
-their names (`mapping.txt`: `com.company.admob.views.AdBannerView -> com.company.admob.views.AdBannerView`).
+their names (`mapping.txt`: `io.github.thesobiaakbar.adroit.views.AdBannerView -> io.github.thesobiaakbar.adroit.views.AdBannerView`).
 `ReleaseSmokeTest` checks the inflated views' class names on the device.
 
 ## 5. Instrumented tests against R8 code
@@ -155,7 +155,7 @@ temporary worktree, never committed:
 | App | Release APK |
 |---|---|
 | Baseline: one Activity, no ads | 1,311,572 B |
-| The same plus CompanyAdMob: `initialize`, `start`, an `AdBannerView`, an interstitial | 3,441,045 B |
+| The same plus Adroit: `initialize`, `start`, an `AdBannerView`, an interstitial | 3,441,045 B |
 | **Delta** | **+2,129,473 B (about 2.03 MiB)** |
 
 Almost all of the delta is the Google Mobile Ads Next-Gen and UMP SDKs and their dependencies (WorkManager, Room,

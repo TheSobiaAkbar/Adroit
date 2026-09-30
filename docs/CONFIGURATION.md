@@ -1,7 +1,7 @@
 # Configuration
 
 Everything is configured once, in `Application.onCreate`, with `adMobConfig { }` (or the Java builder), and passed to
-`CompanyAdMob.initialize`. The configuration is fixed for the life of the process: a second `initialize` with a
+`Adroit.initialize`. The configuration is fixed for the life of the process: a second `initialize` with a
 different configuration is ignored, with an error log and an `AdEvent.ConfigurationWarning`. Change placements,
 formats and intervals at runtime with [remote overrides](REMOTE_CONFIG.md) instead.
 
@@ -12,7 +12,7 @@ see [Ad profiles](AD_PROFILES.md). It can be combined with the options below.
 
 Every option, with a typical value. Only `environment` and `placements` are usually needed.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Configuration.kt#full-dsl -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Configuration.kt#full-dsl -->
 ```kotlin
 fun fullConfig(analytics: AdEventListener): AdMobConfig = adMobConfig {
     environment = AdEnvironment.STAGING
@@ -116,14 +116,14 @@ Every placement takes an optional block:
 Every placement function also takes a list of ad unit IDs, for example `interstitial(placement, listOf(id1, id2))`:
 each load uses the next one, and after the last one the first again.
 
-A size passed where you show a banner (`AdBannerView`'s `company_admob_bannerSize`, or `BannerOptions`) wins over the
+A size passed where you show a banner (`AdBannerView`'s `adroit_bannerSize`, or `BannerOptions`) wins over the
 placement's `size`; leave it out when the configuration (or Firebase) should decide.
 
 ## Environments
 
 Pick the environment per build type:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Configuration.kt#per-build -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Configuration.kt#per-build -->
 ```kotlin
 val environment = when (buildType) {
     "debug" -> AdEnvironment.DEVELOPMENT // Google's demo ad units, whatever is configured
@@ -210,7 +210,7 @@ shorter than Google's limits, which are one hour for most formats and four hours
 
 ## Java
 
-<!-- snippet: docs-snippets/src/main/java/com/company/admob/docs/JavaConfiguration.java#java-builder -->
+<!-- snippet: docs-snippets/src/main/java/io/github/thesobiaakbar/adroit/docs/JavaConfiguration.java#java-builder -->
 ```java
 static AdMobConfig create() {
     AdMobConfig.Builder builder = new AdMobConfig.Builder()

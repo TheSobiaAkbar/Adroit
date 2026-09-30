@@ -1,7 +1,7 @@
 # consumer-smoke
 
 A separate Gradle build, not part of the main settings. It's a minimal host app that depends only on
-`com.company:admob-compose` from `mavenLocal()`, calls `CompanyAdMob.initialize` and `start`, and shows an `AdBanner`.
+`io.github.thesobiaakbar:adroit-compose` from `mavenLocal()`, calls `Adroit.initialize` and `start`, and shows an `AdBanner`.
 
 ```bash
 ./gradlew publishToMavenLocal
@@ -10,7 +10,7 @@ A separate Gradle build, not part of the main settings. It's a minimal host app 
 
 What it proves:
 
-- The published POMs and module metadata resolve transitively: admob-core, admob-views, `ads-mobile-sdk` and UMP.
+- The published POMs and module metadata resolve transitively: adroit-core, adroit-views, `ads-mobile-sdk` and UMP.
 - No Google Mobile Ads or UMP artifact is on the host's compile classpath. A source file referencing
   `com.google.android.libraries.ads.mobile.sdk.MobileAds` fails to compile.
 - A host on AGP 9's built-in Kotlin 2.2.10 can consume the libraries (built with Kotlin 2.4.20, metadata 2.2).
@@ -19,7 +19,7 @@ What it proves:
 ## Compatibility matrix
 
 Gradle properties pick the row: `smoke.agp`, `smoke.kotlin` (the Kotlin Gradle plugin, applied on AGP 8),
-`smoke.compose` (`false` builds a View-based host on admob-views, with no Compose), `smoke.compileSdk` and
+`smoke.compose` (`false` builds a View-based host on adroit-views, with no Compose), `smoke.compileSdk` and
 `smoke.activity` (the host's own `androidx.activity`). Results for 1.0.0-rc1 are in
 [docs/audits/API_STABILITY_AUDIT.md](../docs/audits/API_STABILITY_AUDIT.md) (check 10).
 
@@ -34,5 +34,5 @@ gradle -p consumer-smoke assembleDebug verifyConsumerClasspath -Psmoke.agp=8.1.4
 
 Rows 2 and 3 need a local Gradle 8 (`gradle`), because AGP 8 doesn't run on the repository's Gradle 9 wrapper.
 
-It reads the version from the main build's `gradle.properties` (`companyAdmob.version`). The Android SDK location
+It reads the version from the main build's `gradle.properties` (`adroit.version`). The Android SDK location
 comes from `consumer-smoke/local.properties` (`sdk.dir=…`, not committed; copy the root one) or `ANDROID_HOME`.

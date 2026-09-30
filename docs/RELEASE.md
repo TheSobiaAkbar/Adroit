@@ -1,4 +1,4 @@
-# Releasing CompanyAdMob
+# Releasing Adroit
 
 For library maintainers. Publishing mechanics (repositories, credentials, signing) are in
 [architecture/PUBLISHING_NOTES.md](architecture/PUBLISHING_NOTES.md).
@@ -11,10 +11,10 @@ Semantic Versioning, with these rules ([architecture §31](architecture/02_ARCHI
   bytecode level).
 - **MINOR:** new API, or a Google SDK upgrade with no consumer-visible change.
 - **PATCH:** fixes only.
-- `0.x` while the API stabilized inside the company. `1.0.0-rc1` froze the API (PROMPT 27); `1.0.0` follows the final
+- `0.x` while the API stabilized. `1.0.0-rc1` froze the API (PROMPT 27); `1.0.0` follows the final
   production audit. Pre-releases are `x.y.z-rcN`, and the rules below apply to them already.
 
-All modules are released together with one version, `companyAdmob.version` in `gradle.properties`.
+All modules are released together with one version, `adroit.version` in `gradle.properties`.
 
 ## API stability
 
@@ -40,19 +40,19 @@ These rules hold from `1.0.0-rc1` ([audits/API_STABILITY_AUDIT.md](audits/API_ST
   `MaxAdContentRating`, `CollapsibleBannerPosition`) or may gain values in a minor version (include an `else`
   branch: `AdError`, `AdEvent`, `AdsState`, `AdAvailability`, `AdPlacement`, `BannerSize`, `BannerState`,
   `NativeAdHandleState`, `AdFormat`, `UnavailableReason`, `ConsentStatus`, `RevenuePrecision`, `AgeTreatment`,
-  `DebugGeography`, `PreloadStrategy`, `NativeStyle`, `FirebaseAdEvent`, admob-testing's `FakeCall`).
+  `DebugGeography`, `PreloadStrategy`, `NativeStyle`, `FirebaseAdEvent`, adroit-testing's `FakeCall`).
 - **Data classes** only for value types that won't gain properties (ADR-011). A class that may grow is a regular
   class, and a new property comes with a new constructor overload; the old constructor stays.
-- **New surfaces** that aren't settled yet are marked `@ExperimentalCompanyAdMobApi` (opt-in, warning) and are exempt
+- **New surfaces** that aren't settled yet are marked `@ExperimentalAdroitApi` (opt-in, warning) and are exempt
   from these rules until the marker is removed. Google-typed escape hatches are `@GoogleSdkEscapeHatch` and may change
   in any release.
 - **Java** (ADR-013): the facade, `start`, every show, banner and native call, privacy, diagnostics and the
   configuration builder (including `profiles(context, resId)`) are callable from Java. `kotlin.time.Duration`
   options are Kotlin-only (Java sets timings in the ads file), except `showOnColdStart(activity, maxWaitMillis, …)`.
-  Callbacks are Kotlin function types: a Java lambda returns `Unit.INSTANCE`. `admob-core`'s
+  Callbacks are Kotlin function types: a Java lambda returns `Unit.INSTANCE`. `adroit-core`'s
   `JavaFacadeCalls.java` test source compiles this surface.
 - **Consumer requirements** (a MAJOR change to raise): minSdk 24, Java 11 bytecode, Kotlin 2.1, compileSdk 34 and
-  AGP 8.1.1 (compileSdk 37 and AGP 9.1.0 with `admob-compose`, set by Compose 1.12), as in the README's "Supported
+  AGP 8.1.1 (compileSdk 37 and AGP 9.1.0 with `adroit-compose`, set by Compose 1.12), as in the README's "Supported
   versions". `consumerMinCompileSdk` in `gradle/libs.versions.toml` is what the AARs ask for; the consumer-smoke matrix
   checks the rest.
 
@@ -62,7 +62,7 @@ These rules hold from `1.0.0-rc1` ([audits/API_STABILITY_AUDIT.md](audits/API_ST
 2. The API dumps are reviewed: `./gradlew apiCheck` passes, and any `.api` change since the last release matches the
    version bump.
 3. `CHANGELOG.md`: move `[Unreleased]` into `## [x.y.z] - YYYY-MM-DD`, and update the compare links.
-4. Set `companyAdmob.version=x.y.z` (no `-SNAPSHOT`) in `gradle.properties`.
+4. Set `adroit.version=x.y.z` (no `-SNAPSHOT`) in `gradle.properties`.
 5. Update the "Supported versions" table in the README if a requirement changed, and the "Last verified" lines if you
    re-verified the docs.
 6. Run locally: `./gradlew build lint apiCheck checkModuleDependencies testDebugUnitTest verifyPublication` and the
@@ -78,10 +78,10 @@ Upgrades of `ads-mobile-sdk` and `user-messaging-platform` never come from a bot
    [deprecation schedule](https://developers.google.com/admob/android/next-gen/deprecation), and the UMP
    [release notes](https://developers.google.com/admob/android/privacy/release-notes), for every version skipped.
 2. Update `docs/architecture/01_SDK_RESEARCH.md`: new APIs, deprecations, behaviour changes, transitive dependencies.
-3. Bump the versions in `gradle/libs.versions.toml`, and fix anything that moved inside `admob-core`'s
+3. Bump the versions in `gradle/libs.versions.toml`, and fix anything that moved inside `adroit-core`'s
    `internal/google` package (the only code that touches Google's APIs). Verify changed signatures with `javap`.
 4. Run the full CI command set, and the instrumentation workflow (manually, `workflow_dispatch`) on API 24 and 36.
-5. The API dumps must be unchanged: a Google upgrade must never change CompanyAdMob's public API.
+5. The API dumps must be unchanged: a Google upgrade must never change Adroit's public API.
 6. Check `docs/architecture/R8_REPORT.md`'s findings still hold (minified samples launch).
 7. Check the new resolved runtime classpath against the GitHub Advisory Database, and update the dependency findings
    in `docs/audits/SECURITY_PRIVACY_AUDIT.md` (check 15).
@@ -95,10 +95,10 @@ git push origin v0.1.0
 ```
 
 The `release.yml` workflow then:
-1. checks that the tag is exactly `v` + `companyAdmob.version`, that the version isn't a snapshot, and that
+1. checks that the tag is exactly `v` + `adroit.version`, that the version isn't a snapshot, and that
    `CHANGELOG.md` has a non-empty `## [x.y.z]` section;
 2. runs the full CI checks;
-3. publishes to GitHub Packages, and to the company repository when its secrets are configured;
+3. publishes to GitHub Packages;
 4. creates the GitHub Release, with the CHANGELOG section as its notes.
 
 If the workflow fails before publishing, fix the problem, delete the tag (`git push --delete origin vX.Y.Z`), and tag

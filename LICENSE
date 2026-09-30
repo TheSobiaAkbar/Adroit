@@ -1,0 +1,27 @@
+Adroit
+Copyright (c) 2026 Sobia Akbar. All rights reserved.
+
+This software, including its source code, binaries, documentation and samples (the "Software"), is the property of
+Sobia Akbar (the "Author"). It is not open source.
+
+1. Permission. You may use the Software only if the Author has given you or your organization written permission,
+   for example by inviting you to its repository. That permission lets you build the Software into your own
+   applications and distribute those applications to their users, within the terms the Author gave you.
+
+2. Restrictions. Unless the Author allows it in writing, you may not:
+   a. share, publish, sell, sublicense or otherwise distribute the Software, its source code or its packages, on
+      their own or as part of a library, SDK or other developer tool;
+   b. give anyone else access to the repository, the packages or your access token;
+   c. remove or change this notice or the Author's credit.
+
+3. Ending access. The Author may withdraw permission at any time. Applications you published before then may keep
+   using the version they contain, unless the Author's written terms say otherwise.
+
+4. No warranty. The Software is provided "as is", without warranty of any kind, express or implied, including
+   merchantability, fitness for a particular purpose and non-infringement. In no event shall the Author be liable for
+   any claim, damages or other liability arising from the Software or its use.
+
+5. Third-party components. The Software uses third-party libraries, such as the Google Mobile Ads SDK and the User
+   Messaging Platform SDK, which have their own licenses and terms. Your use of them is governed by those terms.
+
+For permission or questions: https://github.com/TheSobiaAkbar

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!--
-        The native templates' card fill. Transparent: the card shows your screen's background, inside its stroke.
-        The other native colors are in res/color (company_admob_native_headline, _body, _cta, _cta_text, _attribution,
-        _attribution_text, _stroke). Override any of them in your app with a color of the same name.
-    -->
-    <color name="company_admob_native_background">@android:color/transparent</color>
-</resources>

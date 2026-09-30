@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- small_button_end: icon, "Ad" badge, headline and body, with the call to action at the end of the row. No media.
+     The end is kept free (paddingEnd) for the AdChoices icon. -->
+<!-- Overdraw: the template is embedded in your screen, not a window root. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/adroit_nativeBackground"
+    android:orientation="horizontal"
+    android:padding="@dimen/adroit_native_spacing"
+    android:gravity="center_vertical"
+    android:paddingEnd="@dimen/adroit_native_adchoices_space"
+    android:theme="@style/Adroit.ThemeOverlay.Native"
+    tools:ignore="Overdraw">
+
+    <include layout="@layout/adroit_native_part_header" />
+
+    <android.widget.Button
+        android:id="@+id/adroit_native_cta"
+        style="@style/Adroit.Native.Cta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/adroit_native_spacing" />
+
+</LinearLayout>

@@ -1,11 +1,11 @@
 # Troubleshooting
 
-Start with the facts: log `CompanyAdMob.diagnostics.snapshot()` (the state, consent, environment, test mode, every
-placement's availability and retry state, and the last error), and watch Logcat for the `CompanyAdMob` tag at DEBUG.
+Start with the facts: log `Adroit.diagnostics.snapshot()` (the state, consent, environment, test mode, every
+placement's availability and retry state, and the last error), and watch Logcat for the `Adroit` tag at DEBUG.
 
 ## No ads at all in DEVELOPMENT
 
-- Check `CompanyAdMob.state`: nothing loads until it's `Ready`. Did you call `start(activity)`?
+- Check `Adroit.state`: nothing loads until it's `Ready`. Did you call `start(activity)`?
 - `Unavailable(CONSENT_NOT_OBTAINED)`: consent doesn't allow ads yet ([below](#canrequestads-is-false)).
 - `Unavailable(AD_FREE_USER)`: `setAdFree(true)` was called.
 - Offline, or a first request can simply take a few seconds; look for `LoadFailed` events and their `willRetry`.

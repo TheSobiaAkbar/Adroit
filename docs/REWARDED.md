@@ -10,10 +10,10 @@ before they choose.
 
 Grant rewards in a ViewModel or repository, never in the Activity, and at most once per `rewardId`:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#rewarded-viewmodel -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#rewarded-viewmodel -->
 ```kotlin
 /** Grant rewards in a ViewModel, once per rewardId, including rewards that arrive after the screen is gone. */
-class CoinsViewModel(private val ads: AdsClient = CompanyAdMob.client) : ViewModel() {
+class CoinsViewModel(private val ads: AdsClient = Adroit.client) : ViewModel() {
     private val granted = mutableSetOf<String>()
     private val mutableCoins = MutableStateFlow(0)
     val coins: StateFlow<Int> = mutableCoins.asStateFlow()
@@ -43,7 +43,7 @@ class CoinsViewModel(private val ads: AdsClient = CompanyAdMob.client) : ViewMod
 
 In Compose, enable the button only when an ad is ready:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#rewarded-compose -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#rewarded-compose -->
 ```kotlin
 @Composable
 fun WatchAdButton(onReward: (RewardResult.Earned) -> Unit) {
@@ -70,10 +70,10 @@ fun WatchAdButton(onReward: (RewardResult.Earned) -> Unit) {
 Set up SSV for the ad unit in AdMob ([Google's SSV guide](https://developers.google.com/admob/android/next-gen/ssv)),
 then pass your data with the show; grant the reward when your server receives Google's callback:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#rewarded-ssv -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#rewarded-ssv -->
 ```kotlin
 fun showWithServerSideVerification(activity: Activity, userId: String) {
-    CompanyAdMob.rewarded.show(
+    Adroit.rewarded.show(
         activity,
         Placements.ExtraLife,
         RewardedShowOptions(serverSideVerificationCustomData = "user=$userId"),

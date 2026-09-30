@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- The required ad attribution badge. Translate it in your app ("Anuncio", "Anzeige", ...). -->
-    <string name="company_admob_ad_attribution">Ad</string>
-    <!-- Spoken for the ad's main image or video. -->
-    <string name="company_admob_native_media_description">Ad media</string>
-</resources>

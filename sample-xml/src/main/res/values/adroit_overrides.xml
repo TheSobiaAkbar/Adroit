@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Restyling the library's native templates: a resource with the same name as one of the library's replaces it
+    (docs/NATIVE.md, "Styling"). This sample changes the "Ad" badge and the button; the rest follow the app's theme.
+-->
+<resources>
+    <color name="adroit_native_attribution">#FFC107</color>
+    <color name="adroit_native_attribution_text">#FFFFFF</color>
+    <!-- The button: a gradient from _cta to _cta_end (set only _cta for a solid button). Firebase can change both. -->
+    <color name="adroit_native_cta">#FF6D00</color>
+    <color name="adroit_native_cta_end">#FFA000</color>
+    <color name="adroit_native_cta_text">#FFFFFF</color>
+
+    <!-- More you can override, for example:
+    <color name="adroit_native_headline">#212121</color>
+    <color name="adroit_native_body">#757575</color>
+    <color name="adroit_native_background">#FFFFFF</color>
+    <color name="adroit_native_stroke">#1F000000</color>
+    <dimen name="adroit_native_card_corner_radius">@dimen/_10sdp</dimen>
+    <dimen name="adroit_native_cta_corner_radius">@dimen/_18sdp</dimen>
+    <dimen name="adroit_native_headline_text_size">@dimen/_11ssp</dimen>
+    The loading shimmer's colors (and in values-night for dark mode):
+    <color name="adroit_shimmer_card">#FFF3F0FF</color>
+    <color name="adroit_shimmer_base">#FFE0D8FF</color>
+    <color name="adroit_shimmer_highlight">#FFFFFFFF</color>
+    Or replace a whole shape: a drawable named adroit_native_card, adroit_native_cta_background or
+    adroit_native_attribution_background. -->
+</resources>

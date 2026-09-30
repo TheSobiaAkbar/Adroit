@@ -6,7 +6,7 @@ compileSdk = "37"
 minSdk = "24"
 # The compileSdk the published AARs ask apps for (aar-metadata minCompileSdk). Without it AGP 9 publishes compileSdk
 # (37), forcing every app onto the newest SDK. 34 is what the libraries' own dependencies need (lifecycle 2.11);
-# admob-compose's Compose 1.12 asks for 37 in its own metadata (PROMPT 27, API_STABILITY_AUDIT.md check 10).
+# adroit-compose's Compose 1.12 asks for 37 in its own metadata (PROMPT 27, API_STABILITY_AUDIT.md check 10).
 consumerMinCompileSdk = "34"
 targetSdk = "36"
 # Public API dumps (ADR-007): BCV's JVM dump engine, driven by build-logic tasks
@@ -20,7 +20,7 @@ androidxLifecycle = "2.11.0"
 androidxAnnotation = "1.11.0"
 kotlinxCoroutines = "1.10.2"
 composeBom = "2026.09.00"
-# admob-firebase only (PROMPT 24): the BoM sets firebase-config and firebase-analytics
+# adroit-firebase only (PROMPT 24): the BoM sets firebase-config and firebase-analytics
 firebaseBom = "34.19.0"
 
 # Samples only
@@ -33,11 +33,9 @@ recyclerview = "1.4.0"
 fragmentKtx = "1.9.1"
 # 2.x only: LeakCanary 3.0 is still alpha
 leakcanary = "2.14"
-# admob-views only: the native templates' sizes (sdp) and text sizes (ssp) scale with the screen width.
+# adroit-views only: the native templates' sizes (sdp) and text sizes (ssp) scale with the screen width.
 sdp = "1.1.1"
 navigation = "2.10.2"
-# sample-mixed only, behind -PwithMediation=true (PROMPT 19)
-applovinMediationAdapter = "13.6.4.2"
 
 # Tests
 junit = "4.13.2"
@@ -45,7 +43,7 @@ junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 androidxTestCore = "1.7.0"
 robolectric = "4.17"
-# Test only: admob-views must never depend on androidx.fragment at runtime (ADR-014)
+# Test only: adroit-views must never depend on androidx.fragment at runtime (ADR-014)
 fragmentTesting = "1.9.1"
 turbine = "1.2.1"
 androidxTestRunner = "1.7.0"
@@ -53,7 +51,7 @@ androidxTestRules = "1.7.0"
 uiautomator = "2.4.0"
 
 [libraries]
-# Google Mobile Ads Next-Gen + UMP (admob-core only)
+# Google Mobile Ads Next-Gen + UMP (adroit-core only)
 ads-mobile-sdk = { module = "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk", version.ref = "adsMobileSdk" }
 ump = { module = "com.google.android.ump:user-messaging-platform", version.ref = "ump" }
 
@@ -92,9 +90,8 @@ ssp-android = { module = "com.intuit.ssp:ssp-android", version.ref = "sdp" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 leakcanary-android-instrumentation = { module = "com.squareup.leakcanary:leakcanary-android-instrumentation", version.ref = "leakcanary" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
-applovin-mediation-adapter = { module = "com.google.ads.mediation:applovin", version.ref = "applovinMediationAdapter" }
 
-# admob-firebase only
+# adroit-firebase only
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-config = { module = "com.google.firebase:firebase-config" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
@@ -126,9 +123,9 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 # Convention plugins (build-logic)
-companyadmob-android-library = { id = "companyadmob.android.library" }
-companyadmob-android-library-compose = { id = "companyadmob.android.library.compose" }
-companyadmob-android-sample = { id = "companyadmob.android.sample" }
-companyadmob-android-sample-compose = { id = "companyadmob.android.sample.compose" }
-companyadmob-android-firebase = { id = "companyadmob.android.firebase" }
-companyadmob-publishing = { id = "companyadmob.publishing" }
+adroit-android-library = { id = "adroit.android.library" }
+adroit-android-library-compose = { id = "adroit.android.library.compose" }
+adroit-android-sample = { id = "adroit.android.sample" }
+adroit-android-sample-compose = { id = "adroit.android.sample.compose" }
+adroit-android-firebase = { id = "adroit.android.firebase" }
+adroit-publishing = { id = "adroit.publishing" }

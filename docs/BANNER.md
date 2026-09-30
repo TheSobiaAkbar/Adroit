@@ -7,10 +7,10 @@ content (inline adaptive, medium rectangle). In Compose, `AdBanner` works in a `
 (its `slotKey`) is kept by the screen, so scrolling back shows the same ad ([Compose](COMPOSE.md#adbanner)). In a
 `RecyclerView`, a recycled banner view loads a new ad: use [native ads](NATIVE.md) there.
 
-| `BannerSize` | XML `company_admob_bannerSize` | Use |
+| `BannerSize` | XML `adroit_bannerSize` | Use |
 |---|---|---|
 | `AnchoredAdaptive` (default) | `anchoredAdaptive` | Pinned to the top or bottom, full width |
-| `InlineAdaptive(maxHeightDp)` | `inlineAdaptive` (+ `company_admob_inlineMaxHeight`) | Inside scrolling content |
+| `InlineAdaptive(maxHeightDp)` | `inlineAdaptive` (+ `adroit_inlineMaxHeight`) | Inside scrolling content |
 | `MediumRectangle` | `mediumRectangle` | 300×250 inside content |
 | `Standard` | `standard` | 320×50, when you need a fixed size |
 | `Collapsible(BOTTOM or TOP)` | `collapsibleBottom`, `collapsibleTop` | Anchored adaptive that opens expanded, then collapses; at that edge of the screen |
@@ -26,21 +26,21 @@ ads show as normal banners ([Google's guide](https://developers.google.com/admob
 
 <!-- snippet: docs-snippets/src/main/res/layout/snippet_banner.xml#xml-banner -->
 ```xml
-<com.company.admob.views.AdBannerView
+<io.github.thesobiaakbar.adroit.views.AdBannerView
     android:id="@+id/home_banner"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:company_admob_placement="home_banner"
-    app:company_admob_bannerSize="anchoredAdaptive" />
+    app:adroit_placement="home_banner"
+    app:adroit_bannerSize="anchoredAdaptive" />
 ```
 
 `AdBannerView` finds its lifecycle owner itself (the Fragment's view lifecycle inside a Fragment), loads when ads
 are ready, and destroys the banner with that owner. It's `GONE` while there's no ad
-(`company_admob_collapseWhenEmpty`, default true). You can also call `setPlacement(placement, options)` from code.
+(`adroit_collapseWhenEmpty`, default true). You can also call `setPlacement(placement, options)` from code.
 
 ### A container from code
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Banner.kt#fragment-attach -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Banner.kt#fragment-attach -->
 ```kotlin
 class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -54,7 +54,7 @@ class HomeFragment : Fragment() {
 
 ### Compose
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Banner.kt#compose-banner -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Banner.kt#compose-banner -->
 ```kotlin
 @Composable
 fun HomeBottomBar() {
@@ -69,7 +69,7 @@ fun HomeBottomBar() {
 }
 ```
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Banner.kt#compose-mrec -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Banner.kt#compose-mrec -->
 ```kotlin
 @Composable
 fun ArticleRectangle() {
@@ -83,11 +83,11 @@ fun ArticleRectangle() {
 
 ### Plain View, with core only
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Banner.kt#plain-view -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Banner.kt#plain-view -->
 ```kotlin
 /** Without the views module's helpers: create the handle yourself, add its view, and destroy it. */
 fun showBanner(activity: Activity, container: FrameLayout, owner: LifecycleOwner) {
-    val handle = CompanyAdMob.banner.create(
+    val handle = Adroit.banner.create(
         activity,
         Placements.HomeBanner,
         BannerOptions(size = BannerSize.InlineAdaptive(maxHeightDp = 250), reserveSpace = true),
@@ -140,7 +140,7 @@ full-width banner; a banner of another width loads its own. See [Ad profiles](AD
 
 ## FAQ
 
-**The banner never appears.** Check `CompanyAdMob.state` is `Ready`, the placement key matches the configuration,
+**The banner never appears.** Check `Adroit.state` is `Ready`, the placement key matches the configuration,
 and the state reported by `onStateChange`. See [Troubleshooting](TROUBLESHOOTING.md).
 
 **Does rotation reload the banner?** Yes: a banner belongs to its Activity, and rotation recreates the Activity.

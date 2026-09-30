@@ -16,7 +16,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AdsPlugin">
+        android:theme="@style/Theme.Adroit">
         <!-- Its own Activity, not a navigation destination: the app open ad excludes it by class name (SampleAds). -->
         <activity
             android:name=".SplashActivity"

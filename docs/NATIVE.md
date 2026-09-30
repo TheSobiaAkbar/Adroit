@@ -9,7 +9,7 @@ app. Use it inside content and in lists ([Google](https://developers.google.com/
 
 ### Compose
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Native.kt#compose-native -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Native.kt#compose-native -->
 ```kotlin
 @Composable
 fun ArticleFooterAd() {
@@ -24,7 +24,7 @@ fun ArticleFooterAd() {
 
 In a `LazyColumn`, give each ad item a distinct, stable `slotKey`:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Native.kt#compose-feed -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Native.kt#compose-feed -->
 ```kotlin
 @Composable
 fun Feed(articles: List<String>) {
@@ -45,7 +45,7 @@ For your own Compose rendering of the assets, `rememberNativeAd` gives you the l
 are only recorded when the ad is rendered by the library (`AdNative`, the views helpers or `native.render`), so use
 this for extra information, not instead of rendering:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Native.kt#compose-remember -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Native.kt#compose-remember -->
 ```kotlin
 @Composable
 fun SponsoredHeadline() {
@@ -62,16 +62,16 @@ fun SponsoredHeadline() {
 
 <!-- snippet: docs-snippets/src/main/res/layout/snippet_banner.xml#xml-native -->
 ```xml
-<com.company.admob.views.AdNativeView
+<io.github.thesobiaakbar.adroit.views.AdNativeView
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:company_admob_placement="feed_native"
-    app:company_admob_template="large_button_bottom" />
+    app:adroit_placement="feed_native"
+    app:adroit_template="large_button_bottom" />
 ```
 
 ### A container from code
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Native.kt#views-attach -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Native.kt#views-attach -->
 ```kotlin
 class ArticleFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -84,7 +84,7 @@ class ArticleFragment : Fragment() {
 
 ### RecyclerView
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Native.kt#views-holder -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Native.kt#views-holder -->
 ```kotlin
 /** RecyclerView: one holder per ad position, kept in the ViewModel so scrolling and rotation don't reload. */
 class FeedViewModel : ViewModel() {
@@ -118,7 +118,7 @@ The library has one template per style:
 They use framework widgets only, follow the light and dark themes, support RTL, include the required "Ad" badge,
 and keep a top corner free for the AdChoices icon.
 
-When the code passes no layout (`AdSlotView`, `AdNativeView` without `company_admob_template`, `attachNativeAd`,
+When the code passes no layout (`AdSlotView`, `AdNativeView` without `adroit_template`, `attachNativeAd`,
 `NativeAdHolder.bindTo`, `AdSlot`, `AdNative`), an ad shows in the layout its `style` names now: a style's template,
 or [your own registered layout](#your-own-layout-picked-by-name). The configuration, the
 [ad profile](AD_PROFILES.md) or Firebase (`{"style": "media_start"}`) sets it, so it can change without a
@@ -132,46 +132,46 @@ your app (for example in `res/values/ads_style.xml`); yours replaces the library
 
 ```xml
 <resources>
-    <color name="company_admob_native_attribution">#FFC107</color>      <!-- the "Ad" badge -->
-    <color name="company_admob_native_attribution_text">#FFFFFF</color>
-    <color name="company_admob_native_cta">#FF6D00</color>              <!-- the button -->
-    <color name="company_admob_native_cta_text">#FFFFFF</color>
-    <dimen name="company_admob_native_cta_corner_radius">22dp</dimen>
+    <color name="adroit_native_attribution">#FFC107</color>      <!-- the "Ad" badge -->
+    <color name="adroit_native_attribution_text">#FFFFFF</color>
+    <color name="adroit_native_cta">#FF6D00</color>              <!-- the button -->
+    <color name="adroit_native_cta_text">#FFFFFF</color>
+    <dimen name="adroit_native_cta_corner_radius">22dp</dimen>
 </resources>
 ```
 
 | Resource | Default | What |
 |---|---|---|
-| `color/company_admob_native_background` | transparent | The card's fill |
-| `color/company_admob_native_stroke` | the text color at 12% | The card's border |
-| `color/company_admob_native_headline` | `?android:textColorPrimary` | Headline text |
-| `color/company_admob_native_body` | `?android:textColorSecondary` | Body, advertiser, store and price text |
-| `color/company_admob_native_cta`, `_cta_end` | `?android:colorPrimary`, the same | The call-to-action button: a left-to-right gradient from `_cta` to `_cta_end`. Set only `_cta` for a solid button. |
-| `color/company_admob_native_cta_text` | `?android:textColorPrimaryInverse` | Its text |
-| `color/company_admob_native_attribution` | `?android:colorPrimary` | The "Ad" badge |
-| `color/company_admob_native_attribution_text` | `?android:textColorPrimaryInverse` | Its text |
-| `dimen/company_admob_native_card_corner_radius`, `_card_stroke_width` | `_7sdp`, 1dp | The card's corners and border |
-| `dimen/company_admob_native_cta_corner_radius`, `_attribution_corner_radius` | `_5sdp`, `_2sdp` | The button's and the badge's corners |
-| `dimen/company_admob_native_headline_text_size`, `_body_text_size`, `_caption_text_size`, `_cta_text_size`, `_attribution_text_size` | `_12ssp`, `_11ssp`, `_10ssp`, `_12ssp`, `_8ssp` | Text sizes |
-| `dimen/company_admob_native_icon_size`, `_icon_size_large` | `_34sdp`, `_40sdp` | The icon |
-| `dimen/company_admob_native_cta_min_height` | `_33sdp` | The button's height |
-| `dimen/company_admob_native_media_height`, `_media_height_compact` | `_133sdp`, 120dp | Media in `large_button_bottom`; in `large_compact` and `media_start`. Keep it at least 120dp, Google's minimum for video. |
-| `dimen/company_admob_native_spacing`, `_spacing_small`, `_spacing_tiny`, `_spacing_large` | `_7sdp`, `_3sdp`, `_2sdp`, `_13sdp` | Padding and gaps |
-| `color/company_admob_shimmer_card`, `_shimmer_base`, `_shimmer_highlight` | light greys (dark in night mode) | The [shimmer](#the-shimmer): its card, its blocks, the sweep |
-| `dimen/company_admob_shimmer_corner_radius`, `_shimmer_padding` | `_3sdp`, `_7sdp` | The shimmer's block corners, and a banner shimmer's padding |
-| `drawable/company_admob_native_card` | a rounded card with a border | The whole background shape |
-| `drawable/company_admob_native_cta_background` | a rounded gradient button with a ripple | The whole button shape |
-| `drawable/company_admob_native_attribution_background` | a rounded rectangle | The whole badge shape |
-| `string/company_admob_ad_attribution` | `Ad` | The badge text: translate it in `values-xx` |
+| `color/adroit_native_background` | transparent | The card's fill |
+| `color/adroit_native_stroke` | the text color at 12% | The card's border |
+| `color/adroit_native_headline` | `?android:textColorPrimary` | Headline text |
+| `color/adroit_native_body` | `?android:textColorSecondary` | Body, advertiser, store and price text |
+| `color/adroit_native_cta`, `_cta_end` | `?android:colorPrimary`, the same | The call-to-action button: a left-to-right gradient from `_cta` to `_cta_end`. Set only `_cta` for a solid button. |
+| `color/adroit_native_cta_text` | `?android:textColorPrimaryInverse` | Its text |
+| `color/adroit_native_attribution` | `?android:colorPrimary` | The "Ad" badge |
+| `color/adroit_native_attribution_text` | `?android:textColorPrimaryInverse` | Its text |
+| `dimen/adroit_native_card_corner_radius`, `_card_stroke_width` | `_7sdp`, 1dp | The card's corners and border |
+| `dimen/adroit_native_cta_corner_radius`, `_attribution_corner_radius` | `_5sdp`, `_2sdp` | The button's and the badge's corners |
+| `dimen/adroit_native_headline_text_size`, `_body_text_size`, `_caption_text_size`, `_cta_text_size`, `_attribution_text_size` | `_12ssp`, `_11ssp`, `_10ssp`, `_12ssp`, `_8ssp` | Text sizes |
+| `dimen/adroit_native_icon_size`, `_icon_size_large` | `_34sdp`, `_40sdp` | The icon |
+| `dimen/adroit_native_cta_min_height` | `_33sdp` | The button's height |
+| `dimen/adroit_native_media_height`, `_media_height_compact` | `_133sdp`, 120dp | Media in `large_button_bottom`; in `large_compact` and `media_start`. Keep it at least 120dp, Google's minimum for video. |
+| `dimen/adroit_native_spacing`, `_spacing_small`, `_spacing_tiny`, `_spacing_large` | `_7sdp`, `_3sdp`, `_2sdp`, `_13sdp` | Padding and gaps |
+| `color/adroit_shimmer_card`, `_shimmer_base`, `_shimmer_highlight` | light greys (dark in night mode) | The [shimmer](#the-shimmer): its card, its blocks, the sweep |
+| `dimen/adroit_shimmer_corner_radius`, `_shimmer_padding` | `_3sdp`, `_7sdp` | The shimmer's block corners, and a banner shimmer's padding |
+| `drawable/adroit_native_card` | a rounded card with a border | The whole background shape |
+| `drawable/adroit_native_cta_background` | a rounded gradient button with a ripple | The whole button shape |
+| `drawable/adroit_native_attribution_background` | a rounded rectangle | The whole badge shape |
+| `string/adroit_ad_attribution` | `Ad` | The badge text: translate it in `values-xx` |
 
 Sizes use [sdp and ssp](https://github.com/intuit/sdp) (`@dimen/_8sdp`, `@dimen/_12ssp`), which scale with the
-screen's width; `admob-views` brings both. Each default matches the dp size a 360dp-wide phone had, so the templates
+screen's width; `adroit-views` brings both. Each default matches the dp size a 360dp-wide phone had, so the templates
 look the same there and scale on smaller and larger screens. Your overrides can use sdp and ssp too, or plain dp and
 sp. The few kept in dp are set by Google: the AdChoices corner, the badge's 16dp minimum, and the 120dp media minimum.
 
 Replace a drawable to change a shape itself, for example a badge with a border. The colors
 follow the light and dark themes until you override them; to override them per theme, put yours in `values` and
-`values-night`. Overriding the `CompanyAdMob.ThemeOverlay.Native` style replaces its items all at once.
+`values-night`. Overriding the `Adroit.ThemeOverlay.Native` style replaces its items all at once.
 
 ### Colors from Firebase
 
@@ -207,13 +207,13 @@ library adds itself. Then either give its views the standard IDs, or map your ow
 
 | Standard ID | View | |
 |---|---|---|
-| `@id/company_admob_native_headline` | `TextView` | Required |
-| `@id/company_admob_native_body` | `TextView` | |
-| `@id/company_admob_native_cta` | `Button` (write `<android.widget.Button>`: see below) | |
-| `@id/company_admob_native_icon` | `ImageView` | |
-| `@id/company_admob_native_media` | an empty `FrameLayout`, at least 120dp tall | The image or video goes inside |
-| `@id/company_admob_native_attribution` | `TextView` saying "Ad" | Required by Google's policy |
-| `@id/company_admob_native_advertiser`, `_stars` (a `RatingBar`), `_price`, `_store` | | |
+| `@id/adroit_native_headline` | `TextView` | Required |
+| `@id/adroit_native_body` | `TextView` | |
+| `@id/adroit_native_cta` | `Button` (write `<android.widget.Button>`: see below) | |
+| `@id/adroit_native_icon` | `ImageView` | |
+| `@id/adroit_native_media` | an empty `FrameLayout`, at least 120dp tall | The image or video goes inside |
+| `@id/adroit_native_attribution` | `TextView` saying "Ad" | Required by Google's policy |
+| `@id/adroit_native_advertiser`, `_stars` (a `RatingBar`), `_price`, `_store` | | |
 
 Views whose asset an ad lacks are hidden. Keep a top corner free (about 24dp) for the AdChoices icon the SDK adds.
 In an app with a Material theme, a plain `<Button>` becomes a `MaterialButton`, which paints the theme's color over
@@ -222,7 +222,7 @@ your background: write `<android.widget.Button>` to keep yours.
 Register the layout under a name in `Application.onCreate`. An ad profile can then use it by default, and Firebase
 can switch any native ad to it, or back to a library style, with `"style"`:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Native.kt#native-register -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Native.kt#native-register -->
 ```kotlin
 class PromoAdsApp : Application() {
     override fun onCreate() {
@@ -239,7 +239,7 @@ enum class PromoAds(override val defaults: AdProfile) : AdDefinition {
 }
 ```
 
-In XML, `app:company_admob_layout="@layout/my_native_ad"` on an `AdNativeView` shows that layout (standard IDs only)
+In XML, `app:adroit_layout="@layout/my_native_ad"` on an `AdNativeView` shows that layout (standard IDs only)
 whatever the style. A name Firebase gives that the app hasn't registered is logged once, and the ad shows its style's
 template.
 
@@ -253,16 +253,16 @@ shimmer of the ad's own shape and size, with nothing to write. A banner's shimme
 like a banner's content. To change the shimmer's colors, override them like the others, in `values` and, for dark mode, `values-night`:
 
 ```xml
-<color name="company_admob_shimmer_card">#FFF3F0FF</color>      <!-- the ad area -->
-<color name="company_admob_shimmer_base">#FFE0D8FF</color>      <!-- the blocks -->
-<color name="company_admob_shimmer_highlight">#FFFFFFFF</color> <!-- the sweep -->
+<color name="adroit_shimmer_card">#FFF3F0FF</color>      <!-- the ad area -->
+<color name="adroit_shimmer_base">#FFE0D8FF</color>      <!-- the blocks -->
+<color name="adroit_shimmer_highlight">#FFFFFFFF</color> <!-- the sweep -->
 ```
 
 ### A layout from code
 
 For your own layout, map its views with a `NativeAdLayout`, and style them with a `NativeAdRenderer`:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Native.kt#custom-layout -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Native.kt#custom-layout -->
 ```kotlin
 /** Your own layout: map its view IDs. Keep an "Ad" attribution label and room for the AdChoices icon. */
 val ArticleAdLayout = NativeAdLayout(

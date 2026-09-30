@@ -1,0 +1,267 @@
+public final class io/github/thesobiaakbar/adroit/testing/AdroitTestRule : org/junit/rules/TestWatcher {
+	public fun <init> ()V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/testing/FakeAdsClient;)V
+	public synthetic fun <init> (Lio/github/thesobiaakbar/adroit/testing/FakeAdsClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getClient ()Lio/github/thesobiaakbar/adroit/testing/FakeAdsClient;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeAdsClient : io/github/thesobiaakbar/adroit/AdsClient {
+	public static final field Companion Lio/github/thesobiaakbar/adroit/testing/FakeAdsClient$Companion;
+	public static final field DEFAULT_NATIVE_ASSETS Lio/github/thesobiaakbar/adroit/NativeAdAssets;
+	public fun <init> ()V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/AdsState;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/AdsState;Ljava/util/concurrent/Executor;)V
+	public synthetic fun <init> (Lio/github/thesobiaakbar/adroit/AdsState;Ljava/util/concurrent/Executor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun awaitReady-VtjQ1oo (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun clearRecordedCalls ()V
+	public final fun emit (Lio/github/thesobiaakbar/adroit/events/AdEvent;)V
+	public final fun emitUnclaimedReward (Lio/github/thesobiaakbar/adroit/RewardResult$Earned;)V
+	public final fun emitUnclaimedRewardedInterstitialReward (Lio/github/thesobiaakbar/adroit/RewardResult$Earned;)V
+	public final fun enqueueAppOpenResult (Lio/github/thesobiaakbar/adroit/FullScreenResult;)V
+	public final fun enqueueInterstitialResult (Lio/github/thesobiaakbar/adroit/InterstitialPlacement;Lio/github/thesobiaakbar/adroit/FullScreenResult;)V
+	public final fun enqueueNativeResult (Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdResult;)V
+	public final fun enqueueRewardResult (Lio/github/thesobiaakbar/adroit/RewardedPlacement;Lio/github/thesobiaakbar/adroit/RewardResult;)V
+	public final fun enqueueRewardedInterstitialResult (Lio/github/thesobiaakbar/adroit/RewardedInterstitialPlacement;Lio/github/thesobiaakbar/adroit/RewardResult;)V
+	public fun getAppOpen ()Lio/github/thesobiaakbar/adroit/AppOpenApi;
+	public fun getBanner ()Lio/github/thesobiaakbar/adroit/BannerApi;
+	public final fun getCreatedBanners ()Ljava/util/List;
+	public fun getDiagnostics ()Lio/github/thesobiaakbar/adroit/DiagnosticsApi;
+	public final fun getEmittedEvents ()Ljava/util/List;
+	public fun getEvents ()Lkotlinx/coroutines/flow/SharedFlow;
+	public final fun getInitialBannerState ()Lio/github/thesobiaakbar/adroit/BannerState;
+	public fun getInterstitial ()Lio/github/thesobiaakbar/adroit/InterstitialApi;
+	public final fun getLoadedNativeAds ()Ljava/util/List;
+	public fun getNative ()Lio/github/thesobiaakbar/adroit/NativeApi;
+	public final fun getNativeAssets ()Lio/github/thesobiaakbar/adroit/NativeAdAssets;
+	public fun getPrivacy ()Lio/github/thesobiaakbar/adroit/PrivacyApi;
+	public final fun getRecordedCalls ()Ljava/util/List;
+	public fun getRewarded ()Lio/github/thesobiaakbar/adroit/RewardedApi;
+	public fun getRewardedInterstitial ()Lio/github/thesobiaakbar/adroit/RewardedInterstitialApi;
+	public fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun isAdFree ()Z
+	public fun isReady ()Z
+	public fun preload ([Lio/github/thesobiaakbar/adroit/AdPlacement;)V
+	public fun setAdFree (Z)V
+	public final fun setAvailability (Lio/github/thesobiaakbar/adroit/AdPlacement;Lio/github/thesobiaakbar/adroit/AdAvailability;)V
+	public final fun setConsentState (Lio/github/thesobiaakbar/adroit/ConsentState;)V
+	public final fun setInitialBannerState (Lio/github/thesobiaakbar/adroit/BannerState;)V
+	public final fun setNativeAssets (Lio/github/thesobiaakbar/adroit/NativeAdAssets;)V
+	public final fun setNativeStyle (Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeStyle;)V
+	public final fun setState (Lio/github/thesobiaakbar/adroit/AdsState;)V
+	public fun showInterstitial (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/InterstitialPlacement;Lkotlin/jvm/functions/Function1;)V
+	public fun showRewarded (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/RewardedPlacement;Lkotlin/jvm/functions/Function1;)V
+	public fun start (Landroid/app/Activity;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeAdsClient$Companion {
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeBannerAdHandle : io/github/thesobiaakbar/adroit/BannerAdHandle {
+	public fun bindTo (Landroidx/lifecycle/LifecycleOwner;)V
+	public fun destroy ()V
+	public final fun getBoundOwner ()Landroidx/lifecycle/LifecycleOwner;
+	public fun getExpectedHeightPx ()I
+	public final fun getOptions ()Lio/github/thesobiaakbar/adroit/BannerOptions;
+	public final fun getPlacement ()Lio/github/thesobiaakbar/adroit/BannerPlacement;
+	public fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun getView ()Landroid/view/View;
+	public final fun isDestroyed ()Z
+	public fun setExpectedHeightPx (I)V
+	public final fun setState (Lio/github/thesobiaakbar/adroit/BannerState;)V
+}
+
+public abstract class io/github/thesobiaakbar/adroit/testing/FakeCall {
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$Clear : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$Clear;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$Clear;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$Clear;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$CreateBanner : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$CreateBanner;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$CreateBanner;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$CreateBanner;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$LoadNative : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$LoadNative;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$LoadNative;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$LoadNative;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$OpenAdInspector : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/testing/FakeCall$OpenAdInspector;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$Preload : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$Preload;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$Preload;Ljava/util/List;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$Preload;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPlacementKeys ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$RenderNative : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$RenderNative;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$RenderNative;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$RenderNative;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$ResetConsent : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/testing/FakeCall$ResetConsent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$SetAdFree : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lio/github/thesobiaakbar/adroit/testing/FakeCall$SetAdFree;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$SetAdFree;ZILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$SetAdFree;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$SetAppOpenEnabled : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lio/github/thesobiaakbar/adroit/testing/FakeCall$SetAppOpenEnabled;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$SetAppOpenEnabled;ZILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$SetAppOpenEnabled;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnabled ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$ShowAppOpenOnColdStart : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowAppOpenOnColdStart;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$ShowInterstitial : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowInterstitial;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowInterstitial;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowInterstitial;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$ShowInterstitialOnSplash : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowInterstitialOnSplash;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowInterstitialOnSplash;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowInterstitialOnSplash;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$ShowPrivacyOptions : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowPrivacyOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$ShowRewarded : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowRewarded;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowRewarded;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowRewarded;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCustomData ()Ljava/lang/String;
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$ShowRewardedInterstitial : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowRewardedInterstitial;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowRewardedInterstitial;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/testing/FakeCall$ShowRewardedInterstitial;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCustomData ()Ljava/lang/String;
+	public final fun getPlacementKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$SkipNextAppOpen : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/testing/FakeCall$SkipNextAppOpen;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$Start : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/testing/FakeCall$Start;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeCall$SuppressAppOpen : io/github/thesobiaakbar/adroit/testing/FakeCall {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/testing/FakeCall$SuppressAppOpen;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/testing/FakeNativeAdHandle : io/github/thesobiaakbar/adroit/NativeAdHandle {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/NativePlacement;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdAssets;)V
+	public synthetic fun <init> (Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdAssets;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun block ()V
+	public final fun block (Lio/github/thesobiaakbar/adroit/UnavailableReason;)V
+	public static synthetic fun block$default (Lio/github/thesobiaakbar/adroit/testing/FakeNativeAdHandle;Lio/github/thesobiaakbar/adroit/UnavailableReason;ILjava/lang/Object;)V
+	public fun destroy ()V
+	public fun getAssets ()Lio/github/thesobiaakbar/adroit/NativeAdAssets;
+	public final fun getDestroyCount ()I
+	public fun getPlacement ()Lio/github/thesobiaakbar/adroit/NativePlacement;
+	public fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun isDestroyed ()Z
+	public fun toString ()Ljava/lang/String;
+}
+

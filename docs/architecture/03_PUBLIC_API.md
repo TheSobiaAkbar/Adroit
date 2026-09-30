@@ -3,7 +3,7 @@
 This is the contract the implementation prompts build. Signatures are normative. KDoc wording is illustrative.
 
 > **Frozen for `1.0.0-rc1` (PROMPT 27, 2026-09-28).** This document was reviewed line by line against the five
-> committed dumps (`admob-core`, `admob-views`, `admob-compose`, `admob-testing`, `admob-firebase` `api/*.api`)
+> committed dumps (`adroit-core`, `adroit-views`, `adroit-compose`, `adroit-testing`, `adroit-firebase` `api/*.api`)
 > and the code blocks below now match them. They leave out what the compiler generates (`equals`/`hashCode`/
 > `toString`, data classes' `componentN`/`copy`, the Java overloads from `@JvmOverloads`, `$default` bridges) and
 > the option groups' Java-style accessors listed in §3.6. The dumps stay authoritative. Differences from the original
@@ -12,8 +12,8 @@ This is the contract the implementation prompts build. Signatures are normative.
 >   `CollapsibleBannerPosition`; `NativeStyle` and `NativeApi.style`; `InterstitialApi.showOnSplash`;
 >   `AppOpenApi.showOnColdStart(activity, maxWaitMillis, onResult)` for Java; ad profiles (`profiles(...)`); several
 >   ad unit IDs per placement; `FrequencyRule.counter` and `FrequencyOptions.maxInterstitialsPerSession`;
->   `CompanyAdMobVersion`, `AndroidAdLogger`, `AdMobAppId`; `NativeTemplates.forStyle`; `setPlacement` on the XML views;
->   the `CompanyAdMobInternal` hooks (ADR-012, ADR-016); the `admob-firebase` module (§3.13).
+>   `AdroitVersion`, `AndroidAdLogger`, `AdMobAppId`; `NativeTemplates.forStyle`; `setPlacement` on the XML views;
+>   the `AdroitInternal` hooks (ADR-012, ADR-016); the `adroit-firebase` module (§3.13).
 > - Changed: `BannerOptions.size` and the native `layout` parameters are nullable (null = the placement's size or
 >   style); `showOnColdStart`'s callback is `onResult` (was `onComplete`); `FrequencyRule`, `DiagnosticsReport`,
 >   `BannerOptions`, `RewardedShowOptions`, `NativeAdAssets`, `NativeAdLayout`, `ConsentState` and `AdSourceInfo` are
@@ -22,27 +22,27 @@ This is the contract the implementation prompts build. Signatures are normative.
 > - Stability rules for every type (which sealed types and enums may grow, default arguments, interface evolution,
 >   deprecation) are in `docs/RELEASE.md` "API stability", and Java support in ADR-013.
 
-> **Implemented in PROMPT 02; the source and `admob-core/api/admob-core.api` are authoritative where they differ from this summary.** Decisions made during implementation:
-> - **Packages:** everyday types live in `com.company.admob` (facade, `AdsClient`, sub-APIs, states, results, errors, placements, opt-in annotations). Only `com.company.admob.events`, `com.company.admob.logging`, and `com.company.admob.config` are separate.
+> **Implemented in PROMPT 02; the source and `adroit-core/api/adroit-core.api` are authoritative where they differ from this summary.** Decisions made during implementation:
+> - **Packages:** everyday types live in `io.github.thesobiaakbar.adroit` (facade, `AdsClient`, sub-APIs, states, results, errors, placements, opt-in annotations). Only `io.github.thesobiaakbar.adroit.events`, `io.github.thesobiaakbar.adroit.logging`, and `io.github.thesobiaakbar.adroit.config` are separate.
 > - **Suspend shows are named `showAndAwait`,** not overloads of `show`. `show(activity, placement)` with a defaulted callback and a same-named `suspend` overload would make the fire-and-forget call fail to compile outside coroutines ("suspend function should be called only from a coroutine"). `NativeApi.load` keeps its overload because the callback form has no default.
-> - `CompanyAdMob.initialize(application, config)` arrives in PROMPT 06, after PROMPT 03 adds `AdMobConfig`.
+> - `Adroit.initialize(application, config)` arrives in PROMPT 06, after PROMPT 03 adds `AdMobConfig`.
 > - `AdEvent.PlacementEvent` groups placement events, with non-null `placementKey`/`format` and the effective `adUnitId`.
 > - `AdError.NoFill/NetworkError/Timeout/LoadFailed/ShowFailed/SdkInitFailed` are classes carrying optional `sdkDetails`. `AdError.Internal(detail, cause)`. `SdkErrorDetails` adds `codeName`.
-> - `ConsentState.Unknown` constant. `DiagnosticsReport.environment`/`testMode` are nullable (null before initialization). `AdEnvironment` lives in `com.company.admob.config`.
+> - `ConsentState.Unknown` constant. `DiagnosticsReport.environment`/`testMode` are nullable (null before initialization). `AdEnvironment` lives in `io.github.thesobiaakbar.adroit.config`.
 All public declarations use explicit API mode. **No `com.google.*` type appears in any signature here**, except in `@GoogleSdkEscapeHatch` declarations.
 
-## 3.1 Entry point (`admob-core`, package `com.company.admob`)
+## 3.1 Entry point (`adroit-core`, package `io.github.thesobiaakbar.adroit`)
 
 ```kotlin
 /** Process-wide facade. Delegates to an AdsClient built from the config. */
-public object CompanyAdMob : AdsClient {
+public object Adroit : AdsClient {
   /** Application.onCreate. Main-thread friendly, idempotent, no network. */
   @JvmStatic public fun initialize(application: Application, config: AdMobConfig)
-  /** The underlying client, for DI (bind AdsClient to this in a Hilt module). Java: CompanyAdMob.getClient(). */
+  /** The underlying client, for DI (bind AdsClient to this in a Hilt module). Java: Adroit.getClient(). */
   @JvmStatic public val client: AdsClient
 }
-public object CompanyAdMobVersion { public const val NAME: String }
-@InternalCompanyAdMobApi public object CompanyAdMobInternal { /* ADR-012/016 hooks for the library's own modules */ }
+public object AdroitVersion { public const val NAME: String }
+@InternalAdroitApi public object AdroitInternal { /* ADR-012/016 hooks for the library's own modules */ }
 
 public interface AdsClient {
   public val state: StateFlow<AdsState>
@@ -106,7 +106,7 @@ public sealed interface AdEvent { val placementKey: String?; val format: AdForma
   // Dismissed, RewardEarned, Paid(revenue: AdRevenue, source: AdSourceInfo?), Expired,
   // Destroyed, ConsentUpdated, StateChanged, ConfigurationWarning
 }
-// In com.company.admob.events, with AdEvent and AdEventListener:
+// In io.github.thesobiaakbar.adroit.events, with AdEvent and AdEventListener:
 public data class AdRevenue(val valueMicros: Long, val currencyCode: String, val precision: RevenuePrecision)
 public enum class RevenuePrecision { UNKNOWN, ESTIMATED, PUBLISHER_PROVIDED, PRECISE }
 public class AdSourceInfo(val name: String?, val id: String?, val instanceName: String?, val instanceId: String?,
@@ -226,14 +226,14 @@ public enum class ConsentStatus { UNKNOWN, REQUIRED, NOT_REQUIRED, OBTAINED }
 
 ## 3.6 Configuration
 
-> **Implemented in PROMPT 03; the source and `admob-core.api` are authoritative.** Decisions made during implementation:
+> **Implemented in PROMPT 03; the source and `adroit-core.api` are authoritative.** Decisions made during implementation:
 > - `AdMobConfig.Builder` exposes each option group both as a property (`testing`, `privacy`, `frequency`, `logging`, `advanced`, `placements`) and as a DSL block function. Java uses the chainable `environment(…)`, `appId(…)`, `addTestDeviceId(…)`, `addEventListener(…)`, `remoteConfig(…)` and `addBanner/addInterstitial/addRewarded/addRewardedInterstitial/addAppOpen/addNative(placement, adUnitId)`, or the group getters (`getPrivacy().setMaxAdContentRating(…)`). `Duration` setters are mangled and not callable from Java (ADR-013).
 > - The default `environment` is **DEVELOPMENT** (fail-safe: a forgotten setting shows test ads, and non-debuggable builds log an error-level warning).
 > - Environment-dependent defaults are nullable and resolved internally: `testing.useDemoAdUnits` (null → true in STAGING), `logging.level` (null → DEBUG/WARN), `advanced.failFast` (null → true outside PRODUCTION).
 > - Per ADR-011, option groups (`TestingOptions`, `PrivacyOptions`, `FrequencyOptions`, `LoggingOptions`, `AdvancedOptions`), `PlacementConfig` subclasses, `AdOverrides` and `PlacementOverride` are regular classes with `equals`/`hashCode`. `RetryPolicy` and `FrequencyRule` stay data classes. `PlacementConfig` constructors are internal; placements are created only through `placements { }`.
 > - `frequency.includeRewardedInGlobalInterval` (default false) makes the rewarded exclusion configurable, as PROMPT 09 requires.
 > - `privacy.consentSyncId: String?` (default null; blank is treated as null) passes UMP's consent sync ID through. Added in PROMPT 05. `toString` reports it only as set or unset, because it identifies a user.
-> - `GoogleRequestCustomizer` lives in the root package next to `GoogleSdkEscapeHatch`. Remote types live in `com.company.admob.config.remote`. `@AdMobConfigDsl` is the DSL marker.
+> - `GoogleRequestCustomizer` lives in the root package next to `GoogleSdkEscapeHatch`. Remote types live in `io.github.thesobiaakbar.adroit.config.remote`. `@AdMobConfigDsl` is the DSL marker.
 > - Duplicate placement keys (across all formats) build fine and are reported by validation, never thrown.
 > - `AdMobConfig`'s constructor is `internal` (not `private`) so the nested `Builder` can call it without a public synthetic accessor in the binary API; externally it's equally inaccessible.
 
@@ -258,7 +258,7 @@ public fun interface AdConfigProvider { public fun overrides(): Flow<AdOverrides
 public object StaticConfigProvider : AdConfigProvider
 public fun interface AdEventListener { public fun onEvent(event: AdEvent) }
 public fun interface AdLogger { public fun log(level: LogLevel, tag: String, message: String, throwable: Throwable?) }
-public class AndroidAdLogger : AdLogger   // the default: Logcat, tag "CompanyAdMob"
+public class AndroidAdLogger : AdLogger   // the default: Logcat, tag "Adroit"
 public enum class LogLevel { VERBOSE, DEBUG, INFO, WARN, ERROR, NONE }
 ```
 
@@ -278,12 +278,12 @@ public class PlacementDiagnostics(val key: String, val format: AdFormat, val adU
 public class TestModeInfo(val demoAdUnitsSubstituted: Boolean, val testDeviceCount: Int)
 ```
 
-> **Added in PROMPT 15** (source and `admob-core.api` are authoritative): `DiagnosticsReport.activeOverrides` (a readable summary of the remote overrides in force, ad unit IDs shortened in PRODUCTION, or "none"), and `PlacementDiagnostics.enabled` and `showsThisSession` (frequency counters). Per ADR-011 these are regular classes, not data classes; `environment` and `testMode` are nullable because the uninitialized facade reports them as null. `toString()` never contains consent strings or advertising IDs, and in PRODUCTION every full ad unit ID in it (including inside error messages) is shortened to its last 4 digits. `openAdInspector` maps to `MobileAds.openAdInspector(OnAdInspectorClosedListener)`, which in SDK 1.4.0 takes no Context.
+> **Added in PROMPT 15** (source and `adroit-core.api` are authoritative): `DiagnosticsReport.activeOverrides` (a readable summary of the remote overrides in force, ad unit IDs shortened in PRODUCTION, or "none"), and `PlacementDiagnostics.enabled` and `showsThisSession` (frequency counters). Per ADR-011 these are regular classes, not data classes; `environment` and `testMode` are nullable because the uninitialized facade reports them as null. `toString()` never contains consent strings or advertising IDs, and in PRODUCTION every full ad unit ID in it (including inside error messages) is shortened to its last 4 digits. `openAdInspector` maps to `MobileAds.openAdInspector(OnAdInspectorClosedListener)`, which in SDK 1.4.0 takes no Context.
 
 ## 3.8 Opt-in markers
 
 ```kotlin
-@RequiresOptIn(level = RequiresOptIn.Level.WARNING) public annotation class ExperimentalCompanyAdMobApi
+@RequiresOptIn(level = RequiresOptIn.Level.WARNING) public annotation class ExperimentalAdroitApi
 @RequiresOptIn(level = RequiresOptIn.Level.ERROR,
   message = "Exposes Google Mobile Ads SDK types; may break on any Google SDK upgrade.")
 public annotation class GoogleSdkEscapeHatch
@@ -295,11 +295,11 @@ public fun interface GoogleRequestCustomizer {       // registered in config.adv
 ```
 *(`builder: Any` keeps even the escape hatch out of the binary API dump. The implementation casts to the Next-Gen builder type. This is documented as unstable.)*
 
-## 3.9 `admob-views`
+## 3.9 `adroit-views`
 
 ```kotlin
 public class AdBannerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : FrameLayout {
-//   attrs: company_admob_placement (string key), company_admob_bannerSize (enum, optional), company_admob_collapseWhenEmpty (bool)
+//   attrs: adroit_placement (string key), adroit_bannerSize (enum, optional), adroit_collapseWhenEmpty (bool)
   @JvmOverloads public fun setPlacement(placement: BannerPlacement, options: BannerOptions = /* current */)
 }
 @JvmOverloads public fun ViewGroup.attachBanner(owner: LifecycleOwner, placement: BannerPlacement,
@@ -309,7 +309,7 @@ public class AdBannerView @JvmOverloads constructor(context: Context, attrs: Att
                                     renderer: NativeAdRenderer? = null,
                                     onResult: (NativeAdResult) -> Unit = {})
 public class AdNativeView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : FrameLayout {
-//   XML: company_admob_placement, company_admob_template (optional)
+//   XML: adroit_placement, adroit_template (optional)
   @JvmOverloads public fun setPlacement(placement: NativePlacement, layout: NativeAdLayout? = /* current */)
 }
 public object NativeTemplates { public val Small: NativeAdLayout; public val Medium: NativeAdLayout; public val Large: NativeAdLayout
@@ -321,7 +321,7 @@ public class NativeAdHolder(placement: NativePlacement) {   // keep in a ViewMod
 }
 ```
 
-## 3.10 `admob-compose`
+## 3.10 `adroit-compose`
 
 ```kotlin
 @Composable public fun AdBanner(placement: BannerPlacement, modifier: Modifier = Modifier,
@@ -340,7 +340,7 @@ public interface FullScreenAdLauncher {
 }
 ```
 
-## 3.11 `admob-testing`
+## 3.11 `adroit-testing`
 
 ```kotlin
 public class FakeAdsClient(initialState: AdsState = AdsState.Ready, callbackExecutor: Executor = direct) : AdsClient {
@@ -351,10 +351,10 @@ public class FakeAdsClient(initialState: AdsState = AdsState.Ready, callbackExec
   public val recordedCalls: List<FakeCall>
   public fun emit(event: AdEvent)
 }
-public class CompanyAdMobTestRule(val client: FakeAdsClient = FakeAdsClient()) : TestWatcher
+public class AdroitTestRule(val client: FakeAdsClient = FakeAdsClient()) : TestWatcher
 ```
 
-> **Implemented in PROMPT 16** (source and `admob-testing.api` are authoritative). Beyond the lines above, `FakeAdsClient` also has `enqueueRewardedInterstitialResult`, `enqueueAppOpenResult`, `enqueueNativeResult`, `emitUnclaimedReward` (and the rewarded interstitial variant), `setConsentState`, `clearRecordedCalls`, and read-only `emittedEvents`, `createdBanners`, `loadedNativeAds`, `isAdFree`, plus the settable `initialBannerState` and `nativeAssets`. `FakeCall` is a sealed class of data classes/objects (ADR-011: small frozen value types). `FakeBannerAdHandle` and `FakeNativeAdHandle` are public so tests can drive them (`setState`, `block`, `destroyCount`). Callbacks run synchronously on the calling thread by default, **unlike production**, unless a `callbackExecutor` is passed. JUnit is `compileOnly`. `CompanyAdMobTestRule` swaps the `CompanyAdMob` facade through `CompanyAdMobInternal.installForTesting` (ADR-012 opt-in, not `@RestrictTo`: the opt-in is enforced by the compiler, while `@RestrictTo` is only a lint check and `LIBRARY_GROUP` would also admit every module of the host's own group if it shared ours).
+> **Implemented in PROMPT 16** (source and `adroit-testing.api` are authoritative). Beyond the lines above, `FakeAdsClient` also has `enqueueRewardedInterstitialResult`, `enqueueAppOpenResult`, `enqueueNativeResult`, `emitUnclaimedReward` (and the rewarded interstitial variant), `setConsentState`, `clearRecordedCalls`, and read-only `emittedEvents`, `createdBanners`, `loadedNativeAds`, `isAdFree`, plus the settable `initialBannerState` and `nativeAssets`. `FakeCall` is a sealed class of data classes/objects (ADR-011: small frozen value types). `FakeBannerAdHandle` and `FakeNativeAdHandle` are public so tests can drive them (`setState`, `block`, `destroyCount`). Callbacks run synchronously on the calling thread by default, **unlike production**, unless a `callbackExecutor` is passed. JUnit is `compileOnly`. `AdroitTestRule` swaps the `Adroit` facade through `AdroitInternal.installForTesting` (ADR-012 opt-in, not `@RestrictTo`: the opt-in is enforced by the compiler, while `@RestrictTo` is only a lint check and `LIBRARY_GROUP` would also admit every module of the host's own group if it shared ours).
 
 ## 3.12 Threading and callback contract (documented on every API)
 
@@ -363,7 +363,7 @@ public class CompanyAdMobTestRule(val client: FakeAdsClient = FakeAdsClient()) :
 - `show` callbacks are called **exactly once**.
 - No public function throws for ad-related failures. Only documented programmer errors throw (for example, calling a `show` before `initialize()` with `failFast`).
 
-## 3.13 `admob-firebase` (optional; Firebase types allowed here only, ADR-017)
+## 3.13 `adroit-firebase` (optional; Firebase types allowed here only, ADR-017)
 
 ```kotlin
 public class FirebaseRemoteConfigProvider(remoteConfig: FirebaseRemoteConfig, autoFetch: Boolean = false,
@@ -380,4 +380,4 @@ Every constructor with default arguments carries `@JvmOverloads`.
 From `1.0.0-rc1`, this surface follows the rules in `docs/RELEASE.md` "API stability": SemVer, deprecation for one
 minor version before removal in the next major, no new parameters on existing functions, members added to
 library-implemented interfaces only with default implementations, and each sealed type and enum documented as closed
-or open to new values. `@ExperimentalCompanyAdMobApi` marks any future surface that isn't covered yet.
+or open to new values. `@ExperimentalAdroitApi` marks any future surface that isn't covered yet.

@@ -1,14 +1,14 @@
 plugins {
-    alias(libs.plugins.companyadmob.android.sample.compose)
+    alias(libs.plugins.adroit.android.sample.compose)
 }
 
 // The code shown in docs/*.md, compiled so the docs can't drift from the API. Never published or shipped.
 // Each snippet is a `// region name` … `// endregion` block; .github/scripts/check-docs.mjs checks that the docs
 // quote them exactly.
 android {
-    namespace = "com.company.admob.docs"
+    namespace = "io.github.thesobiaakbar.adroit.docs"
     defaultConfig {
-        applicationId = "com.company.admob.docs"
+        applicationId = "io.github.thesobiaakbar.adroit.docs"
     }
     // For `BuildConfig.DEBUG`, as apps write it in the ad profiles setup.
     buildFeatures { buildConfig = true }
@@ -17,10 +17,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":admob-core"))
-    implementation(project(":admob-views"))
-    implementation(project(":admob-compose"))
-    implementation(project(":admob-firebase"))
+    implementation(project(":adroit-core"))
+    implementation(project(":adroit-views"))
+    implementation(project(":adroit-compose"))
+    implementation(project(":adroit-firebase"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -32,7 +32,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
 
-    testImplementation(project(":admob-testing"))
+    testImplementation(project(":adroit-testing"))
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)

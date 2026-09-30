@@ -1,9 +1,9 @@
 # Consent and privacy
 
-CompanyAdMob gathers consent with Google's User Messaging Platform (UMP) **before** any ad request, as Google
+Adroit gathers consent with Google's User Messaging Platform (UMP) **before** any ad request, as Google
 requires ([UMP for Next-Gen](https://developers.google.com/admob/android/next-gen/privacy)).
 
-CompanyAdMob follows Google's documented requirements as of 2026-09-26. Your app remains responsible for its own
+Adroit follows Google's documented requirements as of 2026-09-26. Your app remains responsible for its own
 policy configuration and product usage: which messages you publish in AdMob, your age treatment, your privacy policy
 and your Play data safety form.
 
@@ -26,7 +26,7 @@ flowchart TD
 It does:
 - request consent information and show the form when UMP says it's required, on every `start()`;
 - block every ad request until `canRequestAds` is true;
-- expose the state as `CompanyAdMob.privacy.consentState` and `isPrivacyOptionsRequired`;
+- expose the state as `Adroit.privacy.consentState` and `isPrivacyOptionsRequired`;
 - show the privacy options form with `privacy.showPrivacyOptions(activity)`;
 - apply age treatment, max ad content rating and restricted data processing to every request.
 
@@ -54,7 +54,7 @@ Some messages require your app to offer a way back to the consent choices
 ([Google](https://developers.google.com/admob/android/next-gen/privacy)). Show a "Privacy options" button in your
 settings while `isPrivacyOptionsRequired` is true:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Consent.kt#privacy-button-views -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Consent.kt#privacy-button-views -->
 ```kotlin
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,14 +63,14 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(privacyButton)
 
         privacyButton.setOnClickListener {
-            CompanyAdMob.privacy.showPrivacyOptions(this) { error ->
+            Adroit.privacy.showPrivacyOptions(this) { error ->
                 if (error != null) Toast.makeText(this, error.message, Toast.LENGTH_SHORT).show()
             }
         }
         // Shown only while UMP requires an entry point (for example, for users in the EEA).
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                CompanyAdMob.privacy.isPrivacyOptionsRequired.collect { privacyButton.isVisible = it }
+                Adroit.privacy.isPrivacyOptionsRequired.collect { privacyButton.isVisible = it }
             }
         }
     }
@@ -79,14 +79,14 @@ class SettingsActivity : AppCompatActivity() {
 
 In Compose:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Consent.kt#privacy-button-compose -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Consent.kt#privacy-button-compose -->
 ```kotlin
 @Composable
 fun PrivacyOptionsButton() {
-    val required by CompanyAdMob.privacy.isPrivacyOptionsRequired.collectAsStateWithLifecycle()
+    val required by Adroit.privacy.isPrivacyOptionsRequired.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
     if (required && activity != null) {
-        Button(onClick = { CompanyAdMob.privacy.showPrivacyOptions(activity) }) { Text("Privacy options") }
+        Button(onClick = { Adroit.privacy.showPrivacyOptions(activity) }) { Text("Privacy options") }
     }
 }
 ```
@@ -94,11 +94,11 @@ fun PrivacyOptionsButton() {
 When the user changes their choices, the library updates `consentState`. If ads are no longer allowed, the state
 becomes `Unavailable(CONSENT_NOT_OBTAINED)` and caches are destroyed.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Consent.kt#consent-state -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Consent.kt#consent-state -->
 ```kotlin
 @Composable
 fun ConsentStatusLine() {
-    val consent by CompanyAdMob.privacy.consentState.collectAsStateWithLifecycle()
+    val consent by Adroit.privacy.consentState.collectAsStateWithLifecycle()
     Text("Consent: ${consent.status}, can request ads: ${consent.canRequestAds}")
 }
 ```
@@ -118,11 +118,11 @@ fun ConsentStatusLine() {
   gives test ads).
 - **Reset:** clear the stored consent to see the form again (debug builds only; Google says never in production):
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Consent.kt#reset-consent -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Consent.kt#reset-consent -->
 ```kotlin
 /** Debug builds only: forget the stored consent, so the next start() shows the form again. */
 fun resetConsentForQa() {
-    CompanyAdMob.privacy.resetConsentForTesting()
+    Adroit.privacy.resetConsentForTesting()
 }
 ```
 
@@ -151,7 +151,7 @@ user's GDPR choices to Google Consent Mode for you. The library needs no code fo
 ([Consent mode](https://developers.google.com/admob/android/next-gen/privacy/consent-mode)):
 
 1. Turn on consent mode in the AdMob UI.
-2. Initialize Firebase **before** `CompanyAdMob.start()`, which starts UMP. The google-services plugin initializes it
+2. Initialize Firebase **before** `Adroit.start()`, which starts UMP. The google-services plugin initializes it
    before `Application.onCreate`, so this holds unless you initialize Firebase manually later.
 3. Set the default consent state yourself for users outside the EU regulations, as Google's page describes.
 

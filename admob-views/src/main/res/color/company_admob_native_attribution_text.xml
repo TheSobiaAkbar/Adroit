@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Native templates: override it in your app with <color name="company_admob_native_attribution_text">#…</color>. -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="?android:attr/textColorPrimaryInverse" />
-</selector>

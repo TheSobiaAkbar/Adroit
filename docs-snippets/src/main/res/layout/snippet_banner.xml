@@ -6,12 +6,12 @@
     android:orientation="vertical">
 
     <!-- region xml-banner -->
-    <com.company.admob.views.AdBannerView
+    <io.github.thesobiaakbar.adroit.views.AdBannerView
         android:id="@+id/home_banner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:company_admob_placement="home_banner"
-        app:company_admob_bannerSize="anchoredAdaptive" />
+        app:adroit_placement="home_banner"
+        app:adroit_bannerSize="anchoredAdaptive" />
     <!-- endregion -->
 
     <FrameLayout
@@ -20,10 +20,10 @@
         android:layout_height="wrap_content" />
 
     <!-- region xml-native -->
-    <com.company.admob.views.AdNativeView
+    <io.github.thesobiaakbar.adroit.views.AdNativeView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:company_admob_placement="feed_native"
-        app:company_admob_template="large_button_bottom" />
+        app:adroit_placement="feed_native"
+        app:adroit_template="large_button_bottom" />
     <!-- endregion -->
 </LinearLayout>

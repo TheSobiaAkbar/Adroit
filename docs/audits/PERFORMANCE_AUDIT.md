@@ -1,6 +1,6 @@
 # Performance audit
 
-PROMPT 26, run on 2026-09-27 and 28 against branch `feat/companyadmob-foundation` (base commit `dcc87db`), with
+PROMPT 26, run on 2026-09-27 and 28 against branch `feat/adroit-foundation` (base commit `dcc87db`), with
 ads-mobile-sdk 1.4.0 and UMP 4.0.0. Scope: the startup cost, main-thread work, network requests, retries, memory,
 recompositions and hot-path allocations caused by the library. Architecture references: `02_ARCHITECTURE.md` §11,
 §12, §18, §25, §33.
@@ -44,7 +44,7 @@ compilation, so their timings are several times the release ones; the release bu
   dispatcher up with `ServiceLoader`, which opens the APK as a jar on the main thread. StrictMode timed it at 60 to 80
   ms per cold start in minifiedDebug. R8's full optimization of the release build mostly removes the lookup, but an
   app built without it, and every debug build, paid it.
-- *Fix:* the library's main dispatcher is the main `Handler`'s (`Handler.asCoroutineDispatcher("CompanyAdMob")
+- *Fix:* the library's main dispatcher is the main `Handler`'s (`Handler.asCoroutineDispatcher("Adroit")
   .immediate`, from kotlinx-coroutines-android, already a dependency). Same thread and same `immediate` semantics.
 - *Effect:* minifiedDebug `initialize()` 86.7 → 29.4 ms, and its whole cold start (`am start -W` TotalTime) 583 →
   353 ms. Release 3.40 → 3.16 ms.
@@ -104,7 +104,7 @@ the engines are spaced from each other.
 | Main dispatcher from the main `Handler` (F4) | `internal/threading/MainThread.kt` |
 | UMP warm-up on the IO dispatcher (F5) | `internal/port/ConsentSdk.kt`, `internal/google/UmpConsentSdk.kt`, `internal/runtime/AdsRuntime.kt` |
 | StrictMode (thread: disk reads, disk writes, network; VM: leaked closables, Activity leaks; log penalty) in the debug builds of the three samples | `SampleApplication.kt`, `PlaygroundApplication.kt`, `MixedApplication.kt` |
-| Configuration and `initialize()` timing, logged under the tag `CompanyAdMobPerf` by sample-xml | `SampleApplication.kt` |
+| Configuration and `initialize()` timing, logged under the tag `AdroitPerf` by sample-xml | `SampleApplication.kt` |
 | A "Recompose screen" button on the playground's Banner and Native screens (measurement 6) | `BannerScreen.kt`, `NativeScreen.kt` |
 | New tests: startup requests (2), offline retries (2), cached `availability()`, the IO-dispatcher work in `initialize`, app open before the count is read | `StartupRequestsTest.kt`, `FullScreenLoadTest.kt`, `InitializeTest.kt`, `AppOpenColdStartTest.kt` |
 | Compose recomposition tests raised from 10 to 100 recompositions | `AdBannerTest.kt`, `AdNativeTest.kt` |
@@ -117,28 +117,28 @@ the engines are spaced from each other.
 ### 1. `initialize()` cost
 1. Install a build of sample-xml: `./gradlew :sample-xml:installRelease` (release numbers count), and optionally
    `installMinifiedDebug` and `installDebug`.
-2. Ten times: `adb shell am force-stop com.company.admob.sample.xml`, `adb logcat -c`, then
-   `adb shell am start -W -n com.company.admob.sample.xml/.SplashActivity`; wait 6 s, then
-   `adb logcat -d -s CompanyAdMobPerf:I`. Each start logs one line: `config took … µs, initialize took … µs`. Read it
+2. Ten times: `adb shell am force-stop io.github.thesobiaakbar.adroit.sample.xml`, `adb logcat -c`, then
+   `adb shell am start -W -n io.github.thesobiaakbar.adroit.sample.xml/.SplashActivity`; wait 6 s, then
+   `adb logcat -d -s AdroitPerf:I`. Each start logs one line: `config took … µs, initialize took … µs`. Read it
    after every start: the ad logs can push it out of the log buffer.
 3. Record the medians. Target: `initialize` under 2 ms in release.
 
 ### 2. Main-thread I/O and `start()`
 1. With the debug build installed, repeat the cold starts of 1.2, saving `adb logcat -d -v threadtime StrictMode:D
    '*:S'` after each one.
-2. Count the violations whose stack has a `com.company.admob` frame outside the sample's package. Target: 0.
+2. Count the violations whose stack has a `io.github.thesobiaakbar.adroit` frame outside the sample's package. Target: 0.
    Violations with only Google SDK, Chrome or sample frames are recorded but aren't library findings.
 3. Method trace of a cold start: `adb shell am start -W --start-profiler /data/local/tmp/start.trace --sampling 200
-   -n com.company.admob.sample.xml/.SplashActivity`, wait 8 s, `adb shell am profile stop
-   com.company.admob.sample.xml`, `adb pull /data/local/tmp/start.trace`. Open it in Android Studio (Profiler →
+   -n io.github.thesobiaakbar.adroit.sample.xml/.SplashActivity`, wait 8 s, `adb shell am profile stop
+   io.github.thesobiaakbar.adroit.sample.xml`, `adb pull /data/local/tmp/start.trace`. Open it in Android Studio (Profiler →
    load from file) and check the thread of `MobileAds.initialize`, `RdpWriter.apply` and
    `SharedPrefsKeyValueStore.getInt`: a `DefaultDispatcher-worker` thread, not `main`.
 
 ### 3. Startup ad requests
 1. Install the playground: `./gradlew :sample-compose:installDebug`. Launch it by its activity
-   (`adb shell am start -W -n com.company.admob.sample.compose/.MainActivity`), not with `monkey`, which can pick
+   (`adb shell am start -W -n io.github.thesobiaakbar.adroit.sample.compose/.MainActivity`), not with `monkey`, which can pick
    LeakCanary's launcher.
-2. Wait 14 s, then `adb logcat -d -v time CompanyAdMob:V '*:S'`. Count the `Loading …` lines in the 10 s after
+2. Wait 14 s, then `adb logcat -d -v time Adroit:V '*:S'`. Count the `Loading …` lines in the 10 s after
    `State: InitializingSdk -> Ready`.
 3. Expected (debug build, demo ad units): app open and one native at Ready; interstitial, rewarded and rewarded
    interstitial at about +250 ms; a second native after the first loads (O1). No `feed` or `custom` native request
@@ -156,7 +156,7 @@ the engines are spaced from each other.
 1. Baseline: set `"adsEnabled": false` in sample-xml's `res/raw/ads_config.json` (don't commit it), then
    `./gradlew :sample-xml:installRelease`.
 2. Three times: force-stop, cold start, press back whenever a full-screen ad covers the app, wait until 40 s after
-   the start, then `adb shell dumpsys meminfo com.company.admob.sample.xml`; note TOTAL PSS, Java Heap, Native
+   the start, then `adb shell dumpsys meminfo io.github.thesobiaakbar.adroit.sample.xml`; note TOTAL PSS, Java Heap, Native
    Heap, Code and Graphics from the App Summary.
 3. Restore the file, install again, repeat 2, and record the medians' differences.
 4. Native pool expiry: leave a pooled native ad for more than 55 minutes in the foreground, then check the

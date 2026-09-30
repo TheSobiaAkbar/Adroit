@@ -2,7 +2,7 @@
 <!-- Only so the snippets compile as an app module; nothing here is launched. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <application android:label="CompanyAdMob docs snippets">
+    <application android:label="Adroit docs snippets">
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />

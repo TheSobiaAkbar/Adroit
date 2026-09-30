@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The call-to-action button: a left-to-right gradient from adroit_native_cta to adroit_native_cta_end
+    (the same color by default), with adroit_native_cta_corner_radius corners. Change those, or replace the
+    whole drawable with one of this name in your app. A Firebase "ctaColors" value recolors this shape at runtime.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?android:attr/colorControlHighlight">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:endColor="@color/adroit_native_cta_end"
+                android:startColor="@color/adroit_native_cta"
+                android:type="linear" />
+            <corners android:radius="@dimen/adroit_native_cta_corner_radius" />
+        </shape>
+    </item>
+</ripple>

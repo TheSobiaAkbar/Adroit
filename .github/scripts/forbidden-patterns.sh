@@ -9,7 +9,7 @@ report() {
   failed=1
 }
 
-library_sources=(admob-core/src/main admob-views/src/main admob-compose/src/main admob-testing/src/main admob-firebase/src/main)
+library_sources=(adroit-core/src/main adroit-views/src/main adroit-compose/src/main adroit-testing/src/main adroit-firebase/src/main)
 
 # 1. No println in library code: logging goes through AdLogger.
 if matches=$(git grep -n 'println(' -- "${library_sources[@]}"); then
@@ -23,10 +23,10 @@ if matches=$(git grep -n 'android\.util\.Log' -- "${library_sources[@]}" ':!**/A
   echo "$matches"
 fi
 
-# 3. Google Mobile Ads / UMP / Play Services imports only in admob-core's adapter package (ADR-003).
+# 3. Google Mobile Ads / UMP / Play Services imports only in adroit-core's adapter package (ADR-003).
 if matches=$(git grep -nE '^import com\.google\.android\.(libraries\.ads|ump|gms)\.' -- "${library_sources[@]}" \
-  ':!admob-core/src/main/kotlin/com/company/admob/internal/google/**'); then
-  report "Google SDK imports outside admob-core internal/google:"
+  ':!adroit-core/src/main/kotlin/io/github/thesobiaakbar/adroit/internal/google/**'); then
+  report "Google SDK imports outside adroit-core internal/google:"
   echo "$matches"
 fi
 

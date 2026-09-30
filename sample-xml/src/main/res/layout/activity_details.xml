@@ -30,12 +30,12 @@
                 android:text="@string/details_body" />
 
             <!-- A large native template declared in XML. -->
-            <com.company.admob.views.AdNativeView
+            <io.github.thesobiaakbar.adroit.views.AdNativeView
                 android:id="@+id/details_native"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:company_admob_placement="ArticleNative" />
+                app:adroit_placement="ArticleNative" />
         </LinearLayout>
     </ScrollView>
 

@@ -1,14 +1,31 @@
 # Migration
 
+## From CompanyAdMob to Adroit
+
+The library was renamed. Nothing else changed: replace the names below, then rebuild.
+
+| Before | After |
+|---|---|
+| `com.company:admob-core` (and `-views`, `-compose`, `-testing`, `-firebase`) | `io.github.thesobiaakbar:adroit-core` (and `-views`, `-compose`, `-testing`, `-firebase`) |
+| `import com.company.admob.…` | `import io.github.thesobiaakbar.adroit.…` |
+| `CompanyAdMob.initialize(…)`, `CompanyAdMob.start(…)`, `CompanyAdMob.client` | `Adroit.initialize(…)`, `Adroit.start(…)`, `Adroit.client` |
+| `CompanyAdMobTestRule`, `CompanyAdMobVersion` | `AdroitTestRule`, `AdroitVersion` |
+| XML attributes `app:company_admob_placement`, `app:company_admob_template`, … | `app:adroit_placement`, `app:adroit_template`, … |
+| Resource overrides `@color/company_admob_…`, `@dimen/company_admob_…`, `@style/…` | `@color/adroit_…`, `@dimen/adroit_…` |
+| The repository `maven.pkg.github.com/TheSobiaAkbar/AdsPlugin` | `maven.pkg.github.com/TheSobiaAkbar/Adroit` ([Getting access](ACCESS.md)) |
+
+A find-and-replace of `com.company.admob` → `io.github.thesobiaakbar.adroit`, `CompanyAdMob` → `Adroit` and
+`company_admob_` → `adroit_` covers it. Firebase Remote Config parameters keep their names.
+
 ## From hand-written legacy AdMob code
 
 Apps that use the legacy Google Mobile Ads SDK (`com.google.android.gms:play-services-ads`) directly move to
-CompanyAdMob in four steps.
+Adroit in four steps.
 
 ### 1. Replace the dependency
 
-Remove `com.google.android.gms:play-services-ads` (and `-lite`) from your build and add CompanyAdMob
-([Getting started](GETTING_STARTED.md#2-add-the-dependencies)). CompanyAdMob uses the Next-Gen SDK, which can't be on
+Remove `com.google.android.gms:play-services-ads` (and `-lite`) from your build and add Adroit
+([Getting started](GETTING_STARTED.md#2-add-the-dependencies)). Adroit uses the Next-Gen SDK, which can't be on
 the same classpath as the legacy one. If a dependency still brings the legacy SDK (a mediation adapter), exclude it
 ([Mediation](MEDIATION.md)).
 
@@ -25,17 +42,17 @@ Every hard-coded ad unit ID becomes a placement in `adMobConfig { placements { �
 
 ### 4. Replace each call
 
-| Legacy code | CompanyAdMob |
+| Legacy code | Adroit |
 |---|---|
-| `MobileAds.initialize(context)` | `CompanyAdMob.initialize(application, config)` in `Application.onCreate`, then `CompanyAdMob.start(activity)` |
+| `MobileAds.initialize(context)` | `Adroit.initialize(application, config)` in `Application.onCreate`, then `Adroit.start(activity)` |
 | UMP `ConsentInformation.requestConsentInfoUpdate` + `loadAndShowConsentFormIfRequired` | Done by `start(activity)` |
 | UMP `showPrivacyOptionsForm` / `getPrivacyOptionsRequirementStatus` | `privacy.showPrivacyOptions(activity)` / `privacy.isPrivacyOptionsRequired` |
 | `RequestConfiguration.Builder().setTestDeviceIds(…)` | `testing { testDeviceIds += … }` |
 | `setTagForChildDirectedTreatment` / `setTagForUnderAgeOfConsent` | `privacy { ageTreatment = … }` |
 | `setMaxAdContentRating(…)` | `privacy { maxAdContentRating = … }` |
-| `AdView` in XML + `adView.loadAd(AdRequest.Builder().build())` | `AdBannerView` with `company_admob_placement` ([XML](XML.md)) |
+| `AdView` in XML + `adView.loadAd(AdRequest.Builder().build())` | `AdBannerView` with `adroit_placement` ([XML](XML.md)) |
 | `adView.pause()` / `resume()` / `destroy()` in lifecycle callbacks | Automatic: banners follow their lifecycle owner |
-| `InterstitialAd.load(…)` + keeping the ad + `show(activity)` + `FullScreenContentCallback` | `CompanyAdMob.showInterstitial(activity, placement) { result -> }`: loading, caching, reloading and callbacks included |
+| `InterstitialAd.load(…)` + keeping the ad + `show(activity)` + `FullScreenContentCallback` | `Adroit.showInterstitial(activity, placement) { result -> }`: loading, caching, reloading and callbacks included |
 | `RewardedAd.load` + `show(activity) { rewardItem -> }` | `rewarded.show(activity, placement) { RewardResult }` with a `rewardId` |
 | `RewardedInterstitialAd` | `rewardedInterstitial.show` after your intro screen |
 | `AppOpenAd` + an `AppOpenManager` with `ProcessLifecycleOwner` | Configure an `appOpen` placement; `showOnColdStart` from the loading screen |
@@ -47,7 +64,7 @@ Every hard-coded ad unit ID becomes a placement in `adMobConfig { placements { �
 Things you can delete rather than port: retry loops, "is an ad loading" flags, cache timestamps, frequency counters,
 `WeakReference<Activity>` holders and "is a full-screen ad showing" booleans.
 
-## Between CompanyAdMob versions
+## Between Adroit versions
 
 Each release lists breaking changes in the [changelog](../CHANGELOG.md), and a section appears here when a release needs
 code changes.

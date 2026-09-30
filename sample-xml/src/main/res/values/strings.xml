@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CompanyAdMob XML sample</string>
+    <string name="app_name">Adroit XML sample</string>
     <string name="splash_progress">%1$d%%</string>
     <string name="nav_home">Home</string>
     <string name="nav_feed">Feed</string>

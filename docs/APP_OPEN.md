@@ -36,14 +36,14 @@ Google advises showing app open ads on cold starts only from a loading screen, a
 `showOnColdStart` from that screen; exclude the screen from automatic app open ads
 (`appOpen(…) { excludeActivities(SplashActivity::class.java) }`):
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#app-open-cold-start -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#app-open-cold-start -->
 ```kotlin
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        CompanyAdMob.start(this) {
+        Adroit.start(this) {
             // Waits up to 4 s for an app open ad, shows it if one is ready, then continues whatever happened.
-            CompanyAdMob.appOpen.showOnColdStart(this, maxWait = 4.seconds) { goToMain() }
+            Adroit.appOpen.showOnColdStart(this, maxWait = 4.seconds) { goToMain() }
         }
     }
 
@@ -61,11 +61,11 @@ rotation), the result is `NotShown(ActivityUnavailable)`; the recreated screen m
 
 ## Controls
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#app-open-controls -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#app-open-controls -->
 ```kotlin
 fun openSharesheet(activity: Activity, share: Intent) {
     // Returning from the share sheet mustn't show an app open ad.
-    CompanyAdMob.appOpen.skipNextForeground()
+    Adroit.appOpen.skipNextForeground()
     activity.startActivity(Intent.createChooser(share, null))
 }
 
@@ -73,12 +73,12 @@ class CheckoutActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // No app open ad while this screen is at least STARTED; released automatically when it's destroyed.
-        CompanyAdMob.appOpen.suppressWhile(this)
+        Adroit.appOpen.suppressWhile(this)
     }
 }
 
 fun onUserBoughtPremium() {
-    CompanyAdMob.appOpen.setEnabled(false) // or CompanyAdMob.setAdFree(true) to stop every format
+    Adroit.appOpen.setEnabled(false) // or Adroit.setAdFree(true) to stop every format
 }
 ```
 

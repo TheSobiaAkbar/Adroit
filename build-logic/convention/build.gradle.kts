@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "com.company.admob.buildlogic"
+group = "io.github.thesobiaakbar.adroit.buildlogic"
 
 java {
     toolchain {
@@ -25,28 +25,28 @@ dependencies {
 gradlePlugin {
     plugins {
         register("androidLibrary") {
-            id = "companyadmob.android.library"
-            implementationClass = "com.company.admob.buildlogic.AndroidLibraryConventionPlugin"
+            id = "adroit.android.library"
+            implementationClass = "io.github.thesobiaakbar.adroit.buildlogic.AndroidLibraryConventionPlugin"
         }
         register("androidLibraryCompose") {
-            id = "companyadmob.android.library.compose"
-            implementationClass = "com.company.admob.buildlogic.ComposeLibraryConventionPlugin"
+            id = "adroit.android.library.compose"
+            implementationClass = "io.github.thesobiaakbar.adroit.buildlogic.ComposeLibraryConventionPlugin"
         }
         register("androidSample") {
-            id = "companyadmob.android.sample"
-            implementationClass = "com.company.admob.buildlogic.SampleAppConventionPlugin"
+            id = "adroit.android.sample"
+            implementationClass = "io.github.thesobiaakbar.adroit.buildlogic.SampleAppConventionPlugin"
         }
         register("androidSampleCompose") {
-            id = "companyadmob.android.sample.compose"
-            implementationClass = "com.company.admob.buildlogic.ComposeSampleAppConventionPlugin"
+            id = "adroit.android.sample.compose"
+            implementationClass = "io.github.thesobiaakbar.adroit.buildlogic.ComposeSampleAppConventionPlugin"
         }
         register("androidFirebase") {
-            id = "companyadmob.android.firebase"
-            implementationClass = "com.company.admob.buildlogic.FirebaseAppConventionPlugin"
+            id = "adroit.android.firebase"
+            implementationClass = "io.github.thesobiaakbar.adroit.buildlogic.FirebaseAppConventionPlugin"
         }
         register("publishing") {
-            id = "companyadmob.publishing"
-            implementationClass = "com.company.admob.buildlogic.PublishingConventionPlugin"
+            id = "adroit.publishing"
+            implementationClass = "io.github.thesobiaakbar.adroit.buildlogic.PublishingConventionPlugin"
         }
     }
 }

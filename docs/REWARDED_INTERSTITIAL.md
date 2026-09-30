@@ -15,7 +15,7 @@ The library can't show that screen for you: `rewardedInterstitial.show` assumes 
 
 ## Integration
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#rewarded-interstitial-intro -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#rewarded-interstitial-intro -->
 ```kotlin
 /** Google requires an intro screen that tells the user about the reward and lets them opt out, before the ad. */
 @Composable

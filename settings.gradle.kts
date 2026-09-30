@@ -23,19 +23,18 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CompanyAdMob"
+rootProject.name = "Adroit"
 
 // Published libraries (docs/architecture/02_ARCHITECTURE.md §7)
-include(":admob-core")
-include(":admob-views")
-include(":admob-compose")
-include(":admob-testing")
-include(":admob-firebase")
+include(":adroit-core")
+include(":adroit-views")
+include(":adroit-compose")
+include(":adroit-testing")
+include(":adroit-firebase")
 
 // Samples (never published)
 include(":sample-xml")
 include(":sample-compose")
-include(":sample-mixed")
 
 // Compiled documentation snippets (docs/*.md), never published: ./gradlew -PincludeDocsSnippets :docs-snippets:build
 if (providers.gradleProperty("includeDocsSnippets").isPresent) {

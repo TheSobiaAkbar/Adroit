@@ -11,10 +11,10 @@ leaves the app, or right after another full-screen ad
 The library preloads each interstitial placement as soon as ads are ready, and loads the next one after each show. At
 the break, call `show` and continue your flow in the callback, which is always called exactly once:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#interstitial-result -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#interstitial-result -->
 ```kotlin
 fun showBetweenLevels(activity: Activity, next: () -> Unit) {
-    CompanyAdMob.interstitial.show(activity, Placements.LevelComplete) { result ->
+    Adroit.interstitial.show(activity, Placements.LevelComplete) { result ->
         when (result) {
             is FullScreenResult.Dismissed -> next()
             is FullScreenResult.NotShown -> {
@@ -29,12 +29,12 @@ fun showBetweenLevels(activity: Activity, next: () -> Unit) {
 
 The suspend form returns when the ad is dismissed, or right away when it can't be shown:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#interstitial-suspend -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#interstitial-suspend -->
 ```kotlin
 class LevelEndActivity : AppCompatActivity() {
     fun onNextLevelClicked() {
         lifecycleScope.launch {
-            CompanyAdMob.interstitial.showAndAwait(this@LevelEndActivity, Placements.LevelComplete)
+            Adroit.interstitial.showAndAwait(this@LevelEndActivity, Placements.LevelComplete)
             startActivity(Intent(this@LevelEndActivity, LauncherActivity::class.java))
         }
     }
@@ -43,12 +43,12 @@ class LevelEndActivity : AppCompatActivity() {
 
 For placements with `preload = PreloadStrategy.ON_DEMAND`, preload before the break:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/FullScreen.kt#interstitial-preload -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/FullScreen.kt#interstitial-preload -->
 ```kotlin
 fun preloadForUpcomingBreak() {
     // Loads now if the placement's preload strategy didn't already: for ON_DEMAND placements.
-    CompanyAdMob.interstitial.preload(Placements.LevelComplete)
-    val readyNow = CompanyAdMob.interstitial.isReady(Placements.LevelComplete)
+    Adroit.interstitial.preload(Placements.LevelComplete)
+    val readyNow = Adroit.interstitial.isReady(Placements.LevelComplete)
 }
 ```
 
@@ -101,7 +101,7 @@ Fragment, pass `requireActivity()`.
 ## Splash screen
 
 Mark the splash placement with `splash = true` and show it with
-`CompanyAdMob.interstitial.showOnSplash(activity, placement) { … }`. It waits up to `splashTimeout` (8 s by default) for
+`Adroit.interstitial.showOnSplash(activity, placement) { … }`. It waits up to `splashTimeout` (8 s by default) for
 consent, initialization and an ad, then shows it or gives up with `NotShown(Timeout)`; continue to your main screen
 in both cases. See [Ad profiles](AD_PROFILES.md#showing-the-ads).
 

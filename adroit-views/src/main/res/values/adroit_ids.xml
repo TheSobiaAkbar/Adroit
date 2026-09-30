@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tags: the banner or native ad attachBanner / attachNativeAd put in a container (one per placement). -->
+    <item name="adroit_attached_banner" type="id" />
+    <item name="adroit_attached_native" type="id" />
+
+    <!--
+        The standard IDs of a native ad layout's views: every template uses them, and so can your own layouts
+        (docs/NATIVE.md, "Your own layout"). Only the headline is required.
+    -->
+    <item name="adroit_native_headline" type="id" />
+    <item name="adroit_native_body" type="id" />
+    <item name="adroit_native_cta" type="id" />
+    <item name="adroit_native_icon" type="id" />
+    <item name="adroit_native_media" type="id" />
+    <item name="adroit_native_attribution" type="id" />
+    <item name="adroit_native_advertiser" type="id" />
+    <item name="adroit_native_stars" type="id" />
+    <item name="adroit_native_price" type="id" />
+    <item name="adroit_native_store" type="id" />
+</resources>

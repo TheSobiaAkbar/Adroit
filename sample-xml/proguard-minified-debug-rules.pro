@@ -5,25 +5,25 @@
 #     at androidx.test.platform.io.TestDirCalculator.<init>
 # The test APK doesn't bundle the libraries the app already has, such as the Kotlin standard library; it uses the
 # app's copy, from which R8 removed what the app itself doesn't call. Keeping the standard library whole doesn't
-# change how the CompanyAdMob libraries or the app code under test are shrunk and obfuscated.
+# change how the Adroit libraries or the app code under test are shrunk and obfuscated.
 -keep class kotlin.** { *; }
 
 # Failure fixed (FragmentLeakTest):
-#   NoSuchFieldError: No field nav_home of type I in class Lcom/company/admob/sample/xml/R$id;
+#   NoSuchFieldError: No field nav_home of type I in class Lio/github/thesobiaakbar/adroit/sample/xml/R$id;
 # The tests read the app's resource IDs as fields of its R classes, which R8 inlines into the app and removes.
--keepclassmembers class com.company.admob.sample.xml.R$* {
+-keepclassmembers class io.github.thesobiaakbar.adroit.sample.xml.R$* {
     public static <fields>;
 }
 
 # Failure fixed (AdProfilesDeviceTest):
-#   NoSuchMethodError: No interface method snapshot()Lcom/company/admob/DiagnosticsReport; in class
-#   Lcom/company/admob/DiagnosticsApi; (and then the same for getRecentEvents())
+#   NoSuchMethodError: No interface method snapshot()Lio/github/thesobiaakbar/adroit/DiagnosticsReport; in class
+#   Lio/github/thesobiaakbar/adroit/DiagnosticsApi; (and then the same for getRecentEvents())
 # The test reads the diagnostics report and recent events, which the app itself never calls, so R8 removed them.
 # Kept, but still obfuscated: the test APK is rewritten with the app's mapping.
--keepclassmembers,allowobfuscation interface com.company.admob.DiagnosticsApi {
+-keepclassmembers,allowobfuscation interface io.github.thesobiaakbar.adroit.DiagnosticsApi {
     *;
 }
--keepclassmembers,allowobfuscation class com.company.admob.DiagnosticsReport, com.company.admob.PlacementDiagnostics {
+-keepclassmembers,allowobfuscation class io.github.thesobiaakbar.adroit.DiagnosticsReport, io.github.thesobiaakbar.adroit.PlacementDiagnostics {
     public *** get*();
     public *** is*();
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The loading placeholder of banners and native ads (AdShimmerView): its blocks, and the sweeping highlight. -->
+    <!-- The ad area behind the blocks: the card of a native ad, or the whole banner. -->
+    <color name="adroit_shimmer_card">#FFF1F1F1</color>
+    <color name="adroit_shimmer_base">#FFE0E0E0</color>
+    <color name="adroit_shimmer_highlight">#FFF5F5F5</color>
+</resources>

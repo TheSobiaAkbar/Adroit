@@ -1,12 +1,19 @@
 # Changelog
 
-All notable changes to CompanyAdMob are recorded here. The format follows
+All notable changes to Adroit are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/)
 with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get their own "Google SDK" section.
 
 ## [Unreleased]
 
 ### Changed
+- **Renamed to Adroit** (breaking). Maven group `io.github.thesobiaakbar`, artifacts `adroit-core`, `adroit-views`,
+  `adroit-compose`, `adroit-testing` and `adroit-firebase`, package `io.github.thesobiaakbar.adroit`, facade `Adroit`,
+  resource and XML attribute prefix `adroit_`. See [Migration](docs/MIGRATION.md#from-companyadmob-to-adroit).
+- Distributed privately through GitHub Packages, under a proprietary license (`LICENSE`); access by invitation
+  ([Getting access](docs/ACCESS.md)). The in-house Maven repository publishing is removed.
+- The mixed XML and Compose sample and its guide are removed; `sample-xml` and `sample-compose` remain. The
+  new-app guides install Adroit from GitHub Packages.
 - `AdBanner` (and `AdSlot` showing a banner) keeps its banner for the whole screen, like `AdNative`: in a ViewModel
   of the current `LocalViewModelStoreOwner`, one per (placement, options, new `slotKey`). Leaving the composition and
   coming back (another tab, a lazy list scrolled away and back) and configuration changes show the same ad with no
@@ -36,21 +43,21 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   the next banner view for it shows it at once, or waits for it while it's loading; one of another width loads its
   own. Native ads already could; a native view asking while its ad loads ahead now takes that ad without a second
   request.
-- The native templates' sizes use sdp and text sizes ssp (com.intuit.sdp and com.intuit.ssp, new `admob-views`
-  dependencies), scaling with the screen width. New dimens `company_admob_native_spacing_tiny`,
-  `company_admob_shimmer_corner_radius` and `company_admob_shimmer_padding`.
+- The native templates' sizes use sdp and text sizes ssp (com.intuit.sdp and com.intuit.ssp, new `adroit-views`
+  dependencies), scaling with the screen width. New dimens `adroit_native_spacing_tiny`,
+  `adroit_shimmer_corner_radius` and `adroit_shimmer_padding`.
 - Native styles `SMALL_BUTTON_END`, `SMALL_BUTTON_BOTTOM`, `LARGE_BUTTON_BOTTOM` (the default), `LARGE_COMPACT`
   and `MEDIA_START`, each with its template (`NativeTemplates.SmallButtonEnd`, ...; `"style": "media_start"` in
-  Firebase; `company_admob_template` in XML).
+  Firebase; `adroit_template` in XML).
 - Native colors from Firebase: `ctaColors` (one color, or two for a gradient), `ctaTextColor`, `attributionColor`
   and `attributionTextColor`, in an ad's value or in `AdSettings`. The template button is a gradient from
-  `company_admob_native_cta` to the new `company_admob_native_cta_end` (the same color by default).
+  `adroit_native_cta` to the new `adroit_native_cta_end` (the same color by default).
 - The app's own native layouts by name: `NativeTemplates.register(name, layout)`, then `AdProfile.native(layout =
   name)` or `{"style": "name"}` in Firebase. `NativeTemplates.forPlacement(placement)` returns the layout an ad shows
   in now.
-- Native template styling by resources: colors (`company_admob_native_headline`, `_body`, `_cta`, `_cta_text`,
+- Native template styling by resources: colors (`adroit_native_headline`, `_body`, `_cta`, `_cta_text`,
   `_attribution`, `_attribution_text`, `_stroke`, `_background`), dimens (corners, text sizes, icon and media
-  sizes) and drawables (`company_admob_native_card`, `_cta_background`, `_attribution_background`), each replaced by
+  sizes) and drawables (`adroit_native_card`, `_cta_background`, `_attribution_background`), each replaced by
   an app resource of the same name.
 - `docs/NEW_APP_XML.md`: adding the plugin to a new Kotlin + XML app, step by step, with a sample Firebase value
   for every kind of ad.
@@ -58,18 +65,18 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdBanner`, `AdNative` in a `LazyColumn`, the full-screen launcher).
 - `sample-compose` is now the XML sample's app in Compose (replacing the AdMob Playground): splash with consent and
   the splash ad, Home, Feed, Settings, Details and Native styles destinations, the same `SampleAds` and Firebase
-  parameters. Firebase turns on once `google-services.json` is added for `com.company.admob.sample.compose`.
+  parameters. Firebase turns on once `google-services.json` is added for `io.github.thesobiaakbar.adroit.sample.compose`.
 - `docs/NEW_APP_MIXED.md`: the same for an app with both XML and Compose screens: one setup for both, which API
   where, Compose in a Fragment or an XML layout, XML in a Compose screen, and mediation.
 - `sample-mixed` is now the same app with both toolkits (replacing its two interop screens): XML splash, Home and
   Settings, a Compose feed in a Fragment, a Compose Details screen embedding an XML native ad; Firebase, the same
   `SampleAds` and parameters, and the `-PwithMediation=true` build as before.
-- `RemoteValue` (admob-firebase): the app's own Remote Config parameters, with in-app defaults:
+- `RemoteValue` (adroit-firebase): the app's own Remote Config parameters, with in-app defaults:
   `RemoteValue.boolean`, `long`, `double`, `string`, `json` and `custom`. `.value` never waits and reads as the
   default when Firebase doesn't set a valid value; `updates()` follows activations.
-- `NetworkMonitor` (admob-core): the connection state as a `StateFlow<NetworkState>`: `Unavailable`,
+- `NetworkMonitor` (adroit-core): the connection state as a `StateFlow<NetworkState>`: `Unavailable`,
   `ConnectedNoInternet` (for example Wi-Fi behind a sign-in page) or `Connected` over Wi-Fi, mobile data or ethernet.
-- `RemoteConfigSession` (admob-firebase): fetches Remote Config once per app session without blocking. After a
+- `RemoteConfigSession` (adroit-firebase): fetches Remote Config once per app session without blocking. After a
   failure it tries again on each new Activity and when the device comes back online. `FirebaseRemoteConfigProvider`
   re-reads its values as soon as the session activates them.
 - Ad definitions (`docs/AD_PROFILES.md`): an enum implementing `AdDefinition`, each entry holding a typed
@@ -80,7 +87,7 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 - Format swapping (`docs/AD_PROFILES.md`, "Swapping formats"): a Firebase value with `"format"` turns an interstitial
   into an app open ad or back, and a banner into a native ad or back, with ad unit IDs of the new format (PRODUCTION
   ignores a swap without them). The ad keeps its counter, timer and caps. `AdSlots.showFullScreen`,
-  `AdSlots.showOnSplash`, `AdSlotView` (admob-views) and `AdSlot` (admob-compose) show an ad in its current format;
+  `AdSlots.showOnSplash`, `AdSlotView` (adroit-views) and `AdSlot` (adroit-compose) show an ad in its current format;
   a swapped app open ad shows its interstitial on returns to the app. `PlacementOverride.format`, through a new
   constructor; the 1.0.0-rc1 constructor is unchanged.
 - One ad per banner or native slot, and refresh: `load(refresh = false)` on `AdBannerView`, `AdNativeView`,
@@ -90,10 +97,10 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `attachNativeAd` reuse the ad already in their container for the same placement.
 - Shimmer while banner and native ad profiles load (`showLoading`): shaped like the banner's size or the native
   template, as currently configured (Firebase included), in every view helper and composable; removed when the ad
-  appears or fails. Colours `company_admob_shimmer_base` and `company_admob_shimmer_highlight` can be overridden.
+  appears or fails. Colours `adroit_shimmer_base` and `adroit_shimmer_highlight` can be overridden.
 - "Loading ad…" screen before full-screen ad profiles (`showLoading`, default true; `loadingSeconds`, default 1): shown
   from the show call for at least `loadingSeconds`, or during the load wait, and removed when the ad opens, fails,
-  times out or the user leaves. Its layout (`company_admob_loading_ad`) can be replaced by the app. Not for splash ads.
+  times out or the user leaves. Its layout (`adroit_loading_ad`) can be replaced by the app. Not for splash ads.
 - Load timeout for full-screen ad profiles (`loadTimeoutSeconds`, default 8, per ad or in `AdSettings`): a show on an
   ad that isn't loaded requests it and waits at most that long, then answers `NotShown(Timeout)` (a failed load ends
   the wait at once); a late ad is kept for the next show. `showLoading` and `loadingSeconds` are read already, for
@@ -125,8 +132,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   Material 3 theme maps to its muted secondary color).
 - The loading shimmer of a native ad is built at runtime from the layout it will show in, any template or an app's
   own layout, with a block over each of its views; the whole card shimmers too, and a banner's whole area. New color
-  `company_admob_shimmer_card`.
-- The native templates draw a card with a thin border by default (`company_admob_native_card`); their call-to-action
+  `adroit_shimmer_card`.
+- The native templates draw a card with a thin border by default (`adroit_native_card`); their call-to-action
   buttons are framework `Button`s, so a Material theme no longer repaints them.
 - An ad without ad unit IDs (in a definition or an ads file) uses Google's test ad unit for its format instead of
   being a configuration error. PRODUCTION logs a warning for it.
@@ -139,7 +146,7 @@ The public API is frozen for 1.0.0 (`docs/audits/API_STABILITY_AUDIT.md`): from 
 ### Added
 - `AppOpenApi.showOnColdStart(activity, maxWaitMillis, onResult)`, for Java callers (ADR-013).
 - `@JvmOverloads` on the public constructors with default arguments: `BannerOptions`, `AdError.Internal`,
-  `FirebaseAnalyticsOptions`, `FirebaseAnalyticsEventListener`, `FirebaseRemoteConfigProvider`, and admob-testing's
+  `FirebaseAnalyticsOptions`, `FirebaseAnalyticsEventListener`, `FirebaseRemoteConfigProvider`, and adroit-testing's
   `FakeNativeAdHandle` (and its `block`).
 - Ad profiles (`docs/AD_PROFILES.md`): `adMobConfig { profiles(context, R.raw.ads_config) }` defines every ad in one
   JSON file, and each ad can be changed from a Firebase Remote Config parameter of the same name.
@@ -152,7 +159,7 @@ The public API is frozen for 1.0.0 (`docs/audits/API_STABILITY_AUDIT.md`): from 
 - `BannerSize.Collapsible` (Google's collapsible banners) and `CollapsibleBannerPosition`; the XML sizes
   `collapsibleBottom` and `collapsibleTop`.
 - `NativeStyle`, a native placement's `style`, `NativeApi.style(placement)` and `NativeTemplates.forStyle(style)`.
-- `admob-firebase` (optional): `FirebaseRemoteConfigProvider`, which reads one Remote Config parameter per ad (and an
+- `adroit-firebase` (optional): `FirebaseRemoteConfigProvider`, which reads one Remote Config parameter per ad (and an
   `AdSettings` parameter) as remote overrides, and `FirebaseAnalyticsEventListener`, which logs paid events as Firebase
   `ad_impression` events (and optional custom ad events). Firebase BoM 34.19.0.
 
@@ -166,9 +173,9 @@ The public API is frozen for 1.0.0 (`docs/audits/API_STABILITY_AUDIT.md`): from 
 
 ### Changed
 - A banner's size comes from its placement (or ad profile) unless the code passes one: `BannerOptions.size` and
-  `AdBannerView`'s `company_admob_bannerSize` are now optional. The placement-level `size` had no effect before.
+  `AdBannerView`'s `adroit_bannerSize` are now optional. The placement-level `size` had no effect before.
 - A native ad's template comes from its placement's `style` unless the code passes a layout: the `layout` parameters
-  of `AdNative`, `attachNativeAd` and `NativeAdHolder.bindTo`, and `AdNativeView`'s `company_admob_template`, are
+  of `AdNative`, `attachNativeAd` and `NativeAdHolder.bindTo`, and `AdNativeView`'s `adroit_template`, are
   now optional (the default style is MEDIUM, as the default template was).
 - Placement keys may contain capital letters (`[A-Za-z0-9_]{1,40}`), so they can match Firebase parameter names.
 - Remote overrides drop an invalid ad unit ID on its own, instead of the placement's whole override.
@@ -176,7 +183,7 @@ The public API is frozen for 1.0.0 (`docs/audits/API_STABILITY_AUDIT.md`): from 
 ### Fixed
 - The AARs asked apps to compile against API 37 (AGP 9 publishes the library's compileSdk as `minCompileSdk`). They
   now ask for 34, what their dependencies need, so apps on compileSdk 34 to 36 and AGP 8.1.1 or newer can use
-  admob-core and admob-views. admob-compose still needs compileSdk 37 and AGP 9.1, from Compose 1.12.
+  adroit-core and adroit-views. adroit-compose still needs compileSdk 37 and AGP 9.1, from Compose 1.12.
 - Sealed types and enums state in their KDoc whether they may gain values (include an `else` branch) or are closed.
 - No disk I/O from the library on the main thread (`docs/audits/PERFORMANCE_AUDIT.md`): `initialize()` reads and
   updates the launch count and loads UMP's stored consent state on a background thread, and `start()` writes
@@ -198,7 +205,7 @@ The public API is frozen for 1.0.0 (`docs/audits/API_STABILITY_AUDIT.md`): from 
 First internal release.
 
 ### Added
-- `admob-core`:
+- `adroit-core`:
   - One configuration DSL (`adMobConfig { }`, plus a Java builder) with DEVELOPMENT, STAGING and PRODUCTION
     environments, test-ad safety rules and full validation.
   - Consent with UMP before any ad request: the privacy options entry point, debug geography, age treatment, max ad
@@ -214,17 +221,17 @@ First internal release.
     lifecycle-bound handles.
   - The ad-free switch, remote overrides (`AdConfigProvider`), the `AdEvent` stream and listeners (including paid
     events), pluggable logging, diagnostics and Ad Inspector.
-- `admob-views`: `AdBannerView`, `AdNativeView`, `attachBanner`, `attachNativeAd`, `NativeAdHolder` and three native
+- `adroit-views`: `AdBannerView`, `AdNativeView`, `attachBanner`, `attachNativeAd`, `NativeAdHolder` and three native
   templates.
-- `admob-compose`: `AdBanner`, `AdNative`, `rememberNativeAd`, `rememberAdAvailability` and
+- `adroit-compose`: `AdBanner`, `AdNative`, `rememberNativeAd`, `rememberAdAvailability` and
   `rememberFullScreenAdLauncher`.
-- `admob-testing`: `FakeAdsClient`, fake handles and `CompanyAdMobTestRule`.
+- `adroit-testing`: `FakeAdsClient`, fake handles and `AdroitTestRule`.
 - Consumer R8 rules: one rule, for WorkManager's database, which the Google SDK brings in with Room 2.2.5. Without it,
   every minified app crashed at launch (see `docs/architecture/R8_REPORT.md`).
 
 ### Google SDK
 - Built against Google Mobile Ads Next-Gen SDK `ads-mobile-sdk` 1.4.0 and UMP 4.0.0.
 
-[Unreleased]: https://github.com/TheSobiaAkbar/AdsPlugin/compare/v1.0.0-rc1...HEAD
-[1.0.0-rc1]: https://github.com/TheSobiaAkbar/AdsPlugin/compare/v0.1.0...v1.0.0-rc1
-[0.1.0]: https://github.com/TheSobiaAkbar/AdsPlugin/releases/tag/v0.1.0
+[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc1...HEAD
+[1.0.0-rc1]: https://github.com/TheSobiaAkbar/Adroit/compare/v0.1.0...v1.0.0-rc1
+[0.1.0]: https://github.com/TheSobiaAkbar/Adroit/releases/tag/v0.1.0

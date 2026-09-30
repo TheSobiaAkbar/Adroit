@@ -2,7 +2,7 @@
 
 Design for PROMPT 25A (ADR-018). Status: **accepted** (2026-09-27). It extends
 `02_ARCHITECTURE.md` §20 (configuration) and §21 (remote configuration), and replaces the unreleased
-`company_admob_*` Firebase keys from PROMPT 24.
+`adroit_*` Firebase keys from PROMPT 24.
 
 ## 1. Goals
 
@@ -45,7 +45,7 @@ launch, offline, or when a Firebase parameter is missing or invalid.
 
 ```kotlin
 // Application.onCreate: the same in every project
-CompanyAdMob.initialize(this, adMobConfig {
+Adroit.initialize(this, adMobConfig {
     environment = if (BuildConfig.DEBUG) AdEnvironment.DEVELOPMENT else AdEnvironment.PRODUCTION
     profiles(R.raw.ads_config)                  // the ads file
     remoteConfig = FirebaseRemoteConfigProvider() // Firebase values override the file, key by key
@@ -208,7 +208,7 @@ Only a real showing counts toward the limits and resets the counter.
 
 ### 4.4 Splash interstitial
 
-- `CompanyAdMob.interstitial.showOnSplash(activity, placement, onResult)` waits up to `splashTimeoutSeconds` for
+- `Adroit.interstitial.showOnSplash(activity, placement, onResult)` waits up to `splashTimeoutSeconds` for
   the library to be ready (consent first) and for an ad to load. It then shows the ad, or gives up and lets the
   app continue.
 - The result arrives exactly once, like every show.
@@ -235,9 +235,9 @@ Only a real showing counts toward the limits and resets the counter.
 
 | Module | Change |
 |---|---|
-| admob-core | Placements get a list of ad unit IDs (`adUnitIds`; `adUnitId` stays as the first entry). The profile JSON parser (on the platform's `org.json`, with no new dependency). `adMobConfig { profiles(rawRes) }` builds the placements and settings from the file. Rotation in the full-screen, native and banner engines. Counter and overall interstitial limit in `FrequencyGate`. `showOnSplash`. `BannerSize.Collapsible(position)` and the style-to-size mapping. A native style value. New `AdError.CounterNotReached`. Remote overrides carry the new fields. Placement keys widened. |
-| admob-views, admob-compose | Size and template default to the ad's style. |
-| admob-firebase | `FirebaseRemoteConfigProvider` reads one parameter per ad key from the ads file, plus `AdSettings`, parsed by core's parser. The unreleased `company_admob_*` keys are removed. |
+| adroit-core | Placements get a list of ad unit IDs (`adUnitIds`; `adUnitId` stays as the first entry). The profile JSON parser (on the platform's `org.json`, with no new dependency). `adMobConfig { profiles(rawRes) }` builds the placements and settings from the file. Rotation in the full-screen, native and banner engines. Counter and overall interstitial limit in `FrequencyGate`. `showOnSplash`. `BannerSize.Collapsible(position)` and the style-to-size mapping. A native style value. New `AdError.CounterNotReached`. Remote overrides carry the new fields. Placement keys widened. |
+| adroit-views, adroit-compose | Size and template default to the ad's style. |
+| adroit-firebase | `FirebaseRemoteConfigProvider` reads one parameter per ad key from the ads file, plus `AdSettings`, parsed by core's parser. The unreleased `adroit_*` keys are removed. |
 | samples | sample-xml switches to an `ads_config.json` with a static provider (no Firebase, per the sample rules). The docs snippets show the Firebase setup. |
 | docs | `docs/AD_PROFILES.md` (reference: every field, the check order, examples), plus updates to CONFIGURATION, REMOTE_CONFIG, BANNER, NATIVE and INTERSTITIAL. The plain-language `docs/INTEGRATION_GUIDE.md` comes after PROMPT 27. |
 

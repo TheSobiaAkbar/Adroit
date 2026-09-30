@@ -2,8 +2,7 @@
 
 Starting a new Kotlin + XML app? [Adding ads to a new Kotlin + XML app](NEW_APP_XML.md) covers the same steps with
 complete files for every screen, and a sample Firebase value for every kind of ad. A Jetpack Compose app:
-[Adding ads to a new Jetpack Compose app](NEW_APP_COMPOSE.md). Both kinds of screens in one app:
-[Adding ads to a new app with XML and Compose screens](NEW_APP_MIXED.md).
+[Adding ads to a new Jetpack Compose app](NEW_APP_COMPOSE.md).
 
 This page is a checklist for adding the ads library to a new app, from nothing to ads you can tune from Firebase
 without a release. Every step says what to do and how to check it worked. You write one Kotlin file listing your ads,
@@ -13,12 +12,12 @@ and add a few lines to three others. The other pages explain each part in depth;
 
 | What | Where to get it | Example |
 |---|---|---|
-| The app's package name | `applicationId` in `app/build.gradle.kts` | `com.mycompany.puzzle` |
+| The app's package name | `applicationId` in `app/build.gradle.kts` | `com.example.puzzle` |
 | An AdMob app ID | AdMob, Apps, your app, App settings | `ca-app-pub-1234567890123456~1234567890` |
 | An ad unit ID per ad | AdMob, Apps, your app, Ad units. One per ad, of the right format. | `ca-app-pub-1234567890123456/1234567890` |
 | A Firebase project with the app added | [Firebase console](https://console.firebase.google.com), Add app, Android, the **exact** package name | |
 | `google-services.json` | Firebase, Project settings, your Android app, Download | |
-| Access to the library | A GitHub token with `read:packages`, or the company repository URL | |
+| Access to the library | An invite and a GitHub token with `read:packages`: [Getting access](ACCESS.md) | |
 
 You can start without the ad unit IDs: an ad without IDs shows Google's test ads until you add them.
 
@@ -33,8 +32,8 @@ plugins {
     id("com.google.gms.google-services") // reads google-services.json
 }
 dependencies {
-    implementation("com.company:admob-views:1.0.0-rc2") // or admob-compose for Compose apps
-    implementation("com.company:admob-firebase:1.0.0-rc2") // Remote Config and Analytics; brings Firebase itself
+    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc2") // or adroit-compose for Compose apps
+    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc2") // Remote Config and Analytics; brings Firebase itself
 }
 ```
 
@@ -61,7 +60,7 @@ Create `AppAds.kt` with one entry per ad in the app. The entry name is the ad's 
 in Firebase. Pick names that say where the ad is (`HomeBanner`, `LevelCompleteAd`), and never rename one after
 release, because Firebase finds the ad by its name.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-enum -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-enum -->
 ```kotlin
 enum class AppAds(override val defaults: AdProfile) : AdDefinition {
     SplashAd(AdProfile.interstitial(ids = listOf("ca-app-pub-0000000000000000/0000000001"), splash = true)),
@@ -95,13 +94,13 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 Create (or open) your `Application` class, and register it in the manifest (`android:name=".MyApp"` on
 `<application>`):
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-setup -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-setup -->
 ```kotlin
 class AdsApp : Application() {
     override fun onCreate() {
         super.onCreate()
         RemoteConfigSession.start(this) // fetches Firebase once this session, without making anything wait
-        CompanyAdMob.initialize(
+        Adroit.initialize(
             this,
             adMobConfig {
                 // Debug builds show only Google's test ads, whatever IDs the definitions list.
@@ -117,10 +116,10 @@ class AdsApp : Application() {
 - `RemoteConfigSession.start` fetches your Firebase values once per launch, in the background. The app never waits
   for it.
 - Debug builds (`DEVELOPMENT`) always show test ads, so you can't click your own real ads by mistake while testing.
-- If the app sells an ad-free upgrade, add `if (userIsPremium) CompanyAdMob.setAdFree(true)` right after
+- If the app sells an ad-free upgrade, add `if (userIsPremium) Adroit.setAdFree(true)` right after
   `initialize`.
 
-**Check:** run a debug build and filter logcat by `CompanyAdMob`. You see one line `Firebase parameter <Name>: {…}`
+**Check:** run a debug build and filter logcat by `Adroit`. You see one line `Firebase parameter <Name>: {…}`
 per ad.
 
 ## 5. The splash screen
@@ -128,7 +127,7 @@ per ad.
 The splash screen asks for consent (Europe and other regions that require it), starts the ads, shows a progress bar
 and the splash ad, and then opens your main screen. It never gets stuck, even offline. Keep the flow in a ViewModel:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Splash.kt#splash-viewmodel -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Splash.kt#splash-viewmodel -->
 ```kotlin
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
     // Survives rotation: consent, the timer and the splash ad run once per launch.
@@ -140,7 +139,7 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
 
 and draw it in the splash Activity, your launcher Activity:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Splash.kt#splash-activity -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Splash.kt#splash-activity -->
 ```kotlin
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -175,7 +174,7 @@ test ad shows before the main screen. [Splash screen](SPLASH.md) lists every cas
 Ads load only when you ask, so ask when the screen that shows them opens. For an ad that's shown again and again (a
 level-complete ad, the app open ad), set `loadAgain = true` in its entry, so the next ad loads right after each show.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-load -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-load -->
 ```kotlin
 override fun onResume() {
     super.onResume()
@@ -189,7 +188,7 @@ Then call `showFullScreen` where the ad belongs, and continue in its callback, w
 screen covers the app for about a second first. If the ad isn't loaded yet, the show waits for it at most 8 seconds
 (`loadTimeoutSeconds`), then gives up and your callback runs: the user is never stuck on a slow network.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-counter -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-counter -->
 ```kotlin
 // With "counter": 3 in HistoryAd, this shows an ad on the 3rd, 6th, 9th… call. Other calls return at once
 // with NotShown(CounterNotReached), and the app just continues.
@@ -199,10 +198,10 @@ AdSlots.showFullScreen(this, AppAds.HistoryAd) { result: FullScreenResult -> ope
 Banners and native ads: put an `AdSlotView` in the layout, with the ad's entry name.
 
 ```xml
-<com.company.admob.views.AdSlotView
+<io.github.thesobiaakbar.adroit.views.AdSlotView
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:company_admob_placement="HomeBanner" />
+    app:adroit_placement="HomeBanner" />
 ```
 
 In Compose, use `AdSlot(AppAds.HomeBanner)`. While the ad loads, the slot shows a shimmer shaped like it. A slot never
@@ -211,7 +210,7 @@ change `refreshKey` in Compose): the shown ad stays until the new one has loaded
 
 The app open ad shows by itself when the user returns to the app. Like every ad, it loads only when asked: call
 `AdSlots.load(AppAds.AppOpenAd)` once when your main screen opens, and give it `loadAgain = true` so a new one loads
-after each show. Rewarded ads use `CompanyAdMob.rewarded` ([Rewarded](REWARDED.md)).
+after each show. Rewarded ads use `Adroit.rewarded` ([Rewarded](REWARDED.md)).
 
 **Check:** each ad shows a test ad labelled "Test Ad" in a debug build, after a "Loading ad…" screen for full-screen ads
 and a shimmer for banners and native ads.

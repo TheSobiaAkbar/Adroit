@@ -9,7 +9,7 @@ the new values.
 The library collects your provider's `Flow<AdOverrides>` after initialization and applies each emission on the main
 thread. **Each emission replaces the previous one entirely.** Register it with `adMobConfig { remoteConfig = … }`.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AnalyticsAndRemote.kt#remote-provider -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AnalyticsAndRemote.kt#remote-provider -->
 ```kotlin
 class MyRemoteConfigProvider(private val values: Flow<RemoteAdValues>) : AdConfigProvider {
     override fun overrides(): Flow<AdOverrides> = values.map { remote ->
@@ -43,7 +43,7 @@ loading resumes.
 
 From strongest to weakest:
 
-1. An ad-free user (`CompanyAdMob.setAdFree(true)`): no ads, whatever the remote says.
+1. An ad-free user (`Adroit.setAdFree(true)`): no ads, whatever the remote says.
 2. A remote `adsEnabled = false`.
 3. Remote per-placement overrides and disabled formats.
 4. The local configuration.
@@ -52,25 +52,25 @@ From strongest to weakest:
 
 Overrides are validated like the local configuration, but an invalid value never stops ads: it's dropped with a log,
 and the rest of the emission still applies. For example, an unknown placement key, a malformed ad unit ID, a Google
-demo ad unit in PRODUCTION, or a negative interval or count. `CompanyAdMob.diagnostics.snapshot().activeOverrides`
+demo ad unit in PRODUCTION, or a negative interval or count. `Adroit.diagnostics.snapshot().activeOverrides`
 shows what's currently applied.
 
 ## Firebase Remote Config
 
-The optional `com.company:admob-firebase` module provides `FirebaseRemoteConfigProvider`. Your app keeps initializing
+The optional `io.github.thesobiaakbar:adroit-firebase` module provides `FirebaseRemoteConfigProvider`. Your app keeps initializing
 Firebase itself (the google-services plugin); the module doesn't apply it.
 
 ```kotlin
-implementation("com.company:admob-firebase:1.0.0-rc2")
+implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc2")
 ```
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Firebase.kt#firebase-setup -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Firebase.kt#firebase-setup -->
 ```kotlin
 class FirebaseApp : Application() {
     override fun onCreate() {
         super.onCreate()
         // Firebase itself is initialized by the google-services plugin, before this runs.
-        CompanyAdMob.initialize(
+        Adroit.initialize(
             this,
             adMobConfig {
                 environment = AdEnvironment.PRODUCTION
@@ -124,7 +124,7 @@ changes on the next launch.
 The same fetch also brings the app's own parameters: flags, numbers, texts and JSON that have nothing to do with ads.
 Declare each once with its default, in one place:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/RemoteValues.kt#remote-values -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/RemoteValues.kt#remote-values -->
 ```kotlin
 /** The app's own Firebase parameters, each with the value used until Firebase sets one. */
 object AppConfig {
@@ -139,7 +139,7 @@ object AppConfig {
 In the Firebase console, add a parameter with the same name, of the matching data type: **Boolean**, **Number**,
 **String** or **JSON**. Then read `.value` anywhere:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/RemoteValues.kt#remote-values-read -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/RemoteValues.kt#remote-values-read -->
 ```kotlin
 fun onLevelFinished(level: Int, openPaywall: () -> Unit, showRateDialog: () -> Unit) {
     // .value is the value in force now: it never waits for Firebase.
@@ -157,7 +157,7 @@ fun onLevelFinished(level: Int, openPaywall: () -> Unit, showRateDialog: () -> U
 - `json` returns a new `JSONObject` on each read. For a JSON object with a fixed shape, read it into your own class
   with `custom`:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/RemoteValues.kt#remote-values-custom -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/RemoteValues.kt#remote-values-custom -->
 ```kotlin
 data class Offer(val percent: Int, val title: String)
 
@@ -171,7 +171,7 @@ val offer = RemoteValue.custom("offer", default = Offer(0, "")) { text ->
 To follow a value on a screen that stays open, collect `updates()`: it emits the value now, then the new value if
 the fetch changes it.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/RemoteValues.kt#remote-values-flow -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/RemoteValues.kt#remote-values-flow -->
 ```kotlin
 fun showWelcome(scope: LifecycleCoroutineScope, label: TextView) {
     // The value now, then the new one if this session's fetch changes it while the screen is open.

@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 # Usage: verify-release.sh <tag> <release-notes-output>
-# Fails unless <tag> is exactly "v" + companyAdmob.version, that version isn't a snapshot, and CHANGELOG.md has a
+# Fails unless <tag> is exactly "v" + adroit.version, that version isn't a snapshot, and CHANGELOG.md has a
 # "## [x.y.z]" section for it. Writes that section's body to <release-notes-output>. Used by release.yml.
 set -euo pipefail
 
 tag="${1:?tag}"
 notes="${2:?release notes output path}"
 
-version=$(grep -E '^companyAdmob\.version=' gradle.properties | cut -d= -f2- | tr -d '[:space:]')
+version=$(grep -E '^adroit\.version=' gradle.properties | cut -d= -f2- | tr -d '[:space:]')
 if [[ -z "$version" ]]; then
-  echo "::error::companyAdmob.version is missing from gradle.properties"
+  echo "::error::adroit.version is missing from gradle.properties"
   exit 1
 fi
 if [[ "$version" == *-SNAPSHOT ]]; then
-  echo "::error::companyAdmob.version is $version: a release needs a non-snapshot version"
+  echo "::error::adroit.version is $version: a release needs a non-snapshot version"
   exit 1
 fi
 if [[ "$tag" != "v$version" ]]; then
-  echo "::error::Tag $tag doesn't match companyAdmob.version $version (expected v$version)"
+  echo "::error::Tag $tag doesn't match adroit.version $version (expected v$version)"
   exit 1
 fi
 if [[ ! -f CHANGELOG.md ]]; then

@@ -19,10 +19,6 @@ jobs:
     permissions:
       contents: write # create the GitHub Release
       packages: write # publish to GitHub Packages
-    env:
-      # Empty when the secret isn't configured: the company repository is then skipped. The signing key reaches only
-      # the publish steps (unsigned when its secrets aren't configured).
-      COMPANY_MAVEN_URL: ${{ secrets.COMPANY_MAVEN_URL }}
     steps:
       - name: Check out (full history, for the forbidden-patterns check)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,11 +46,8 @@ jobs:
       - name: Full CI checks
         run: >-
           ./gradlew build lint apiCheck checkModuleDependencies testDebugUnitTest verifyPublication
-          :sample-xml:assembleRelease :sample-compose:assembleRelease :sample-mixed:assembleRelease
+          :sample-xml:assembleRelease :sample-compose:assembleRelease
           --stacktrace
-
-      - name: Mediation sample and its dependency guard
-        run: ./gradlew :sample-mixed:assembleRelease :sample-mixed:checkModuleDependencies -PwithMediation=true --stacktrace
 
       - name: Publish to GitHub Packages
         env:
@@ -63,17 +56,8 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew publishAllPublicationsToGitHubPackagesRepository --stacktrace
 
-      - name: Publish to the company repository
-        if: ${{ env.COMPANY_MAVEN_URL != '' }}
-        env:
-          COMPANY_MAVEN_USER: ${{ secrets.COMPANY_MAVEN_USER }}
-          COMPANY_MAVEN_PASSWORD: ${{ secrets.COMPANY_MAVEN_PASSWORD }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew publishAllPublicationsToCompanyRepository --stacktrace
-
       - name: Create the GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          name: CompanyAdMob ${{ github.ref_name }}
+          name: Adroit ${{ github.ref_name }}
           body_path: ${{ runner.temp }}/release-notes.md

@@ -1,4 +1,4 @@
-# How CompanyAdMob works
+# How Adroit works
 
 A short tour for app developers. The full design, with every decision record, is in
 [architecture/02_ARCHITECTURE.md](architecture/02_ARCHITECTURE.md); the public API specification is in
@@ -8,23 +8,23 @@ A short tour for app developers. The full design, with every decision record, is
 
 ```mermaid
 flowchart LR
-  app[Your app] --> compose[admob-compose]
-  app --> views[admob-views]
+  app[Your app] --> compose[adroit-compose]
+  app --> views[adroit-views]
   compose --> views
-  compose --> core[admob-core]
+  compose --> core[adroit-core]
   views --> core
   core -. runtime only .-> gma[Google Mobile Ads Next-Gen SDK]
   core -. runtime only .-> ump[UMP SDK]
-  tests[Your unit tests] --> testing[admob-testing] --> core
-  app -. optional .-> firebase[admob-firebase] --> core
+  tests[Your unit tests] --> testing[adroit-testing] --> core
+  app -. optional .-> firebase[adroit-firebase] --> core
 ```
 
-- **admob-core** holds everything that matters: configuration, consent, initialization, every format's loading,
+- **adroit-core** holds everything that matters: configuration, consent, initialization, every format's loading,
   caching, retry, expiry and frequency logic, events and diagnostics. Only its `internal.google` package talks to
   Google's SDKs, so no Google type appears in the API and a Google SDK upgrade stays inside the library.
-- **admob-views** and **admob-compose** are thin UI adapters on top of core's public API.
-- **admob-testing** replaces core with a fake for your unit tests.
-- **admob-firebase** (optional) connects Firebase Remote Config and Analytics; the only module that depends on Firebase.
+- **adroit-views** and **adroit-compose** are thin UI adapters on top of core's public API.
+- **adroit-testing** replaces core with a fake for your unit tests.
+- **adroit-firebase** (optional) connects Firebase Remote Config and Analytics; the only module that depends on Firebase.
 
 ## Two-step startup
 
@@ -46,7 +46,7 @@ stateDiagram-v2
   Unavailable --> Ready: re-enabled
 ```
 
-`CompanyAdMob.state` (a `StateFlow<AdsState>`) is the single source of truth. **No ad is requested unless the state
+`Adroit.state` (a `StateFlow<AdsState>`) is the single source of truth. **No ad is requested unless the state
 is `Ready`**. Calls made earlier are remembered as intent: a banner created before `Ready` loads when it gets there.
 
 ## What the library does for every ad

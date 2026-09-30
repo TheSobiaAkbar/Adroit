@@ -4,8 +4,8 @@ This page takes an app from nothing to its first banner and interstitial. Each l
 
 ## 1. Add the repository
 
-The libraries are published to GitHub Packages and to the company Maven repository. Put your credentials in
-`~/.gradle/gradle.properties`, never in the project:
+Adroit is published privately to GitHub Packages, so you need access first: see [Getting access](ACCESS.md). Then put
+your credentials in `~/.gradle/gradle.properties`, never in the project:
 
 ```properties
 gpr.user=<your GitHub user>
@@ -19,13 +19,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://maven.pkg.github.com/TheSobiaAkbar/AdsPlugin") {
+        maven("https://maven.pkg.github.com/TheSobiaAkbar/Adroit") {
             credentials {
                 username = providers.gradleProperty("gpr.user").get()
                 password = providers.gradleProperty("gpr.key").get()
             }
         }
-        // Or the company Artifactory/Nexus: ask the mobile platform team for its URL.
     }
 }
 ```
@@ -34,13 +33,13 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.company:admob-compose:1.0.0-rc2") // Compose apps (brings admob-core and admob-views)
-    // implementation("com.company:admob-views:1.0.0-rc2") // XML/View apps without Compose (brings admob-core)
-    testImplementation("com.company:admob-testing:1.0.0-rc2")
+    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc2") // Compose apps (brings adroit-core and adroit-views)
+    // implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc2") // XML/View apps without Compose (brings adroit-core)
+    testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0-rc2")
 }
 ```
 
-Don't add `play-services-ads` or `ads-mobile-sdk` yourself: `admob-core` brings the Google Mobile Ads Next-Gen SDK and
+Don't add `play-services-ads` or `ads-mobile-sdk` yourself: `adroit-core` brings the Google Mobile Ads Next-Gen SDK and
 UMP at runtime, and no Google type is needed to use it. If another dependency brings `play-services-ads` (for example a
 mediation adapter), see [Mediation](MEDIATION.md).
 
@@ -65,7 +64,7 @@ While developing you can use Google's sample app ID, `ca-app-pub-394025609994254
 A placement is a place in your app that shows an ad. It has a stable key (used by remote config and analytics) and a
 format. Declare them once:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/GettingStarted.kt#placements -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/GettingStarted.kt#placements -->
 ```kotlin
 /** Every place the app shows an ad. Keys are stable identifiers: remote overrides and analytics use them. */
 object Placements {
@@ -78,13 +77,13 @@ object Placements {
 
 ## 5. Initialize in `Application.onCreate`
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/GettingStarted.kt#initialize -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/GettingStarted.kt#initialize -->
 ```kotlin
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         // Cheap and synchronous: validates the configuration, no network and no Google SDK call.
-        CompanyAdMob.initialize(
+        Adroit.initialize(
             this,
             adMobConfig {
                 environment = if (isDebugBuild) AdEnvironment.DEVELOPMENT else AdEnvironment.PRODUCTION
@@ -109,14 +108,14 @@ one. [Configuration](CONFIGURATION.md) covers environments and every option.
 `start()` gathers consent with UMP (showing the form when required), then initializes the Google Mobile Ads SDK. No ad
 is requested before consent allows it. See [Consent](CONSENT.md).
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/GettingStarted.kt#start -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/GettingStarted.kt#start -->
 ```kotlin
 class LauncherActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Gathers consent (UMP), then initializes the Google Mobile Ads SDK. Safe to call again after a rotation:
         // it joins the work already in progress.
-        CompanyAdMob.start(this) { state ->
+        Adroit.start(this) { state ->
             // Ready, or Unavailable/Failed: continue into the app either way.
         }
     }
@@ -129,17 +128,17 @@ XML:
 
 <!-- snippet: docs-snippets/src/main/res/layout/snippet_banner.xml#xml-banner -->
 ```xml
-<com.company.admob.views.AdBannerView
+<io.github.thesobiaakbar.adroit.views.AdBannerView
     android:id="@+id/home_banner"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:company_admob_placement="home_banner"
-    app:company_admob_bannerSize="anchoredAdaptive" />
+    app:adroit_placement="home_banner"
+    app:adroit_bannerSize="anchoredAdaptive" />
 ```
 
 Compose:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/Banner.kt#compose-banner -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Banner.kt#compose-banner -->
 ```kotlin
 @Composable
 fun HomeBottomBar() {
@@ -158,10 +157,10 @@ Both follow the screen's lifecycle and are destroyed with it. See [Banner](BANNE
 
 ## 8. A first interstitial
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/GettingStarted.kt#first-interstitial -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/GettingStarted.kt#first-interstitial -->
 ```kotlin
 fun onLevelComplete(activity: Activity, goToNextLevel: () -> Unit) {
-    CompanyAdMob.showInterstitial(activity, Placements.LevelComplete) {
+    Adroit.showInterstitial(activity, Placements.LevelComplete) {
         // Called exactly once, whether an ad was shown or not: always continue the flow here.
         goToNextLevel()
     }
@@ -173,15 +172,15 @@ it. See [Interstitial](INTERSTITIAL.md).
 
 ## 9. Dependency injection
 
-Everything is reachable from the `CompanyAdMob` object, which also implements `AdsClient`. Code that receives an
+Everything is reachable from the `Adroit` object, which also implements `AdsClient`. Code that receives an
 `AdsClient` can be tested with `FakeAdsClient` ([Testing](TESTING.md)).
 
-Without a DI framework, default the parameter to `CompanyAdMob.client`:
+Without a DI framework, default the parameter to `Adroit.client`:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/GettingStarted.kt#without-hilt -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/GettingStarted.kt#without-hilt -->
 ```kotlin
-/** A ViewModel that receives the client instead of reaching for the CompanyAdMob object: easy to fake in tests. */
-class LevelViewModel(private val ads: AdsClient = CompanyAdMob.client) : ViewModel() {
+/** A ViewModel that receives the client instead of reaching for the Adroit object: easy to fake in tests. */
+class LevelViewModel(private val ads: AdsClient = Adroit.client) : ViewModel() {
     fun onLevelComplete(activity: Activity) {
         ads.showInterstitial(activity, Placements.LevelComplete) { /* continue */ }
     }
@@ -195,7 +194,7 @@ With Hilt, bind it once, in a `SingletonComponent` module. Keep `initialize` in 
 @InstallIn(SingletonComponent::class)
 object AdsModule {
     @Provides
-    fun ads(): AdsClient = CompanyAdMob.client
+    fun ads(): AdsClient = Adroit.client
 }
 ```
 

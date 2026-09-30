@@ -9,7 +9,7 @@ style, without a release. For the design and the reasons behind it, see
 
 List your ads:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-enum -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-enum -->
 ```kotlin
 enum class AppAds(override val defaults: AdProfile) : AdDefinition {
     SplashAd(AdProfile.interstitial(ids = listOf("ca-app-pub-0000000000000000/0000000001"), splash = true)),
@@ -41,13 +41,13 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 
 Then register them:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-setup -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-setup -->
 ```kotlin
 class AdsApp : Application() {
     override fun onCreate() {
         super.onCreate()
         RemoteConfigSession.start(this) // fetches Firebase once this session, without making anything wait
-        CompanyAdMob.initialize(
+        Adroit.initialize(
             this,
             adMobConfig {
                 // Debug builds show only Google's test ads, whatever IDs the definitions list.
@@ -60,7 +60,7 @@ class AdsApp : Application() {
 }
 ```
 
-- `FirebaseRemoteConfigProvider` and `RemoteConfigSession` come from the optional `com.company:admob-firebase`
+- `FirebaseRemoteConfigProvider` and `RemoteConfigSession` come from the optional `io.github.thesobiaakbar:adroit-firebase`
   module. Without it, the enum alone configures the ads. See [Remote configuration](REMOTE_CONFIG.md) for the
   session: it fetches once per app session, retries on later screens until it succeeds, and never makes the app wait.
 - `AdSettings(...)` holds the defaults of the `AdSettings` Firebase parameter (see [Settings](#settings)).
@@ -72,7 +72,7 @@ class AdsApp : Application() {
 
 Refer to each ad through its entry:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-placements -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-placements -->
 ```kotlin
 object Ads {
     val Splash = AppAds.SplashAd.interstitialPlacement()
@@ -83,7 +83,7 @@ object Ads {
 ```
 
 `interstitialPlacement()` and the others throw if the entry's format is another one. In XML, use the entry name:
-`app:company_admob_placement="HomeBanner"`.
+`app:adroit_placement="HomeBanner"`.
 
 ### Getting the JSON for Firebase
 
@@ -233,7 +233,7 @@ Fetch with `RemoteConfigSession.start(application)` in `Application.onCreate` (s
 Ads load only when your app asks, so no ad loads that the app won't show, which keeps AdMob's show rate (shown ads
 out of loaded ones) high:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-load -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-load -->
 ```kotlin
 override fun onResume() {
     super.onResume()
@@ -248,7 +248,7 @@ override fun onResume() {
 - **Banners and native ads, ahead of their screen.** `AdSlots.load` works for them too: load the next screen's ads
   before it opens, and its views show them at once.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-preload-inline -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-preload-inline -->
 ```kotlin
 fun preloadNextScreenAds() {
     // The next screen's banner and native ad, loaded now. Its AdSlotView (or any banner or native view) shows each at
@@ -272,8 +272,8 @@ and none waits while ads are off (ad-free, consent). Refresh (`load(refresh = tr
 - **Loading screen.** With `showLoading` (the default), a "Loading ad…" screen covers the app from the show call:
   for `loadingSeconds` (1 by default) when the ad is ready, or for the whole wait when it isn't. It goes the moment
   the ad opens, and also when the show fails, times out, or the user leaves the screen. The splash ad never gets one:
-  the splash is its loading screen. To change its look, declare a layout named `company_admob_loading_ad` in your app
-  (and the text with a `company_admob_loading_ad` string); the library only inflates it.
+  the splash is its loading screen. To change its look, declare a layout named `adroit_loading_ad` in your app
+  (and the text with a `adroit_loading_ad` string); the library only inflates it.
 - **Shimmer.** With `showLoading`, a banner or native ad shows a shimmer while it loads: the ad's whole area as a
   card, with grey blocks shaped like the ad that will appear, and a highlight sweeping across both. A banner's
   shimmer has the banner's height (adaptive, collapsible, standard, rectangle or inline, as its `style` says now); a
@@ -281,8 +281,8 @@ and none waits while ads are off (ad-free, consent). Refresh (`load(refresh = tr
   each of its views ([Native](NATIVE.md#the-shimmer)). A Firebase change of style or format changes the shimmer too. It goes when the ad appears,
   and when the load fails (the slot then collapses as before). This works in `AdSlotView`, `AdBannerView`,
   `AdNativeView`, `attachBanner`, `attachNativeAd`, `NativeAdHolder`, and the `AdSlot`, `AdBanner` and `AdNative`
-  composables; a composable's own `placeholder` replaces it. Its colours are the `company_admob_shimmer_card`, `company_admob_shimmer_base` and
-  `company_admob_shimmer_highlight` colour resources (with night variants), which your app can override.
+  composables; a composable's own `placeholder` replaces it. Its colours are the `adroit_shimmer_card`, `adroit_shimmer_base` and
+  `adroit_shimmer_highlight` colour resources (with night variants), which your app can override.
 - An ad that expires unshown (after an hour for most formats) isn't replaced until the next `AdSlots.load`.
 - After a show, an ad with **`loadAgain`** set loads the next one straight away: with `adUnitIds` of `[A, B]`, showing
   the ad from A requests one from B. Without it (the default), the ad loads again only at the next `AdSlots.load`. For
@@ -296,9 +296,9 @@ show each ad in its current format, so a [format swap](#swapping-formats) from F
 
 Splash screen:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-splash -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-splash -->
 ```kotlin
-CompanyAdMob.start(this) {
+Adroit.start(this) {
     // Waits up to SplashAd's splashTimeoutSeconds, then shows it (as an interstitial, or an app open ad if
     // Firebase swapped it) or gives up. Continue either way.
     AdSlots.showOnSplash(this, AppAds.SplashAd) { goToMain() }
@@ -307,7 +307,7 @@ CompanyAdMob.start(this) {
 
 Interstitials with a counter: call `showFullScreen` every time the event happens, and let the counter decide.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-counter -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-counter -->
 ```kotlin
 // With "counter": 3 in HistoryAd, this shows an ad on the 3rd, 6th, 9th… call. Other calls return at once
 // with NotShown(CounterNotReached), and the app just continues.
@@ -316,7 +316,7 @@ AdSlots.showFullScreen(this, AppAds.HistoryAd) { result: FullScreenResult -> ope
 
 Banners and native ads take their size and template from `style`:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-ui -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-ui -->
 ```kotlin
 @Composable
 fun HomeScreenAds() {
@@ -328,10 +328,10 @@ fun HomeScreenAds() {
 With Views, declare an `AdSlotView`:
 
 ```xml
-<com.company.admob.views.AdSlotView
+<io.github.thesobiaakbar.adroit.views.AdSlotView
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:company_admob_placement="HomeBanner" />
+    app:adroit_placement="HomeBanner" />
 ```
 
 ### One ad per slot, and refresh
@@ -341,7 +341,7 @@ A banner or native slot never requests a second ad while it shows one or one is 
 shown ad with a new one, ask for a refresh: the new ad loads in the background while the shown one stays on screen
 (no shimmer), and takes its place once loaded. If it fails, the shown ad stays.
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-refresh-views -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-refresh-views -->
 ```kotlin
 fun refreshHomeAd(homeSlot: AdSlotView) {
     // Never a second request while the slot has an ad or one is loading. With refresh, the shown ad stays until a
@@ -352,7 +352,7 @@ fun refreshHomeAd(homeSlot: AdSlotView) {
 
 `AdBannerView`, `AdNativeView` and `NativeAdHolder` have the same `load(refresh)`. In Compose, change `refreshKey`:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-refresh-compose -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-refresh-compose -->
 ```kotlin
 @Composable
 fun RefreshableHomeAd(refreshCount: Int) {
@@ -364,10 +364,10 @@ fun RefreshableHomeAd(refreshCount: Int) {
 `AdBanner` and `AdNative` take `refreshKey` too. `attachBanner` and `attachNativeAd` reuse the ad already in their
 container for the same placement; use a view or a `NativeAdHolder` to refresh.
 
-The format-specific APIs (`CompanyAdMob.interstitial`, `AdBanner`, `AdNative`, `AdBannerView`, `AdNativeView`,
+The format-specific APIs (`Adroit.interstitial`, `AdBanner`, `AdNative`, `AdBannerView`, `AdNativeView`,
 `attachBanner`, `NativeAdHolder`…) keep working, but always use the ad's configured format:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AdProfiles.kt#profiles-typed -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AdProfiles.kt#profiles-typed -->
 ```kotlin
 @Composable
 fun TypedAds() {
@@ -377,7 +377,7 @@ fun TypedAds() {
 }
 ```
 
-Without a `company_admob_bannerSize` or `company_admob_template` attribute, or a size or layout in code, they also
+Without a `adroit_bannerSize` or `adroit_template` attribute, or a size or layout in code, they also
 take the style from the profile. A new style applies to banners and native ads created after the new values arrive;
 one already on screen keeps its style.
 

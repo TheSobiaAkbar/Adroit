@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <io.github.thesobiaakbar.adroit.views.AdBannerView
+        android:id="@+id/adroit_test_mrec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:adroit_bannerSize="mediumRectangle"
+        app:adroit_placement="home" />
+
+    <io.github.thesobiaakbar.adroit.views.AdBannerView
+        android:id="@+id/adroit_test_inline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:adroit_bannerSize="inlineAdaptive"
+        app:adroit_collapseWhenEmpty="false"
+        app:adroit_inlineMaxHeight="90dp"
+        app:adroit_placement="home" />
+
+    <io.github.thesobiaakbar.adroit.views.AdBannerView
+        android:id="@+id/adroit_test_unknown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:adroit_placement="nope" />
+
+    <io.github.thesobiaakbar.adroit.views.AdBannerView
+        android:id="@+id/adroit_test_invalid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:adroit_placement="Not A Key" />
+</LinearLayout>

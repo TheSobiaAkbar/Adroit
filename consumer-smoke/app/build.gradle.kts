@@ -5,8 +5,8 @@ plugins {
 }
 
 /**
- * The Compose host (admob-compose) by default; `-Psmoke.compose=false` builds a View-based host on admob-views, with
- * no Compose at all, for the matrix rows on AGP 8: Compose 1.12 (admob-compose's BOM) requires AGP 9.1.
+ * The Compose host (adroit-compose) by default; `-Psmoke.compose=false` builds a View-based host on adroit-views, with
+ * no Compose at all, for the matrix rows on AGP 8: Compose 1.12 (adroit-compose's BOM) requires AGP 9.1.
  */
 val withCompose: Boolean = providers.gradleProperty("smoke.compose").getOrElse("true").toBoolean()
 
@@ -17,16 +17,16 @@ if (com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore(".").toInt
 }
 if (withCompose) apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 
-/** The version just published by the main build (companyAdmob.version in its gradle.properties). */
-val companyAdmobVersion: String = Properties()
+/** The version just published by the main build (adroit.version in its gradle.properties). */
+val adroitVersion: String = Properties()
     .apply { rootDir.resolve("../gradle.properties").inputStream().use(::load) }
-    .getProperty("companyAdmob.version")
+    .getProperty("adroit.version")
 
 android {
-    namespace = "com.company.admob.consumersmoke"
+    namespace = "io.github.thesobiaakbar.adroit.consumersmoke"
     compileSdk = providers.gradleProperty("smoke.compileSdk").getOrElse("37").toInt()
     defaultConfig {
-        applicationId = "com.company.admob.consumersmoke"
+        applicationId = "io.github.thesobiaakbar.adroit.consumersmoke"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -50,22 +50,22 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEa
 }
 
 dependencies {
-    // The only CompanyAdMob dependency: the other modules and the Google SDKs must arrive transitively.
+    // The only Adroit dependency: the other modules and the Google SDKs must arrive transitively.
     if (withCompose) {
-        implementation("com.company:admob-compose:$companyAdmobVersion")
+        implementation("io.github.thesobiaakbar:adroit-compose:$adroitVersion")
         implementation(platform("androidx.compose:compose-bom:2026.09.00"))
         implementation("androidx.compose.foundation:foundation")
         implementation("androidx.activity:activity-compose:1.13.0")
     } else {
-        implementation("com.company:admob-views:$companyAdmobVersion")
-        // The host's own choice, not CompanyAdMob's: activity 1.13 needs AGP 8.9.1, so the oldest rows pass an older one.
+        implementation("io.github.thesobiaakbar:adroit-views:$adroitVersion")
+        // The host's own choice, not Adroit's: activity 1.13 needs AGP 8.9.1, so the oldest rows pass an older one.
         implementation("androidx.activity:activity:${providers.gradleProperty("smoke.activity").getOrElse("1.13.0")}")
     }
 }
 
 /**
- * The published POMs and module metadata put the right things on the host's classpaths: CompanyAdMob and the Google
- * SDKs at runtime, but no Google Mobile Ads or UMP types at compile time (they're `implementation` in admob-core).
+ * The published POMs and module metadata put the right things on the host's classpaths: Adroit and the Google
+ * SDKs at runtime, but no Google Mobile Ads or UMP types at compile time (they're `implementation` in adroit-core).
  */
 val verifyConsumerClasspath by tasks.registering {
     group = "verification"
@@ -80,18 +80,18 @@ val verifyConsumerClasspath by tasks.registering {
         val onRuntime = runtimeModules.get()
         val onCompile = compileModules.get()
         listOf(
-            "com.company:admob-core",
-            "com.company:admob-views",
+            "io.github.thesobiaakbar:adroit-core",
+            "io.github.thesobiaakbar:adroit-views",
             "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk",
             "com.google.android.ump:user-messaging-platform",
-        ).plus(listOfNotNull("com.company:admob-compose".takeIf { withCompose }))
+        ).plus(listOfNotNull("io.github.thesobiaakbar:adroit-compose".takeIf { withCompose }))
             .filterNot { it in onRuntime }.forEach { problems += "missing from the runtime classpath: $it" }
         listOf(
             "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk",
             "com.google.android.ump:user-messaging-platform",
         ).filter { it in onCompile }.forEach { problems += "on the compile classpath: $it" }
         if (problems.isNotEmpty()) throw GradleException(problems.joinToString("\n"))
-        println("Consumer classpaths OK: CompanyAdMob and the Google SDKs at runtime, no Google SDK at compile time")
+        println("Consumer classpaths OK: Adroit and the Google SDKs at runtime, no Google SDK at compile time")
     }
 }
 

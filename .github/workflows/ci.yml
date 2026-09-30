@@ -42,12 +42,8 @@ jobs:
       - name: Build, lint, unit tests, API, dependency guard, publication and minified samples
         run: >-
           ./gradlew build lint apiCheck checkModuleDependencies testDebugUnitTest verifyPublication
-          :sample-xml:assembleRelease :sample-compose:assembleRelease :sample-mixed:assembleRelease
+          :sample-xml:assembleRelease :sample-compose:assembleRelease
           --stacktrace
-
-      # -PwithMediation applies to the whole Gradle invocation, so the mediation build gets its own run.
-      - name: Mediation sample and its dependency guard
-        run: ./gradlew :sample-mixed:assembleRelease :sample-mixed:checkModuleDependencies -PwithMediation=true --stacktrace
 
       - name: Documentation snippets and docs check
         run: |

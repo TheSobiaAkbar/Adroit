@@ -35,7 +35,7 @@ Register listeners in the configuration: `adMobConfig { eventListeners += Analyt
 called on the main thread, in order, for every event from the start. Keep them fast; exceptions are caught and
 logged. A Firebase Analytics or Amplitude mapping looks like this (`Analytics` stands for your SDK):
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AnalyticsAndRemote.kt#analytics-listener -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AnalyticsAndRemote.kt#analytics-listener -->
 ```kotlin
 /** Registered with adMobConfig { eventListeners += AnalyticsForwarder(analytics) }. Main thread, keep it fast. */
 class AnalyticsForwarder(private val analytics: Analytics) : AdEventListener {
@@ -68,15 +68,15 @@ class AnalyticsForwarder(private val analytics: Analytics) : AdEventListener {
 
 ## The Flow
 
-`CompanyAdMob.events` is a `SharedFlow<AdEvent>`, the same before and after initialization. Collect it from a scope
+`Adroit.events` is a `SharedFlow<AdEvent>`, the same before and after initialization. Collect it from a scope
 that lives as long as you need; there's no replay:
 
-<!-- snippet: docs-snippets/src/main/kotlin/com/company/admob/docs/AnalyticsAndRemote.kt#analytics-flow -->
+<!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/AnalyticsAndRemote.kt#analytics-flow -->
 ```kotlin
 class RevenueViewModel : ViewModel() {
     init {
         viewModelScope.launch {
-            CompanyAdMob.events
+            Adroit.events
                 .filterIsInstance<AdEvent.Paid>()
                 .collect { paid -> println("${paid.placementKey}: ${paid.revenue.valueMicros} micros") }
         }
@@ -84,12 +84,12 @@ class RevenueViewModel : ViewModel() {
 }
 ```
 
-`CompanyAdMob.diagnostics.recentEvents` keeps the last events for debugging, and `diagnostics.snapshot()` summarizes
+`Adroit.diagnostics.recentEvents` keeps the last events for debugging, and `diagnostics.snapshot()` summarizes
 the state of every placement.
 
 ## Google Analytics for Firebase
 
-The optional `com.company:admob-firebase` module provides `FirebaseAnalyticsEventListener`, registered like any
+The optional `io.github.thesobiaakbar:adroit-firebase` module provides `FirebaseAnalyticsEventListener`, registered like any
 listener (full setup in [Remote config](REMOTE_CONFIG.md#firebase-remote-config)):
 
 ```kotlin

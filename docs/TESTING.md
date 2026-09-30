@@ -1,12 +1,12 @@
 # Testing
 
-## Unit tests with `admob-testing`
+## Unit tests with `adroit-testing`
 
-`com.company:admob-testing` replaces the library with fakes that never touch Google's SDKs, so view models and
+`io.github.thesobiaakbar:adroit-testing` replaces the library with fakes that never touch Google's SDKs, so view models and
 screens that show ads can be tested on the JVM or with Robolectric.
 
 ```kotlin
-testImplementation("com.company:admob-testing:1.0.0-rc2")
+testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0-rc2")
 ```
 
 ### `FakeAdsClient`
@@ -14,7 +14,7 @@ testImplementation("com.company:admob-testing:1.0.0-rc2")
 A complete `AdsClient`. Pass it wherever your code takes an `AdsClient`
 ([dependency injection](GETTING_STARTED.md#9-dependency-injection)), script the results, and assert:
 
-<!-- snippet: docs-snippets/src/test/kotlin/com/company/admob/docs/TestingSnippets.kt#fake-client -->
+<!-- snippet: docs-snippets/src/test/kotlin/io/github/thesobiaakbar/adroit/docs/TestingSnippets.kt#fake-client -->
 ```kotlin
 @RunWith(RobolectricTestRunner::class)
 class CoinsViewModelTest {
@@ -42,18 +42,18 @@ What you can script and inspect:
 
 Callbacks are synchronous by default; pass an `Executor` to the constructor to make them asynchronous.
 
-### `CompanyAdMobTestRule`
+### `AdroitTestRule`
 
-For code that calls the `CompanyAdMob` object directly, the rule turns it into a `FakeAdsClient` for each test and
+For code that calls the `Adroit` object directly, the rule turns it into a `FakeAdsClient` for each test and
 restores it afterwards:
 
-<!-- snippet: docs-snippets/src/test/kotlin/com/company/admob/docs/TestingSnippets.kt#test-rule -->
+<!-- snippet: docs-snippets/src/test/kotlin/io/github/thesobiaakbar/adroit/docs/TestingSnippets.kt#test-rule -->
 ```kotlin
-/** For code that calls the CompanyAdMob object directly: the rule makes it a FakeAdsClient for each test. */
+/** For code that calls the Adroit object directly: the rule makes it a FakeAdsClient for each test. */
 @RunWith(RobolectricTestRunner::class)
 class LevelFlowTest {
     @get:Rule
-    val admob = CompanyAdMobTestRule()
+    val admob = AdroitTestRule()
 
     @Test
     fun `the next level opens whether or not the interstitial shows`() {
@@ -85,9 +85,9 @@ class LevelFlowTest {
 - To test real ad units, register the testers' devices: run the app once, find the device ID the Google SDK logs, and
   add it to `testing { testDeviceIds += "…" }` in a STAGING build. Emulators are always test devices.
 - Test consent with `debugGeography` and `resetConsentForTesting()` ([Consent](CONSENT.md#testing-consent)).
-- `CompanyAdMob.diagnostics.snapshot()` (for example on a debug screen) shows the state of every placement, and
+- `Adroit.diagnostics.snapshot()` (for example on a debug screen) shows the state of every placement, and
   `openAdInspector` shows what the Google SDK received.
-- `sample-xml`, `sample-compose` and `sample-mixed` (the same app, in Views, in Compose, and in both) exercise every
+- `sample-xml` and `sample-compose` (the same app, in Views and in Compose) exercise every
   format, the splash, rotation, offline mode and Firebase overrides.
 
 Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26

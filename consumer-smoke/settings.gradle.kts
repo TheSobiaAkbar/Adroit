@@ -1,5 +1,5 @@
-// A separate Gradle build (not included in the main settings): a host app that consumes the published CompanyAdMob
-// artifacts from mavenLocal() exactly as a company app would. Run `./gradlew publishToMavenLocal` in the repository
+// A separate Gradle build (not included in the main settings): a host app that consumes the published Adroit
+// artifacts from mavenLocal() exactly as an app would. Run `./gradlew publishToMavenLocal` in the repository
 // root first, then `./gradlew -p consumer-smoke assembleDebug verifyConsumerClasspath`. See README.md.
 pluginManagement {
     // The compatibility matrix (README.md): -Psmoke.agp picks the Android Gradle plugin, -Psmoke.kotlin the Kotlin
@@ -25,7 +25,7 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenLocal {
-            content { includeGroup("com.company") }
+            content { includeGroup("io.github.thesobiaakbar") }
         }
         google()
         mavenCentral()

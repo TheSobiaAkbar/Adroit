@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Applied by every native template (android:theme on its root). The simplest way to restyle the templates is to
+        override the colors, dimens and drawables these items use (docs/NATIVE.md, "Styling"); overriding this style
+        in your app replaces them all at once.
+    -->
+    <style name="Adroit.ThemeOverlay.Native" parent="">
+        <item name="adroit_nativeBackground">@drawable/adroit_native_card</item>
+        <item name="adroit_nativeCtaBackground">@drawable/adroit_native_cta_background</item>
+        <item name="adroit_nativeCtaTextColor">@color/adroit_native_cta_text</item>
+        <item name="adroit_nativeAttributionBackground">@drawable/adroit_native_attribution_background</item>
+        <item name="adroit_nativeTextAppearanceHeadline">@style/Adroit.TextAppearance.Native.Headline</item>
+        <item name="adroit_nativeTextAppearanceBody">@style/Adroit.TextAppearance.Native.Body</item>
+        <item name="adroit_nativeTextAppearanceCaption">@style/Adroit.TextAppearance.Native.Caption</item>
+        <item name="adroit_nativeTextAppearanceAttribution">@style/Adroit.TextAppearance.Native.Attribution</item>
+    </style>
+
+    <!-- Colors from res/color, which follow the light and dark themes until your app overrides them. -->
+    <style name="Adroit.TextAppearance.Native.Headline" parent="@android:style/TextAppearance.Material.Subhead">
+        <item name="android:textColor">@color/adroit_native_headline</item>
+        <item name="android:textSize">@dimen/adroit_native_headline_text_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Adroit.TextAppearance.Native.Body" parent="@android:style/TextAppearance.Material.Body1">
+        <item name="android:textColor">@color/adroit_native_body</item>
+        <item name="android:textSize">@dimen/adroit_native_body_text_size</item>
+    </style>
+
+    <style name="Adroit.TextAppearance.Native.Caption" parent="@android:style/TextAppearance.Material.Caption">
+        <item name="android:textColor">@color/adroit_native_body</item>
+        <item name="android:textSize">@dimen/adroit_native_caption_text_size</item>
+    </style>
+
+    <style name="Adroit.TextAppearance.Native.Attribution" parent="@android:style/TextAppearance.Material.Caption">
+        <item name="android:textColor">@color/adroit_native_attribution_text</item>
+        <item name="android:textSize">@dimen/adroit_native_attribution_text_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Adroit.Native.Cta" parent="">
+        <item name="android:background">?attr/adroit_nativeCtaBackground</item>
+        <item name="android:textColor">?attr/adroit_nativeCtaTextColor</item>
+        <item name="android:textSize">@dimen/adroit_native_cta_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">@dimen/adroit_native_cta_min_height</item>
+        <item name="android:paddingStart">@dimen/adroit_native_spacing_large</item>
+        <item name="android:paddingEnd">@dimen/adroit_native_spacing_large</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="Adroit.Native.Attribution" parent="">
+        <item name="android:background">?attr/adroit_nativeAttributionBackground</item>
+        <item name="android:textAppearance">?attr/adroit_nativeTextAppearanceAttribution</item>
+        <item name="android:minWidth">@dimen/adroit_native_attribution_min_size</item>
+        <item name="android:minHeight">@dimen/adroit_native_attribution_min_size</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/adroit_native_spacing_small</item>
+        <item name="android:paddingEnd">@dimen/adroit_native_spacing_small</item>
+        <item name="android:text">@string/adroit_ad_attribution</item>
+    </style>
+
+    <!-- The headline, body and icon of the new templates, shared so they look alike. -->
+    <style name="Adroit.Native.Headline" parent="">
+        <item name="android:textAppearance">?attr/adroit_nativeTextAppearanceHeadline</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Adroit.Native.Body" parent="">
+        <item name="android:textAppearance">?attr/adroit_nativeTextAppearanceBody</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Adroit.Native.Icon" parent="">
+        <item name="android:layout_width">@dimen/adroit_native_icon_size</item>
+        <item name="android:layout_height">@dimen/adroit_native_icon_size</item>
+        <item name="android:contentDescription">@null</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+</resources>

@@ -26,7 +26,6 @@ jobs:
       TEST_TASKS: >-
         :sample-xml:connectedMinifiedDebugAndroidTest
         :sample-compose:connectedDebugAndroidTest
-        :sample-mixed:connectedDebugAndroidTest
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
