@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:502941475684:android:bf2100a62559646de89071",
+        "mobilesdk_app_id": "1:502941475684:android:696adea1d39f4f5de89071",
         "android_client_info": {
-          "package_name": "com.company.admob.sample.compose"
+          "package_name": "com.company.admob.sample.mixed"
         }
       },
       "oauth_client": [],
@@ -26,9 +26,28 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:502941475684:android:51ad67a9d117f31be89071",
+        "mobilesdk_app_id": "1:502941475684:android:6ad7eff1e364b2f2e89071",
         "android_client_info": {
-          "package_name": "com.company.admob.sample.xml"
+          "package_name": "io.github.thesobiaakbar.adroit.sample.compose"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB3N9s9nAvVz3smcYNaReNCZWvVJazeFc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502941475684:android:371c53db4edf6f08e89071",
+        "android_client_info": {
+          "package_name": "io.github.thesobiaakbar.adroit.sample.xml"
         }
       },
       "oauth_client": [],
