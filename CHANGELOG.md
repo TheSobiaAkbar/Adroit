@@ -6,6 +6,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+## [1.0.0-rc2] - 2026-09-30
+
 ### Changed
 - **Renamed to Adroit** (breaking). Maven group `io.github.thesobiaakbar`, artifacts `adroit-core`, `adroit-views`,
   `adroit-compose`, `adroit-testing` and `adroit-firebase`, package `io.github.thesobiaakbar.adroit`, facade `Adroit`,
