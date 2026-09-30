@@ -32,9 +32,7 @@ import com.company.admob.views.NativeTemplates
  * Every native style, each with a live test ad: the library's templates, then the sample's own layout registered as
  * "sample_promo" (SampleApplication). "Show the shimmers" swaps each ad for the shimmer its layout gets while loading.
  * The styles use SampleAds.ArticleNative's ad units; each style is its own slot (`slotKey`).
- *
- * A screen keeps at most 3 native ads, so a style scrolled far away gives its ad up and loads a new one when it comes
- * back: fine for a gallery. A list that must keep its ads, like the feed, has at most 3 slots.
+ * The screen keeps every style's ad while it's open: scrolling back shows the same ads.
  */
 @Composable
 fun NativeStylesScreen() {

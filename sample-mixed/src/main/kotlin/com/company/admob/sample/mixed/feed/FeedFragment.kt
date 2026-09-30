@@ -20,7 +20,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
+import com.company.admob.compose.AdBanner
 import com.company.admob.compose.AdNative
+import com.company.admob.config.bannerPlacement
 import com.company.admob.config.nativePlacement
 import com.company.admob.sample.mixed.R
 import com.company.admob.sample.mixed.ads.SampleAds
@@ -37,14 +39,23 @@ sealed interface FeedRow {
     data class Ad(val slot: Int) : FeedRow {
         override val key: String get() = "ad_$slot"
     }
+
+    /** A banner slot, kept the same way. */
+    data class Banner(val slot: Int) : FeedRow {
+        override val key: String get() = "banner_$slot"
+    }
 }
 
-/** 30 articles with a native ad after every 9 (at every 10th position): 3 ad slots, the most a screen keeps. */
+/** 30 articles with an ad at every 8th position, native and banner in turn. */
 val feedRows: List<FeedRow> = buildList {
     var article = 0
     var position = 0
     while (article < 30) {
-        if (position % 10 == 9) add(FeedRow.Ad(slot = position)) else add(FeedRow.Article(article++))
+        when {
+            position % 8 != 7 -> add(FeedRow.Article(article++))
+            position / 8 % 2 == 0 -> add(FeedRow.Ad(slot = position))
+            else -> add(FeedRow.Banner(slot = position))
+        }
         position++
     }
 }
@@ -54,9 +65,10 @@ const val FEED_TAG = "feed"
 /**
  * A screen already moved to Compose, in the XML app's Fragment navigation: the Fragment's view is a [ComposeView].
  *
- * - `DisposeOnViewTreeLifecycleDestroyed`: the composition, and the banners in it, end with the Fragment's view.
- * - The native ads are kept in the Fragment's ViewModel store (the ComposeView's `LocalViewModelStoreOwner`): the same
- *   ads after scrolling and rotation, destroyed when the Fragment is gone for good.
+ * - `DisposeOnViewTreeLifecycleDestroyed`: the composition ends with the Fragment's view.
+ * - The native ads and banners are kept in the Fragment's ViewModel store (the ComposeView's
+ *   `LocalViewModelStoreOwner`): the same ads after scrolling and rotation, destroyed when the Fragment is gone for
+ *   good.
  */
 class FeedFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
@@ -79,6 +91,11 @@ private fun FeedScreen() {
                 is FeedRow.Ad -> AdNative(
                     SampleAds.FeedNative.nativePlacement(),
                     Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    slotKey = row.slot,
+                )
+                is FeedRow.Banner -> AdBanner(
+                    SampleAds.FeedBanner.bannerPlacement(),
+                    Modifier.padding(vertical = 4.dp),
                     slotKey = row.slot,
                 )
             }

@@ -27,9 +27,9 @@ import org.junit.runner.RunWith
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The feed's native ads: scrolling to the end and back, and rotating, show the same ads (no new native ad request),
- * and leaving the screen leaks nothing. Only requests are compared: a request already in flight when the scrolling
- * starts may still complete during it.
+ * Banners and native ads stay until their screen is gone: the feed's, scrolled to the end and back and rotated, and
+ * Home's banner, after switching tabs and rotating, show the same ads (no new request), and nothing leaks. Only
+ * requests are compared: a request already in flight when the test starts may still complete during it.
  */
 @RequiresNetwork
 @RunWith(AndroidJUnit4::class)
@@ -38,20 +38,22 @@ class FeedTest {
 
     @get:Rule
     val rules: RuleChain = RuleChain
-        .outerRule(DetectLeaksAfterTestSuccess())
+        .outerRule(notificationsGranted())
+        .around(DetectLeaksAfterTestSuccess())
         .around(AppOpenDisabledRule())
         .around(compose)
 
     private val device = uiDevice()
-    private val nativeRequests = AtomicInteger()
+    /** Native and banner ad requests. */
+    private val adRequests = AtomicInteger()
     private val scope = CoroutineScope(Dispatchers.Main)
 
     @Before
-    fun countNativeRequests() {
+    fun countAdRequests() {
         scope.launch {
             CompanyAdMob.events
-                .filter { it is AdEvent.LoadRequested && it.format == AdFormat.NATIVE }
-                .collect { nativeRequests.incrementAndGet() }
+                .filter { it is AdEvent.LoadRequested && (it.format == AdFormat.NATIVE || it.format == AdFormat.BANNER) }
+                .collect { adRequests.incrementAndGet() }
         }
     }
 
@@ -72,8 +74,31 @@ class FeedTest {
         }
         SystemClock.sleep(STABLE_MILLIS)
         compose.waitForIdle()
-        assertEquals("native ad requests, before and after scrolling and rotating", before, nativeRequests.get())
+        assertEquals("ad requests, before and after scrolling and rotating", before, adRequests.get())
         compose.navigateTo(Destination.Home)
+    }
+
+    @Test
+    fun homeKeepsItsBannerAcrossTabsAndRotation() {
+        // Home's banner, and every tab's ads, loaded once.
+        compose.navigateTo(Destination.Feed)
+        scrollDownAndUp()
+        compose.navigateTo(Destination.Settings)
+        compose.navigateTo(Destination.Home)
+        val before = awaitStableCount()
+        try {
+            repeat(2) {
+                compose.navigateTo(Destination.Feed)
+                compose.navigateTo(Destination.Settings)
+                compose.navigateTo(Destination.Home)
+                compose.rotateAndBack(device)
+            }
+        } finally {
+            device.unfreezeRotation()
+        }
+        SystemClock.sleep(STABLE_MILLIS)
+        compose.waitForIdle()
+        assertEquals("ad requests, before and after switching tabs and rotating", before, adRequests.get())
     }
 
     private fun scrollDownAndUp() {
@@ -87,11 +112,11 @@ class FeedTest {
     /** The request count once it hasn't changed for [STABLE_MILLIS], within 30 s. */
     private fun awaitStableCount(): Int {
         val deadline = SystemClock.elapsedRealtime() + 30_000
-        var last = nativeRequests.get()
+        var last = adRequests.get()
         var stableSince = SystemClock.elapsedRealtime()
         while (SystemClock.elapsedRealtime() < deadline) {
             SystemClock.sleep(POLL_MILLIS)
-            val current = nativeRequests.get()
+            val current = adRequests.get()
             if (current != last) {
                 last = current
                 stableSince = SystemClock.elapsedRealtime()

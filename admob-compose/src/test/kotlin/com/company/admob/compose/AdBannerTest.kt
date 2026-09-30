@@ -2,7 +2,10 @@ package com.company.admob.compose
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -12,6 +15,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.company.admob.AdError
 import com.company.admob.BannerOptions
 import com.company.admob.BannerSize
@@ -64,32 +72,73 @@ class AdBannerTest {
     }
 
     @Test
-    fun `removing it from the composition destroys the banner once`() {
+    fun `leaving the composition keeps the banner, coming back shows the same one, clearing the screen destroys it`() {
+        val screen = TestScreen()
         var show by mutableStateOf(true)
-        rule.setContent { if (show) AdBanner(HOME) }
+        rule.setContent {
+            CompositionLocalProvider(LocalViewModelStoreOwner provides screen) { if (show) AdBanner(HOME) }
+        }
         rule.waitForIdle()
+        val handle = client.banner.created.single().handle
+        repeat(3) {
+            show = false
+            rule.waitForIdle()
+            assertEquals(0, handle.destroyCount)
+            show = true
+            rule.waitForIdle()
+        }
+        // One banner, back on screen each time: no new request.
+        assertEquals(1, client.banner.created.size)
+        assertTrue(handle.view.isAttachedToWindow)
         show = false
         rule.waitForIdle()
-        assertEquals(1, client.banner.created.single().handle.destroyCount)
+        screen.viewModelStore.clear()
+        assertEquals(1, handle.destroyCount)
     }
 
     @Test
-    fun `a changed placement destroys the old banner and creates a new one`() {
+    fun `banners in a LazyColumn are created once each, scrolled away and back`() {
+        val screen = TestScreen()
+        rule.setContent {
+            CompositionLocalProvider(LocalViewModelStoreOwner provides screen) {
+                LazyColumn(Modifier.testTag("list")) {
+                    items(20, key = { it }) { index ->
+                        if (index % 5 == 0) AdBanner(HOME, slotKey = index) else BasicText("item $index", Modifier.height(300.dp))
+                    }
+                }
+            }
+        }
+        for (index in (0 until 20) + (19 downTo 0)) {
+            rule.onNodeWithTag("list").performScrollToIndex(index)
+            rule.waitForIdle()
+        }
+        assertEquals(4, client.banner.created.size)
+        assertEquals(client.banner.created.map { it.handle }, client.banner.live)
+        screen.viewModelStore.clear()
+        assertTrue(client.banner.live.isEmpty())
+    }
+
+    @Test
+    fun `a changed placement shows a new banner, the old one kept until the screen is cleared`() {
+        val screen = TestScreen()
         var placement by mutableStateOf(HOME)
-        rule.setContent { AdBanner(placement) }
+        rule.setContent {
+            CompositionLocalProvider(LocalViewModelStoreOwner provides screen) { AdBanner(placement) }
+        }
         rule.waitForIdle()
         placement = OTHER_BANNER
         rule.waitForIdle()
         val (first, second) = client.banner.created
         assertEquals(HOME, first.placement)
         assertEquals(OTHER_BANNER, second.placement)
-        assertEquals(1, first.handle.destroyCount)
-        assertEquals(0, second.handle.destroyCount)
-        assertEquals(listOf(second.handle), client.banner.live)
+        assertTrue(second.handle.view.isAttachedToWindow)
+        assertEquals(0, first.handle.destroyCount)
+        screen.viewModelStore.clear()
+        assertTrue(client.banner.live.isEmpty())
     }
 
     @Test
-    fun `changed options replace the banner, equal options don't`() {
+    fun `changed options show another banner, equal options don't`() {
         var options by mutableStateOf(BannerOptions())
         rule.setContent { AdBanner(HOME, options = options) }
         rule.waitForIdle()
@@ -99,9 +148,8 @@ class AdBannerTest {
         options = BannerOptions(BannerSize.MediumRectangle)
         rule.waitForIdle()
         assertEquals(2, client.banner.created.size)
-        assertEquals(BannerSize.MediumRectangle, client.banner.live.single().let { live ->
-            client.banner.created.single { it.handle === live }.options.size
-        })
+        assertEquals(BannerSize.MediumRectangle, client.banner.created.last().options.size)
+        assertTrue(client.banner.created.last().handle.view.isAttachedToWindow)
     }
 
     @Test
@@ -138,5 +186,9 @@ class AdBannerTest {
         rule.waitForIdle()
         val height = rule.onNodeWithTag("banner").fetchSemanticsNode().size.height
         assertEquals(0, height)
+    }
+
+    private class TestScreen : ViewModelStoreOwner {
+        override val viewModelStore = ViewModelStore()
     }
 }

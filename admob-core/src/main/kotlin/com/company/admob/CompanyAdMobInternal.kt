@@ -1,6 +1,8 @@
 package com.company.admob
 
+import android.app.Activity
 import com.company.admob.config.remote.AdOverrides
+import com.company.admob.internal.banner.BannerAdHandleImpl
 import com.company.admob.internal.config.AdProfiles
 import com.company.admob.internal.native.NativeAdHandleImpl
 import com.company.admob.logging.LogLevel
@@ -16,6 +18,27 @@ public object CompanyAdMobInternal {
     @JvmStatic
     public fun detachRenderedView(handle: NativeAdHandle) {
         (handle as? NativeAdHandleImpl)?.detachView()
+    }
+
+    /**
+     * Takes a banner off screen while its screen lives on (a composable left the composition): its loaded ad is kept
+     * without its view, so the banner retains no View or Activity; [showBannerIn] shows the same ad again, with no new
+     * request. A banner not loaded yet drops its request, and loads again in [showBannerIn]. Main thread only. Does
+     * nothing for a handle that isn't from `banner.create()`.
+     */
+    @JvmStatic
+    public fun parkBanner(handle: BannerAdHandle) {
+        (handle as? BannerAdHandleImpl)?.park()
+    }
+
+    /**
+     * Puts a banner back on screen in [activity] (its `view` is then a new view of that Activity): a parked ad without
+     * a new request, else a new load. Moves a banner shown in another Activity (after a configuration change). Does
+     * nothing for a banner already in [activity]. Main thread only.
+     */
+    @JvmStatic
+    public fun showBannerIn(handle: BannerAdHandle, activity: Activity) {
+        (handle as? BannerAdHandleImpl)?.showIn(activity)
     }
 
     /**

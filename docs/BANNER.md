@@ -3,8 +3,9 @@
 ## When to use them
 
 A banner stays on screen with your content: the bottom of a screen (anchored adaptive), or inline in scrolling
-content (inline adaptive, medium rectangle). Put banners in fixed places, not in list items: in a lazy list every item
-scrolled back in creates a new banner. Use [native ads](NATIVE.md) in lists.
+content (inline adaptive, medium rectangle). In Compose, `AdBanner` works in a `LazyColumn` too: each item's banner
+(its `slotKey`) is kept by the screen, so scrolling back shows the same ad ([Compose](COMPOSE.md#adbanner)). In a
+`RecyclerView`, a recycled banner view loads a new ad: use [native ads](NATIVE.md) there.
 
 | `BannerSize` | XML `company_admob_bannerSize` | Use |
 |---|---|---|

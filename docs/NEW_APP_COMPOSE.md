@@ -6,7 +6,7 @@ This page takes a new Android Studio project (Kotlin, Jetpack Compose) to a comp
 - a splash ad;
 - interstitial, rewarded, rewarded interstitial and app open ads;
 - banners and native ads as composables, which can load before their screen opens;
-- native ads in lazy lists, kept across scrolling and rotation;
+- banners and native ads kept by their screen: across tabs, scrolling, lazy lists and rotation;
 - native ads in your own layouts and colors;
 - a "remove ads" purchase;
 - every ad, and any other value you choose, controlled from Firebase without a new release.
@@ -725,8 +725,10 @@ once: `AdSlots.load(AppAds.AppOpenAd)`. With `loadAgain = true`, the next one lo
 | `AdBanner(AppAds.DetailsBanner.bannerPlacement())` | A banner. |
 | `AdNative(AppAds.HomeNative.nativePlacement())` | A native ad, in its style's template. |
 
-Each one loads by itself, shows a shimmer while it loads, collapses if no ad comes, never requests a second ad while
-it has one, and destroys its ad with the screen. A rotation never reloads a native ad.
+Each one loads by itself, shows a shimmer while it loads, and collapses if no ad comes. Its ad belongs to the screen
+(the navigation destination): leaving the screen for another tab and coming back, scrolling it away in a list, or
+rotating shows the same ad again, with no new request. It's destroyed only when the screen is (the destination is
+popped).
 
 ```kotlin
 package com.example.myapp
@@ -756,7 +758,7 @@ To replace an ad with a new one, change its `refreshKey`: `AdSlot(AppAds.HomeBan
 then `bannerRefresh++` (the "Refresh the banner" button in `HomeScreen`). The current ad stays until the new one
 arrives, and stays if the new one fails. `AdBanner` and `AdNative` take a `refreshKey` too.
 
-Banners belong in fixed places, like the bottom of a screen. In a lazy list, use native ads.
+In a lazy list, give each banner a `slotKey`, as for native ads below.
 
 ### Load banners and native ads before their screen
 
@@ -776,10 +778,10 @@ AdSlots.load(AppAds.HomeNative)
 
 A banner loaded ahead is sized for the full screen width; a banner of another width loads its own.
 
-### Native ads in a LazyColumn
+### Ads in a LazyColumn
 
-One `AdNative` per ad item, each with its own `slotKey`. Nothing else: the ads are kept in the screen's ViewModel
-store, so scrolling away and back, or rotating, shows the same ad without reloading it.
+One `AdNative` or `AdBanner` per ad item, each with its own `slotKey`. Nothing else: the ads are kept in the screen's
+ViewModel store, so scrolling away and back, or rotating, shows the same ad without reloading it.
 
 ```kotlin
 package com.example.myapp
@@ -791,29 +793,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
+import com.company.admob.compose.AdBanner
 import com.company.admob.compose.AdNative
+import com.company.admob.config.bannerPlacement
 import com.company.admob.config.nativePlacement
 import com.example.myapp.ads.AppAds
 
 @Composable
 fun FeedScreen() {
     LazyColumn {
-        for (position in 0 until 30) {
-            if (position % 10 == 9) {
-                // Every 10th row is an ad; its position is its slotKey.
-                item(key = "ad_$position") {
+        for (position in 0 until 40) {
+            when {
+                // Every 10th row is a native ad, and the 25th a banner; each one's position is its slotKey.
+                position % 10 == 9 -> item(key = "ad_$position") {
                     AdNative(AppAds.FeedNative.nativePlacement(), Modifier.fillMaxWidth(), slotKey = position)
                 }
-            } else {
-                item(key = "article_$position") { Text("Article $position", Modifier.padding(16.dp)) }
+                position == 24 -> item(key = "banner_$position") {
+                    AdBanner(AppAds.HomeBanner.bannerPlacement(), slotKey = position)
+                }
+                else -> item(key = "article_$position") { Text("Article $position", Modifier.padding(16.dp)) }
             }
         }
     }
 }
 ```
 
-A screen keeps **at most 3 native ads**. With more ad items, the one furthest from the screen gives its ad up and
-loads a new one when it comes back. So 3 ad items per list is the most that never reload.
+Every ad item keeps its ad for as long as the screen exists, however many the list has.
 
 ### Native styles
 
@@ -1241,7 +1246,8 @@ A debug build on a phone or an emulator:
 - [ ] Logcat (`CompanyAdMob`): `Firebase parameter <Name>: {…}` per ad, then `Remote Config fetched`.
 - [ ] The consent form (first launch), the progress bar, a test ad, then your main screen.
 - [ ] Every ad is labelled "Test Ad". Full-screen ads show "Loading ad…" first; banners and native ads, a shimmer.
-- [ ] Rotating the phone doesn't reload a native ad, and doesn't restart the splash.
+- [ ] Switching tabs, scrolling a list away and back, or rotating the phone doesn't reload a banner or a native ad,
+  and rotating doesn't restart the splash.
 - [ ] Your `ads_style.xml` colors show on the native ads, and your own layout shows where you use it.
 - [ ] A Firebase change (for example `{ "style": "media_start" }` on a native ad) shows after one or two relaunches.
 - [ ] In airplane mode, the splash lasts 3 seconds and the app works without ads.
@@ -1259,4 +1265,4 @@ Problems? See [Troubleshooting](TROUBLESHOOTING.md). In depth: [Jetpack Compose]
 [Ad profiles](AD_PROFILES.md), [Native ads](NATIVE.md), [Splash screen](SPLASH.md), [Consent](CONSENT.md),
 [Remote configuration](REMOTE_CONFIG.md).
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-30

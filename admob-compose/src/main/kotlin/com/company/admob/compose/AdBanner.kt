@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.runtime.setValue
@@ -21,11 +21,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.company.admob.BannerAdHandle
 import com.company.admob.BannerOptions
 import com.company.admob.BannerPlacement
 import com.company.admob.BannerState
+import com.company.admob.CompanyAdMobInternal
 import com.company.admob.InternalCompanyAdMobApi
 import com.company.admob.compose.internal.BannerShimmer
 import com.company.admob.compose.internal.ComposeRuntime
@@ -35,14 +38,17 @@ import com.company.admob.compose.internal.findActivity
 /**
  * A banner ad for [placement].
  *
- * One banner is created per ([placement], [options], Activity) and reused across recompositions; it's destroyed when
- * this leaves the composition or one of those changes. Recomposition never reloads it. Banners belong in fixed
- * slots: in a lazy list, every item scrolled back in creates a new banner, so prefer [AdNative] there.
+ * The banner is kept by the screen, like [AdNative]'s ads: in a ViewModel of the current `LocalViewModelStoreOwner`
+ * (a navigation destination, a Fragment, or the Activity), one per ([placement], [options], [slotKey]). Recomposition,
+ * leaving and coming back to the composition (another tab, scrolling out of a lazy list) and configuration changes
+ * show the same ad again, with no new request; it's destroyed when that owner is cleared (the destination is popped,
+ * the Fragment or Activity finishes). While it's off screen it keeps no View or Activity.
  *
  * @param modifier applied to the banner's slot, which fills the available width.
  * @param options the banner size, and whether to reserve its expected height while it loads.
  * @param placeholder shown over the reserved space while the banner is loading. Without one, an ad profile with
  *   `showLoading` (the default) shows a shimmer shaped like its banner, in the banner's height.
+ * @param slotKey distinct and stable for each banner of the same placement on a screen, such as a lazy list item's key.
  * @param onStateChange called on the main thread with each new [BannerState].
  *
  * Without an Activity in `LocalContext`, logs an error and shows nothing.
@@ -53,9 +59,10 @@ public fun AdBanner(
     modifier: Modifier = Modifier,
     options: BannerOptions = BannerOptions(),
     placeholder: (@Composable () -> Unit)? = null,
+    slotKey: Any = Unit,
     onStateChange: (BannerState) -> Unit = {},
 ) {
-    AdBanner(placement, modifier, options, placeholder, refreshKey = null, onStateChange)
+    AdBanner(placement, modifier, options, placeholder, slotKey, refreshKey = null, onStateChange)
 }
 
 /**
@@ -71,6 +78,7 @@ public fun AdBanner(
     modifier: Modifier = Modifier,
     options: BannerOptions = BannerOptions(),
     placeholder: (@Composable () -> Unit)? = null,
+    slotKey: Any = Unit,
     refreshKey: Any?,
     onStateChange: (BannerState) -> Unit = {},
 ) {
@@ -81,12 +89,17 @@ public fun AdBanner(
         }
         return
     }
-    val banner = remember(placement, activity, options) { RememberedBanner(activity, placement, options) }
+    val retainer: BannerRetainer = viewModel(key = BannerRetainer.VIEW_MODEL_KEY) { BannerRetainer() }
+    val banner = remember(retainer, placement, options, slotKey) { retainer.get(placement, options, slotKey, activity) }
+    // On screen in this Activity while composed (idempotent, and before the views below are read); off screen, with
+    // its ad kept, once it leaves.
+    banner.showIn(activity)
+    DisposableEffect(banner) { onDispose { banner.park() } }
     val lastRefreshKey = remember(banner) { arrayOf(refreshKey) }
     LaunchedEffect(banner, refreshKey) {
         if (lastRefreshKey[0] == refreshKey) return@LaunchedEffect
         lastRefreshKey[0] = refreshKey
-        banner.refresh()
+        banner.refresh(activity)
     }
     val incoming = banner.incoming
     if (incoming != null) {
@@ -148,15 +161,35 @@ public fun AdBanner(
     }
 }
 
+/** The banners of one screen (one `ViewModelStoreOwner`), one per (placement, options, slotKey), destroyed with it. */
+internal class BannerRetainer : ViewModel() {
+    private data class Key(val placement: BannerPlacement, val options: BannerOptions, val slotKey: Any)
+
+    private val banners = HashMap<Key, RetainedBanner>()
+
+    fun get(placement: BannerPlacement, options: BannerOptions, slotKey: Any, activity: Activity): RetainedBanner =
+        banners.getOrPut(Key(placement, options, slotKey)) { RetainedBanner(activity, placement, options) }
+
+    override fun onCleared() {
+        banners.values.forEach(RetainedBanner::destroyAll)
+        banners.clear()
+    }
+
+    companion object {
+        const val VIEW_MODEL_KEY: String = "company_admob_banner"
+    }
+}
+
 /**
- * Creates the banner once it's remembered and destroys it when forgotten, or if the composition that created it is
- * abandoned (which a `DisposableEffect` would miss).
+ * One banner slot: the banner shown ([handle]), and a refresh loading unseen ([incoming]). Keeps no Activity: its
+ * handles are on screen in the composition's Activity ([showIn]) or off screen without one ([park]).
  */
-private class RememberedBanner(
-    private val activity: Activity,
+@OptIn(InternalCompanyAdMobApi::class)
+internal class RetainedBanner(
+    activity: Activity,
     private val placement: BannerPlacement,
     private val options: BannerOptions,
-) : RememberObserver {
+) {
     /** The banner shown, or loading when there's none yet. */
     var handle: BannerAdHandle by mutableStateOf(ComposeRuntime.client.banner.create(activity, placement, options))
         private set
@@ -165,8 +198,20 @@ private class RememberedBanner(
     var incoming: BannerAdHandle? by mutableStateOf(null)
         private set
 
+    fun showIn(activity: Activity) {
+        CompanyAdMobInternal.showBannerIn(handle, activity)
+        incoming?.let { CompanyAdMobInternal.showBannerIn(it, activity) }
+    }
+
+    fun park() {
+        CompanyAdMobInternal.parkBanner(handle)
+        // A refresh doesn't outlive the screen it was asked on: a loaded ad would replace the shown one unseen.
+        incoming?.destroy()
+        incoming = null
+    }
+
     /** A shown banner gets a background replacement; a failed one a new request; a loading one nothing. */
-    fun refresh() {
+    fun refresh(activity: Activity) {
         if (incoming != null) return
         when (handle.state.value) {
             BannerState.Loaded -> incoming = ComposeRuntime.client.banner.create(activity, placement, options)
@@ -193,13 +238,7 @@ private class RememberedBanner(
         next.destroy()
     }
 
-    override fun onRemembered() = Unit
-
-    override fun onForgotten() = destroyAll()
-
-    override fun onAbandoned() = destroyAll()
-
-    private fun destroyAll() {
+    fun destroyAll() {
         incoming?.destroy()
         incoming = null
         handle.destroy()

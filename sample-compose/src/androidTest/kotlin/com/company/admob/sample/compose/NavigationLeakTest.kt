@@ -23,7 +23,8 @@ class NavigationLeakTest {
 
     @get:Rule
     val rules: RuleChain = RuleChain
-        .outerRule(DetectLeaksAfterTestSuccess())
+        .outerRule(notificationsGranted())
+        .around(DetectLeaksAfterTestSuccess())
         .around(AppOpenDisabledRule())
         .around(compose)
 

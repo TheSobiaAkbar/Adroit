@@ -3,8 +3,8 @@ public final class com/company/admob/compose/AdAvailabilityKt {
 }
 
 public final class com/company/admob/compose/AdBannerKt {
+	public static final fun AdBanner (Lcom/company/admob/BannerPlacement;Landroidx/compose/ui/Modifier;Lcom/company/admob/BannerOptions;Lkotlin/jvm/functions/Function2;Ljava/lang/Object;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
 	public static final fun AdBanner (Lcom/company/admob/BannerPlacement;Landroidx/compose/ui/Modifier;Lcom/company/admob/BannerOptions;Lkotlin/jvm/functions/Function2;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
-	public static final fun AdBanner (Lcom/company/admob/BannerPlacement;Landroidx/compose/ui/Modifier;Lcom/company/admob/BannerOptions;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/company/admob/compose/AdNativeKt {
@@ -13,8 +13,8 @@ public final class com/company/admob/compose/AdNativeKt {
 }
 
 public final class com/company/admob/compose/AdSlotKt {
-	public static final fun AdSlot (Lcom/company/admob/config/AdDefinition;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Ljava/lang/Object;Landroidx/compose/runtime/Composer;II)V
-	public static final fun AdSlot (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Ljava/lang/Object;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AdSlot (Lcom/company/admob/config/AdDefinition;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Ljava/lang/Object;Ljava/lang/Object;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AdSlot (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Ljava/lang/Object;Ljava/lang/Object;Landroidx/compose/runtime/Composer;II)V
 }
 
 public abstract interface class com/company/admob/compose/FullScreenAdLauncher {

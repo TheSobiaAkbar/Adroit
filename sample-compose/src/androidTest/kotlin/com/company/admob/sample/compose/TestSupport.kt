@@ -1,5 +1,10 @@
 package com.company.admob.sample.compose
 
+import android.Manifest
+import android.os.Build
+import androidx.test.rule.GrantPermissionRule
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -31,6 +36,13 @@ class AppOpenDisabledRule : ExternalResource() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync { CompanyAdMob.client.appOpen.setEnabled(enabled) }
     }
 }
+
+/**
+ * Grants the notification permission (Android 13+). Without it, LeakCanary opens its permission screen over the app
+ * as soon as it counts retained objects (old screens not collected yet), and the Compose rule loses the app.
+ */
+fun notificationsGranted(): TestRule =
+    if (Build.VERSION.SDK_INT >= 33) GrantPermissionRule.grant(Manifest.permission.POST_NOTIFICATIONS) else RuleChain.emptyRuleChain()
 
 /** Opens a bottom-bar [destination]. */
 fun ComposeTestRule.navigateTo(destination: Destination) {

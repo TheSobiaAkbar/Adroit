@@ -6,6 +6,18 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Changed
+- `AdBanner` (and `AdSlot` showing a banner) keeps its banner for the whole screen, like `AdNative`: in a ViewModel
+  of the current `LocalViewModelStoreOwner`, one per (placement, options, new `slotKey`). Leaving the composition and
+  coming back (another tab, a lazy list scrolled away and back) and configuration changes show the same ad with no
+  new request; it's destroyed when the screen's ViewModel store is cleared. Off screen it keeps no View or Activity:
+  the loaded ad is taken out of its view (`AdView.unregisterBannerAd`) and put into a new one for the Activity it
+  comes back in. Banners now work in a `LazyColumn`. Previously a banner was destroyed whenever it left the
+  composition, so switching tabs or rotating loaded a new one.
+- `AdNative` and `rememberNativeAd` keep every slot's ad until the screen is cleared; the limit of 3 ads per screen,
+  which destroyed the least recently used one, is gone.
+- `AdSlot` takes a `slotKey`, for banners and native ads in lists.
+
 ### Fixed
 - The splash timer no longer starts while the consent form is on screen: the consent step's 2-second guard counted the
   form's time, so after 10 seconds the timer, the progress bar and the splash ad request started behind the form. Now

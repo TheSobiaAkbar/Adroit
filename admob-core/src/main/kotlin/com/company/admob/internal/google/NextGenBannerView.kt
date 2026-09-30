@@ -76,6 +76,21 @@ internal class NextGenBannerView(
             log.w(e) { "Destroying a banner failed" }
         }
     }
+
+    override fun detach(): PreloadedBanner? {
+        if (destroyed) return null
+        val ad = unregister(adView, log)
+        destroy()
+        return ad?.let { NextGenPreloadedBanner(it, log) }
+    }
+}
+
+/** The loaded ad of [adView], taken out of it (the SDK's `unregisterBannerAd`), or null. */
+private fun unregister(adView: AdView, log: AdLog): BannerAd? = try {
+    adView.unregisterBannerAd()
+} catch (e: Exception) {
+    log.w(e) { "Taking the ad out of a banner view failed" }
+    null
 }
 
 /**
@@ -135,6 +150,20 @@ private class AttachedBanner(
         } catch (e: Exception) {
             log.w(e) { "Destroying a banner failed" }
         }
+    }
+
+    override fun detach(): PreloadedBanner? {
+        if (destroyed) return null
+        destroyed = true
+        listener.clear()
+        (adView.parent as? ViewGroup)?.removeView(adView)
+        unregister(adView, log)
+        try {
+            adView.destroy()
+        } catch (e: Exception) {
+            log.w(e) { "Destroying a banner view failed" }
+        }
+        return NextGenPreloadedBanner(ad, log)
     }
 }
 

@@ -50,6 +50,13 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
     /** Bottom of the details screen. */
     DetailsBanner(AdProfile.banner(style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM))),
 
+    /**
+     * A banner between articles in sample-compose's and sample-mixed's Compose feeds, which keep it while it scrolls.
+     * Listed here too because the three samples share the Firebase parameters; this app's RecyclerView feed shows
+     * native ads only.
+     */
+    FeedBanner(AdProfile.banner(style = BannerSize.MediumRectangle)),
+
     /** In the feed, every few articles: each ad shown is replaced, ready for the next slot. */
     FeedNative(AdProfile.native(style = NativeStyle.SMALL_BUTTON_END, loadAgain = true)),
 

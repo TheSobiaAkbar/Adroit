@@ -1,6 +1,9 @@
 package com.company.admob.sample.mixed
 
+import android.Manifest
+import android.os.Build
 import android.os.SystemClock
+import androidx.test.rule.GrantPermissionRule
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
@@ -35,30 +38,37 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * The mixed app's screens, whichever toolkit draws them: XML Fragments, the Compose feed in its Fragment, the Compose
- * Details screen embedding XML, and the native styles. Each survives rotation, the feed keeps its ads (no new native
- * request) across scrolling and rotation, and LeakCanary finds nothing retained afterwards. Needs network for the
- * ads, but passes when none load.
+ * Details screen embedding XML, and the native styles. Each survives rotation, the Compose feed keeps its native ads
+ * and banners (no new request) across scrolling and rotation, and LeakCanary finds nothing retained afterwards. Needs
+ * network for the ads, but passes when none load.
  */
 @RunWith(AndroidJUnit4::class)
 class MixedAppTest {
     private val compose = createAndroidComposeRule<MainActivity>()
 
+    // The notification permission (Android 13+): without it, LeakCanary opens its permission screen over the app as
+    // soon as it counts retained objects (old screens not collected yet), and the Compose rule loses the app.
     @get:Rule
     val rules: RuleChain = RuleChain
-        .outerRule(DetectLeaksAfterTestSuccess())
+        .outerRule(
+            if (Build.VERSION.SDK_INT >= 33) GrantPermissionRule.grant(Manifest.permission.POST_NOTIFICATIONS) else RuleChain.emptyRuleChain(),
+        )
+        .around(DetectLeaksAfterTestSuccess())
         .around(AppOpenDisabledRule())
         .around(compose)
 
     private val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    private val nativeRequests = AtomicInteger()
+
+    /** Native and banner ad requests. */
+    private val adRequests = AtomicInteger()
     private val scope = CoroutineScope(Dispatchers.Main)
 
     @Before
-    fun countNativeRequests() {
+    fun countAdRequests() {
         scope.launch {
             CompanyAdMob.events
-                .filter { it is AdEvent.LoadRequested && it.format == AdFormat.NATIVE }
-                .collect { nativeRequests.incrementAndGet() }
+                .filter { it is AdEvent.LoadRequested && (it.format == AdFormat.NATIVE || it.format == AdFormat.BANNER) }
+                .collect { adRequests.incrementAndGet() }
         }
     }
 
@@ -95,7 +105,7 @@ class MixedAppTest {
         }
         SystemClock.sleep(STABLE_MILLIS)
         compose.waitForIdle()
-        assertEquals("native ad requests, before and after scrolling and rotating", before, nativeRequests.get())
+        assertEquals("ad requests, before and after scrolling and rotating", before, adRequests.get())
         onView(withId(R.id.nav_home)).perform(click())
     }
 
@@ -119,11 +129,11 @@ class MixedAppTest {
     /** The request count once it hasn't changed for [STABLE_MILLIS], within 30 s. */
     private fun awaitStableCount(): Int {
         val deadline = SystemClock.elapsedRealtime() + 30_000
-        var last = nativeRequests.get()
+        var last = adRequests.get()
         var stableSince = SystemClock.elapsedRealtime()
         while (SystemClock.elapsedRealtime() < deadline) {
             SystemClock.sleep(POLL_MILLIS)
-            val current = nativeRequests.get()
+            val current = adRequests.get()
             if (current != last) {
                 last = current
                 stableSince = SystemClock.elapsedRealtime()

@@ -547,7 +547,9 @@ public final class com/company/admob/CompanyAdMobInternal {
 	public static final fun installForTesting (Lcom/company/admob/AdsClient;)Lkotlin/jvm/functions/Function0;
 	public static final fun log (Lcom/company/admob/logging/LogLevel;Ljava/lang/String;)V
 	public static final fun nativeLayoutName (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun parkBanner (Lcom/company/admob/BannerAdHandle;)V
 	public static final fun parseRemoteProfiles (Ljava/util/Map;Ljava/util/Map;Ljava/lang/String;)Lcom/company/admob/config/remote/AdOverrides;
+	public static final fun showBannerIn (Lcom/company/admob/BannerAdHandle;Landroid/app/Activity;)V
 	public static final fun showsLoading (Ljava/lang/String;)Z
 }
 

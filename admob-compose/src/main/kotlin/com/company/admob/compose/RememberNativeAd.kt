@@ -13,8 +13,8 @@ import com.company.admob.compose.internal.NativeAdRetainer
  *
  * The ad is kept in a ViewModel of the current `LocalViewModelStoreOwner` (the Activity, or a navigation destination),
  * so recomposition, configuration changes and scrolling out of a lazy list don't reload it. It's destroyed when that
- * owner is cleared. Each screen keeps at most 3 ads; a new slot beyond that destroys the least recently used one,
- * preferring slots not on screen. A failed load isn't kept: the slot retries the next time it enters the composition.
+ * owner is cleared; until then every slot keeps its ad. A failed load isn't kept: the slot retries the next time it
+ * enters the composition.
  *
  * Use a distinct, stable [slotKey] for each ad of the same placement on a screen, such as a list item's key.
  * The handle belongs to the library: don't destroy it. Most apps use [AdNative], which renders it.

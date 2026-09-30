@@ -175,9 +175,15 @@ internal interface SdkBannerView {
 
     /** Destroys the SDK view and drops the listener. Safe to call more than once. */
     fun destroy()
+
+    /**
+     * Takes the loaded ad out of this view, to show it in another later ([PreloadedBanner.attach]), and destroys the
+     * view and its listener: nothing keeps the Activity. Null, with the view destroyed, when no ad is loaded.
+     */
+    fun detach(): PreloadedBanner?
 }
 
-/** A banner loaded without a view ([AdsSdk.preloadBanner]). Main thread only. */
+/** A banner loaded without a view ([AdsSdk.preloadBanner]), or taken out of one ([SdkBannerView.detach]). Main thread only. */
 internal interface PreloadedBanner {
     /**
      * Shows it in [activity]: a banner view whose SDK events (impressions, clicks, refreshes, revenue) go to

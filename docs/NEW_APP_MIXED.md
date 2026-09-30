@@ -513,18 +513,18 @@ Two rules cover every ad, in both toolkits:
 | Banner or native, as Firebase says | `<com.company.admob.views.AdSlotView app:company_admob_placement="HomeBanner" />` | `AdSlot(AppAds.HomeBanner)` |
 | Banner | `AdBannerView`, or `attachBanner(owner, AppAds.DetailsBanner.bannerPlacement())` from code | `AdBanner(AppAds.DetailsBanner.bannerPlacement())` |
 | Native ad | `<com.company.admob.views.AdNativeView app:company_admob_placement="HomeNative" />` | `AdNative(AppAds.HomeNative.nativePlacement())` |
-| Native ads in a list | `NativeAdHolder` per row, in a `RecyclerView` | `AdNative(…, slotKey = …)` per item, in a `LazyColumn` |
+| Ads in a list | `NativeAdHolder` per row, in a `RecyclerView` (native ads only) | `AdNative(…, slotKey = …)` or `AdBanner(…, slotKey = …)` per item, in a `LazyColumn` |
 | Interstitial | `AdSlots.showFullScreen(activity, AppAds.LevelCompleteAd) { … }` | the same, with `LocalActivity.current` |
 | Rewarded | `CompanyAdMob.showRewarded(activity, AppAds.ExtraLifeRewarded.rewardedPlacement()) { … }` | the same, or `rememberFullScreenAdLauncher().showRewarded(…)` |
 | Replace a banner or native ad with a new one | `binding.homeBanner.load(refresh = true)` | change the composable's `refreshKey` |
 
 Where the two toolkits meet, each ad follows the screen it's on:
 
-| You put… | …in… | Its ads are destroyed | Native ads kept across rotation by |
-|---|---|---|---|
-| Compose (a `ComposeView`) | a Fragment | with the Fragment's view (`DisposeOnViewTreeLifecycleDestroyed`) | the Fragment |
-| Compose (a `ComposeView`) | an XML layout of an Activity | with the Activity | the Activity |
-| XML (`AndroidView`) | a Compose screen | with the Activity | the XML view: a rotation loads a new one |
+| You put… | …in… | Its ads are kept (across rotation and scrolling) by, and destroyed with |
+|---|---|---|
+| Compose (a `ComposeView`) | a Fragment | the Fragment |
+| Compose (a `ComposeView`) | an XML layout of an Activity | the Activity |
+| XML (`AndroidView`) | a Compose screen | the XML view, destroyed with the Activity: a rotation loads a new one |
 
 This page's app has all three: Home is an XML Fragment with a Compose native ad inside, Feed is a Compose screen in a
 Fragment, and Details is a Compose Activity with an XML layout inside.
@@ -744,8 +744,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
 - An `AdSlotView` or `AdNativeView` in a layout loads by itself, hides itself if no ad comes, never requests a second
   ad while it has one, and destroys its ad with the screen (in a Fragment, with the Fragment's view).
-- A `ComposeView` in a Fragment's layout needs `DisposeOnViewTreeLifecycleDestroyed`, as above: then its ads end
-  with the Fragment's view. Its native ads are kept by the Fragment across rotation.
+- A `ComposeView` in a Fragment's layout: set `DisposeOnViewTreeLifecycleDestroyed`, as above. Its banners and
+  native ads are kept by the Fragment, across rotation, and destroyed with it.
 - A banner from code, into an empty `FrameLayout`: `bannerContainer.attachBanner(viewLifecycleOwner,
   AppAds.DetailsBanner.bannerPlacement())` (in an Activity, `this` instead of `viewLifecycleOwner`).
 
@@ -815,7 +815,7 @@ It shows by itself when the user comes back to the app, never over `excludedActi
 once: `AdSlots.load(AppAds.AppOpenAd)`. With `loadAgain = true`, the next one loads after each show. It covers XML
 and Compose Activities alike.
 
-### A Compose screen inside a Fragment: native ads in a LazyColumn
+### A Compose screen inside a Fragment: ads in a LazyColumn
 
 `FeedFragment.kt`: a screen already moved to Compose, still reached through the XML navigation. The Fragment's view
 is a `ComposeView`; one `AdNative` per ad item, each with its own `slotKey`.
@@ -867,8 +867,7 @@ class FeedFragment : Fragment() {
 ```
 
 The ads are kept by the Fragment: scrolling away and back, or rotating, shows the same ad without reloading it. They're
-destroyed when the Fragment is gone for good. A screen keeps **at most 3 native ads**: with more ad items, the one
-furthest from the screen gives its ad up and loads a new one when it comes back.
+destroyed when the Fragment is gone for good. An `AdBanner(…, slotKey = …)` item works the same way.
 
 In an XML list, a `RecyclerView`, keep one `NativeAdHolder` per ad row in the ViewModel instead
 ([the XML guide](NEW_APP_XML.md#native-ads-in-a-recyclerview)).
@@ -1392,8 +1391,8 @@ A debug build on a phone or an emulator:
 - [ ] The consent form (first launch), the progress bar, a test ad, then your main screen.
 - [ ] Every ad is labelled "Test Ad". Full-screen ads show "Loading ad…" first; banners and native ads, a shimmer,
   in XML and Compose screens.
-- [ ] Rotating the phone doesn't reload a native ad drawn by `AdNative` (the Compose feed, Home's `ComposeView`), and
-  doesn't restart the splash.
+- [ ] Scrolling or rotating doesn't reload a banner or native ad drawn by a composable (the Compose feed, Home's
+  `ComposeView`), and rotating doesn't restart the splash.
 - [ ] Your `ads_style.xml` colors show on the native ads of both toolkits, and your own layout shows where you use it.
 - [ ] A Firebase change (for example `{ "style": "media_start" }` on a native ad) shows after one or two relaunches.
 - [ ] In airplane mode, the splash lasts 3 seconds and the app works without ads.

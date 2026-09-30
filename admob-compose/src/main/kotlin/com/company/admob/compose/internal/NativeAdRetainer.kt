@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
  * Keeps the native ads of one screen (one `ViewModelStoreOwner`) across configuration changes, one per
  * (placement, slotKey). Loads a slot's ad on its first request only, and destroys every ad in [onCleared].
  *
- * At most [maxRetained] ads are kept (loaded or loading): a new slot beyond that destroys the least recently used
- * one, preferring slots that aren't on screen. A slot whose load failed isn't kept, so a later request retries it.
+ * Every slot's ad is kept (loaded or loading), on screen or not, until the screen is cleared: a screen shows as many
+ * ads as it has slots, each loaded once. A slot whose load failed isn't kept, so a later request retries it.
  * Main thread only.
  */
-internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_SCREEN) : ViewModel() {
+internal class NativeAdRetainer : ViewModel() {
     private data class Key(val placement: NativePlacement, val slotKey: Any)
 
     private class Slot {
@@ -38,8 +38,7 @@ internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_
         }
     }
 
-    /** In least recently used order: the first entry is the next to evict. */
-    private val slots = LinkedHashMap<Key, Slot>()
+    private val slots = HashMap<Key, Slot>()
 
     /** The number of slots holding or loading an ad. */
     val retainedCount: Int get() = slots.size
@@ -47,13 +46,11 @@ internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_
     /** The slot's current result without loading or touching it, or null. */
     fun peek(placement: NativePlacement, slotKey: Any): NativeAdResult? = slots[Key(placement, slotKey)]?.result?.value
 
-    /** Marks the slot as on screen and most recently used, loading its ad if it has none. Pair with [release]. */
+    /** Marks the slot as on screen, loading its ad if it has none. Pair with [release]. */
     fun acquire(placement: NativePlacement, slotKey: Any): StateFlow<NativeAdResult?> {
         val key = Key(placement, slotKey)
-        val slot = slots.remove(key) ?: Slot().also { load(key, it) }
-        slots[key] = slot
+        val slot = slots.getOrPut(key) { Slot().also { load(key, it) } }
         slot.users++
-        trim()
         return slot.result
     }
 
@@ -65,7 +62,7 @@ internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_
     /**
      * Replaces the slot's shown ad with a new one (PROMPT 29D): the new ad loads while the current one stays, and
      * takes its place when it arrives; if it fails, the current one stays. Returns false when the slot has no ad and
-     * isn't loading (its load failed, or it was evicted): the caller then acquires it again, which loads anew. A slot
+     * isn't loading (its load failed): the caller then acquires it again, which loads anew. A slot
      * that is loading or refreshing already is left alone.
      */
     fun refresh(placement: NativePlacement, slotKey: Any): Boolean {
@@ -98,7 +95,7 @@ internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_
     private fun load(key: Key, slot: Slot) {
         ComposeRuntime.client.native.load(key.placement) { result ->
             when {
-                // Evicted or cleared while loading: nobody will show or destroy it.
+                // Cleared while loading: nobody will show or destroy it.
                 slot.released -> (result as? NativeAdResult.Loaded)?.handle?.destroy()
                 result is NativeAdResult.Failed -> {
                     if (slots[key] === slot) slots.remove(key)
@@ -109,15 +106,6 @@ internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_
         }
     }
 
-    private fun trim() {
-        while (slots.size > maxRetained) {
-            val victim = slots.entries.firstOrNull { it.value.users == 0 } ?: slots.entries.first()
-            ComposeRuntime.debug("Native slot ${victim.key.placement.key}/${victim.key.slotKey} evicted (max $maxRetained)")
-            slots.remove(victim.key)
-            victim.value.release()
-        }
-    }
-
     override fun onCleared() {
         slots.values.forEach { it.release() }
         slots.clear()
@@ -125,6 +113,5 @@ internal class NativeAdRetainer(private val maxRetained: Int = MAX_RETAINED_PER_
 
     companion object {
         const val VIEW_MODEL_KEY: String = "company_admob_native"
-        const val MAX_RETAINED_PER_SCREEN: Int = 3
     }
 }

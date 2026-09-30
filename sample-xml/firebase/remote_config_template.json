@@ -56,6 +56,13 @@
       "valueType": "JSON",
       "description": "Ad DetailsBanner (docs\/AD_PROFILES.md)"
     },
+    "FeedBanner": {
+      "defaultValue": {
+        "value": "{\"format\":\"banner\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"rectangle\"}"
+      },
+      "valueType": "JSON",
+      "description": "Ad FeedBanner (docs\/AD_PROFILES.md)"
+    },
     "FeedNative": {
       "defaultValue": {
         "value": "{\"format\":\"native\",\"enabled\":true,\"adUnitIds\":[],\"style\":\"small_button_end\",\"loadAgain\":true}"

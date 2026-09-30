@@ -295,8 +295,8 @@ views, hides views whose asset is missing, and creates the media view inside `me
 - A native ad must be destroyed when it's no longer shown; the library does it for you: `AdNative` when the screen's
   ViewModel is cleared, `attachNativeAd` and `AdNativeView` when their lifecycle owner is destroyed, `NativeAdHolder`
   on `clear()`. If you call `native.load` yourself, you own the handle: call `destroy()`.
-- `AdNative` and `rememberNativeAd` keep at most 3 ads per screen; beyond that the least recently used one is
-  destroyed, preferring slots not on screen.
+- `AdNative` and `rememberNativeAd` keep every slot's ad until the screen's ViewModel is cleared, however many
+  slots the screen has.
 - Rotation: `AdNative`, `rememberNativeAd` and `NativeAdHolder` re-render the same ad. `AdNativeView` and
   `attachNativeAd` load a new one; use a holder where that matters.
 - Each placement keeps a small pool (`poolSize`, default 1, at most 3). Don't cache more ads than you're about to show.

@@ -134,7 +134,7 @@ class AdNativeTest {
     }
 
     @Test
-    fun `a LazyColumn with an ad every 5 items retains at most 3 ads, destroying the oldest`() {
+    fun `a LazyColumn with an ad every 5 items keeps every ad, scrolled away and back, until the screen is cleared`() {
         val screen = TestScreen()
         rule.setContent {
             CompositionLocalProvider(LocalViewModelStoreOwner provides screen) {
@@ -149,20 +149,15 @@ class AdNativeTest {
                 }
             }
         }
-        for (index in 0 until 20) {
+        for (index in (0 until 20) + (19 downTo 0)) {
             rule.onNodeWithTag("list").performScrollToIndex(index)
             rule.waitForIdle()
-            assertTrue("retained ${client.native.live.size} at $index", client.native.live.size <= 3)
         }
+        // One load per slot, however often it scrolled away and back; every ad kept.
         assertEquals(4, client.native.loadCount)
-        val (first, second, third, fourth) = client.native.handles
-        assertEquals(1, first.destroyCount)
-        assertEquals(listOf(second, third, fourth), client.native.live)
-        // Scrolling back to a retained slot re-renders its ad without loading.
-        rule.onNodeWithTag("list").performScrollToIndex(10)
-        rule.waitForIdle()
-        assertEquals(4, client.native.loadCount)
-        assertSame(third, client.native.renders.last().handle)
+        val (first) = client.native.handles
+        assertEquals(client.native.handles, client.native.live)
+        assertSame(first, client.native.renders.last().handle)
         screen.viewModelStore.clear()
         assertTrue(client.native.live.isEmpty())
         assertTrue(client.native.handles.all { it.destroyCount == 1 })

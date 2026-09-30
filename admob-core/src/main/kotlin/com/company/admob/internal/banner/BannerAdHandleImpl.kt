@@ -30,6 +30,7 @@ import com.company.admob.internal.init.Readiness
 import com.company.admob.internal.logging.AdLog
 import com.company.admob.internal.port.AdsSdk
 import com.company.admob.internal.port.BannerListener
+import com.company.admob.internal.port.PreloadedBanner
 import com.company.admob.internal.port.RequestExtras
 import com.company.admob.internal.port.SdkBannerView
 import com.company.admob.internal.reliability.AdUnitRotation
@@ -54,6 +55,9 @@ import kotlinx.coroutines.launch
  * [size] is fixed at creation (the code's size, else the placement's). Each new load takes the next ad unit from
  * [rotation]; a collapsible banner asks for the collapsible format only on the first load of each SDK view.
  *
+ * Compose keeps a banner for its whole screen: [park] takes it off screen with its loaded ad but without a view or
+ * Activity, and [showIn] shows that ad again in a new container, with no new request.
+ *
  * Main thread only. After [destroy] every method is a no-op and the library holds no reference to the handle.
  */
 internal class BannerAdHandleImpl(
@@ -74,7 +78,12 @@ internal class BannerAdHandleImpl(
     /** Banners loaded ahead of their view (`AdSlots.load`): the first load takes one when it fits. */
     private val preloader: BannerPreloader? = null,
 ) : BannerAdHandle {
-    private val container = BannerContainer(activity, this)
+    /** The host-facing view; null while off screen ([park]). */
+    private var container: BannerContainer? = BannerContainer(activity, this)
+
+    /** The loaded ad while the banner is off screen ([park]), with the size it was loaded at. */
+    private var parked: PreloadedBanner? = null
+    private var parkedSpec: BannerSizeSpec? = null
     private val mutableState = MutableStateFlow<BannerState>(BannerState.Loading)
     private val bannerPlacement = placement.placement
     private val retryPolicy = placement.retry
@@ -104,7 +113,7 @@ internal class BannerAdHandleImpl(
     private var ownerObserver: LifecycleEventObserver? = null
     private var destroyed = false
 
-    override val view: View get() = container
+    override val view: View get() = checkNotNull(container) { "Banner $placementKey is off screen: showIn() first" }
 
     override val state: StateFlow<BannerState> = mutableState.asStateFlow()
 
@@ -136,10 +145,60 @@ internal class BannerAdHandleImpl(
         collector = null
         unbind()
         tearDownAd()
-        (container.parent as? ViewGroup)?.removeView(container)
-        container.handle = null
+        // The container stays readable ([view]) after destroy, only emptied and detached.
+        container?.let {
+            (it.parent as? ViewGroup)?.removeView(it)
+            it.handle = null
+        }
         mutableState.value = BannerState.Hidden(null)
         log.d { "Banner $placementKey destroyed" }
+    }
+
+    /**
+     * Takes the banner off screen while its screen lives on (a composable left the composition): a loaded ad is kept
+     * without its view, so nothing here keeps the Activity. A banner still loading, or failed, drops its request.
+     */
+    fun park() {
+        if (destroyed || container == null) return
+        val bannerView = sdkView
+        val spec = loadedSpec
+        val ad = if (bannerView != null && spec != null && mutableState.value == BannerState.Loaded) {
+            sdkView = null // detached, not destroyed: tearDownAd leaves it
+            bannerView.detach()
+        } else {
+            null
+        }
+        tearDownAd()
+        parked = ad
+        parkedSpec = spec.takeIf { ad != null }
+        dropContainer()
+        log.d { "Banner $placementKey off screen${if (ad != null) ", its ad kept" else ""}" }
+    }
+
+    /**
+     * Puts the banner on screen in [activity], in a new container ([view]): its parked ad without a new request, else a
+     * new load. A banner shown in another Activity (a configuration change) moves here the same way.
+     */
+    fun showIn(activity: Activity) {
+        if (destroyed) return
+        container?.let { if (it.context === activity) return else park() }
+        container = BannerContainer(activity, this)
+        val ad = parked
+        val spec = parkedSpec
+        parked = null
+        parkedSpec = null
+        if (ad != null && spec != null) {
+            show(ad, adUnitId, spec, activity, "shown again, same ad")
+        } else if (mutableState.value !is BannerState.Hidden) {
+            requestLoad()
+        }
+    }
+
+    private fun dropContainer() {
+        val c = container ?: return
+        (c.parent as? ViewGroup)?.removeView(c)
+        c.handle = null
+        container = null
     }
 
     private fun unbind() {
@@ -174,7 +233,7 @@ internal class BannerAdHandleImpl(
 
     private fun onReadiness(state: AdsState) {
         when (state) {
-            AdsState.Ready -> if (sdkView == null) requestLoad()
+            AdsState.Ready -> if (sdkView == null && parked == null) requestLoad()
             is AdsState.Unavailable -> {
                 if (sdkView != null) log.i { "Banner $placementKey hidden: ${state.reason}" }
                 tearDownAd()
@@ -187,6 +246,7 @@ internal class BannerAdHandleImpl(
     /** Loads at the container's width, or waits for its first layout. */
     private fun requestLoad() {
         if (destroyed || !readiness.canLoad()) return
+        val container = container ?: return // off screen: loads in showIn()
         if (!container.isLaidOut) {
             waitingForLayout = true
             return
@@ -205,7 +265,11 @@ internal class BannerAdHandleImpl(
             val claimed = preloader.claim(placementKey, spec, adUnitIds) { preloaded ->
                 if (destroyed || token != generation || sdkView != null) return@claim false
                 waitingForPreload = false
-                if (preloaded == null) requestLoad() else show(preloaded, spec, activity)
+                if (preloaded == null) {
+                    requestLoad()
+                } else {
+                    show(preloaded.banner, preloaded.adUnitId, spec, activity, "shown from its load ahead of the view")
+                }
                 true
             }
             if (claimed) {
@@ -231,14 +295,15 @@ internal class BannerAdHandleImpl(
         load(bannerView, spec)
     }
 
-    /** Shows a banner loaded ahead of this view: attached as this handle's SDK view, loaded already. */
-    private fun show(preloaded: PreloadedBannerAd, spec: BannerSizeSpec, activity: Activity) {
+    /** Shows a loaded ad (loaded ahead of this view, or parked): attached as this handle's SDK view. */
+    private fun show(banner: PreloadedBanner, fromAdUnitId: String, spec: BannerSizeSpec, activity: Activity, how: String) {
+        val container = checkNotNull(container)
         val loadGeneration = ++generation
-        val bannerView = preloaded.banner.attach(activity, Listener(loadGeneration))
+        val bannerView = banner.attach(activity, Listener(loadGeneration))
         sdkView = bannerView
         loadsOnView = 1
         loadedSpec = spec
-        adUnitId = preloaded.adUnitId
+        adUnitId = fromAdUnitId
         container.addView(
             bannerView.view,
             FrameLayout.LayoutParams(
@@ -251,7 +316,7 @@ internal class BannerAdHandleImpl(
         if (options.reserveSpace) container.minimumHeight = expectedHeightPx
         failedAttempts = 0
         mutableState.value = BannerState.Loaded
-        log.i { "Banner $placementKey shown from its load ahead of the view (${logId()})" }
+        log.i { "Banner $placementKey $how (${logId()})" }
     }
 
     private fun load(bannerView: SdkBannerView, spec: BannerSizeSpec) {
@@ -279,11 +344,14 @@ internal class BannerAdHandleImpl(
         waitingForLayout = false
         waitingForPreload = false
         loadedSpec = null
+        parked?.destroy()
+        parked = null
+        parkedSpec = null
         val bannerView = sdkView ?: return
         sdkView = null
-        container.removeView(bannerView.view)
+        container?.removeView(bannerView.view)
         bannerView.destroy()
-        container.minimumHeight = 0
+        container?.minimumHeight = 0
         emit(AdEvent.Destroyed(placementKey, AdFormat.BANNER, adUnitId, now()))
     }
 
@@ -334,7 +402,7 @@ internal class BannerAdHandleImpl(
 
     /** Retries only while the container is attached and shown; otherwise the retry waits for [onAttachedOrShown]. */
     private fun scheduleRetry(error: AdError) {
-        if (!container.isAttachedAndShown) {
+        if (container?.isAttachedAndShown != true) {
             retryPending = true
             log.d { "Banner $placementKey: retry paused while not attached and shown" }
             return
@@ -344,14 +412,14 @@ internal class BannerAdHandleImpl(
             val spec = loadedSpec
             when {
                 destroyed || bannerView == null || spec == null || !readiness.canLoad() -> Unit
-                container.isAttachedAndShown -> load(bannerView, spec)
+                container?.isAttachedAndShown == true -> load(bannerView, spec)
                 else -> retryPending = true
             }
         }
     }
 
     internal fun onAttachedOrShown() {
-        if (destroyed || !retryPending || !container.isAttachedAndShown) return
+        if (destroyed || !retryPending || container?.isAttachedAndShown != true) return
         retryPending = false
         lastError?.let(::scheduleRetry)
     }
@@ -371,7 +439,7 @@ internal class BannerAdHandleImpl(
     /** A width change (layout or configuration change): an adaptive banner reloads when it moved by 8 dp or more. */
     internal fun onWidthChanged(widthPx: Int) {
         val spec = loadedSpec ?: return
-        val newWidthDp = (widthPx / container.resources.displayMetrics.density).toInt()
+        val newWidthDp = (widthPx / (container ?: return).resources.displayMetrics.density).toInt()
         if (!BannerSizeResolver.needsReload(spec, newWidthDp)) return
         log.d { "Banner $placementKey: width ${spec.widthDp} → $newWidthDp dp; reloading" }
         // Not during the layout pass that reported it.

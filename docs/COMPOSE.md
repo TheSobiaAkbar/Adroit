@@ -15,6 +15,7 @@ fun AdSlot(
     definition: AdDefinition,                          // or key: String, the ad's name
     modifier: Modifier = Modifier,
     placeholder: (@Composable () -> Unit)? = null,
+    slotKey: Any = Unit,                               // distinct and stable per slot on a screen (list item key)
     refreshKey: Any? = null,                           // change it to ask for a new ad
 )
 ```
@@ -32,17 +33,22 @@ fun AdBanner(
     modifier: Modifier = Modifier,
     options: BannerOptions = BannerOptions(),          // size, and whether to reserve the expected height
     placeholder: (@Composable () -> Unit)? = null,     // shown over the reserved space while loading
+    slotKey: Any = Unit,                               // distinct and stable per banner on a screen (list item key)
     refreshKey: Any?,                                  // optional overload: change it to ask for a new banner
     onStateChange: (BannerState) -> Unit = {},         // main thread, each new state
 )
 ```
 
-- One banner per (`placement`, `options`, Activity), reused across recompositions: recomposition never reloads it.
-- Destroyed when it leaves the composition or one of those changes. A configuration change creates a new one.
+- The banner is kept like a native ad: in a ViewModel of the current `LocalViewModelStoreOwner` (a navigation
+  destination, a Fragment, or the Activity), one per (`placement`, `options`, `slotKey`).
+- Recomposition, leaving the composition and coming back (another tab, scrolling out of a lazy list) and
+  configuration changes show the same ad again, with no new request. Off screen it keeps no View or Activity: the
+  loaded ad is taken out of its view, and put into a new one for the Activity it comes back in.
+- It's destroyed when that owner is cleared, for example when a navigation destination is popped.
+- In a `LazyColumn`, give each banner item a distinct, stable `slotKey`, as for native ads.
 - A changed `refreshKey` loads a new banner in the background; the shown one stays until it's loaded, and stays if
   it fails.
 - Needs an Activity in `LocalContext`; without one it logs an error and shows nothing.
-- Don't put banners in lazy lists; see [Banner](BANNER.md).
 
 ## `AdNative` and `rememberNativeAd`
 
@@ -62,11 +68,10 @@ fun AdNative(
 fun rememberNativeAd(placement: NativePlacement, slotKey: Any = Unit): State<NativeAdResult?>
 ```
 
-- The ad is kept in a ViewModel of the current `LocalViewModelStoreOwner` (the Activity, or a navigation
+- The ad is kept in a ViewModel of the current `LocalViewModelStoreOwner` (the Activity, a Fragment, or a navigation
   destination). Recomposition, configuration changes and scrolling out of a lazy list don't reload it.
-- It's destroyed when that owner is cleared, for example when a navigation destination is popped.
-- A screen keeps at most 3 native ads; a new slot beyond that replaces the least recently used one, preferring slots
-  not on screen.
+- It's destroyed when that owner is cleared, for example when a navigation destination is popped. Until then every
+  slot keeps its ad, however many the screen has.
 - A failed load isn't kept: the slot tries again the next time it enters the composition. `AdNative` shows nothing
   when the load fails or ads are blocked.
 
@@ -120,6 +125,6 @@ fun WatchAdButton(onReward: (RewardResult.Earned) -> Unit) {
 - Grant rewards and keep results in ViewModels, not in composables: a rotation recreates the composition, and
   `rememberSaveable` state is the only composition state that survives it.
 - `sample-compose` uses every API: a splash Activity, then Navigation Compose destinations with banners, native ads
-  in a `LazyColumn`, full-screen ads and a native style gallery.
+  and banners in a `LazyColumn`, full-screen ads and a native style gallery.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-30

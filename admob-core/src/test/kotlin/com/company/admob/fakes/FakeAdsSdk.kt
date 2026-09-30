@@ -300,11 +300,28 @@ internal class FakeSdkBannerView(override val view: View) : SdkBannerView {
         listener = null
     }
 
-    fun simulateLoaded(source: AdSourceInfo? = null, isRefresh: Boolean = false) = listener?.onLoaded(source, isRefresh)
+    /** Whether an ad loaded in (or was attached to) this view. */
+    private var hasAd = false
+
+    /** The ad [detach] handed back, to show elsewhere. */
+    var detachedAs: FakePreloadedBanner? = null
+        private set
+
+    override fun detach(): PreloadedBanner? {
+        val ad = if (hasAd) FakePreloadedBanner().also { detachedAs = it } else null
+        destroy()
+        return ad
+    }
+
+    fun simulateLoaded(source: AdSourceInfo? = null, isRefresh: Boolean = false) {
+        if (listener != null) hasAd = true
+        listener?.onLoaded(source, isRefresh)
+    }
 
     /** A preloaded banner's view: loaded already, its events going to [listener]. */
     fun adopt(listener: BannerListener) {
         this.listener = listener
+        hasAd = true
     }
 
     fun simulateFailedToLoad(error: AdError = AdError.NoFill(), retryable: Boolean = true, isRefresh: Boolean = false) =

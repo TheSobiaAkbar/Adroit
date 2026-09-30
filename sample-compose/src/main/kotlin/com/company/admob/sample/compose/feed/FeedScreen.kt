@@ -12,7 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.company.admob.compose.AdBanner
 import com.company.admob.compose.AdNative
+import com.company.admob.config.bannerPlacement
 import com.company.admob.config.nativePlacement
 import com.company.admob.sample.compose.R
 import com.company.admob.sample.compose.ads.SampleAds
@@ -29,14 +31,23 @@ sealed interface FeedRow {
     data class Ad(val slot: Int) : FeedRow {
         override val key: String get() = "ad_$slot"
     }
+
+    /** A banner slot, kept the same way. */
+    data class Banner(val slot: Int) : FeedRow {
+        override val key: String get() = "banner_$slot"
+    }
 }
 
-/** 30 articles with a native ad after every 9 (at every 10th position): 3 ad slots, the most a screen keeps. */
+/** 30 articles with an ad at every 8th position, native and banner in turn. */
 val feedRows: List<FeedRow> = buildList {
     var article = 0
     var position = 0
     while (article < 30) {
-        if (position % 10 == 9) add(FeedRow.Ad(slot = position)) else add(FeedRow.Article(article++))
+        when {
+            position % 8 != 7 -> add(FeedRow.Article(article++))
+            position / 8 % 2 == 0 -> add(FeedRow.Ad(slot = position))
+            else -> add(FeedRow.Banner(slot = position))
+        }
         position++
     }
 }
@@ -44,9 +55,9 @@ val feedRows: List<FeedRow> = buildList {
 const val FEED_TAG = "feed"
 
 /**
- * The list pattern for native ads: each ad row is an [AdNative] with its own `slotKey`. The ads are kept by this
- * destination (its ViewModel store), so scrolling away and back, or rotating, shows the same ad without reloading;
- * they're destroyed when the destination is gone for good. A screen keeps at most 3 native ads, hence 3 slots.
+ * Ads in a lazy list: each ad row is an [AdNative] or an [AdBanner] with its own `slotKey`. The ads are kept by this
+ * destination (its ViewModel store), so scrolling away and back, switching tabs or rotating shows the same ad without
+ * a new request; they're destroyed when the destination is gone for good.
  */
 @Composable
 fun FeedScreen() {
@@ -61,6 +72,11 @@ fun FeedScreen() {
                 is FeedRow.Ad -> AdNative(
                     SampleAds.FeedNative.nativePlacement(),
                     Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    slotKey = row.slot,
+                )
+                is FeedRow.Banner -> AdBanner(
+                    SampleAds.FeedBanner.bannerPlacement(),
+                    Modifier.padding(vertical = 4.dp),
                     slotKey = row.slot,
                 )
             }

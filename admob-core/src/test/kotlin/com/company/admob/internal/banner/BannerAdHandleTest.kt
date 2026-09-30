@@ -294,6 +294,58 @@ class BannerAdHandleTest {
     }
 
     @Test
+    fun `park and showIn - a loaded ad moves to a new Activity with no new request, and the old Activity is released`() = runTest {
+        val b = BannerHarness(this)
+        b.ready()
+        val (handle, ref) = showParkAndMove(b)
+        // No local holds the first view: it's the old Activity's.
+        val moved = checkNotNull(b.views.single().detachedAs) { "the loaded ad was taken out of its view" }
+        assertTrue(b.views.single().destroyed)
+        assertEquals(1, b.loads())
+        assertSame(b.activity, handle.view.context)
+        assertEquals(BannerState.Loaded, handle.state.value)
+        assertTrue(moved.attachedView != null)
+        b.adsSdk.bannerViews.clear() // the fake SDK keeps its views for inspection
+        b.run(300_000)
+        assertCollected(ref)
+        // Destroyed from its new place, the moved ad goes too.
+        handle.destroy()
+        assertEquals(1, moved.attachedView!!.destroyCount)
+    }
+
+    @Test
+    fun `park before the ad loaded - the request is dropped, and showIn loads again`() = runTest {
+        val b = BannerHarness(this)
+        b.ready()
+        val handle = b.create()
+        b.layout(400)
+        CompanyAdMobPark.park(handle)
+        assertNull(b.views.single().detachedAs)
+        assertTrue(b.views.single().destroyed)
+        CompanyAdMobPark.showIn(handle, b.activity)
+        b.host.addView(handle.view)
+        b.run()
+        assertEquals(2, b.loads())
+    }
+
+    private fun showParkAndMove(b: BannerHarness): Pair<BannerAdHandle, WeakReference<Activity>> {
+        val controller = Robolectric.buildActivity(Activity::class.java).setup()
+        val first = controller.get()
+        val host = FrameLayout(first).also { first.setContentView(it) }
+        val handle = b.api.create(first, HOME, BannerOptions())
+        host.addView(handle.view)
+        b.run()
+        b.views.single().simulateLoaded()
+        // The Activity goes (a rotation): the banner leaves the screen, then shows in the new Activity.
+        CompanyAdMobPark.park(handle)
+        controller.pause().stop().destroy()
+        CompanyAdMobPark.showIn(handle, b.activity)
+        b.host.addView(handle.view)
+        b.run()
+        return handle to WeakReference(first)
+    }
+
+    @Test
     fun `create off the main thread - logged, and it still works`() = runTest {
         val b = BannerHarness(this)
         b.ready()
@@ -342,4 +394,12 @@ class BannerAdHandleTest {
             b.views.map { it.loadCalls.single().adUnitId },
         )
     }
+}
+
+/** The public hooks Compose uses, as it calls them. */
+@OptIn(com.company.admob.InternalCompanyAdMobApi::class)
+private object CompanyAdMobPark {
+    fun park(handle: BannerAdHandle) = com.company.admob.CompanyAdMobInternal.parkBanner(handle)
+
+    fun showIn(handle: BannerAdHandle, activity: Activity) = com.company.admob.CompanyAdMobInternal.showBannerIn(handle, activity)
 }

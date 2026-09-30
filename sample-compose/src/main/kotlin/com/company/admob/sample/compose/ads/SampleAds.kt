@@ -56,6 +56,9 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
     /** Bottom of the details screen. */
     DetailsBanner(AdProfile.banner(style = BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM))),
 
+    /** In the feed, between articles: a banner in a lazy list, kept by the screen like the native ads. */
+    FeedBanner(AdProfile.banner(style = BannerSize.MediumRectangle)),
+
     /** In the feed, every few articles: each ad shown is replaced, ready for the next slot. */
     FeedNative(AdProfile.native(style = NativeStyle.SMALL_BUTTON_END, loadAgain = true)),
 

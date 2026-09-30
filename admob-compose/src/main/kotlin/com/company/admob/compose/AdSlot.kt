@@ -18,6 +18,8 @@ import com.company.admob.config.AdDefinition
  *
  * @param modifier applied to the banner or native ad.
  * @param placeholder shown while the ad loads; without one, an ad with `showLoading` shows a shimmer.
+ * @param slotKey distinct and stable for each slot of the same ad on a screen, such as a lazy list item's key. The
+ *   screen keeps each slot's ad across recomposition, scrolling and configuration changes, until it's cleared.
  * @param refreshKey change it to ask for a new ad: a shown ad stays until the new one arrives and replaces it, and
  *   stays if the new one fails. The slot never requests a second ad otherwise.
  */
@@ -26,13 +28,18 @@ public fun AdSlot(
     key: String,
     modifier: Modifier = Modifier,
     placeholder: (@Composable () -> Unit)? = null,
+    slotKey: Any = Unit,
     refreshKey: Any? = null,
 ) {
     val formats = remember(key) { AdSlots.formatChanges(key) }
     val format by formats.collectAsStateWithLifecycle(initialValue = remember(key) { AdSlots.currentFormat(key) })
     when (format) {
-        AdFormat.BANNER -> AdBanner(BannerPlacement(key), modifier, placeholder = placeholder, refreshKey = refreshKey)
-        AdFormat.NATIVE -> AdNative(NativePlacement(key), modifier, placeholder = placeholder, refreshKey = refreshKey)
+        AdFormat.BANNER -> AdBanner(
+            BannerPlacement(key), modifier, placeholder = placeholder, slotKey = slotKey, refreshKey = refreshKey,
+        )
+        AdFormat.NATIVE -> AdNative(
+            NativePlacement(key), modifier, placeholder = placeholder, slotKey = slotKey, refreshKey = refreshKey,
+        )
         else -> Unit
     }
 }
@@ -43,7 +50,8 @@ public fun AdSlot(
     definition: AdDefinition,
     modifier: Modifier = Modifier,
     placeholder: (@Composable () -> Unit)? = null,
+    slotKey: Any = Unit,
     refreshKey: Any? = null,
 ) {
-    AdSlot(definition.name, modifier, placeholder, refreshKey)
+    AdSlot(definition.name, modifier, placeholder, slotKey, refreshKey)
 }
