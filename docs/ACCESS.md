@@ -5,7 +5,7 @@ can download them. This page covers what you do once, on each computer that buil
 
 ## 1. Get an invite
 
-Ask [Sobia Akbar](https://github.com/TheSobiaAkbar) for access, and give her your GitHub user name. You'll get an email
+Ask [Sobia Akbar](https://github.com/TheSobiaAkbar) for access, with your GitHub user name. You'll get an email
 from GitHub: accept the invitation. You can then open https://github.com/TheSobiaAkbar/Adroit.
 
 ## 2. Create a token
