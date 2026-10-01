@@ -14,7 +14,10 @@ import io.github.thesobiaakbar.adroit.sample.xml.feed.FeedFragment
 import io.github.thesobiaakbar.adroit.sample.xml.home.HomeFragment
 import io.github.thesobiaakbar.adroit.sample.xml.settings.SettingsFragment
 
-/** Bottom navigation over three Fragments. Each Fragment's ads follow its view lifecycle (`viewLifecycleOwner`). */
+/**
+ * Bottom navigation over three Fragments. Like Navigation's tabs, a tab keeps its Fragment (and its ViewModels) while
+ * another one shows: only its views go. Its ads are kept by the Fragment, so coming back shows the same ones.
+ */
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
@@ -29,22 +32,30 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         binding.bottomNavigation.setOnItemSelectedListener { item ->
-            show(
-                when (item.itemId) {
-                    R.id.nav_feed -> FeedFragment()
-                    R.id.nav_settings -> SettingsFragment()
-                    else -> HomeFragment()
-                },
-            )
+            show(item.itemId)
             true
         }
-        if (savedInstanceState == null) show(HomeFragment())
+        if (savedInstanceState == null) show(R.id.nav_home)
         // Ads load only when asked: the app open ad now, for the user's first return to the app. It has loadAgain,
         // so each later return finds a new one. Nothing happens if it's loaded already.
         AdSlots.load(SampleAds.AppOpenAd)
     }
 
-    private fun show(fragment: Fragment) {
-        supportFragmentManager.commit { replace(R.id.fragment_container, fragment) }
+    /** Shows [tab]'s Fragment, creating it the first time; the shown one is detached (its views go, it stays). */
+    private fun show(tab: Int) {
+        val tag = "tab_$tab"
+        val fragments = supportFragmentManager
+        if (fragments.findFragmentByTag(tag)?.isDetached == false) return
+        fragments.commit {
+            setReorderingAllowed(true)
+            fragments.fragments.filter { it.id == R.id.fragment_container && !it.isDetached }.forEach { detach(it) }
+            fragments.findFragmentByTag(tag)?.let { attach(it) } ?: add(R.id.fragment_container, newTab(tab), tag)
+        }
+    }
+
+    private fun newTab(tab: Int): Fragment = when (tab) {
+        R.id.nav_feed -> FeedFragment()
+        R.id.nav_settings -> SettingsFragment()
+        else -> HomeFragment()
     }
 }

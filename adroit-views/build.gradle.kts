@@ -17,6 +17,8 @@ dependencies {
     api(project(":adroit-core"))
     // lifecycleScope and repeatOnLifecycle. Core keeps lifecycle-runtime as implementation, so it isn't visible here.
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    // The screen's ViewModel that keeps the views' ads across view recreation and rotation (ViewAdRetainer).
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     // The templates' dimens use sdp and ssp (@dimen/_8sdp, @dimen/_12ssp): sizes that scale with the screen width.
     // Resources only, and api: an app can use them in its own layouts and overrides (an app already using them
     // shares the same artifacts).

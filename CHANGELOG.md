@@ -6,6 +6,13 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Changed
+- `AdBannerView`, `AdNativeView` and `AdSlotView` keep their ad for their screen, like Compose's `AdBanner` and
+  `AdNative`: in a ViewModel of the view tree's `ViewModelStoreOwner` (the Fragment, or the Activity), one per
+  placement and view id. A Fragment's views recreated (coming back to a tab) and rotation show the same ad with no new
+  request; only `load(refresh = true)` asks for another. Previously each new view loaded a new ad.
+- `sample-xml`'s tabs keep their Fragments (`detach`/`attach` instead of `replace`), as Navigation does.
+
 ### Fixed
 - Per-ad Firebase values (`"style"`, `"showLoading"`, `"enabled"`, ad unit IDs, …) were ignored for the whole session:
   the remote provider was collected inside `initialize()`, before the configured placements were known, so

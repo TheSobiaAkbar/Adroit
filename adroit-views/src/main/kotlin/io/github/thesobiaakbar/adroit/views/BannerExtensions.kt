@@ -5,9 +5,11 @@ import android.widget.FrameLayout
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import io.github.thesobiaakbar.adroit.AdroitInternal
 import io.github.thesobiaakbar.adroit.BannerAdHandle
 import io.github.thesobiaakbar.adroit.BannerOptions
 import io.github.thesobiaakbar.adroit.BannerPlacement
@@ -57,6 +59,11 @@ public fun ViewGroup.attachBanner(
 /** The banner [attachBanner] put in a container, so a second call for the same placement reuses it. */
 private class AttachedBanner(val placement: BannerPlacement, val handle: BannerAdHandle)
 
+/**
+ * Shows [existing] (a banner its screen keeps, put back on screen with its ad) or a new banner in this container.
+ * With [keep], [owner]'s destruction only takes the banner off screen (parked, its ad kept) for its screen to show
+ * again; otherwise it destroys the banner.
+ */
 @OptIn(InternalAdroitApi::class)
 internal fun ViewGroup.attachBanner(
     owner: LifecycleOwner,
@@ -64,13 +71,29 @@ internal fun ViewGroup.attachBanner(
     options: BannerOptions,
     collapseWhenEmpty: Boolean,
     shimmer: Boolean = ViewsRuntime.showsLoading(placement.key),
+    existing: BannerAdHandle? = null,
+    keep: Boolean = false,
     onState: (BannerState) -> Unit = {},
 ): BannerAdHandle {
     val activity = checkNotNull(context.findActivity()) { "attachBanner(): the container isn't inside an Activity" }
-    val handle = ViewsRuntime.client.banner.create(activity, placement, options)
+    val handle = existing?.also { AdroitInternal.showBannerIn(it, activity) }
+        ?: ViewsRuntime.client.banner.create(activity, placement, options)
+    (handle.view.parent as? ViewGroup)?.removeView(handle.view)
     addView(handle.view)
     val shimmerView = if (shimmer) addBannerShimmer(handle) else null
-    handle.bindTo(owner)
+    if (keep) {
+        owner.lifecycle.addObserver(
+            object : LifecycleEventObserver {
+                override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                    if (event != Lifecycle.Event.ON_DESTROY) return
+                    source.lifecycle.removeObserver(this)
+                    AdroitInternal.parkBanner(handle)
+                }
+            },
+        )
+    } else {
+        handle.bindTo(owner)
+    }
     owner.lifecycleScope.launch {
         owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             handle.state.collect { state ->

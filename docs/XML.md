@@ -41,8 +41,10 @@ with that owner. An unknown key logs an error and the view stays `GONE`; it neve
 | `adroit_layout` | your own layout, using the standard template IDs (`adroit_native_headline`, `_body`, `_cta`, `_icon`, `_media`, `_advertiser`, `_stars`, `_price`, `_store`, `_attribution`) |
 
 From code: `setPlacement(placement)` or `setPlacement(placement, layout)`. It loads when attached, renders, and is
-`GONE` if the load fails. It loads a new ad after a configuration change: for ads that must survive rotation, use
-`NativeAdHolder`.
+`GONE` if the load fails. The ad is kept by its screen: a ViewModel of the view tree's `ViewModelStoreOwner` (the Fragment inside a
+Fragment, otherwise the Activity), one per placement and view `android:id`. Coming back to the screen (another tab,
+a Fragment's view recreated) and rotation show the same ad, with no new request; it's destroyed when the screen is
+cleared. Only `load(refresh = true)` asks for another.
 
 ## Extensions
 
@@ -87,6 +89,9 @@ Fragment, pass `requireActivity()`. Show them from click handlers or ViewModel e
 
 - Fragment views are destroyed and recreated more often than the Fragment: use `viewLifecycleOwner` for everything
   view-bound, and create views and collect flows in `onViewCreated`.
+- `AdBannerView`, `AdNativeView` and `AdSlotView` keep their ads for the Fragment, not its view: a tab that keeps its
+  Fragment (Navigation's bottom navigation, or `detach`/`attach`) shows the same ads when you come back. With
+  `replace()`, the Fragment itself is destroyed, and its ads with it.
 - `sample-xml` shows each pattern: a banner in XML and one attached from code, a native feed with holders in a
   ViewModel, the rewarded interstitial intro as a `DialogFragment`, and a settings screen with the privacy options
   button.

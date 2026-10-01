@@ -12,6 +12,7 @@ import io.github.thesobiaakbar.adroit.NativeAdLayout
 import io.github.thesobiaakbar.adroit.NativeAdResult
 import io.github.thesobiaakbar.adroit.NativePlacement
 import io.github.thesobiaakbar.adroit.NativeStyle
+import io.github.thesobiaakbar.adroit.views.internal.ViewAdRetainer
 import io.github.thesobiaakbar.adroit.views.internal.ViewsRuntime
 
 /**
@@ -23,15 +24,19 @@ import io.github.thesobiaakbar.adroit.views.internal.ViewsRuntime
  *     app:adroit_placement="feed_native"
  *     app:adroit_template="large_button_bottom" />
  * ```
- * When attached to a window, it loads and renders the ad for its view tree's `LifecycleOwner` (the Fragment's view
- * lifecycle inside a Fragment) and destroys it with that owner. It's GONE if the load fails.
+ * When attached to a window, it loads and renders the ad. The ad is kept by its screen: a ViewModel of the view tree's
+ * `ViewModelStoreOwner` (the Fragment inside a Fragment, otherwise the Activity), one per placement and view id. When
+ * the screen's views are created again (coming back to a Fragment, rotation), the new view shows the same ad with no
+ * new request; it's destroyed when the screen is cleared. Only [load] with `refresh = true` asks for another. Give
+ * each view of the same placement on a screen its own `android:id`. Without a `ViewModelStoreOwner`, the ad is
+ * destroyed with the view tree's `LifecycleOwner` instead. It's GONE if the load fails.
  *
  * Attributes: `adroit_placement` (the placement key), `adroit_template` (small, medium or large;
  * without it, the placement's configured style decides, so the configuration or Firebase can change it), or
  * `adroit_layout`: your own layout, which must use the standard template IDs (see [NativeTemplates]).
  *
- * An invalid key or no `LifecycleOwner` is logged as an error and the view stays GONE; it never crashes. For ads
- * that must survive rotation without reloading, use [NativeAdHolder] from a ViewModel instead. Main thread only.
+ * An invalid key or no `LifecycleOwner` is logged as an error and the view stays GONE; it never crashes. Main thread
+ * only.
  */
 public class AdNativeView @JvmOverloads constructor(
     context: Context,
@@ -50,6 +55,12 @@ public class AdNativeView @JvmOverloads constructor(
 
     /** Bumped when the view drops its ad ([setPlacement], [release]), so an older request's ad is destroyed. */
     private var generation = 0
+
+    /** Set by [AdSlotView]: its id, which names this view's slot instead of the view's own. */
+    internal var slotId: Int = NO_ID
+
+    /** The screen's retainer and this view's slot in it, once attached to a screen that keeps ads. */
+    private var retained: Pair<ViewAdRetainer, String>? = null
 
     init {
         readAttributes(attrs)
@@ -85,6 +96,7 @@ public class AdNativeView @JvmOverloads constructor(
 
     /** Destroys the current ad now, for a container that removes this view for good ([AdSlotView]). */
     internal fun release() {
+        dropRetained()
         generation++
         loading = false
         boundOwner = null
@@ -100,16 +112,18 @@ public class AdNativeView @JvmOverloads constructor(
     public fun setPlacement(placement: NativePlacement, layout: NativeAdLayout? = this.layout) {
         this.placement = placement
         this.layout = layout
+        dropRetained()
         generation++
         loading = false
         boundOwner = null
         current?.destroy()
         current = null
-        if (isAttachedToWindow) load()
+        if (isAttachedToWindow && !bindRetained()) load()
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        if (bindRetained()) return
         val owner = boundOwner
         if (owner == null || owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
             // The ad went with its previous owner: this attach is a new screen.
@@ -133,6 +147,10 @@ public class AdNativeView @JvmOverloads constructor(
      */
     @JvmOverloads
     public fun load(refresh: Boolean = false) {
+        retained?.let { (retainer, slot) ->
+            retainer.natives[slot]?.load(refresh)
+            return
+        }
         val placement = placement ?: return
         if (!isAttachedToWindow || loading) return
         val shown = current?.takeUnless { it.isDestroyed }
@@ -170,6 +188,27 @@ public class AdNativeView @JvmOverloads constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Shows this view's slot of its screen's [ViewAdRetainer]: the ad it keeps, or a new one it loads. False when
+     * there's no placement, `ViewModelStoreOwner` or `LifecycleOwner`.
+     */
+    private fun bindRetained(): Boolean {
+        val placement = placement ?: return false
+        val retainer = ViewAdRetainer.of(this) ?: return false
+        val owner = findViewTreeLifecycleOwner() ?: return false
+        val slot = ViewAdRetainer.slot(placement.key, if (slotId != NO_ID) slotId else id)
+        retained = retainer to slot
+        retainer.natives.getOrPut(slot) { NativeAdHolder(placement) }.bindTo(this, owner, layout)
+        return true
+    }
+
+    /** Destroys the ad this view's slot keeps, for a new placement or a removed view. */
+    private fun dropRetained() {
+        val (retainer, slot) = retained ?: return
+        retained = null
+        retainer.natives.remove(slot)?.clear()
     }
 
     private companion object {

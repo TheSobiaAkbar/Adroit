@@ -25,7 +25,8 @@ import kotlinx.coroutines.launch
  * ```
  * A Firebase value can swap the placement between banner and native (docs/AD_PROFILES.md, "Swapping formats"). This
  * view then replaces its [AdBannerView] with an [AdNativeView] or back, while attached. Size and template come from
- * the placement's style. It's GONE while the placement is neither, or unknown. Main thread only.
+ * the placement's style. It's GONE while the placement is neither, or unknown. Like its children, it keeps its ad
+ * for its screen (see [AdBannerView] and [AdNativeView]): give it an `android:id`. Main thread only.
  */
 public class AdSlotView @JvmOverloads constructor(
     context: Context,
@@ -109,8 +110,9 @@ public class AdSlotView @JvmOverloads constructor(
         reset()
         shown = format
         val child = when (format) {
-            AdFormat.BANNER -> AdBannerView(context).apply { setPlacement(BannerPlacement(key)) }
-            AdFormat.NATIVE -> AdNativeView(context).apply { setPlacement(NativePlacement(key)) }
+            // The slot's id names the child's slot in its screen, which keeps the ad across view recreation.
+            AdFormat.BANNER -> AdBannerView(context).apply { slotId = this@AdSlotView.id; setPlacement(BannerPlacement(key)) }
+            AdFormat.NATIVE -> AdNativeView(context).apply { slotId = this@AdSlotView.id; setPlacement(NativePlacement(key)) }
             else -> null
         }
         if (child == null) {

@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.FrameLayout
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import io.github.thesobiaakbar.adroit.AdError
 import io.github.thesobiaakbar.adroit.BannerAdHandle
@@ -12,6 +15,7 @@ import io.github.thesobiaakbar.adroit.BannerPlacement
 import io.github.thesobiaakbar.adroit.BannerSize
 import io.github.thesobiaakbar.adroit.CollapsibleBannerPosition
 import io.github.thesobiaakbar.adroit.BannerState
+import io.github.thesobiaakbar.adroit.views.internal.ViewAdRetainer
 import io.github.thesobiaakbar.adroit.views.internal.ViewsRuntime
 import kotlin.math.roundToInt
 
@@ -23,8 +27,12 @@ import kotlin.math.roundToInt
  *     android:layout_height="wrap_content"
  *     app:adroit_placement="home_banner" />
  * ```
- * When attached to a window, it finds its `LifecycleOwner` (`findViewTreeLifecycleOwner()`, which is the Fragment's
- * view lifecycle inside a Fragment), creates the banner and destroys it when that owner is destroyed.
+ * When attached to a window, it creates the banner. The banner is kept by its screen: a ViewModel of the view tree's
+ * `ViewModelStoreOwner` (the Fragment inside a Fragment, otherwise the Activity), one per placement and view id. When
+ * the screen's views are destroyed (another tab, rotation) the banner goes off screen with its ad, and the new view
+ * shows the same ad with no new request; it's destroyed when the screen is cleared. Only [load] with
+ * `refresh = true` asks for another. Give each view of the same placement on a screen its own `android:id`. Without
+ * a `ViewModelStoreOwner`, the banner is destroyed with the view tree's `LifecycleOwner` instead.
  *
  * Attributes: `adroit_placement` (the placement key), `adroit_bannerSize` (anchoredAdaptive,
  * inlineAdaptive, mediumRectangle, standard, collapsibleBottom or collapsibleTop; without it, the placement's
@@ -46,6 +54,15 @@ public class AdBannerView @JvmOverloads constructor(
 
     /** A banner loading in the background to replace [handle] (`load(refresh = true)`); invisible until it's loaded. */
     private var incoming: BannerAdHandle? = null
+
+    /** Set by [AdSlotView]: its id, which names this view's slot instead of the view's own. */
+    internal var slotId: Int = NO_ID
+
+    /** The screen's retainer and this view's slot in it, once the banner is kept by a screen. */
+    private var retained: Pair<ViewAdRetainer, String>? = null
+
+    /** The owner [handle] was attached for; once it's destroyed, a kept banner is off screen, in its retainer. */
+    private var bannerOwner: LifecycleOwner? = null
 
     /** The current banner, or null before it's created (on attach) or after a failed setup. */
     internal val bannerHandle: BannerAdHandle? get() = handle
@@ -96,6 +113,7 @@ public class AdBannerView @JvmOverloads constructor(
     public fun setPlacement(placement: BannerPlacement, options: BannerOptions = this.options) {
         this.placement = placement
         this.options = options
+        dropRetained()
         handle?.destroy()
         handle = null
         dropIncoming()
@@ -104,6 +122,7 @@ public class AdBannerView @JvmOverloads constructor(
 
     /** Destroys the current banner now, for a container that removes this view for good ([AdSlotView]). */
     internal fun release() {
+        dropRetained()
         dropIncoming()
         handle?.destroy()
         handle = null
@@ -143,6 +162,8 @@ public class AdBannerView @JvmOverloads constructor(
         super.onAttachedToWindow()
         // A banner destroyed with its previous owner (Hidden(null)) is replaced when the view is attached again.
         if (handle?.state?.value == BannerState.Hidden(null)) handle = null
+        // Kept by its screen and parked with its previous owner: createBanner shows it again.
+        if (bannerOwner?.lifecycle?.currentState == Lifecycle.State.DESTROYED) handle = null
         if (handle == null) createBanner()
     }
 
@@ -154,23 +175,51 @@ public class AdBannerView @JvmOverloads constructor(
             visibility = GONE
             return
         }
+        val retainer = ViewAdRetainer.of(this)
+        val slot = ViewAdRetainer.slot(placement.key, if (slotId != NO_ID) slotId else id)
+        val kept = retainer?.banners?.get(slot)?.takeUnless { it.state.value == BannerState.Hidden(null) }
         // The collector can emit before attachBanner returns: until then, [created] is null and the state is this banner's.
         var created: BannerAdHandle? = null
-        created = attachBanner(owner, placement, options, collapseWhenEmpty = false) { state ->
+        created = attachBanner(owner, placement, options, collapseWhenEmpty = false, existing = kept, keep = retainer != null) { state ->
             onBannerState(created, state, placement)
         }
         handle = created
+        bannerOwner = owner
+        if (retainer != null) {
+            retainer.banners[slot] = created
+            retained = retainer to slot
+        }
+    }
+
+    /** Destroys nothing itself: forgets this view's slot in its screen, whose banner the caller destroys. */
+    private fun dropRetained() {
+        val (retainer, slot) = retained ?: return
+        retained = null
+        retainer.banners.remove(slot)
     }
 
     /** Loads a new banner under the shown one; swaps them once it's loaded, or drops it if it fails. */
     private fun refreshBanner(placement: BannerPlacement) {
         val owner = findViewTreeLifecycleOwner() ?: return
         var created: BannerAdHandle? = null
-        created = attachBanner(owner, placement, options, collapseWhenEmpty = false, shimmer = false) { state ->
+        val keep = retained != null
+        created = attachBanner(owner, placement, options, collapseWhenEmpty = false, shimmer = false, keep = keep) { state ->
             // Before attachBanner returns, the state is the new banner's own first one (Loading): nothing to do.
             created?.let { onBannerState(it, state, placement) }
         }
         val next = checkNotNull(created)
+        // A refresh doesn't outlive the view it was asked in: a kept banner's screen would never show or destroy it.
+        if (keep) {
+            owner.lifecycle.addObserver(
+                object : LifecycleEventObserver {
+                    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                        if (event != Lifecycle.Event.ON_DESTROY) return
+                        source.lifecycle.removeObserver(this)
+                        if (incoming === next) dropIncoming()
+                    }
+                },
+            )
+        }
         // Laid out (it needs its width to load) but not seen until it replaces the current banner.
         next.view.visibility = INVISIBLE
         incoming = next
@@ -190,6 +239,7 @@ public class AdBannerView @JvmOverloads constructor(
                     val old = handle
                     handle = candidate
                     incoming = null
+                    retained?.let { (retainer, slot) -> retainer.banners[slot] = candidate }
                     candidate.view.visibility = VISIBLE
                     old?.destroy()
                     visibility = VISIBLE

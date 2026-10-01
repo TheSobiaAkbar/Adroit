@@ -36,7 +36,7 @@ class AdBannerViewInflationTest {
     private fun idle() = shadowOf(Looper.getMainLooper()).idle()
 
     @Test
-    fun `inflated with attrs and attached - banner created with those options and bound to the Activity`() {
+    fun `inflated with attrs and attached - banner created with those options, kept by the Activity's screen`() {
         val controller = Robolectric.buildActivity(FragmentActivity::class.java).setup()
         val activity = controller.get()
         activity.setContentView(R.layout.adroit_test_banners)
@@ -48,10 +48,9 @@ class AdBannerViewInflationTest {
         val handle = byPlacement.first().handle
         assertSame(handle, mrec.bannerHandle)
         assertSame(mrec, handle.view.parent)
-        assertSame(activity, handle.boundOwner)
 
         controller.pause().stop().destroy()
-        assertTrue("destroyed with its owner", client.banner.created.all { it.handle.isDestroyed })
+        assertTrue("destroyed when the screen's ViewModels are cleared", client.banner.created.all { it.handle.isDestroyed })
     }
 
     @Test
