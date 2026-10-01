@@ -6,6 +6,7 @@ import io.github.thesobiaakbar.adroit.AdAvailability
 import io.github.thesobiaakbar.adroit.AdError
 import io.github.thesobiaakbar.adroit.AdsState
 import io.github.thesobiaakbar.adroit.Adroit
+import io.github.thesobiaakbar.adroit.AdroitInternal
 import io.github.thesobiaakbar.adroit.FullScreenResult
 import io.github.thesobiaakbar.adroit.InterstitialPlacement
 import io.github.thesobiaakbar.adroit.UnavailableReason
@@ -24,7 +25,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 /** Remote overrides and event listeners through the whole runtime, as configured by the host. */
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class, io.github.thesobiaakbar.adroit.InternalAdroitApi::class)
 @RunWith(RobolectricTestRunner::class)
 class RemoteConfigRuntimeTest {
     private val level = InterstitialPlacement("level")
@@ -123,5 +124,21 @@ class RemoteConfigRuntimeTest {
             assertTrue("a Loaded event reached the listeners", "first:Loaded" in calls)
             assertEquals(setOf(Looper.getMainLooper().thread), threads)
             assertTrue(h.bus.recent().any { it is AdEvent.Loaded })
+        }
+
+    @Test
+    fun `a provider collected by initialize sees the configured placements - Firebase reads every ad's parameter`() =
+        runTest {
+            val h = RuntimeHarness(this)
+            var keysSeen: Set<String>? = null
+            val provider = AdConfigProvider {
+                kotlinx.coroutines.flow.flow {
+                    keysSeen = AdroitInternal.configuredPlacementFormats().keys
+                    emit(AdOverrides())
+                }
+            }
+            Adroit.initialize(h.app, testConfig(h.logs) { remoteConfig = provider }) { _, _ -> h.deps() }
+            h.settle()
+            assertEquals(setOf("level"), keysSeen)
         }
 }

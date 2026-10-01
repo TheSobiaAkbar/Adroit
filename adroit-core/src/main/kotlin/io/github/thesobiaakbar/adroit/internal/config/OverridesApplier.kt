@@ -10,6 +10,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 
 /**
  * Applies the host's remote overrides (architecture §21): collects [provider] in the library [scope] (main thread),
@@ -34,6 +35,11 @@ internal class OverridesApplier(
         if (job != null) return
         job = scope.launch {
             try {
+                // The scope's dispatcher is immediate, and start() runs inside initialize(): without this, providers
+                // would be collected before initialize() returns, when Adroit has no runtime yet, and
+                // AdroitInternal.configuredPlacementFormats() would be empty (FirebaseRemoteConfigProvider would then
+                // read no ad's parameter for the whole session).
+                yield()
                 provider.overrides().collect(::apply)
             } catch (e: CancellationException) {
                 throw e

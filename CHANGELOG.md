@@ -6,6 +6,12 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Fixed
+- Per-ad Firebase values (`"style"`, `"showLoading"`, `"enabled"`, ad unit IDs, …) were ignored for the whole session:
+  the remote provider was collected inside `initialize()`, before the configured placements were known, so
+  `FirebaseRemoteConfigProvider` read no ad's parameter. Only `AdSettings` applied. Providers are now collected
+  right after `initialize()` returns.
+
 ## [1.0.0-rc2] - 2026-09-30
 
 ### Changed
