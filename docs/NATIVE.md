@@ -293,12 +293,12 @@ views, hides views whose asset is missing, and creates the media view inside `me
 ## Lifecycle and memory
 
 - A native ad must be destroyed when it's no longer shown; the library does it for you: `AdNative` when the screen's
-  ViewModel is cleared, `AdNativeView` when its screen's ViewModel is cleared, `attachNativeAd` when its lifecycle owner is destroyed, `NativeAdHolder`
-  on `clear()`. If you call `native.load` yourself, you own the handle: call `destroy()`.
+  ViewModel is cleared, `AdNativeView` and `attachNativeAd` (into a container with an id) when their screen's ViewModel is cleared,
+  `NativeAdHolder` on `clear()`. If you call `native.load` yourself, you own the handle: call `destroy()`.
 - `AdNative` and `rememberNativeAd` keep every slot's ad until the screen's ViewModel is cleared, however many
   slots the screen has.
-- Rotation: `AdNative`, `rememberNativeAd`, `AdNativeView` and `NativeAdHolder` re-render the same ad.
-  `attachNativeAd` loads a new one; use a holder where that matters.
+- Rotation: `AdNative`, `rememberNativeAd`, `AdNativeView`, `NativeAdHolder` and `attachNativeAd` (into a container
+  with an id) re-render the same ad. A new one comes only when you ask: `refresh = true`, or a new `refreshKey`.
 - Each placement keeps a small pool (`poolSize`, default 1, at most 3). Don't cache more ads than you're about to show.
 
 ## State and events
@@ -322,8 +322,8 @@ Google's native ad requirements ([native policies](https://support.google.com/ad
 
 ## FAQ
 
-**Every rotation loads a new ad.** Use `AdNative`, `AdNativeView`, or a `NativeAdHolder` in a ViewModel, instead of
-`attachNativeAd`.
+**Every rotation loads a new ad.** `attachNativeAd`'s container has no `android:id`: give it one. Or use `AdNative`,
+`AdNativeView`, or a `NativeAdHolder` in a ViewModel.
 
 **Logcat warns about retained native ads, or memory grows.** Something holds handles without destroying them: see
 [Troubleshooting](TROUBLESHOOTING.md#memory-warnings-with-native-ads).

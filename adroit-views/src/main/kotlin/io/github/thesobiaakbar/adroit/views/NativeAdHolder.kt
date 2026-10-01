@@ -46,6 +46,15 @@ public class NativeAdHolder(private val placement: NativePlacement) {
     /** Bumped by [clear], so a load that completes afterwards is destroyed instead of kept. */
     private var generation = 0
 
+    /** For `attachNativeAd`: called once with the next result shown (rendered, or failed), then dropped. */
+    internal var onNextResult: ((NativeAdResult) -> Unit)? = null
+
+    private fun deliver(result: NativeAdResult) {
+        val listener = onNextResult ?: return
+        onNextResult = null
+        listener(result)
+    }
+
     /**
      * Renders the held ad into [container], or loads one first if there's none. [container] is GONE while no ad can
      * be shown. With no [layout], the template matching the placement's configured style is used.
@@ -67,6 +76,7 @@ public class NativeAdHolder(private val placement: NativePlacement) {
         val held = handle?.takeUnless { it.isDestroyed }
         if (held != null) {
             render(newTarget, held)
+            if (handle != null) deliver(NativeAdResult.Loaded(held))
         } else {
             handle = null
             // Also after a rotation during the load: the new container shows the shimmer until the ad arrives.
@@ -116,6 +126,7 @@ public class NativeAdHolder(private val placement: NativePlacement) {
                 is NativeAdResult.Loaded -> {
                     handle = result.handle
                     target?.let { render(it, result.handle) }
+                    deliver(result)
                     // Only now: the old ad stayed on screen until its replacement arrived.
                     if (replacing != null && replacing !== result.handle) replacing.destroy()
                 }
@@ -124,6 +135,7 @@ public class NativeAdHolder(private val placement: NativePlacement) {
                         removeNativeShimmer(it)
                         it.visibility = View.GONE
                     }
+                    deliver(result)
                 } else {
                     ViewsRuntime.debug("NativeAdHolder(${placement.key}): refresh not loaded; keeping the current ad")
                 }

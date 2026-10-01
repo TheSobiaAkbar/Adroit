@@ -195,7 +195,7 @@ public class AdBannerView @JvmOverloads constructor(
         val kept = retainer?.banners?.get(slot)?.takeUnless { it.state.value == BannerState.Hidden(null) }
         // The collector can emit before attachBanner returns: until then, [created] is null and the state is this banner's.
         var created: BannerAdHandle? = null
-        created = attachBanner(owner, placement, options, collapseWhenEmpty = false, existing = kept, keep = retainer != null) { state ->
+        created = attachBanner(owner, placement, options, collapseWhenEmpty = { false }, existing = kept, keep = retainer != null) { state ->
             onBannerState(created, state, placement)
         }
         handle = created
@@ -220,7 +220,7 @@ public class AdBannerView @JvmOverloads constructor(
         val owner = findViewTreeLifecycleOwner() ?: return
         var created: BannerAdHandle? = null
         val keep = retained != null
-        created = attachBanner(owner, placement, options, collapseWhenEmpty = false, shimmer = false, keep = keep) { state ->
+        created = attachBanner(owner, placement, options, collapseWhenEmpty = { false }, shimmer = false, keep = keep) { state ->
             // Before attachBanner returns, the state is the new banner's own first one (Loading): nothing to do.
             created?.let { onBannerState(it, state, placement) }
         }

@@ -14,8 +14,10 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 - `app:adroit_refresh` (and `refreshOnShow`) on `AdBannerView`, `AdNativeView` and `AdSlotView`: ask for a new ad
   each time the view is created again; the shown one stays until the new one replaces it. Default false.
 - `slotKey` on the three views: names a view's ad on its screen (default: its `android:id`), for views made in code.
-- `attachBanner` into a container with an `android:id` keeps its banner for the screen too: rotation shows the same
-  banner.
+- `attachBanner` and `attachNativeAd` into a container with an `android:id` keep their ad for the screen too:
+  rotation shows the same ad. Both take `refresh` (default false): a new ad loads while the shown one stays, replaces
+  it once loaded, and the old one is destroyed then. Java callers of `attachNativeAd` with `onResult` now pass
+  `refresh` before it.
 - `sample-xml`'s tabs keep their Fragments (`detach`/`attach` instead of `replace`), as Navigation does.
 
 ### Fixed

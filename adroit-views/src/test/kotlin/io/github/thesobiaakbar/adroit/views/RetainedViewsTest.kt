@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import io.github.thesobiaakbar.adroit.BannerState
+import io.github.thesobiaakbar.adroit.NativeAdResult
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,6 +35,18 @@ class AttachBannerActivity : FragmentActivity() {
         val container = FrameLayout(this).apply { id = CONTAINER_ID }
         setContentView(container)
         container.attachBanner(this, HOME)
+    }
+}
+
+/** A native ad attached from code into a container with an id; records each onResult. */
+class AttachNativeActivity : FragmentActivity() {
+    val results = mutableListOf<NativeAdResult>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val container = FrameLayout(this).apply { id = CONTAINER_ID }
+        setContentView(container)
+        container.attachNativeAd(this, FEED) { results += it }
     }
 }
 
@@ -163,6 +177,64 @@ class RetainedViewsTest {
         assertFalse(first.isDestroyed)
         assertTrue("replaced once its successor arrived", second.isDestroyed)
         assertSame(first, client.native.renders.first { it.handle === first }.handle)
+    }
+
+    @Test
+    fun `attachNativeAd into a container with an id - rotation shows the same ad, refresh replaces it, finishing destroys it`() {
+        val controller = Robolectric.buildActivity(AttachNativeActivity::class.java).setup()
+        idle()
+        val first = client.native.handles.single()
+        assertEquals(listOf(first), controller.get().results.map { (it as NativeAdResult.Loaded).handle })
+
+        controller.recreate()
+        idle()
+        assertEquals(1, client.native.loadCount)
+        assertEquals("onResult called again, with the same ad", listOf(first), controller.get().results.map { (it as NativeAdResult.Loaded).handle })
+
+        val container = controller.get().findViewById<FrameLayout>(CONTAINER_ID)
+        client.native.deliverImmediately = false
+        container.attachNativeAd(controller.get(), FEED, refresh = true)
+        assertEquals(2, client.native.loadCount)
+        assertFalse("shown until its successor arrives", first.isDestroyed)
+        client.native.deliverPending()
+        idle()
+        val second = client.native.handles.last()
+        assertTrue(first.isDestroyed)
+        assertSame(second, client.native.renders.last().handle)
+
+        controller.get().finish()
+        controller.pause().stop().destroy()
+        assertTrue(second.isDestroyed)
+    }
+
+    @Test
+    fun `attachBanner with refresh - the shown banner stays until the new one is loaded, then it's destroyed`() {
+        val controller = Robolectric.buildActivity(AttachBannerActivity::class.java).setup()
+        idle()
+        val activity = controller.get()
+        val container = activity.findViewById<FrameLayout>(CONTAINER_ID)
+        val first = client.banner.created.single().handle
+        first.state.value = BannerState.Loaded
+        idle()
+
+        assertSame(first, container.attachBanner(activity, HOME))
+        assertEquals("no refresh, no request", 1, client.banner.created.size)
+
+        assertSame("returns the banner shown now", first, container.attachBanner(activity, HOME, refresh = true))
+        idle()
+        val second = client.banner.created.last().handle
+        assertEquals(2, client.banner.created.size)
+        assertFalse(first.isDestroyed)
+
+        second.state.value = BannerState.Loaded
+        idle()
+        assertTrue("replaced once the new one loaded", first.isDestroyed)
+        assertSame(second, container.attachBanner(activity, HOME))
+
+        controller.recreate()
+        idle()
+        assertEquals("the refreshed banner is the one kept", 2, client.banner.created.size)
+        assertSame(second.view, controller.get().findViewById<FrameLayout>(CONTAINER_ID).getChildAt(0))
     }
 
     private companion object {

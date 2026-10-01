@@ -27,18 +27,17 @@ import kotlinx.coroutines.launch
  * `ViewModelStoreOwner`: the Fragment, or the Activity): when [owner] is destroyed (a Fragment's view, or the Activity
  * on rotation) the banner goes off screen with its ad, and calling this again for the new container shows the same
  * ad, with no new request. It's destroyed when the screen is cleared. Without an id, or a `ViewModelStoreOwner`, it's
- * destroyed with [owner]. To replace a shown banner with a new one, use an [AdBannerView] and its
- * `load(refresh = true)`.
+ * destroyed with [owner].
+ *
+ * One banner per container and placement: another call returns the banner shown and asks for nothing, unless
+ * [refresh] is true. With [refresh], a new banner loads unseen while the shown one stays, replaces it once loaded, and
+ * the old one is destroyed then; if it fails, the shown one stays. A banner still loading is left alone, and a failed
+ * one is replaced by a new request. The returned handle is the banner shown now.
  *
  * In a Fragment, pass `viewLifecycleOwner`, so the banner leaves the screen in `onDestroyView`:
  * `binding.adContainer.attachBanner(viewLifecycleOwner, Placements.HomeBanner)`.
  *
  * Banners belong in fixed containers; don't put them in a `RecyclerView`. Main thread only.
- *
- * One banner per container and placement: calling this again while the banner this container got for [placement]
- * is loading, shown, or hidden while ads are blocked returns that banner instead of requesting another. After a
- * failed load, the failed banner is destroyed and a new one requested. To replace a shown banner with a new one, use
- * [AdBannerView.load] with `refresh = true`.
  *
  * @throws IllegalStateException if this container isn't inside an Activity.
  */
@@ -47,6 +46,7 @@ public fun ViewGroup.attachBanner(
     owner: LifecycleOwner,
     placement: BannerPlacement,
     options: BannerOptions = BannerOptions(),
+    refresh: Boolean = false,
 ): BannerAdHandle {
     val attached = getTag(R.id.adroit_attached_banner) as? AttachedBanner
     if (attached != null && attached.placement == placement) {
@@ -54,7 +54,11 @@ public fun ViewGroup.attachBanner(
             BannerState.Hidden(null) -> Unit
             is BannerState.Failed -> attached.handle.destroy()
             else -> {
-                ViewsRuntime.debug("attachBanner(${placement.key}): this container already has its banner; not requesting another")
+                if (refresh) {
+                    refreshAttached(owner, attached, options)
+                } else {
+                    ViewsRuntime.debug("attachBanner(${placement.key}): this container already has its banner; not requesting another")
+                }
                 return attached.handle
             }
         }
@@ -68,26 +72,79 @@ public fun ViewGroup.attachBanner(
             else -> banner
         }
     }
-    return attachBanner(owner, placement, options, collapseWhenEmpty = true, existing = kept, keep = retainer != null).also {
-        retainer?.banners?.put(slot, it)
-        setTag(R.id.adroit_attached_banner, AttachedBanner(placement, it))
-    }
+    val handle = attachBanner(owner, placement, options, collapseWhenEmpty = { true }, existing = kept, keep = retainer != null)
+    retainer?.banners?.put(slot, handle)
+    val record = AttachedBanner(placement, handle, retainer?.let { it to slot })
+    setTag(R.id.adroit_attached_banner, record)
+    if (kept != null && refresh) refreshAttached(owner, record, options)
+    return handle
 }
 
 /** The banner [attachBanner] put in a container, so a second call for the same placement reuses it. */
-private class AttachedBanner(val placement: BannerPlacement, val handle: BannerAdHandle)
+private class AttachedBanner(
+    val placement: BannerPlacement,
+    var handle: BannerAdHandle,
+    /** The screen's retainer and slot that keep [handle], or null when [handle] goes with its owner. */
+    val retained: Pair<ViewAdRetainer, String>?,
+) {
+    /** A refresh loading unseen, which replaces [handle] once loaded. */
+    var incoming: BannerAdHandle? = null
+}
 
-/**
- * Shows [existing] (a banner its screen keeps, put back on screen with its ad) or a new banner in this container.
- * With [keep], [owner]'s destruction only takes the banner off screen (parked, its ad kept) for its screen to show
- * again; otherwise it destroys the banner.
- */
+/** Loads a new banner under [record]'s shown one, which stays until the new one is loaded; then destroys it. */
+private fun ViewGroup.refreshAttached(owner: LifecycleOwner, record: AttachedBanner, options: BannerOptions) {
+    if (record.incoming != null || record.handle.state.value != BannerState.Loaded) return
+    var promoted = false
+    var next: BannerAdHandle? = null
+    next = attachBanner(
+        owner, record.placement, options, collapseWhenEmpty = { promoted }, shimmer = false, keep = record.retained != null,
+    ) { state ->
+        val candidate = next ?: return@attachBanner
+        if (record.incoming !== candidate) return@attachBanner
+        when (state) {
+            BannerState.Loading -> Unit
+            BannerState.Loaded -> {
+                promoted = true
+                val old = record.handle
+                record.handle = candidate
+                record.incoming = null
+                record.retained?.let { (retainer, slot) -> retainer.banners[slot] = candidate }
+                candidate.view.visibility = View.VISIBLE
+                old.destroy()
+                ViewsRuntime.debug("attachBanner(${record.placement.key}): refreshed")
+            }
+            is BannerState.Failed, is BannerState.Hidden -> {
+                ViewsRuntime.debug("attachBanner(${record.placement.key}): refresh not loaded; keeping the current banner")
+                record.incoming = null
+                candidate.destroy()
+            }
+        }
+    }
+    val incoming = checkNotNull(next)
+    // Laid out (it needs its width to load) but not seen until it replaces the shown banner.
+    incoming.view.visibility = View.INVISIBLE
+    record.incoming = incoming
+    // A refresh doesn't outlive the views it was asked for: the screen would never show or destroy it.
+    owner.lifecycle.addObserver(
+        object : LifecycleEventObserver {
+            override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                if (event != Lifecycle.Event.ON_DESTROY) return
+                source.lifecycle.removeObserver(this)
+                if (record.incoming === incoming) {
+                    record.incoming = null
+                    incoming.destroy()
+                }
+            }
+        },
+    )
+}
+
 @OptIn(InternalAdroitApi::class)
 internal fun ViewGroup.attachBanner(
     owner: LifecycleOwner,
     placement: BannerPlacement,
     options: BannerOptions,
-    collapseWhenEmpty: Boolean,
+    collapseWhenEmpty: () -> Boolean,
     shimmer: Boolean = ViewsRuntime.showsLoading(placement.key),
     existing: BannerAdHandle? = null,
     keep: Boolean = false,
@@ -115,7 +172,7 @@ internal fun ViewGroup.attachBanner(
     owner.lifecycleScope.launch {
         owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             handle.state.collect { state ->
-                if (collapseWhenEmpty) handle.view.visibility = if (state.hasNoAd()) View.GONE else View.VISIBLE
+                if (collapseWhenEmpty()) handle.view.visibility = if (state.hasNoAd()) View.GONE else View.VISIBLE
                 shimmerView?.visibility = if (state == BannerState.Loading) View.VISIBLE else View.GONE
                 onState(state)
             }

@@ -62,16 +62,16 @@ From code: `setPlacement(placement)` or `setPlacement(placement, layout)`. It lo
 ## Extensions
 
 ```kotlin
-fun ViewGroup.attachBanner(owner: LifecycleOwner, placement: BannerPlacement, options: BannerOptions = …): BannerAdHandle
+fun ViewGroup.attachBanner(owner: LifecycleOwner, placement: BannerPlacement, options: BannerOptions = …,
+    refresh: Boolean = false): BannerAdHandle
 fun ViewGroup.attachNativeAd(owner: LifecycleOwner, placement: NativePlacement, layout: NativeAdLayout = …,
-    renderer: NativeAdRenderer? = null, onResult: (NativeAdResult) -> Unit = {})
+    renderer: NativeAdRenderer? = null, refresh: Boolean = false, onResult: (NativeAdResult) -> Unit = {})
 ```
 
-Both add the ad to the container. `attachBanner` into a container with an `android:id` keeps its banner for the
-screen like `AdBannerView`: call it again for the new container (in `onViewCreated`, or `onCreate` after a rotation)
-and the same banner shows, with no new request. `attachNativeAd` destroys its ad when `owner` is destroyed; for a
-native ad that stays, use `AdNativeView` or a `NativeAdHolder`. To replace a shown ad, use the views'
-`load(refresh = true)`. In a Fragment, always pass `viewLifecycleOwner`:
+Both add the ad to the container and follow [How long an ad stays](#how-long-an-ad-stays) when the container has an
+`android:id`: call them again for the new container (in `onViewCreated`, or `onCreate` after a rotation) and the same
+ad shows, with no new request. Call one with `refresh = true` to ask for a new ad: the shown one stays until the new
+one replaces it. Without an id, the ad is destroyed with `owner`. In a Fragment, always pass `viewLifecycleOwner`:
 
 <!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Banner.kt#fragment-attach -->
 ```kotlin

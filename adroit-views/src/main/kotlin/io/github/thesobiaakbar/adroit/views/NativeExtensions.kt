@@ -14,22 +14,28 @@ import io.github.thesobiaakbar.adroit.NativeAdLayout
 import io.github.thesobiaakbar.adroit.NativeAdRenderer
 import io.github.thesobiaakbar.adroit.NativeAdResult
 import io.github.thesobiaakbar.adroit.NativePlacement
+import io.github.thesobiaakbar.adroit.views.internal.ViewAdRetainer
 import io.github.thesobiaakbar.adroit.views.internal.ViewsRuntime
 import kotlinx.coroutines.launch
 
 /**
  * Loads a native ad for [placement] and renders it into this container with [layout], replacing its children. With
  * no [layout], the template matching the placement's configured style is used ([NativeTemplates.forStyle]), so the
- * configuration (or Firebase) can change it. The
- * ad is destroyed when [owner] is destroyed; if the load fails, or ads become blocked, the container is GONE.
+ * configuration (or Firebase) can change it. If the load fails, or ads become blocked, the container is GONE.
  * [onResult] is called once, on the main thread, after rendering.
  *
- * In a Fragment, pass `viewLifecycleOwner`. In a `RecyclerView`, don't call this from `onBindViewHolder`: keep a
- * [NativeAdHolder] per ad position in the screen's ViewModel instead, so scrolling and rotation don't reload.
+ * A container with an `android:id` keeps its ad for its screen (a ViewModel of the view tree's
+ * `ViewModelStoreOwner`: the Fragment, or the Activity): when [owner] is destroyed (a Fragment's view, or the Activity
+ * on rotation) the ad leaves its views, and calling this again for the new container shows the same ad, with no new
+ * request. It's destroyed when the screen is cleared. Without an id, or a `ViewModelStoreOwner`, it's destroyed with
+ * [owner].
  *
- * One ad per container and placement: while this container shows an ad from an earlier call for [placement], or one
- * is loading, another call does nothing (and [onResult] isn't called). To replace a shown ad with a new one, use
- * [AdNativeView.load] or [NativeAdHolder.load] with `refresh = true`. Main thread only.
+ * One ad per container and placement: another call shows the same ad and asks for nothing, unless [refresh] is true.
+ * With [refresh], a new ad loads while the shown one stays, replaces it once loaded, and the old one is destroyed
+ * then; if it fails, the shown one stays (and [onResult] isn't called). A refresh needs the container's id.
+ *
+ * In a Fragment, pass `viewLifecycleOwner`. In a `RecyclerView`, don't call this from `onBindViewHolder`: keep a
+ * [NativeAdHolder] per ad position in the screen's ViewModel instead. Main thread only.
  */
 @JvmOverloads
 public fun ViewGroup.attachNativeAd(
@@ -37,8 +43,19 @@ public fun ViewGroup.attachNativeAd(
     placement: NativePlacement,
     layout: NativeAdLayout? = null,
     renderer: NativeAdRenderer? = null,
+    refresh: Boolean = false,
     onResult: (NativeAdResult) -> Unit = {},
 ) {
+    val retainer = if (id != View.NO_ID) ViewAdRetainer.of(this) else null
+    if (retainer != null) {
+        val slot = ViewAdRetainer.slot(placement.key, "attach:$id")
+        val holder = retainer.natives.getOrPut(slot) { NativeAdHolder(placement) }
+        holder.onNextResult = onResult
+        holder.bindTo(this, owner, layout, renderer)
+        if (refresh) holder.load(refresh = true)
+        return
+    }
+    if (refresh) ViewsRuntime.debug("attachNativeAd(${placement.key}): refresh needs the container's android:id; ignored")
     val container = this
     val attached = getTag(R.id.adroit_attached_native) as? AttachedNative
     if (attached != null && attached.placement == placement && attached.busy) {

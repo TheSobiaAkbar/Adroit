@@ -62,7 +62,8 @@ public final class io/github/thesobiaakbar/adroit/views/AdSlotView : android/wid
 public final class io/github/thesobiaakbar/adroit/views/BannerExtensionsKt {
 	public static final fun attachBanner (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/BannerPlacement;)Lio/github/thesobiaakbar/adroit/BannerAdHandle;
 	public static final fun attachBanner (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/BannerPlacement;Lio/github/thesobiaakbar/adroit/BannerOptions;)Lio/github/thesobiaakbar/adroit/BannerAdHandle;
-	public static synthetic fun attachBanner$default (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/BannerPlacement;Lio/github/thesobiaakbar/adroit/BannerOptions;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/BannerAdHandle;
+	public static final fun attachBanner (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/BannerPlacement;Lio/github/thesobiaakbar/adroit/BannerOptions;Z)Lio/github/thesobiaakbar/adroit/BannerAdHandle;
+	public static synthetic fun attachBanner$default (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/BannerPlacement;Lio/github/thesobiaakbar/adroit/BannerOptions;ZILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/BannerAdHandle;
 }
 
 public final class io/github/thesobiaakbar/adroit/views/NativeAdHolder {
@@ -81,8 +82,9 @@ public final class io/github/thesobiaakbar/adroit/views/NativeExtensionsKt {
 	public static final fun attachNativeAd (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/NativePlacement;)V
 	public static final fun attachNativeAd (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;)V
 	public static final fun attachNativeAd (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;Lio/github/thesobiaakbar/adroit/NativeAdRenderer;)V
-	public static final fun attachNativeAd (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;Lio/github/thesobiaakbar/adroit/NativeAdRenderer;Lkotlin/jvm/functions/Function1;)V
-	public static synthetic fun attachNativeAd$default (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;Lio/github/thesobiaakbar/adroit/NativeAdRenderer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static final fun attachNativeAd (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;Lio/github/thesobiaakbar/adroit/NativeAdRenderer;Z)V
+	public static final fun attachNativeAd (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;Lio/github/thesobiaakbar/adroit/NativeAdRenderer;ZLkotlin/jvm/functions/Function1;)V
+	public static synthetic fun attachNativeAd$default (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;Lio/github/thesobiaakbar/adroit/NativeAdRenderer;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }
 
 public final class io/github/thesobiaakbar/adroit/views/NativeTemplates {
