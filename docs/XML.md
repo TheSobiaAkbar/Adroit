@@ -19,10 +19,25 @@
 | `adroit_bannerSize` | `anchoredAdaptive`, `inlineAdaptive`, `mediumRectangle`, `standard` | `anchoredAdaptive` |
 | `adroit_inlineMaxHeight` | a dimension, for `inlineAdaptive` | `@dimen/adroit_banner_inline_max_height` |
 | `adroit_collapseWhenEmpty` | boolean: `GONE` while there's no ad | true |
+| `adroit_refresh` | boolean: ask for a new banner each time the view is created again (see below) | false |
 
 From code: `setPlacement(placement)` or `setPlacement(placement, options)`. The view creates its banner when attached
-to a window, for its view tree's `LifecycleOwner` (the Fragment's view lifecycle inside a Fragment), and destroys it
-with that owner. An unknown key logs an error and the view stays `GONE`; it never crashes.
+to a window. An unknown key logs an error and the view stays `GONE`; it never crashes.
+
+### How long an ad stays
+
+The rule for `AdBannerView`, `AdNativeView` and `AdSlotView`, and for `AdBanner`, `AdNative` and `AdSlot` in Compose:
+**once an ad is shown in a view, it stays there until its screen is closed for good, or you ask for a new one.**
+
+- The ad is kept by its screen: a ViewModel of the view tree's `ViewModelStoreOwner` (the Fragment inside a
+  Fragment, otherwise the Activity). Coming back to the screen (another tab, a Fragment's view recreated) and
+  rotation show the same ad, with no new request. It's destroyed when the screen is cleared: the Activity finishes,
+  or the Fragment is removed.
+- A new ad only when asked: `load(refresh = true)` from code, or `app:adroit_refresh="true"`, which asks each time
+  the view is created again. Either way the shown ad stays while the new one loads, the new one takes its place once
+  it's loaded, and the old one is destroyed then. If the new one fails, the shown one stays.
+- One ad per placement and slot on a screen. The slot is the view's `android:id`, or `slotKey` (set it for views made
+  in code, or for several views of one placement without ids).
 
 ## `AdNativeView`
 
@@ -39,12 +54,10 @@ with that owner. An unknown key logs an error and the view stays `GONE`; it neve
 | `adroit_placement` | a native placement key (required) |
 | `adroit_template` | A library style: `small_button_end`, `small_button_bottom`, `large_button_bottom`, `large_compact` or `media_start`. Without it, the placement's style decides ([Native](NATIVE.md#templates-and-custom-layouts)). |
 | `adroit_layout` | your own layout, using the standard template IDs (`adroit_native_headline`, `_body`, `_cta`, `_icon`, `_media`, `_advertiser`, `_stars`, `_price`, `_store`, `_attribution`) |
+| `adroit_refresh` | ask for a new ad each time the view is created again; default false ([How long an ad stays](#how-long-an-ad-stays)) |
 
 From code: `setPlacement(placement)` or `setPlacement(placement, layout)`. It loads when attached, renders, and is
-`GONE` if the load fails. The ad is kept by its screen: a ViewModel of the view tree's `ViewModelStoreOwner` (the Fragment inside a
-Fragment, otherwise the Activity), one per placement and view `android:id`. Coming back to the screen (another tab,
-a Fragment's view recreated) and rotation show the same ad, with no new request; it's destroyed when the screen is
-cleared. Only `load(refresh = true)` asks for another.
+`GONE` if the load fails. Its ad stays as described in [How long an ad stays](#how-long-an-ad-stays).
 
 ## Extensions
 
@@ -54,8 +67,11 @@ fun ViewGroup.attachNativeAd(owner: LifecycleOwner, placement: NativePlacement, 
     renderer: NativeAdRenderer? = null, onResult: (NativeAdResult) -> Unit = {})
 ```
 
-Both add the ad to the container and destroy it when `owner` is destroyed. In a Fragment, always pass
-`viewLifecycleOwner`:
+Both add the ad to the container. `attachBanner` into a container with an `android:id` keeps its banner for the
+screen like `AdBannerView`: call it again for the new container (in `onViewCreated`, or `onCreate` after a rotation)
+and the same banner shows, with no new request. `attachNativeAd` destroys its ad when `owner` is destroyed; for a
+native ad that stays, use `AdNativeView` or a `NativeAdHolder`. To replace a shown ad, use the views'
+`load(refresh = true)`. In a Fragment, always pass `viewLifecycleOwner`:
 
 <!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Banner.kt#fragment-attach -->
 ```kotlin

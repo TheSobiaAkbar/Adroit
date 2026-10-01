@@ -11,6 +11,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `AdNative`: in a ViewModel of the view tree's `ViewModelStoreOwner` (the Fragment, or the Activity), one per
   placement and view id. A Fragment's views recreated (coming back to a tab) and rotation show the same ad with no new
   request; only `load(refresh = true)` asks for another. Previously each new view loaded a new ad.
+- `app:adroit_refresh` (and `refreshOnShow`) on `AdBannerView`, `AdNativeView` and `AdSlotView`: ask for a new ad
+  each time the view is created again; the shown one stays until the new one replaces it. Default false.
+- `slotKey` on the three views: names a view's ad on its screen (default: its `android:id`), for views made in code.
+- `attachBanner` into a container with an `android:id` keeps its banner for the screen too: rotation shows the same
+  banner.
 - `sample-xml`'s tabs keep their Fragments (`detach`/`attach` instead of `replace`), as Navigation does.
 
 ### Fixed

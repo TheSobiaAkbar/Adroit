@@ -35,7 +35,7 @@ internal class ViewAdRetainer : ViewModel() {
         fun of(view: View): ViewAdRetainer? =
             view.findViewTreeViewModelStoreOwner()?.let { ViewModelProvider(it, factory)[KEY, ViewAdRetainer::class.java] }
 
-        /** A slot: the placement, and the view's id (or its [io.github.thesobiaakbar.adroit.views.AdSlotView]'s). */
-        fun slot(placementKey: String, viewId: Int): String = "$placementKey#$viewId"
+        /** A slot: the placement, and the view's slot key (by default its id, or its AdSlotView's). */
+        fun slot(placementKey: String, slotKey: String): String = "$placementKey#$slotKey"
     }
 }

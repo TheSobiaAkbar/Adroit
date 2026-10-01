@@ -36,6 +36,12 @@ public class AdSlotView @JvmOverloads constructor(
     private var shown: AdFormat? = null
     private var watch: Job? = null
 
+    /** As [AdBannerView.slotKey]: names this slot's ad on its screen. Defaults to the view's `android:id`. */
+    public var slotKey: String? = null
+
+    /** As [AdBannerView.refreshOnShow], from `app:adroit_refresh`. */
+    public var refreshOnShow: Boolean = false
+
     init {
         readAttributes(attrs)
     }
@@ -46,6 +52,7 @@ public class AdSlotView @JvmOverloads constructor(
         val a = context.obtainStyledAttributes(attrs, R.styleable.AdroitAdSlotView)
         try {
             key = a.getString(R.styleable.AdroitAdSlotView_adroit_placement)
+            refreshOnShow = a.getBoolean(R.styleable.AdroitAdSlotView_adroit_refresh, false)
         } finally {
             a.recycle()
         }
@@ -111,8 +118,8 @@ public class AdSlotView @JvmOverloads constructor(
         shown = format
         val child = when (format) {
             // The slot's id names the child's slot in its screen, which keeps the ad across view recreation.
-            AdFormat.BANNER -> AdBannerView(context).apply { slotId = this@AdSlotView.id; setPlacement(BannerPlacement(key)) }
-            AdFormat.NATIVE -> AdNativeView(context).apply { slotId = this@AdSlotView.id; setPlacement(NativePlacement(key)) }
+            AdFormat.BANNER -> AdBannerView(context).apply { inherit(); setPlacement(BannerPlacement(key)) }
+            AdFormat.NATIVE -> AdNativeView(context).apply { inherit(); setPlacement(NativePlacement(key)) }
             else -> null
         }
         if (child == null) {
@@ -122,6 +129,16 @@ public class AdSlotView @JvmOverloads constructor(
         }
         visibility = VISIBLE
         addView(child, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+    }
+
+    private fun AdBannerView.inherit() {
+        slotKey = this@AdSlotView.slotKey ?: "id:${this@AdSlotView.id}"
+        refreshOnShow = this@AdSlotView.refreshOnShow
+    }
+
+    private fun AdNativeView.inherit() {
+        slotKey = this@AdSlotView.slotKey ?: "id:${this@AdSlotView.id}"
+        refreshOnShow = this@AdSlotView.refreshOnShow
     }
 
     /** Removes the current child and destroys its ad, so a swapped-out banner stops refreshing. */

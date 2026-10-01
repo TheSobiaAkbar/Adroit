@@ -2,24 +2,32 @@ public final class io/github/thesobiaakbar/adroit/views/AdBannerView : android/w
 	public fun <init> (Landroid/content/Context;)V
 	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
 	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getRefreshOnShow ()Z
+	public final fun getSlotKey ()Ljava/lang/String;
 	public final fun load ()V
 	public final fun load (Z)V
 	public static synthetic fun load$default (Lio/github/thesobiaakbar/adroit/views/AdBannerView;ZILjava/lang/Object;)V
 	public final fun setPlacement (Lio/github/thesobiaakbar/adroit/BannerPlacement;)V
 	public final fun setPlacement (Lio/github/thesobiaakbar/adroit/BannerPlacement;Lio/github/thesobiaakbar/adroit/BannerOptions;)V
 	public static synthetic fun setPlacement$default (Lio/github/thesobiaakbar/adroit/views/AdBannerView;Lio/github/thesobiaakbar/adroit/BannerPlacement;Lio/github/thesobiaakbar/adroit/BannerOptions;ILjava/lang/Object;)V
+	public final fun setRefreshOnShow (Z)V
+	public final fun setSlotKey (Ljava/lang/String;)V
 }
 
 public final class io/github/thesobiaakbar/adroit/views/AdNativeView : android/widget/FrameLayout {
 	public fun <init> (Landroid/content/Context;)V
 	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
 	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getRefreshOnShow ()Z
+	public final fun getSlotKey ()Ljava/lang/String;
 	public final fun load ()V
 	public final fun load (Z)V
 	public static synthetic fun load$default (Lio/github/thesobiaakbar/adroit/views/AdNativeView;ZILjava/lang/Object;)V
 	public final fun setPlacement (Lio/github/thesobiaakbar/adroit/NativePlacement;)V
 	public final fun setPlacement (Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;)V
 	public static synthetic fun setPlacement$default (Lio/github/thesobiaakbar/adroit/views/AdNativeView;Lio/github/thesobiaakbar/adroit/NativePlacement;Lio/github/thesobiaakbar/adroit/NativeAdLayout;ILjava/lang/Object;)V
+	public final fun setRefreshOnShow (Z)V
+	public final fun setSlotKey (Ljava/lang/String;)V
 }
 
 public final class io/github/thesobiaakbar/adroit/views/AdShimmerView : android/widget/FrameLayout {
@@ -40,11 +48,15 @@ public final class io/github/thesobiaakbar/adroit/views/AdSlotView : android/wid
 	public fun <init> (Landroid/content/Context;)V
 	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
 	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getRefreshOnShow ()Z
+	public final fun getSlotKey ()Ljava/lang/String;
 	public final fun load ()V
 	public final fun load (Z)V
 	public static synthetic fun load$default (Lio/github/thesobiaakbar/adroit/views/AdSlotView;ZILjava/lang/Object;)V
 	public final fun setDefinition (Lio/github/thesobiaakbar/adroit/config/AdDefinition;)V
 	public final fun setKey (Ljava/lang/String;)V
+	public final fun setRefreshOnShow (Z)V
+	public final fun setSlotKey (Ljava/lang/String;)V
 }
 
 public final class io/github/thesobiaakbar/adroit/views/BannerExtensionsKt {

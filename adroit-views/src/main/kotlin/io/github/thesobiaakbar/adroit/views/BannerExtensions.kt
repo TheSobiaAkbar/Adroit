@@ -14,15 +14,23 @@ import io.github.thesobiaakbar.adroit.BannerAdHandle
 import io.github.thesobiaakbar.adroit.BannerOptions
 import io.github.thesobiaakbar.adroit.BannerPlacement
 import io.github.thesobiaakbar.adroit.BannerState
+import io.github.thesobiaakbar.adroit.views.internal.ViewAdRetainer
 import io.github.thesobiaakbar.adroit.views.internal.ViewsRuntime
 import io.github.thesobiaakbar.adroit.views.internal.findActivity
 import kotlinx.coroutines.launch
 
 /**
- * Creates a banner for [placement], adds its view to this container, and destroys it when [owner] is destroyed.
- * The banner's view is GONE while there's no ad (Hidden or Failed), so the container collapses.
+ * Creates a banner for [placement] and adds its view to this container. The banner's view is GONE while there's no ad
+ * (Hidden or Failed), so the container collapses.
  *
- * In a Fragment, pass `viewLifecycleOwner`, so the banner goes away in `onDestroyView`:
+ * A container with an `android:id` keeps its banner for its screen (a ViewModel of the view tree's
+ * `ViewModelStoreOwner`: the Fragment, or the Activity): when [owner] is destroyed (a Fragment's view, or the Activity
+ * on rotation) the banner goes off screen with its ad, and calling this again for the new container shows the same
+ * ad, with no new request. It's destroyed when the screen is cleared. Without an id, or a `ViewModelStoreOwner`, it's
+ * destroyed with [owner]. To replace a shown banner with a new one, use an [AdBannerView] and its
+ * `load(refresh = true)`.
+ *
+ * In a Fragment, pass `viewLifecycleOwner`, so the banner leaves the screen in `onDestroyView`:
  * `binding.adContainer.attachBanner(viewLifecycleOwner, Placements.HomeBanner)`.
  *
  * Banners belong in fixed containers; don't put them in a `RecyclerView`. Main thread only.
@@ -51,7 +59,17 @@ public fun ViewGroup.attachBanner(
             }
         }
     }
-    return attachBanner(owner, placement, options, collapseWhenEmpty = true).also {
+    val retainer = if (id != View.NO_ID) ViewAdRetainer.of(this) else null
+    val slot = ViewAdRetainer.slot(placement.key, "attach:$id")
+    val kept = retainer?.banners?.get(slot)?.let { banner ->
+        when (banner.state.value) {
+            BannerState.Hidden(null) -> null
+            is BannerState.Failed -> null.also { banner.destroy() }
+            else -> banner
+        }
+    }
+    return attachBanner(owner, placement, options, collapseWhenEmpty = true, existing = kept, keep = retainer != null).also {
+        retainer?.banners?.put(slot, it)
         setTag(R.id.adroit_attached_banner, AttachedBanner(placement, it))
     }
 }

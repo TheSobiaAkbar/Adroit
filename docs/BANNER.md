@@ -34,10 +34,9 @@ ads show as normal banners ([Google's guide](https://developers.google.com/admob
     app:adroit_bannerSize="anchoredAdaptive" />
 ```
 
-`AdBannerView` loads when ads are ready. The banner is kept by its screen: a ViewModel of the view tree's `ViewModelStoreOwner` (the Fragment inside a
-Fragment, otherwise the Activity), one per placement and view `android:id`. Coming back to the screen (another tab,
-a Fragment's view recreated) and rotation show the same ad, with no new request; it's destroyed when the screen is
-cleared. Only `load(refresh = true)` asks for another. It's `GONE` while there's no ad
+`AdBannerView` loads when ads are ready. Its banner stays until its screen is closed for good, or you ask for a new
+one (`load(refresh = true)`, or `app:adroit_refresh="true"`): see
+[How long an ad stays](XML.md#how-long-an-ad-stays). It's `GONE` while there's no ad
 (`adroit_collapseWhenEmpty`, default true). You can also call `setPlacement(placement, options)` from code.
 
 ### A container from code

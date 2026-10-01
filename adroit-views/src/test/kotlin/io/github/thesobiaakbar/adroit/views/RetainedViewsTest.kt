@@ -24,6 +24,27 @@ import org.robolectric.android.controller.ActivityController
 private val BANNER_ID = View.generateViewId()
 private val NATIVE_ID = View.generateViewId()
 
+private val CONTAINER_ID = View.generateViewId()
+
+/** A banner attached from code into a container with an id, as DetailsActivity does. */
+class AttachBannerActivity : FragmentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val container = FrameLayout(this).apply { id = CONTAINER_ID }
+        setContentView(container)
+        container.attachBanner(this, HOME)
+    }
+}
+
+/** Two native views of one placement made in code, without ids, told apart by their slot keys; one refreshes on show. */
+class CodeAdsFragment : Fragment() {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        FrameLayout(inflater.context).apply {
+            addView(AdNativeView(context).apply { slotKey = "first"; setPlacement(FEED) })
+            addView(AdNativeView(context).apply { slotKey = "second"; refreshOnShow = true; setPlacement(FEED) })
+        }
+}
+
 /** A screen with an XML-style banner and native ad, as a layout would declare them. */
 class AdsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
@@ -106,6 +127,42 @@ class RetainedViewsTest {
 
         assertTrue(client.banner.created.all { it.handle.isDestroyed })
         assertTrue(client.native.handles.all { it.isDestroyed })
+    }
+
+    @Test
+    fun `attachBanner into a container with an id - rotation shows the same banner, finishing destroys it`() {
+        val controller = Robolectric.buildActivity(AttachBannerActivity::class.java).setup()
+        idle()
+        val banner = client.banner.created.single().handle
+
+        controller.recreate()
+        idle()
+        assertEquals(1, client.banner.created.size)
+        assertSame(banner.view, controller.get().findViewById<FrameLayout>(CONTAINER_ID).getChildAt(0))
+
+        controller.get().finish()
+        controller.pause().stop().destroy()
+        assertTrue(banner.isDestroyed)
+    }
+
+    @Test
+    fun `views made in code keep one ad per slot key, and refreshOnShow asks for a new one when shown again`() {
+        val controller = Robolectric.buildActivity(FragmentActivity::class.java).setup()
+        val fragment = CodeAdsFragment()
+        val fm = controller.get().supportFragmentManager
+        fm.beginTransaction().add(android.R.id.content, fragment).commitNow()
+        idle()
+        assertEquals(2, client.native.loadCount)
+        val (first, second) = client.native.handles
+
+        fm.beginTransaction().detach(fragment).commitNow()
+        fm.beginTransaction().attach(fragment).commitNow()
+        idle()
+
+        assertEquals("only the refreshOnShow view asked again", 3, client.native.loadCount)
+        assertFalse(first.isDestroyed)
+        assertTrue("replaced once its successor arrived", second.isDestroyed)
+        assertSame(first, client.native.renders.first { it.handle === first }.handle)
     }
 
     private companion object {

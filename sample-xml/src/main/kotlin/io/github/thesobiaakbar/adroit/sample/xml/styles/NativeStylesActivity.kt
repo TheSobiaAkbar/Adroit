@@ -81,7 +81,12 @@ class NativeStylesActivity : AppCompatActivity() {
             val ad: View = if (showingShimmers) {
                 AdShimmerView(this).apply { showLayout(layout) }
             } else {
-                AdNativeView(this).apply { setPlacement(SampleAds.ArticleNative.nativePlacement(), layout) }
+                // Created in code, without an id: the style's name keeps each view's ad apart, so toggling the
+                // shimmers and rotating show the same ads again.
+                AdNativeView(this).apply {
+                    slotKey = name
+                    setPlacement(SampleAds.ArticleNative.nativePlacement(), layout)
+                }
             }
             list.addView(ad, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         }

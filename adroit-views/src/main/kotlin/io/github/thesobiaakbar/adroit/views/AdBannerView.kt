@@ -55,8 +55,22 @@ public class AdBannerView @JvmOverloads constructor(
     /** A banner loading in the background to replace [handle] (`load(refresh = true)`); invisible until it's loaded. */
     private var incoming: BannerAdHandle? = null
 
-    /** Set by [AdSlotView]: its id, which names this view's slot instead of the view's own. */
-    internal var slotId: Int = NO_ID
+    /**
+     * Names this view's ad on its screen, which keeps one ad per placement and slot. Defaults to the view's
+     * `android:id`: set it for views created in code, or to tell apart views of the same placement without ids.
+     * Set it before the view is attached.
+     */
+    public var slotKey: String? = null
+
+    /**
+     * `app:adroit_refresh`. False (the default): the view keeps its screen's ad, and only `load(refresh = true)` asks
+     * for another. True: each time the view is created again on its screen (coming back to a tab, rotation), it asks
+     * for a new ad; the shown one stays until the new one replaces it.
+     */
+    public var refreshOnShow: Boolean = false
+
+    /** This view's slot name for [placementKey] in its screen's [ViewAdRetainer]. */
+    private fun slotName(placementKey: String) = ViewAdRetainer.slot(placementKey, slotKey ?: "id:$id")
 
     /** The screen's retainer and this view's slot in it, once the banner is kept by a screen. */
     private var retained: Pair<ViewAdRetainer, String>? = null
@@ -91,6 +105,7 @@ public class AdBannerView @JvmOverloads constructor(
                 else -> null
             }
             options = BannerOptions(size)
+            refreshOnShow = a.getBoolean(R.styleable.AdroitAdBannerView_adroit_refresh, false)
             a.getString(R.styleable.AdroitAdBannerView_adroit_placement)?.let { key ->
                 placement = try {
                     BannerPlacement(key)
@@ -176,7 +191,7 @@ public class AdBannerView @JvmOverloads constructor(
             return
         }
         val retainer = ViewAdRetainer.of(this)
-        val slot = ViewAdRetainer.slot(placement.key, if (slotId != NO_ID) slotId else id)
+        val slot = slotName(placement.key)
         val kept = retainer?.banners?.get(slot)?.takeUnless { it.state.value == BannerState.Hidden(null) }
         // The collector can emit before attachBanner returns: until then, [created] is null and the state is this banner's.
         var created: BannerAdHandle? = null
@@ -189,6 +204,8 @@ public class AdBannerView @JvmOverloads constructor(
             retainer.banners[slot] = created
             retained = retainer to slot
         }
+        // Shown again with the banner its screen kept: a new one only when asked for.
+        if (kept != null && refreshOnShow) load(refresh = true)
     }
 
     /** Destroys nothing itself: forgets this view's slot in its screen, whose banner the caller destroys. */

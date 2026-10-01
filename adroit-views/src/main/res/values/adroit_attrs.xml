@@ -2,9 +2,14 @@
 <resources>
     <!-- Shared by AdBannerView and AdNativeView: the placement key from your configuration. -->
     <attr name="adroit_placement" format="string" />
+    <!-- Shared by AdBannerView, AdNativeView and AdSlotView. Default false: the view keeps its screen's ad, and only
+         load(refresh = true) asks for another. True: each time the view is created again on its screen (coming back
+         to a tab, rotation), it asks for a new ad; the shown one stays until the new one replaces it. -->
+    <attr name="adroit_refresh" format="boolean" />
 
     <declare-styleable name="AdroitAdBannerView">
         <attr name="adroit_placement" />
+        <attr name="adroit_refresh" />
         <attr name="adroit_bannerSize" format="enum">
             <enum name="anchoredAdaptive" value="0" />
             <enum name="inlineAdaptive" value="1" />
@@ -21,6 +26,7 @@
 
     <declare-styleable name="AdroitAdNativeView">
         <attr name="adroit_placement" />
+        <attr name="adroit_refresh" />
         <!-- A library template; without it (and without adroit_layout), the placement's style decides.
              The values are NativeStyle's ordinals: keep them in its order. -->
         <attr name="adroit_template" format="enum">
@@ -37,6 +43,7 @@
     <!-- AdSlotView: a banner or native ad, whichever format the placement has now (docs/AD_PROFILES.md). -->
     <declare-styleable name="AdroitAdSlotView">
         <attr name="adroit_placement" />
+        <attr name="adroit_refresh" />
     </declare-styleable>
 
     <!--

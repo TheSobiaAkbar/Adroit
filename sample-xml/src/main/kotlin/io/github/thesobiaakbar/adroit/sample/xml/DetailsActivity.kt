@@ -11,7 +11,8 @@ import io.github.thesobiaakbar.adroit.views.attachBanner
 import io.github.thesobiaakbar.adroit.sample.xml.databinding.ActivityDetailsBinding
 
 /**
- * A banner attached from code (`attachBanner`, destroyed with this Activity) and a native ad declared in XML
+ * A banner attached from code (`attachBanner`; the container's id lets this screen keep it across rotation, and it's
+ * destroyed when the Activity finishes) and a native ad declared in XML
  * (`AdNativeView`, `app:adroit_placement="ArticleNative"`). Their looks come from SampleAds: a collapsible
  * banner and the large native template.
  */
