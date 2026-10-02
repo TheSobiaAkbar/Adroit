@@ -17,6 +17,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   ads (`minSecondsBetweenFullScreenAds` / `frequency.minIntervalBetweenFullScreenAds`) default to 0 instead of
   4 minutes and 30 seconds, and `minLaunchesBeforeFirstShow` to 0 instead of 2, so app open can show from the first
   launch. Set them to keep the old behaviour. The 5 s with no app open after another full-screen ad stays.
+- Both samples log each ad's requests, loads, failures, refused shows and impressions to logcat (tag `AdEvents`)
+  through an `AdEventListener`.
 - sample-compose shows every banner and native ad with `AdSlot(definition)` (Details, Feed), and the Compose guide
   and docs/COMPOSE.md recommend it over `AdBanner`/`AdNative`, which only take an ad of their own format.
 

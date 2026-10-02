@@ -1,8 +1,11 @@
 package io.github.thesobiaakbar.adroit.sample.compose.ads
 
+import android.util.Log
 import io.github.thesobiaakbar.adroit.config.AdEnvironment
 import io.github.thesobiaakbar.adroit.config.AdMobConfig
 import io.github.thesobiaakbar.adroit.config.adMobConfig
+import io.github.thesobiaakbar.adroit.events.AdEvent
+import io.github.thesobiaakbar.adroit.events.AdEventListener
 import io.github.thesobiaakbar.adroit.firebase.FirebaseRemoteConfigProvider
 import io.github.thesobiaakbar.adroit.logging.LogLevel
 
@@ -38,5 +41,14 @@ object SampleAdsConfig {
         // Firebase values override the enum's defaults, ad by ad. SampleApplication's RemoteConfigSession does the fetching.
         if (firebase) remoteConfig = FirebaseRemoteConfigProvider()
         logging { level = if (buildType == "release") LogLevel.WARN else LogLevel.DEBUG }
+        // Each ad's life in logcat (filter by AdEvents): requested, loaded, failed, not shown, displayed. A real app
+        // sends these to its analytics instead (docs/ANALYTICS.md).
+        eventListeners += AdEventListener { event ->
+            when (event) {
+                is AdEvent.LoadRequested, is AdEvent.Loaded, is AdEvent.LoadFailed, is AdEvent.NotShown,
+                is AdEvent.Impression -> Log.d("AdEvents", event.toString())
+                else -> Unit
+            }
+        }
     }
 }
