@@ -26,9 +26,10 @@ internal object FormatDefaults {
     val APP_OPEN_TTL = 3.hours + 55.minutes
     val NATIVE_TTL = 55.minutes
 
-    val MIN_INTERVAL_BETWEEN_FULL_SCREEN_ADS = 30.seconds
-    val APP_OPEN_COOLDOWN = 4.minutes
-    const val APP_OPEN_MIN_LAUNCHES_BEFORE_FIRST_SHOW = 2
+    // No timer unless the app sets one (timerSeconds, minSecondsBetweenFullScreenAds, frequency {}, cooldown).
+    val MIN_INTERVAL_BETWEEN_FULL_SCREEN_ADS = Duration.ZERO
+    val APP_OPEN_COOLDOWN = Duration.ZERO
+    const val APP_OPEN_MIN_LAUNCHES_BEFORE_FIRST_SHOW = 0
     val SUPPRESS_APP_OPEN_AFTER_FULL_SCREEN_AD = 5.seconds
     val SHOW_TIMEOUT = 5.seconds
     val SPLASH_TIMEOUT = 8.seconds

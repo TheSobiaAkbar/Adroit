@@ -176,7 +176,7 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | Format | Field | Meaning |
 |---|---|---|
 | rewarded | `maxPerSession` | 0 = no limit |
-| app_open | `timerSeconds` | The cooldown between app open ads (default 4 minutes) |
+| app_open | `timerSeconds` | The cooldown between app open ads (default 0: no cooldown) |
 | app_open | `maxPerSession` | 0 = no limit |
 | app_open | `excludedActivities` | File only. Activity class names never covered by an app open ad, for example your splash screen |
 | banner | `style` | `adaptive` (default), `collapsible_bottom`, `collapsible_top`, `rectangle` (300×250), `standard` (320×50) or `inline_adaptive` |

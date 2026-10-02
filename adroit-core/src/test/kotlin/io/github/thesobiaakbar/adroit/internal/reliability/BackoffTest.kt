@@ -8,6 +8,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.random.Random
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -21,7 +22,7 @@ class BackoffTest {
         assertEquals(RetryPolicy(10.seconds, 2.0, 120.seconds, 3, 0.2), FormatDefaults.NATIVE_RETRY)
         assertEquals(RetryPolicy(15.seconds, 2.0, 120.seconds, 4, 0.2), FormatDefaults.BANNER_RETRY)
         assertEquals(30.seconds, FormatDefaults.NO_FILL_MIN_RETRY_DELAY)
-        assertEquals(30.seconds, FormatDefaults.MIN_INTERVAL_BETWEEN_FULL_SCREEN_ADS)
+        assertEquals(Duration.ZERO, FormatDefaults.MIN_INTERVAL_BETWEEN_FULL_SCREEN_ADS)
         // The ShowSession watchdog default is advanced.showTimeout.
         assertEquals(5.seconds, adMobConfig { }.advanced.showTimeout)
     }

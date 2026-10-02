@@ -55,9 +55,10 @@ for the Next-Gen SDK ([Mediation](MEDIATION.md#adding-an-adapter)).
 ## The app open ad never shows
 
 In order of likelihood:
-- It never shows on the first launches: the first show is after `minLaunchesBeforeFirstShow` launches (default 2).
+- It never shows on the first launches if you set `minLaunchesBeforeFirstShow` (default 0).
 - It never shows automatically on a cold start: call `showOnColdStart` from your loading screen.
-- Cooldown (4 min by default), the 30 s global interval, or the 5 s after another full-screen ad.
+- A cooldown or global interval you set (`timerSeconds`, `minSecondsBetweenFullScreenAds`; none by default), or the 5 s
+  after another full-screen ad.
 - The resumed Activity is excluded, `skipNextForeground()` was called, or `suppressWhile` is active.
 - No ad was cached when the app came back: it loads one for next time and never shows late.
 

@@ -21,7 +21,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class AdMobConfigDslTest {
@@ -119,7 +119,7 @@ class AdMobConfigDslTest {
         assertEquals(false, config.privacy.restrictedDataProcessing)
         assertEquals(DebugGeography.DISABLED, config.privacy.debugGeography)
         assertNull(config.privacy.consentSyncId)
-        assertEquals(30.seconds, config.frequency.minIntervalBetweenFullScreenAds)
+        assertEquals(Duration.ZERO, config.frequency.minIntervalBetweenFullScreenAds)
         assertEquals(false, config.frequency.includeRewardedInGlobalInterval)
         assertNull(config.logging.level)
         assertTrue(config.logging.logger is AndroidAdLogger)
@@ -149,8 +149,8 @@ class AdMobConfigDslTest {
         assertNull(banner.expiry)
 
         val appOpen = config.placements[1] as AppOpenPlacementConfig
-        assertEquals(4.minutes, appOpen.cooldown)
-        assertEquals(2, appOpen.minLaunchesBeforeFirstShow)
+        assertEquals(Duration.ZERO, appOpen.cooldown)
+        assertEquals(0, appOpen.minLaunchesBeforeFirstShow)
         assertEquals(emptySet<String>(), appOpen.excludedActivityClassNames)
         assertEquals(true, appOpen.showOnColdStartAllowed)
         assertEquals(5.seconds, appOpen.suppressAfterFullScreenAd)

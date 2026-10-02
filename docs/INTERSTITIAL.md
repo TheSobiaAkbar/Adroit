@@ -90,7 +90,7 @@ Fragment, pass `requireActivity()`.
 - Failed loads retry after 5 s, doubling up to 120 s, 5 attempts; a no-fill waits at least 30 s.
 - A cached ad expires after 55 minutes, a few minutes before Google's one-hour limit.
 - `frequency { minInterval; maxPerSession }` per placement, plus the global
-  `minIntervalBetweenFullScreenAds` (30 s by default).
+  `minIntervalBetweenFullScreenAds` (none by default).
 - `frequency { counter = 3 }`: an ad shows at most on every 3rd `show` call (the 3rd, 6th, 9th…); the others return
   `NotShown(CounterNotReached)` at once. A due counter stays due until an ad shows, and `minInterval` is ignored
   while a counter is set.

@@ -15,7 +15,7 @@ process's first start), it shows the ad only if every gate passes:
 flowchart TD
   fg[App returns to the foreground] --> g1{Ready, placement enabled, not ad-free?}
   g1 -->|no| skip[No ad]
-  g1 -->|yes| g2{"More launches than minLaunchesBeforeFirstShow (default 2)?"}
+  g1 -->|yes| g2{"More launches than minLaunchesBeforeFirstShow (default 0)?"}
   g2 -->|no| skip
   g2 -->|yes| g3{No full-screen ad now, none dismissed in the last 5 s?}
   g3 -->|no| skip
@@ -94,8 +94,8 @@ the camera, permission settings.
 
 ## FAQ
 
-**No app open ad in testing.** It never shows on the first two launches (`minLaunchesBeforeFirstShow`), nor within
-4 minutes of the last one (`cooldown`), nor over an excluded Activity. Background the app (Home), wait, and come back.
+**No app open ad in testing.** It never shows within the first launches or the cooldown, if you set them
+(`minLaunchesBeforeFirstShow`, `cooldown` or `timerSeconds`; both are 0 by default), nor over an excluded Activity. Background the app (Home), wait, and come back.
 See [Troubleshooting](TROUBLESHOOTING.md).
 
 **It showed after the user came back from a purchase.** Call `skipNextForeground()` before starting the purchase flow.

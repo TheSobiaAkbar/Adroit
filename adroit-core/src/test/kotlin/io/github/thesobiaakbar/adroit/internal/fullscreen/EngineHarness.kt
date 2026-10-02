@@ -53,6 +53,8 @@ internal fun engineConfig(extra: AdMobConfig.Builder.() -> Unit = {}): AdMobConf
         useDemoAdUnits = false
         testDeviceIds += "TEST-DEVICE"
     }
+    // The library has no interval by default; these tests exercise one.
+    frequency { minIntervalBetweenFullScreenAds = 30.seconds }
     extra()
 }
 

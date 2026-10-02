@@ -122,7 +122,7 @@ public class PrivacyOptions internal constructor(
  * user-experience safeguard and don't replace AdMob's server-side frequency capping.
  *
  * @property minIntervalBetweenFullScreenAds minimum time between any two full-screen ads (interstitial, rewarded
- *   interstitial, app open). Default 30 seconds.
+ *   interstitial, app open). Default zero: no interval.
  * @property includeRewardedInGlobalInterval whether rewarded ads also respect that interval. Default false,
  *   because the user asks for rewarded ads.
  * @property maxInterstitialsPerSession maximum interstitials shown per process lifetime, across every interstitial

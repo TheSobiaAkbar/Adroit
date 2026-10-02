@@ -148,7 +148,7 @@ public sealed class AdProfile {
     /**
      * An app open ad.
      *
-     * @property timerSeconds the cooldown between app open ads; null keeps the library default (4 minutes).
+     * @property timerSeconds the cooldown between app open ads; null means none (0).
      * @property maxPerSession 0 = no limit.
      * @property excludedActivities Activity class names never covered by an app open ad, such as the splash screen.
      * @property loadAgain see [AdProfile.loadAgain]; set it to keep an app open ad for every return to the app.

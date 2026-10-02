@@ -18,6 +18,7 @@ import io.github.thesobiaakbar.adroit.internal.fullscreen.LEVEL_END
 import io.github.thesobiaakbar.adroit.internal.fullscreen.engineConfig
 import kotlinx.coroutines.test.TestScope
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 internal val APP_OPEN = AppOpenPlacement("app_open")
@@ -53,6 +54,9 @@ internal class AppOpenHarness(
             placements {
                 appOpen(APP_OPEN, TestIds.unit(5)) {
                     retry = EXACT_RETRY
+                    // The library has no cooldown or launch minimum by default; these tests exercise them.
+                    cooldown = 4.minutes
+                    minLaunchesBeforeFirstShow = 2
                     configure()
                 }
                 interstitial(LEVEL_END, TestIds.unit(1))

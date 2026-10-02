@@ -223,7 +223,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 | Argument | Formats | Meaning |
 |---|---|---|
 | `counter = 3` | interstitial, rewarded interstitial | Shows an ad only on every 3rd `show` call. |
-| `timerSeconds = 60` | interstitial, rewarded interstitial, app open | At least 60 s between two shows of this ad. |
+| `timerSeconds = 60` | interstitial, rewarded interstitial, app open | At least 60 s between two shows of this ad. Leave it out for no timer (0). |
 | `maxPerSession = 5` | full-screen ads | At most 5 shows per app launch. |
 | `loadAgain = true` | all but banners | Loads the next ad right after each show. For ads shown again and again. |
 | `loadTimeoutSeconds = 8` | full-screen ads | How long a show waits for an ad that isn't loaded yet. |
@@ -231,7 +231,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 | `enabled = false` | all | Turns this ad off. |
 
 `AdSettings` holds what every ad shares: `splashSeconds` (the splash timer, default 11),
-`minSecondsBetweenFullScreenAds`, `maxInterstitialsPerSession`, and the defaults of `loadTimeoutSeconds`,
+`minSecondsBetweenFullScreenAds` (default 0: no gap), `maxInterstitialsPerSession`, and the defaults of `loadTimeoutSeconds`,
 `showLoading` and `loadingSeconds`.
 
 ## 6. Start everything: the Application class

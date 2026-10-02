@@ -84,7 +84,7 @@ fun fullConfig(analytics: AdEventListener): AdMobConfig = adMobConfig {
 | `privacy.restrictedDataProcessing` | false | Restricted data processing for US state privacy laws. |
 | `privacy.debugGeography` | `DISABLED` | Forces UMP's geography on test devices. Must be `DISABLED` in PRODUCTION. |
 | `privacy.consentSyncId` | none | Syncs consent choices across your apps for the same user. |
-| `frequency.minIntervalBetweenFullScreenAds` | 30 s | Between any two interstitial, rewarded interstitial and app open ads. |
+| `frequency.minIntervalBetweenFullScreenAds` | 0 (none) | Between any two interstitial, rewarded interstitial and app open ads. |
 | `frequency.includeRewardedInGlobalInterval` | false | Whether rewarded ads (which users ask for) also respect it. |
 | `frequency.maxInterstitialsPerSession` | no limit | Interstitials per session across every placement, splash ones not counted. Wins over a higher per-placement `maxPerSession`. |
 | `logging.level` | DEBUG, or WARN in PRODUCTION | Minimum level logged. |
@@ -111,7 +111,7 @@ Every placement takes an optional block:
 | `retry` | all | see [Defaults](#defaults) |
 | `expiry` | cached formats | see [Defaults](#defaults) |
 | `poolSize` | native | 1 (1 to 3) |
-| `cooldown`, `minLaunchesBeforeFirstShow`, `showOnColdStartAllowed`, `suppressAfterFullScreenAd`, `excludeActivities(...)` | app open | 4 min, 2, true, 5 s, none |
+| `cooldown`, `minLaunchesBeforeFirstShow`, `showOnColdStartAllowed`, `suppressAfterFullScreenAd`, `excludeActivities(...)` | app open | 0 (none), 0, true, 5 s, none |
 
 Every placement function also takes a list of ad unit IDs, for example `interstitial(placement, listOf(id1, id2))`:
 each load uses the next one, and after the last one the first again.
@@ -193,10 +193,10 @@ shorter than Google's limits, which are one hour for most formats and four hours
 
 | Frequency | Default |
 |---|---|
-| Between any two full-screen ads | 30 s |
+| Between any two full-screen ads | none |
 | Per placement | no limit |
-| App open cooldown | 4 min |
-| App open first show | after the 2nd launch |
+| App open cooldown | none |
+| App open first show | from the first launch |
 | App open after another full-screen ad | not within 5 s |
 
 ## Designing placements

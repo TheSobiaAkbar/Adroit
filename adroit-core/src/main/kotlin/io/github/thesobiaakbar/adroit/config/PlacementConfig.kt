@@ -143,9 +143,9 @@ public class RewardedInterstitialPlacementConfig internal constructor(
 /**
  * App open placement configuration. See docs/architecture/02_ARCHITECTURE.md §15 for how these gates combine.
  *
- * @property cooldown minimum time between two app open ads.
- * @property minLaunchesBeforeFirstShow app open ads show only after more than this many launches. Google advises
- *   against showing one on the first start.
+ * @property cooldown minimum time between two app open ads. Default zero: none.
+ * @property minLaunchesBeforeFirstShow app open ads show only after more than this many launches. Default 0. Google
+ *   advises against showing one on the first start.
  * @property excludedActivityClassNames fully qualified names of Activities over which app open ads never show.
  * @property showOnColdStartAllowed false makes `showOnColdStart` complete without showing an ad.
  * @property suppressAfterFullScreenAd no app open ad within this time after another full-screen ad was dismissed

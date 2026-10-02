@@ -13,6 +13,10 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   uses it.
 
 ### Changed
+- No timer unless you set one: the app open cooldown (`timerSeconds` / `cooldown`) and the gap between full-screen
+  ads (`minSecondsBetweenFullScreenAds` / `frequency.minIntervalBetweenFullScreenAds`) default to 0 instead of
+  4 minutes and 30 seconds, and `minLaunchesBeforeFirstShow` to 0 instead of 2, so app open can show from the first
+  launch. Set them to keep the old behaviour. The 5 s with no app open after another full-screen ad stays.
 - sample-compose shows every banner and native ad with `AdSlot(definition)` (Details, Feed), and the Compose guide
   and docs/COMPOSE.md recommend it over `AdBanner`/`AdNative`, which only take an ad of their own format.
 
