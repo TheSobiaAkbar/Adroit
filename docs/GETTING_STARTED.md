@@ -33,9 +33,9 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc2") // Compose apps (brings adroit-core and adroit-views)
-    // implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc2") // XML/View apps without Compose (brings adroit-core)
-    testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0-rc2")
+    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc3") // Compose apps (brings adroit-core and adroit-views)
+    // implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc3") // XML/View apps without Compose (brings adroit-core)
+    testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0-rc3")
 }
 ```
 

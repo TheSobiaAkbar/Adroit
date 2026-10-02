@@ -6,6 +6,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+## [1.0.0-rc3] - 2026-10-02
+
 ### Changed
 - `AdBannerView`, `AdNativeView` and `AdSlotView` keep their ad for their screen, like Compose's `AdBanner` and
   `AdNative`: in a ViewModel of the view tree's `ViewModelStoreOwner` (the Fragment, or the Activity), one per
@@ -254,6 +256,8 @@ First internal release.
 ### Google SDK
 - Built against Google Mobile Ads Next-Gen SDK `ads-mobile-sdk` 1.4.0 and UMP 4.0.0.
 
-[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc1...HEAD
+[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc3...HEAD
+[1.0.0-rc3]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc2...v1.0.0-rc3
+[1.0.0-rc2]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc1...v1.0.0-rc2
 [1.0.0-rc1]: https://github.com/TheSobiaAkbar/Adroit/compare/v0.1.0...v1.0.0-rc1
 [0.1.0]: https://github.com/TheSobiaAkbar/Adroit/releases/tag/v0.1.0

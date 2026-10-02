@@ -132,8 +132,8 @@ android {
 }
 
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc2")
-    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc2")
+    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc3")
+    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc3")
 
     // Your usual AndroidX libraries (Android Studio adds most of them):
     implementation("androidx.appcompat:appcompat:1.7.1")
@@ -548,16 +548,23 @@ can even swap them), in its style, with a shimmer while it loads:
 ```
 
 (`xmlns:app="http://schemas.android.com/apk/res-auto"` on the layout's root.) That's all. It loads by itself, hides
-itself if no ad comes, never requests a second ad while it has one, and destroys its ad with the screen. To replace
-the ad with a new one: `binding.homeBanner.load(refresh = true)`. The current one stays until the new one arrives.
+itself if no ad comes, and never requests a second ad while it has one. Once loaded, the ad stays: switching tabs,
+rebuilding a Fragment's view or rotating shows the same ad, with no new request. It's destroyed only when its screen
+closes for good (the Activity finishes, the Fragment is removed).
 
-A banner from code, into an empty `FrameLayout`:
+To replace the ad with a new one: `binding.homeBanner.load(refresh = true)`. The current one stays until the new one
+arrives, then it's destroyed; if the new one fails, the current one stays. To get a new ad each time the view is
+created again, add `app:adroit_refresh="true"` (false by default).
+
+A banner or a native ad from code, into an empty `FrameLayout`:
 
 ```kotlin
 findViewById<FrameLayout>(R.id.banner_container).attachBanner(this, AppAds.DetailsBanner.bannerPlacement())
+findViewById<FrameLayout>(R.id.native_container).attachNativeAd(this, AppAds.HomeNative.nativePlacement())
 ```
 
-(In a Fragment, pass `viewLifecycleOwner` instead of `this`.)
+(In a Fragment, pass `viewLifecycleOwner` instead of `this`.) Give the container an `android:id`: that's how the screen
+keeps its ad. Pass `refresh = true` to replace the ad the same way as above.
 
 ### Load banners and native ads before their screen
 

@@ -61,7 +61,7 @@ The optional `io.github.thesobiaakbar:adroit-firebase` module provides `Firebase
 Firebase itself (the google-services plugin); the module doesn't apply it.
 
 ```kotlin
-implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc2")
+implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc3")
 ```
 
 <!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Firebase.kt#firebase-setup -->
