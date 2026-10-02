@@ -3,6 +3,7 @@ package io.github.thesobiaakbar.adroit.views
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -32,7 +33,8 @@ public class AdSlotView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : FrameLayout(context, attrs) {
-    private var key: String? = null
+    internal var key: String? = null
+        private set
     private var shown: AdFormat? = null
     private var watch: Job? = null
 
@@ -151,5 +153,33 @@ public class AdSlotView @JvmOverloads constructor(
             }
         }
         removeAllViews()
+    }
+}
+
+/**
+ * Shows [definition]'s ad in this container: a banner or a native ad, whichever format the ad has now (its definition
+ * or Firebase), so one call fits both. It adds an [AdSlotView], replacing the container's children, and returns it.
+ * ```kotlin
+ * binding.adContainer.attachAd(AppAds.DetailsBanner)
+ * ```
+ * Like [AdSlotView], the ad stays for the screen: give the container an `android:id`, and calling this again for the
+ * new container (another tab, rotation) shows the same ad, with no new request. Another call on the same container
+ * asks for nothing, unless [refresh] is true: then a new ad loads while the shown one stays, and replaces it once
+ * loaded. The lifecycle comes from the view tree (in a Fragment, its view's). Main thread only.
+ */
+@JvmOverloads
+public fun ViewGroup.attachAd(definition: AdDefinition, refresh: Boolean = false): AdSlotView {
+    val shown = (0 until childCount).map(::getChildAt).filterIsInstance<AdSlotView>().firstOrNull()
+    if (shown != null && shown.key == definition.name) {
+        if (refresh) shown.load(refresh = true)
+        return shown
+    }
+    removeAllViews()
+    return AdSlotView(context).also {
+        it.slotKey = "attach:$id"
+        // Shown again with the ad its screen kept: a new one only when asked for.
+        it.refreshOnShow = refresh
+        it.setDefinition(definition)
+        addView(it, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
     }
 }

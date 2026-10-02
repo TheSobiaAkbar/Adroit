@@ -6,6 +6,12 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Added
+- `ViewGroup.attachAd(definition, refresh = false)` (adroit-views): shows a banner or a native ad in a container,
+  whichever format the ad has (its definition, or Firebase), so code no longer has to match `attachBanner` or
+  `attachNativeAd` to the ad's format. It keeps its ad for the screen like `AdSlotView`. sample-xml's Details screen
+  uses it.
+
 ## [1.0.0-rc3] - 2026-10-02
 
 ### Changed

@@ -62,6 +62,18 @@ From code: `setPlacement(placement)` or `setPlacement(placement, layout)`. It lo
 ## Extensions
 
 ```kotlin
+fun ViewGroup.attachAd(definition: AdDefinition, refresh: Boolean = false): AdSlotView
+```
+
+The easy one: `binding.adContainer.attachAd(AppAds.DetailsBanner)` shows the ad as a banner or a native ad, whichever
+format it has (its definition, or Firebase), like an `AdSlotView` added in code. Its lifecycle comes
+from the view tree, so it's the same call in an Activity and a Fragment. With the container's `android:id`, the ad
+stays as described in [How long an ad stays](#how-long-an-ad-stays); `refresh = true` replaces it.
+
+For banner options, a custom native layout or a result callback, use the format-specific ones. They only take an ad of
+their own format (`bannerPlacement()` / `nativePlacement()` throw on the other):
+
+```kotlin
 fun ViewGroup.attachBanner(owner: LifecycleOwner, placement: BannerPlacement, options: BannerOptions = …,
     refresh: Boolean = false): BannerAdHandle
 fun ViewGroup.attachNativeAd(owner: LifecycleOwner, placement: NativePlacement, layout: NativeAdLayout = …,

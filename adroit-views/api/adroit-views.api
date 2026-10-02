@@ -59,6 +59,12 @@ public final class io/github/thesobiaakbar/adroit/views/AdSlotView : android/wid
 	public final fun setSlotKey (Ljava/lang/String;)V
 }
 
+public final class io/github/thesobiaakbar/adroit/views/AdSlotViewKt {
+	public static final fun attachAd (Landroid/view/ViewGroup;Lio/github/thesobiaakbar/adroit/config/AdDefinition;)Lio/github/thesobiaakbar/adroit/views/AdSlotView;
+	public static final fun attachAd (Landroid/view/ViewGroup;Lio/github/thesobiaakbar/adroit/config/AdDefinition;Z)Lio/github/thesobiaakbar/adroit/views/AdSlotView;
+	public static synthetic fun attachAd$default (Landroid/view/ViewGroup;Lio/github/thesobiaakbar/adroit/config/AdDefinition;ZILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/views/AdSlotView;
+}
+
 public final class io/github/thesobiaakbar/adroit/views/BannerExtensionsKt {
 	public static final fun attachBanner (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/BannerPlacement;)Lio/github/thesobiaakbar/adroit/BannerAdHandle;
 	public static final fun attachBanner (Landroid/view/ViewGroup;Landroidx/lifecycle/LifecycleOwner;Lio/github/thesobiaakbar/adroit/BannerPlacement;Lio/github/thesobiaakbar/adroit/BannerOptions;)Lio/github/thesobiaakbar/adroit/BannerAdHandle;

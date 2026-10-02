@@ -39,7 +39,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- The banner is attached from code: DetailsActivity calls attachBanner. -->
+    <!-- The ad is attached from code: DetailsActivity calls attachAd. -->
     <FrameLayout
         android:id="@+id/banner_container"
         android:layout_width="match_parent"

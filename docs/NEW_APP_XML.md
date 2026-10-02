@@ -556,15 +556,27 @@ To replace the ad with a new one: `binding.homeBanner.load(refresh = true)`. The
 arrives, then it's destroyed; if the new one fails, the current one stays. To get a new ad each time the view is
 created again, add `app:adroit_refresh="true"` (false by default).
 
-A banner or a native ad from code, into an empty `FrameLayout`:
+The same from code, into an empty `FrameLayout` (or any `ViewGroup`) in your layout:
 
-```kotlin
-findViewById<FrameLayout>(R.id.banner_container).attachBanner(this, AppAds.DetailsBanner.bannerPlacement())
-findViewById<FrameLayout>(R.id.native_container).attachNativeAd(this, AppAds.HomeNative.nativePlacement())
+```xml
+<FrameLayout
+    android:id="@+id/details_ad"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" />
 ```
 
-(In a Fragment, pass `viewLifecycleOwner` instead of `this`.) Give the container an `android:id`: that's how the screen
-keeps its ad. Pass `refresh = true` to replace the ad the same way as above.
+```kotlin
+binding.detailsAd.attachAd(AppAds.DetailsBanner)
+```
+
+`attachAd` shows a banner or a native ad, whichever the ad is defined as (or Firebase makes it), so you never pick the
+wrong one. It works the same in an Activity or a Fragment. Give the container an `android:id`: that's how the screen
+keeps its ad. To replace the ad, call it again with `refresh = true`; the current one stays until the new one
+arrives.
+
+(`attachBanner` and `attachNativeAd` still exist for when you need banner or native options, but they only accept an
+ad of their own format: `bannerPlacement()` on a native ad, or `nativePlacement()` on a banner, throws. Use
+`attachAd` unless you need them.)
 
 ### Load banners and native ads before their screen
 
