@@ -55,8 +55,8 @@ Then add the module your app needs, and continue with your guide:
 
 ```kotlin
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc3")   // XML apps
-    // implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc3") // Compose apps
+    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc4")   // XML apps
+    // implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc4") // Compose apps
 }
 ```
 

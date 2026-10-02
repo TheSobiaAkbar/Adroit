@@ -6,6 +6,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+## [1.0.0-rc4] - 2026-10-02
+
 ### Added
 - `ViewGroup.attachAd(definition, refresh = false)` (adroit-views): shows a banner or a native ad in a container,
   whichever format the ad has (its definition, or Firebase), so code no longer has to match `attachBanner` or
@@ -272,7 +274,8 @@ First internal release.
 ### Google SDK
 - Built against Google Mobile Ads Next-Gen SDK `ads-mobile-sdk` 1.4.0 and UMP 4.0.0.
 
-[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc3...HEAD
+[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc4...HEAD
+[1.0.0-rc4]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc3...v1.0.0-rc4
 [1.0.0-rc3]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc2...v1.0.0-rc3
 [1.0.0-rc2]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc1...v1.0.0-rc2
 [1.0.0-rc1]: https://github.com/TheSobiaAkbar/Adroit/compare/v0.1.0...v1.0.0-rc1

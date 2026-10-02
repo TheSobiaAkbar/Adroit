@@ -138,8 +138,8 @@ android {
 }
 
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc3")
-    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc3")
+    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc4")
+    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc4")
 
     // Your usual Compose libraries (Android Studio's "Empty Activity" template adds most of them):
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))

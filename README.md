@@ -59,7 +59,7 @@ Compose screens adds `adroit-compose`, which includes `adroit-views`.
 
 ```kotlin
 // build.gradle.kts
-dependencies { implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc3") }
+dependencies { implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc4") }
 
 // Application.onCreate
 Adroit.initialize(this, adMobConfig {

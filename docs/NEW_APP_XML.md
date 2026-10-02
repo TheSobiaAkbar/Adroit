@@ -132,8 +132,8 @@ android {
 }
 
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc3")
-    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc3")
+    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc4")
+    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc4")
 
     // Your usual AndroidX libraries (Android Studio adds most of them):
     implementation("androidx.appcompat:appcompat:1.7.1")
