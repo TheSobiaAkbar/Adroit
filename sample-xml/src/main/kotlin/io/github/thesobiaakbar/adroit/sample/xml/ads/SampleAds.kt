@@ -38,7 +38,6 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
     /** On return to the app, never over the splash screen. Loaded again after each show, for the next return. */
     AppOpenAd(
         AdProfile.appOpen(
-            timerSeconds = 240,
             excludedActivities = listOf("io.github.thesobiaakbar.adroit.sample.xml.SplashActivity"),
             loadAgain = true,
         ),
