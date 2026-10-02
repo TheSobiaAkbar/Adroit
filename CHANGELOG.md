@@ -12,6 +12,10 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `attachNativeAd` to the ad's format. It keeps its ad for the screen like `AdSlotView`. sample-xml's Details screen
   uses it.
 
+### Changed
+- sample-compose shows every banner and native ad with `AdSlot(definition)` (Details, Feed), and the Compose guide
+  and docs/COMPOSE.md recommend it over `AdBanner`/`AdNative`, which only take an ad of their own format.
+
 ## [1.0.0-rc3] - 2026-10-02
 
 ### Changed

@@ -12,10 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thesobiaakbar.adroit.compose.AdBanner
-import io.github.thesobiaakbar.adroit.compose.AdNative
-import io.github.thesobiaakbar.adroit.config.bannerPlacement
-import io.github.thesobiaakbar.adroit.config.nativePlacement
+import io.github.thesobiaakbar.adroit.compose.AdSlot
 import io.github.thesobiaakbar.adroit.sample.compose.R
 import io.github.thesobiaakbar.adroit.sample.compose.ads.SampleAds
 
@@ -55,9 +52,9 @@ val feedRows: List<FeedRow> = buildList {
 const val FEED_TAG = "feed"
 
 /**
- * Ads in a lazy list: each ad row is an [AdNative] or an [AdBanner] with its own `slotKey`. The ads are kept by this
- * destination (its ViewModel store), so scrolling away and back, switching tabs or rotating shows the same ad without
- * a new request; they're destroyed when the destination is gone for good.
+ * Ads in a lazy list: each ad row is an [AdSlot] (a native ad or a banner, whichever the ad is) with its own
+ * `slotKey`. The ads are kept by this destination (its ViewModel store), so scrolling away and back, switching tabs or
+ * rotating shows the same ad without a new request; they're destroyed when the destination is gone for good.
  */
 @Composable
 fun FeedScreen() {
@@ -69,13 +66,13 @@ fun FeedScreen() {
                     HorizontalDivider()
                 }
                 // No layout: FeedNative's style (small, in SampleAds) picks the template.
-                is FeedRow.Ad -> AdNative(
-                    SampleAds.FeedNative.nativePlacement(),
+                is FeedRow.Ad -> AdSlot(
+                    SampleAds.FeedNative,
                     Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
                     slotKey = row.slot,
                 )
-                is FeedRow.Banner -> AdBanner(
-                    SampleAds.FeedBanner.bannerPlacement(),
+                is FeedRow.Banner -> AdSlot(
+                    SampleAds.FeedBanner,
                     Modifier.padding(vertical = 4.dp),
                     slotKey = row.slot,
                 )

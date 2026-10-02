@@ -23,6 +23,11 @@ A banner or a native ad, whichever format the ad has now: a Firebase value can s
 and the slot follows. Size and template come from the ad's style. It's [`AdBanner`](#adbanner) or
 [`AdNative`](#adnative-and-remembernativead) underneath.
 
+Use it for every banner and native ad: it never needs the ad's format, so changing an ad between banner and native
+(in its definition or Firebase) never breaks the code. `AdBanner` and `AdNative` take a placement of their own format
+only (`bannerPlacement()` or `nativePlacement()` throws on the other); use them for banner options or one screen's own
+native layout.
+
 ## `AdBanner`
 
 ```kotlin

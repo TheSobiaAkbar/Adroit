@@ -541,10 +541,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.thesobiaakbar.adroit.AdSlots
-import io.github.thesobiaakbar.adroit.compose.AdNative
 import io.github.thesobiaakbar.adroit.compose.AdSlot
 import io.github.thesobiaakbar.adroit.compose.rememberFullScreenAdLauncher
-import io.github.thesobiaakbar.adroit.config.nativePlacement
 import io.github.thesobiaakbar.adroit.config.rewardedInterstitialPlacement
 import io.github.thesobiaakbar.adroit.config.rewardedPlacement
 import com.example.myapp.ads.AppAds
@@ -584,7 +582,7 @@ fun HomeScreen(onOpenDetails: () -> Unit, coins: CoinsViewModel = viewModel()) {
             Button(onClick = { bannerRefresh++ }, modifier = Modifier.fillMaxWidth()) { Text("Refresh the banner") }
 
             // A native ad inside the page: its template comes from HomeNative's style.
-            AdNative(AppAds.HomeNative.nativePlacement(), Modifier.fillMaxWidth().padding(top = 16.dp))
+            AdSlot(AppAds.HomeNative, Modifier.fillMaxWidth().padding(top = 16.dp))
             // A native ad in your own layout (step 11), registered as "promo".
             AdSlot(AppAds.PromoNative, Modifier.fillMaxWidth().padding(top = 16.dp))
         }
@@ -722,13 +720,20 @@ once: `AdSlots.load(AppAds.AppOpenAd)`. With `loadAgain = true`, the next one lo
 
 ### Banners and native ads: one composable
 
-| Composable | Shows |
-|---|---|
-| `AdSlot(AppAds.HomeBanner)` | A banner or a native ad, whichever the ad is (Firebase can even swap them). |
-| `AdBanner(AppAds.DetailsBanner.bannerPlacement())` | A banner. |
-| `AdNative(AppAds.HomeNative.nativePlacement())` | A native ad, in its style's template. |
+Use `AdSlot` for every banner and native ad:
 
-Each one loads by itself, shows a shimmer while it loads, and collapses if no ad comes. Its ad belongs to the screen
+```kotlin
+AdSlot(AppAds.DetailsBanner)
+```
+
+It shows a banner or a native ad, whichever the ad is in `AppAds` (or Firebase makes it), so the code never has to
+match the ad's format: change `AdProfile.banner(…)` to `AdProfile.native(…)` and the same line shows a native ad.
+
+`AdBanner(AppAds.DetailsBanner.bannerPlacement())` and `AdNative(AppAds.HomeNative.nativePlacement())` still exist
+for banner options or one screen's own native layout, but they only take an ad of their own format:
+`bannerPlacement()` on a native ad, or `nativePlacement()` on a banner, throws. Use `AdSlot` unless you need them.
+
+`AdSlot` loads by itself, shows a shimmer while it loads, and collapses if no ad comes. Its ad belongs to the screen
 (the navigation destination): leaving the screen for another tab and coming back, scrolling it away in a list, or
 rotating shows the same ad again, with no new request. It's destroyed only when the screen is (the destination is
 popped).
@@ -744,15 +749,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.thesobiaakbar.adroit.compose.AdBanner
-import io.github.thesobiaakbar.adroit.config.bannerPlacement
+import io.github.thesobiaakbar.adroit.compose.AdSlot
 import com.example.myapp.ads.AppAds
 
 @Composable
 fun DetailsScreen() {
     Column(Modifier.fillMaxSize()) {
         Text("Details", Modifier.weight(1f).padding(16.dp))
-        AdBanner(AppAds.DetailsBanner.bannerPlacement(), Modifier.fillMaxWidth())
+        AdSlot(AppAds.DetailsBanner, Modifier.fillMaxWidth())
     }
 }
 ```
@@ -761,7 +765,7 @@ To replace an ad with a new one, change its `refreshKey`: `AdSlot(AppAds.HomeBan
 then `bannerRefresh++` (the "Refresh the banner" button in `HomeScreen`). The current ad stays until the new one
 arrives, and stays if the new one fails. `AdBanner` and `AdNative` take a `refreshKey` too.
 
-In a lazy list, give each banner a `slotKey`, as for native ads below.
+In a lazy list, give each ad a `slotKey`, as below.
 
 ### Load banners and native ads before their screen
 
@@ -783,7 +787,7 @@ A banner loaded ahead is sized for the full screen width; a banner of another wi
 
 ### Ads in a LazyColumn
 
-One `AdNative` or `AdBanner` per ad item, each with its own `slotKey`. Nothing else: the ads are kept in the screen's
+One `AdSlot` per ad item, each with its own `slotKey`. Nothing else: the ads are kept in the screen's
 ViewModel store, so scrolling away and back, or rotating, shows the same ad without reloading it.
 
 ```kotlin
@@ -796,10 +800,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
-import io.github.thesobiaakbar.adroit.compose.AdBanner
-import io.github.thesobiaakbar.adroit.compose.AdNative
-import io.github.thesobiaakbar.adroit.config.bannerPlacement
-import io.github.thesobiaakbar.adroit.config.nativePlacement
+import io.github.thesobiaakbar.adroit.compose.AdSlot
 import com.example.myapp.ads.AppAds
 
 @Composable
@@ -809,10 +810,10 @@ fun FeedScreen() {
             when {
                 // Every 10th row is a native ad, and the 25th a banner; each one's position is its slotKey.
                 position % 10 == 9 -> item(key = "ad_$position") {
-                    AdNative(AppAds.FeedNative.nativePlacement(), Modifier.fillMaxWidth(), slotKey = position)
+                    AdSlot(AppAds.FeedNative, Modifier.fillMaxWidth(), slotKey = position)
                 }
                 position == 24 -> item(key = "banner_$position") {
-                    AdBanner(AppAds.HomeBanner.bannerPlacement(), slotKey = position)
+                    AdSlot(AppAds.HomeBanner, slotKey = position)
                 }
                 else -> item(key = "article_$position") { Text("Article $position", Modifier.padding(16.dp)) }
             }

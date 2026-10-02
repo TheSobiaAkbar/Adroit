@@ -14,16 +14,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thesobiaakbar.adroit.compose.AdBanner
-import io.github.thesobiaakbar.adroit.compose.AdNative
-import io.github.thesobiaakbar.adroit.config.bannerPlacement
-import io.github.thesobiaakbar.adroit.config.nativePlacement
+import io.github.thesobiaakbar.adroit.compose.AdSlot
 import io.github.thesobiaakbar.adroit.sample.compose.R
 import io.github.thesobiaakbar.adroit.sample.compose.ads.SampleAds
 
 /**
- * A banner ([AdBanner], destroyed when this destination leaves the screen) and a native ad ([AdNative], kept across
- * rotation by this destination and destroyed when it's popped). Their looks come from SampleAds: a collapsible
+ * A banner and a native ad, each an [AdSlot]: it shows a banner or a native ad, whichever the ad is in SampleAds (or
+ * Firebase), so the code never has to match its format. Both are kept across rotation by this destination and
+ * destroyed when it's popped. Their looks come from SampleAds: a collapsible
  * banner and the large compact native template. Home loads both ahead, so they show as soon as this screen opens.
  */
 @Composable
@@ -34,8 +32,8 @@ fun DetailsScreen() {
             Spacer(Modifier.height(8.dp))
             Text(stringResource(R.string.details_body))
             Spacer(Modifier.height(16.dp))
-            AdNative(SampleAds.ArticleNative.nativePlacement(), Modifier.fillMaxWidth())
+            AdSlot(SampleAds.ArticleNative, Modifier.fillMaxWidth())
         }
-        AdBanner(SampleAds.DetailsBanner.bannerPlacement())
+        AdSlot(SampleAds.DetailsBanner)
     }
 }

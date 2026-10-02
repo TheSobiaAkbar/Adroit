@@ -17,9 +17,9 @@ import io.github.thesobiaakbar.adroit.config.AdSettings
  * sets them in Firebase): `AdProfile.interstitial(ids = listOf("ca-app-pub-…/…"))`.
  *
  * The app refers to every ad through this enum: `AdSlots.showFullScreen(activity, SampleAds.LevelCompleteAd)`,
- * `SampleAds.ExtraLifeRewarded.rewardedPlacement()` for the format-specific APIs, and `AdSlot(SampleAds.HomeBanner)`,
- * `AdBanner(SampleAds.DetailsBanner.bannerPlacement())` or `AdNative(SampleAds.ArticleNative.nativePlacement())` in
- * composables.
+ * `SampleAds.ExtraLifeRewarded.rewardedPlacement()` for the format-specific APIs, and `AdSlot(SampleAds.HomeBanner)` for
+ * every banner and native ad in composables: it shows whichever format the ad is. (`AdNative(placement, layout = …)`
+ * only where one screen needs its own layout, as NativeStylesScreen does.)
  *
  * Ads load only when the app asks (`AdSlots.load`): the Home screen for its full-screen ads, `MainActivity` for the
  * app open ad, the splash screen for `SplashAd`, and each banner or native composable for its ad. `loadAgain = true`
