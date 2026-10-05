@@ -170,7 +170,7 @@ public sealed class PlacementConfigBuilder(internal val placement: AdPlacement, 
 
 /** Builds a [FrequencyRule] inside `frequency { }`. */
 @AdMobConfigDsl
-public class FrequencyRuleBuilder internal constructor(initial: FrequencyRule) {
+public class FrequencyRuleBuilder internal constructor(private val initial: FrequencyRule) {
     /** See [FrequencyRule.minInterval]. */
     public var minInterval: Duration = initial.minInterval
 
@@ -180,7 +180,9 @@ public class FrequencyRuleBuilder internal constructor(initial: FrequencyRule) {
     /** See [FrequencyRule.counter]. */
     public var counter: Int = initial.counter
 
-    internal fun build(): FrequencyRule = FrequencyRule(minInterval, maxPerSession, counter)
+    internal fun build(): FrequencyRule = FrequencyRule(minInterval, maxPerSession, counter).also {
+        if (counter == initial.counter) it.counterPlan = initial.counterPlan
+    }
 }
 
 /** Settings for a rewarded or rewarded interstitial placement, and the base of [InterstitialPlacementBuilder]. */

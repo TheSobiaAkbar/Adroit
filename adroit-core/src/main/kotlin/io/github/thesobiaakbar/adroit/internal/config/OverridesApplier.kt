@@ -81,6 +81,7 @@ internal class OverridesApplier(
                     o.preload?.let { "preload=$it" },
                     o.effectiveAdUnitIds?.let { ids -> "adUnitIds=${ids.map(config::displayAdUnitId)}" },
                     o.counter?.let { "counter=$it" },
+                    o.counterPlan?.let { "counterPlan=$it" },
                     o.bannerSize?.let { "bannerSize=$it" },
                     o.nativeStyle?.let { "nativeStyle=$it" },
                     o.splashTimeout?.let { "splashTimeout=$it" },

@@ -45,7 +45,10 @@ internal object AdDefinitionJson {
             .put("adUnitIds", JSONArray(profile.adUnitIds))
         when (profile) {
             is AdProfile.Interstitial -> json
-                .put("counter", profile.counter)
+                .putCounter(
+                    profile.counter, profile.counters, profile.counterStart, profile.counterStep,
+                    profile.counterResetOnFail, profile.loadAhead,
+                )
                 .put("timerSeconds", profile.timerSeconds)
                 .put("maxPerSession", profile.maxPerSession)
                 .apply {
@@ -55,7 +58,10 @@ internal object AdDefinitionJson {
                     }
                 }
             is AdProfile.RewardedInterstitial -> json
-                .put("counter", profile.counter)
+                .putCounter(
+                    profile.counter, profile.counters, profile.counterStart, profile.counterStep,
+                    profile.counterResetOnFail, profile.loadAhead,
+                )
                 .put("timerSeconds", profile.timerSeconds)
                 .put("maxPerSession", profile.maxPerSession)
             is AdProfile.Rewarded -> json.put("maxPerSession", profile.maxPerSession)
@@ -98,6 +104,26 @@ internal object AdDefinitionJson {
         definitions.forEach { add(it.name, profile(it.defaults), "Ad ${it.name} (docs/AD_PROFILES.md)") }
         return JSONObject().put("parameters", parameters)
     }
+
+    /** `counter` (a number, or the list of max counters) and, for an ad that has a counter, its other counter fields. */
+    private fun JSONObject.putCounter(
+        counter: Int,
+        counters: List<Double>,
+        start: Double,
+        step: Double,
+        resetOnFail: Boolean,
+        loadAhead: Int,
+    ): JSONObject {
+        if (counters.isEmpty()) put("counter", counter) else put("counter", JSONArray(counters.map(::number)))
+        if (counter == 0 && counters.isEmpty()) return this
+        return put("counterStart", number(start))
+            .put("counterStep", number(step))
+            .put("counterResetOnFail", resetOnFail)
+            .put("loadAhead", loadAhead)
+    }
+
+    /** 3.0 as 3, 1.5 as 1.5. */
+    private fun number(value: Double): Number = if (value == Math.floor(value)) value.toLong() else value
 
     private fun formatName(profile: AdProfile): String = when (profile) {
         is AdProfile.Interstitial -> "interstitial"

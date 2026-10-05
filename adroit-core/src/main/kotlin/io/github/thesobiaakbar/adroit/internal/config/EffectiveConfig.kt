@@ -160,11 +160,16 @@ internal class EffectiveConfig private constructor(
             }
             // Swapped away: the partner placement serves this key, so this one releases its ad and stays quiet.
             val swappedTo = override?.format?.takeIf { it != config.format && it == FormatSwap.partnerOf(config.format) }
+            // The counter, field by field: the remote value, then the ad's own, then the plain `counter` number.
+            val remotePlan = (override?.counterPlan ?: CounterPlan()).let { plan ->
+                if (plan.maxes == null && override?.counter != null) plan.copy(maxes = listOf(override.counter.toDouble())) else plan
+            }
+            val plan = remotePlan.orElse(config.frequency.plan)
             val rule = FrequencyRule(
                 minInterval = override?.minInterval ?: config.frequency.minInterval,
                 maxPerSession = override?.maxPerSession ?: config.frequency.maxPerSession,
-                counter = override?.counter ?: config.frequency.counter,
-            )
+                counter = plan.legacyCounter,
+            ).also { if (plan != it.plan) it.counterPlan = plan }
             return EffectivePlacement(
                 config = config,
                 adUnitIds = adUnitIds,
@@ -298,6 +303,7 @@ internal class EffectivePlacement(
     val frequency: FrequencyRule =
         if (config is AppOpenPlacementConfig && config.cooldown > placementRule.minInterval) {
             FrequencyRule(config.cooldown, placementRule.maxPerSession, placementRule.counter)
+                .also { it.counterPlan = placementRule.counterPlan }
         } else {
             placementRule
         }

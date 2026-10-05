@@ -168,20 +168,23 @@ internal object AdProfiles {
         val enabled = fields.boolean("enabled") ?: true
         val maxPerSession = fields.count("maxPerSession")?.let(::zeroMeansNoLimit) ?: Int.MAX_VALUE
         val timer = (fields.count("timerSeconds") ?: 0).seconds
-        val counter = fields.count("counter") ?: 0
+        val counted = format == AdFormat.INTERSTITIAL || format == AdFormat.REWARDED_INTERSTITIAL
+        val counterPlan = if (counted) fields.counterPlan()?.withoutDefaults() else null
+        val counter = counterPlan?.legacyCounter ?: 0
+        val rule = FrequencyRule(timer, maxPerSession, counter).also { it.counterPlan = counterPlan?.beyond(counter) }
         // Every ad loads only when the app asks (AdSlots.load, or a native view); "loadAgain" reloads it after a show.
         val preload = PreloadStrategy.NONE
         when (format) {
             AdFormat.INTERSTITIAL -> builder.interstitial(InterstitialPlacement(key), ids) {
                 this.enabled = enabled
-                frequency = FrequencyRule(timer, maxPerSession, counter)
+                frequency = rule
                 splash = fields.boolean("splash") ?: false
                 fields.count("splashTimeoutSeconds")?.let { splashTimeout = it.seconds }
                 this.preload = preload
             }
             AdFormat.REWARDED_INTERSTITIAL -> builder.rewardedInterstitial(RewardedInterstitialPlacement(key), ids) {
                 this.enabled = enabled
-                frequency = FrequencyRule(timer, maxPerSession, counter)
+                frequency = rule
                 this.preload = preload
             }
             AdFormat.REWARDED -> builder.rewarded(RewardedPlacement(key), ids) {
@@ -272,6 +275,8 @@ internal object AdProfiles {
         val styleFormat = swapTo ?: format
         val look = if (styleFormat == AdFormat.NATIVE) fields.nativeLook() else null
         val fullScreenFrequency = format == AdFormat.INTERSTITIAL || format == AdFormat.REWARDED_INTERSTITIAL
+        val counterPlan = if (fullScreenFrequency) fields.counterPlan() else null
+        val counter = counterPlan?.maxes?.let { counterPlan.legacyCounter }
         return PlacementOverride(
             enabled = fields.boolean("enabled"),
             minInterval = if (fullScreenFrequency || format == AdFormat.APP_OPEN) fields.count("timerSeconds")?.seconds else null,
@@ -279,7 +284,7 @@ internal object AdProfiles {
                 fields.count("maxPerSession")?.let(::zeroMeansNoLimit)
             },
             adUnitIds = fields.adUnitIds()?.ifEmpty { null },
-            counter = if (fullScreenFrequency) fields.count("counter") else null,
+            counter = counter,
             bannerSize = if (styleFormat == AdFormat.BANNER) fields.bannerSize() else null,
             nativeStyle = look?.style,
             splashTimeout = if (format == AdFormat.INTERSTITIAL) fields.count("splashTimeoutSeconds")?.seconds else null,
@@ -287,6 +292,7 @@ internal object AdProfiles {
         ).also {
             if (format != AdFormat.BANNER) it.loadAgain = fields.boolean("loadAgain")
             it.nativeLayoutName = look?.layoutName
+            it.counterPlan = counterPlan?.beyond(counter)
             it.behavior = behaviorOf(json, format, issue)
         }
     }
@@ -334,6 +340,29 @@ internal object AdProfiles {
             }
             else -> wrong(name, "a whole number, 0 or more")
         }
+
+        /** A number, 0 or more; decimals allowed. */
+        fun amount(name: String): Double? = when (val value = raw(name)) {
+            null -> null
+            is Number -> value.toDouble().takeIf { it >= 0 && it.isFinite() } ?: wrong(name, "a number, 0 or more")
+            else -> wrong(name, "a number, 0 or more")
+        }
+
+        /** The counter fields set here (docs/AD_PROFILES.md, "Counter"), or null when none is. */
+        fun counterPlan(): CounterPlan? = CounterPlan(
+            maxes = when (val value = raw("counter")) {
+                // Several max counters, used one after the other.
+                is JSONArray -> (0 until value.length()).mapNotNull { i ->
+                    (value.opt(i) as? Number)?.toDouble()?.takeIf { it >= 0 && it.isFinite() }
+                        ?: null.also { issue("\"counter\" item ${i + 1} isn't a number, 0 or more; ignored") }
+                }
+                else -> amount("counter")?.let(::listOf)
+            },
+            start = amount("counterStart"),
+            step = amount("counterStep")?.let { if (it > 0) it else wrong("counterStep", "a number above 0") },
+            resetOnFail = boolean("counterResetOnFail"),
+            loadAhead = count("loadAhead"),
+        ).takeIfSet()
 
         fun string(name: String): String? = when (val value = raw(name)) {
             null -> null

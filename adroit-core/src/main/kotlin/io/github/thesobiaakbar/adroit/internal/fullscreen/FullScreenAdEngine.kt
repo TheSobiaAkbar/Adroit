@@ -158,6 +158,7 @@ internal class FullScreenAdEngine(
             return
         }
         if (retry.isScheduled(slot.key)) return
+        if (slot.timerJob?.isActive == true) return log.d { "preload(): ${placement.key} loads when its timer ends" }
         slot.failedAttempts = 0
         load(slot, p)
     }
@@ -198,7 +199,14 @@ internal class FullScreenAdEngine(
         mayWait: Boolean = true,
         onResult: (FullScreenResult) -> Unit,
     ) {
-        show(activity, placement, prepare, onRewardEarned, OnceCallback(onResult), afterWait = false, mayWait = mayWait)
+        val callback = OnceCallback<FullScreenResult>({ result ->
+            // A due ad that wasn't shown: the counter keeps its value or starts again, as the ad's counter says.
+            if (result is FullScreenResult.NotShown && result.error !is AdError.CounterNotReached) {
+                placements[placement]?.let { frequency.recordNotShown(it.frequencyPlacement) }
+            }
+            onResult(result)
+        })
+        show(activity, placement, prepare, onRewardEarned, callback, afterWait = false, mayWait = mayWait)
     }
 
     private fun show(
@@ -335,7 +343,11 @@ internal class FullScreenAdEngine(
         if (p == null) return AdError.InvalidConfiguration("${placement.key} isn't a configured $format placement")
         val slot = slots[placement] ?: return AdError.Disabled(p.disabledReason ?: UnavailableReason.DISABLED_BY_CONFIG)
         when (val decision = frequency.check(p.frequencyPlacement, countTrigger = countTrigger && countsTriggers(p))) {
-            is FrequencyDecision.CounterNotReached -> return AdError.CounterNotReached(decision.remaining)
+            is FrequencyDecision.CounterNotReached -> {
+                // The ad's loadAhead: load it this many calls before it's due.
+                if (decision.remaining <= p.frequency.plan.loadAheadCalls) preload(placement)
+                return AdError.CounterNotReached(decision.remaining)
+            }
             is FrequencyDecision.Capped -> return AdError.FrequencyCapped(decision.retryAfter)
             FrequencyDecision.Allowed -> Unit
         }
@@ -343,7 +355,7 @@ internal class FullScreenAdEngine(
         if (coordinator.isShowing) return AdError.AlreadyShowing
         val cached = slot.cached
         if (cached == null) {
-            if (p.preload != PreloadStrategy.NONE) preload(placement)
+            if (p.preload != PreloadStrategy.NONE || (countTrigger && countsTriggers(p) && p.frequency.plan.isOn)) preload(placement)
             return AdError.NotReady
         }
         if (cached.isExpired(clock)) {
@@ -457,6 +469,7 @@ internal class FullScreenAdEngine(
         slot.loading = false
         slot.failedAttempts = 0
         slot.take()?.release()
+        slot.timerJob?.cancel()
         retry.cancel(slot.key)
         slot.availability.value = availability
     }
@@ -479,6 +492,26 @@ internal class FullScreenAdEngine(
         if (p.preload != PreloadStrategy.NONE) {
             slot.failedAttempts = 0
             load(slot, p)
+            return
+        }
+        // A counter whose next max counter is already within loadAhead calls (for example a max counter of 1).
+        val remainingCalls = frequency.remainingCalls(p.frequencyPlacement)
+        if (remainingCalls != null && countsTriggers(p)) {
+            if (remainingCalls <= p.frequency.plan.loadAheadCalls) {
+                slot.failedAttempts = 0
+                load(slot, p)
+            }
+            return
+        }
+        // An ad profile on a timer: the next ad is requested when the timer ends, then kept until it's shown.
+        val wait = frequency.timerRemaining(p.frequencyPlacement)?.takeIf { p.behavior != null } ?: return
+        log.d { "$format ${p.placement.key}: on a timer; loading the next one in $wait" }
+        slot.timerJob?.cancel()
+        slot.timerJob = scope.launch {
+            delay(wait)
+            // The delay is over: preload() must not take this job for a running timer.
+            slot.timerJob = null
+            if (slots[p.placement] === slot) preload(p.placement)
         }
     }
 

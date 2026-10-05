@@ -211,13 +211,20 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 
 | Argument | Formats | Meaning |
 |---|---|---|
-| `counter = 3` | interstitial, rewarded interstitial | Shows an ad only on every 3rd `show` call. |
-| `timerSeconds = 60` | interstitial, rewarded interstitial, app open | At least 60 s between two shows of this ad. Leave it out for no timer (0). |
+| `counter = 3` | interstitial, rewarded interstitial | The counter: shows an ad only on every 3rd `show` call. |
+| `counters = listOf(3, 2)` | interstitial, rewarded interstitial | Several max counters in a loop: an ad after 3 calls, then after 2, then 3 again. |
+| `counterStart = 1`, `counterStep = 0.5` | interstitial, rewarded interstitial | Where the counter starts, and what each call adds (defaults 0 and 1). |
+| `counterResetOnFail = true` | interstitial, rewarded interstitial | A due ad that couldn't be shown is counted again from 0, instead of tried on the next call. |
+| `loadAhead = 1` | interstitial, rewarded interstitial | How many calls before it's due a counter ad loads (0 = only when due). |
+| `timerSeconds = 60` | interstitial, rewarded interstitial, app open | The timer, used when there's no counter: at least 60 s between two shows, and the next ad is requested when the 60 s are over. Leave it out for no timer (0). |
 | `maxPerSession = 5` | full-screen ads | At most 5 shows per app launch. |
 | `loadAgain = true` | all but banners | Loads the next ad right after each show. For ads shown again and again. |
 | `loadTimeoutSeconds = 8` | full-screen ads | How long a show waits for an ad that isn't loaded yet. |
 | `showLoading = false` | all | No "Loading ad…" screen before this full-screen ad, and no shimmer on this banner or native ad. |
 | `enabled = false` | all | Turns this ad off. |
+
+Counter and timer are explained, with the values to paste, in
+[step 13](#13-firebase-the-parameters-and-sample-values): everything in this table can also be changed from Firebase.
 
 `AdSettings` holds what every ad shares: `splashSeconds` (the splash timer, default 11),
 `minSecondsBetweenFullScreenAds` (default 0: no gap), `maxInterstitialsPerSession`, and the defaults of `loadTimeoutSeconds`,
@@ -499,7 +506,7 @@ binding.levelComplete.setOnClickListener {
 | The ad is loaded | "Loading ad…" for about a second, then the ad. Your callback runs when it closes. |
 | It's still loading | "Loading ad…" for at most `loadTimeoutSeconds` (8), then the ad, or your callback if it didn't come. |
 | The load failed, or the user is offline | Your callback runs at once. |
-| `counter = 2` and this is the 1st call | No ad; your callback runs. The 2nd, 4th, 6th… calls show an ad. |
+| `counter = 2` and this is the 1st call | No ad; your callback runs, and the ad loads for the next call (`loadAhead`). The 2nd, 4th, 6th… calls show an ad. |
 | A limit (`timerSeconds`, `maxPerSession`, the gap between ads) or a premium user | No ad; your callback runs. |
 
 ### Rewarded
@@ -873,6 +880,10 @@ the IDs from `AppAds`.
   "enabled": true,
   "adUnitIds": ["ca-app-pub-XXXXXXXXXXXXXXXX/2222222222", "ca-app-pub-XXXXXXXXXXXXXXXX/3333333333"],
   "counter": 2,
+  "counterStart": 0,
+  "counterStep": 1,
+  "counterResetOnFail": false,
+  "loadAhead": 1,
   "timerSeconds": 0,
   "maxPerSession": 10,
   "loadAgain": true,
@@ -988,6 +999,52 @@ the IDs from `AppAds`.
 | `welcome_text` | String | `Hello again!` |
 | `features` | JSON | `{"chat": true}` |
 
+**Counter and timer** (interstitials and rewarded interstitials). Each ad follows one strategy, and you can switch
+it from Firebase at any time:
+
+| The ad's JSON has | Strategy |
+|---|---|
+| `"counter": 0, "timerSeconds": 0` | None: every call may show an ad. |
+| a `counter` | Counter. `timerSeconds` is ignored. |
+| `"counter": 0` and a `timerSeconds` | Timer. |
+
+*Counter.* The counter starts at `counterStart`. Every time your code calls the ad, it grows by `counterStep`. When
+it reaches the max counter (`counter`), the ad shows; once the ad was really shown, the counter goes back to 0.
+
+```json
+{
+  "counter": [3, 2],
+  "counterStart": 1,
+  "counterStep": 1,
+  "counterResetOnFail": false,
+  "loadAhead": 1
+}
+```
+
+| Field | Default | Meaning |
+|---|---|---|
+| `counter` | `0` | The max counter. One number (`3`: an ad on every 3rd call), or a list (`[3, 2]`: an ad when the counter reaches 3, then when it reaches 2, then 3 again, and so on in a loop). `0` turns the counter off. |
+| `counterStart` | `0` | Where the counter starts when the app starts. With `1` and a max counter of 3, the first ad comes on the 2nd call. |
+| `counterStep` | `1` | What each call adds. `0.5` makes a max counter of 3 take 6 calls; decimals like `1.25` work too. |
+| `counterResetOnFail` | `false` | When the ad is due and couldn't be shown (not loaded, offline): `false` tries again on the very next call; `true` counts again from 0. |
+| `loadAhead` | `1` | When the ad loads: `1` one call before it's due, `2` two calls before, `0` only on the call it's due. |
+
+Where the ad loads:
+
+| You want the ad to load… | Value |
+|---|---|
+| One call before it's due (the default) | `{ "loadAhead": 1 }` |
+| Two calls before it's due | `{ "loadAhead": 2 }` |
+| Only when it's due, then show as soon as it arrives (behind "Loading ad…") | `{ "loadAhead": 0 }` |
+| Only when it's due, and never make the user wait: the next call shows it | `{ "loadAhead": 0, "loadTimeoutSeconds": 0 }` |
+| Right after each ad is shown, so one is always ready | `{ "loadAgain": true }` |
+
+*Timer.* With `{ "counter": 0, "timerSeconds": 30 }`: after the ad is shown, nothing happens for 30 seconds (the ad
+isn't shown again and isn't requested). Then the next ad is requested once, and stays loaded until your code shows
+it, however long that takes. When it's shown, the 30 seconds start again.
+
+More examples and the call-by-call table: [Counter and timer](AD_PROFILES.md#counter-and-timer).
+
 **Quick changes:**
 
 | To… | Parameter | Value |
@@ -995,7 +1052,9 @@ the IDs from `AppAds`.
 | Turn one ad off | the ad's | `{ "enabled": false }` |
 | Turn every ad off | `AdSettings` | `{ "adsEnabled": false }` |
 | Interstitial on every 3rd tap | the ad's | `{ "counter": 3 }` |
-| At least 60 s between two shows of an ad | the ad's | `{ "timerSeconds": 60 }` |
+| An ad after 3 taps, then after 2, in a loop | the ad's | `{ "counter": [3, 2] }` |
+| Load a counter ad only when it's due | the ad's | `{ "loadAhead": 0 }` |
+| Timer instead of counter: 60 s between two shows | the ad's | `{ "counter": 0, "timerSeconds": 60 }` |
 | Use two ad units in turn | the ad's | `{ "adUnitIds": ["ca-app-pub-…/111", "ca-app-pub-…/222"] }` |
 | Another native layout | the native ad's | `{ "style": "media_start" }` (or your own layout's name) |
 | An orange-to-amber button | a native ad's, or `AdSettings` | `{ "ctaColors": ["#FF6D00", "#FFC107"] }` |
@@ -1030,4 +1089,4 @@ A debug build on a phone or an emulator:
 Problems? See [Troubleshooting](TROUBLESHOOTING.md). In depth: [Ad profiles](AD_PROFILES.md),
 [Native ads](NATIVE.md), [Splash screen](SPLASH.md), [Consent](CONSENT.md), [Remote configuration](REMOTE_CONFIG.md).
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-10-05

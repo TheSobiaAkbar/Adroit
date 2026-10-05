@@ -6,6 +6,28 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Added
+- Counter strategies for interstitials and rewarded interstitials, all settable from Firebase
+  (docs/AD_PROFILES.md, "Counter and timer"): `counter` also takes a list of max counters used in a loop
+  (`"counter": [3, 2]`), `counterStart` (the counter's first value), `counterStep` (what each call adds, decimals
+  allowed), `counterResetOnFail` (a due ad that wasn't shown is tried on the next call, or counted again from 0) and
+  `loadAhead` (how many calls before it's due the ad loads; 0 = only when due). `AdProfile.interstitial` and
+  `AdProfile.rewardedInterstitial` take them as `counters`, `counterStart`, `counterStep`, `counterResetOnFail` and
+  `loadAhead`. Recompile code that calls these two functions.
+
+### Changed
+- An ad with a counter loads by itself one call before it's due (`loadAhead`, default 1), and on the call it's due
+  when it still isn't loaded. Set `"loadAhead": 0` to load only when due.
+- The timer strategy: an ad profile with `timerSeconds` and no counter requests its next ad when the timer ends
+  after a show, once, and keeps it until it's shown; `AdSlots.load` does nothing while the timer runs. With
+  `loadAgain`, the next ad still loads right after the show.
+- With a counter set, the timer is also ignored when a show had to wait for its ad.
+- Both samples: `LevelCompleteAd` uses the timer strategy (`timerSeconds = 60`, no `loadAgain`), and sample-compose's
+  app open ad has no cooldown, like sample-xml's.
+- Both samples: the Home screen has a "Counter ad" (`CounterDemoAd`: start 1, max counters 3 then 2) and a "Timer ad"
+  (`TimerDemoAd`: 30 s) button, with a line saying what each tap did. Their `AdSettings` no longer set a 30 s gap
+  between full-screen ads, which would hide what the counter and the timer decide.
+
 ## [1.0.0-rc4] - 2026-10-02
 
 ### Added

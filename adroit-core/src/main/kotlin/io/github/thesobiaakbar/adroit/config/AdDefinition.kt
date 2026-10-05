@@ -83,7 +83,16 @@ public sealed class AdProfile {
      * An interstitial.
      *
      * @property counter 0 = off; N = shows on every Nth `show` call.
-     * @property timerSeconds 0 = off; the minimum time between two showings of this ad. Ignored while [counter] is set.
+     * @property counters several max counters, used one after the other: with `[3, 2]`, the ad shows when the counter
+     *   reaches 3, then when it reaches 2, then 3 again. Written as a list in `"counter"`. Empty uses [counter].
+     * @property counterStart the counter's value when the session starts.
+     * @property counterStep what each `show` call adds to the counter.
+     * @property counterResetOnFail what happens when the ad is due and can't be shown: false tries again on the very
+     *   next call, true starts counting again from 0.
+     * @property loadAhead how many calls before it's due the ad is loaded: 0 = on the call it's due, 1 = one call
+     *   earlier, and so on.
+     * @property timerSeconds 0 = off; the minimum time between two showings of this ad. After a show, the next ad is
+     *   requested when this time is over, then kept until it's shown. Ignored while a counter is set.
      * @property maxPerSession 0 = no limit; showings per app session.
      * @property splash whether this is the splash ad (not counted in the overall limit, no counter).
      * @property splashTimeoutSeconds how long a splash show waits for the ad.
@@ -101,6 +110,11 @@ public sealed class AdProfile {
         override val loadTimeoutSeconds: Int?,
         override val showLoading: Boolean?,
         override val loadingSeconds: Int?,
+        public val counters: List<Double> = emptyList(),
+        public val counterStart: Double = 0.0,
+        public val counterStep: Double = 1.0,
+        public val counterResetOnFail: Boolean = false,
+        public val loadAhead: Int = 1,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.INTERSTITIAL
     }
@@ -109,7 +123,16 @@ public sealed class AdProfile {
      * A rewarded interstitial.
      *
      * @property counter 0 = off; N = shows on every Nth `show` call.
-     * @property timerSeconds 0 = off; the minimum time between two showings of this ad.
+     * @property counters several max counters, used one after the other: with `[3, 2]`, the ad shows when the counter
+     *   reaches 3, then when it reaches 2, then 3 again. Written as a list in `"counter"`. Empty uses [counter].
+     * @property counterStart the counter's value when the session starts.
+     * @property counterStep what each `show` call adds to the counter.
+     * @property counterResetOnFail what happens when the ad is due and can't be shown: false tries again on the very
+     *   next call, true starts counting again from 0.
+     * @property loadAhead how many calls before it's due the ad is loaded: 0 = on the call it's due, 1 = one call
+     *   earlier, and so on.
+     * @property timerSeconds 0 = off; the minimum time between two showings of this ad. After a show, the next ad is
+     *   requested when this time is over, then kept until it's shown. Ignored while a counter is set.
      * @property maxPerSession 0 = no limit.
      * @property loadAgain see [AdProfile.loadAgain].
      */
@@ -123,6 +146,11 @@ public sealed class AdProfile {
         override val loadTimeoutSeconds: Int?,
         override val showLoading: Boolean?,
         override val loadingSeconds: Int?,
+        public val counters: List<Double> = emptyList(),
+        public val counterStart: Double = 0.0,
+        public val counterStep: Double = 1.0,
+        public val counterResetOnFail: Boolean = false,
+        public val loadAhead: Int = 1,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.REWARDED_INTERSTITIAL
     }
@@ -234,9 +262,15 @@ public sealed class AdProfile {
             loadTimeoutSeconds: Int? = null,
             showLoading: Boolean? = null,
             loadingSeconds: Int? = null,
+            counters: List<Number> = emptyList(),
+            counterStart: Number = 0,
+            counterStep: Number = 1,
+            counterResetOnFail: Boolean = false,
+            loadAhead: Int = 1,
         ): Interstitial = Interstitial(
             ids.toList(), enabled, counter, timerSeconds, maxPerSession, splash, splashTimeoutSeconds, loadAgain,
             loadTimeoutSeconds, showLoading, loadingSeconds,
+            counters.map { it.toDouble() }, counterStart.toDouble(), counterStep.toDouble(), counterResetOnFail, loadAhead,
         )
 
         /** A rewarded interstitial profile; see [RewardedInterstitial]. */
@@ -252,9 +286,15 @@ public sealed class AdProfile {
             loadTimeoutSeconds: Int? = null,
             showLoading: Boolean? = null,
             loadingSeconds: Int? = null,
+            counters: List<Number> = emptyList(),
+            counterStart: Number = 0,
+            counterStep: Number = 1,
+            counterResetOnFail: Boolean = false,
+            loadAhead: Int = 1,
         ): RewardedInterstitial = RewardedInterstitial(
             ids.toList(), enabled, counter, timerSeconds, maxPerSession, loadAgain, loadTimeoutSeconds, showLoading,
             loadingSeconds,
+            counters.map { it.toDouble() }, counterStart.toDouble(), counterStep.toDouble(), counterResetOnFail, loadAhead,
         )
 
         /** A rewarded profile; see [Rewarded]. */

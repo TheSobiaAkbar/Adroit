@@ -46,6 +46,9 @@ internal class FullScreenSlot(
 
     var expiryJob: Job? = null
 
+    /** An ad on a timer, after a show: the wait before its next load. */
+    var timerJob: Job? = null
+
     fun store(value: Cached<LoadedFullScreenAd>) {
         cached = value
         expiresAtElapsed = value.expiresAtElapsed

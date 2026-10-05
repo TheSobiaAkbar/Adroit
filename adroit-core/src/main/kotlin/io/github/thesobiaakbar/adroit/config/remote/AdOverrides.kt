@@ -6,6 +6,7 @@ import io.github.thesobiaakbar.adroit.NativeStyle
 import io.github.thesobiaakbar.adroit.config.PreloadStrategy
 import io.github.thesobiaakbar.adroit.config.SplashTimings
 import io.github.thesobiaakbar.adroit.internal.config.AdBehavior
+import io.github.thesobiaakbar.adroit.internal.config.CounterPlan
 import kotlin.time.Duration
 
 /**
@@ -116,6 +117,12 @@ public class PlacementOverride(
     internal var behavior: AdBehavior? = null
 
     /**
+     * An ad profile's counter fields from its Firebase value (`counter` as a list, `counterStart`, `counterStep`,
+     * `counterResetOnFail`, `loadAhead`); each replaces the ad's own. Set only by the library's parser.
+     */
+    internal var counterPlan: CounterPlan? = null
+
+    /**
      * An ad profile's `"style"` naming a registered app layout instead of a [NativeStyle]; it replaces the ad's own
      * style or layout. Set only by the library's parser.
      */
@@ -146,7 +153,8 @@ public class PlacementOverride(
             other.maxPerSession == maxPerSession && other.preload == preload && other.adUnitId == adUnitId &&
             other.adUnitIds == adUnitIds && other.counter == counter && other.bannerSize == bannerSize &&
             other.nativeStyle == nativeStyle && other.splashTimeout == splashTimeout && other.format == format &&
-            other.loadAgain == loadAgain && other.behavior == behavior && other.nativeLayoutName == nativeLayoutName
+            other.loadAgain == loadAgain && other.behavior == behavior && other.nativeLayoutName == nativeLayoutName &&
+            other.counterPlan == counterPlan
 
     override fun hashCode(): Int {
         var result = enabled.hashCode()
@@ -162,6 +170,7 @@ public class PlacementOverride(
         result = 31 * result + format.hashCode()
         result = 31 * result + loadAgain.hashCode()
         result = 31 * result + nativeLayoutName.hashCode()
+        result = 31 * result + counterPlan.hashCode()
         return 31 * result + behavior.hashCode()
     }
 
@@ -169,7 +178,7 @@ public class PlacementOverride(
         "PlacementOverride(enabled=$enabled, minInterval=$minInterval, maxPerSession=$maxPerSession, " +
             "preload=$preload, adUnitId=$adUnitId, adUnitIds=$adUnitIds, counter=$counter, bannerSize=$bannerSize, " +
             "nativeStyle=$nativeStyle, splashTimeout=$splashTimeout, format=$format, loadAgain=$loadAgain, behavior=$behavior" +
-            (nativeLayoutName?.let { ", nativeLayoutName=$it" } ?: "") + ")"
+            (nativeLayoutName?.let { ", nativeLayoutName=$it" } ?: "") + (counterPlan?.let { ", counterPlan=$it" } ?: "") + ")"
 
     /** This override with its ad units replaced by [ids] (null removes them), keeping every other field. */
     internal fun withAdUnitIds(ids: List<String>?): PlacementOverride = PlacementOverride(
@@ -179,6 +188,7 @@ public class PlacementOverride(
         it.loadAgain = loadAgain
         it.behavior = behavior
         it.nativeLayoutName = nativeLayoutName
+        it.counterPlan = counterPlan
     }
 
     /** This override without its format swap, keeping every other field. */
@@ -189,6 +199,7 @@ public class PlacementOverride(
         it.loadAgain = loadAgain
         it.behavior = behavior
         it.nativeLayoutName = nativeLayoutName
+        it.counterPlan = counterPlan
     }
 
     /** Whether it sets a native look: a style, or a registered app layout. */

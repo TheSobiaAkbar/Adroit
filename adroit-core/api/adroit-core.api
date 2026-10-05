@@ -1091,6 +1091,11 @@ public abstract class io/github/thesobiaakbar/adroit/config/AdProfile {
 	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
 	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
 	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public static final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;ZI)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
 	public static final fun native ()Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/lang/String;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
@@ -1122,6 +1127,11 @@ public abstract class io/github/thesobiaakbar/adroit/config/AdProfile {
 	public static final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
 	public static final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
 	public static final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public static final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;ZI)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
 	public final fun toJson ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
@@ -1177,7 +1187,12 @@ public final class io/github/thesobiaakbar/adroit/config/AdProfile$Companion {
 	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
 	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
 	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
-	public static synthetic fun interstitial$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public final fun interstitial (Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;ZI)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
+	public static synthetic fun interstitial$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/util/List;ZIIIZIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;ZIILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
 	public final fun native ()Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/lang/String;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
@@ -1212,15 +1227,25 @@ public final class io/github/thesobiaakbar/adroit/config/AdProfile$Companion {
 	public final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
 	public final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
 	public final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
-	public static synthetic fun rewardedInterstitial$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public final fun rewardedInterstitial (Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;ZI)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
+	public static synthetic fun rewardedInterstitial$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/util/List;ZIIIZLjava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/Number;Ljava/lang/Number;ZIILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial;
 }
 
 public final class io/github/thesobiaakbar/adroit/config/AdProfile$Interstitial : io/github/thesobiaakbar/adroit/config/AdProfile {
 	public fun getAdUnitIds ()Ljava/util/List;
 	public final fun getCounter ()I
+	public final fun getCounterResetOnFail ()Z
+	public final fun getCounterStart ()D
+	public final fun getCounterStep ()D
+	public final fun getCounters ()Ljava/util/List;
 	public fun getEnabled ()Z
 	public fun getFormat ()Lio/github/thesobiaakbar/adroit/AdFormat;
 	public fun getLoadAgain ()Z
+	public final fun getLoadAhead ()I
 	public fun getLoadTimeoutSeconds ()Ljava/lang/Integer;
 	public fun getLoadingSeconds ()Ljava/lang/Integer;
 	public final fun getMaxPerSession ()I
@@ -1255,9 +1280,14 @@ public final class io/github/thesobiaakbar/adroit/config/AdProfile$Rewarded : io
 public final class io/github/thesobiaakbar/adroit/config/AdProfile$RewardedInterstitial : io/github/thesobiaakbar/adroit/config/AdProfile {
 	public fun getAdUnitIds ()Ljava/util/List;
 	public final fun getCounter ()I
+	public final fun getCounterResetOnFail ()Z
+	public final fun getCounterStart ()D
+	public final fun getCounterStep ()D
+	public final fun getCounters ()Ljava/util/List;
 	public fun getEnabled ()Z
 	public fun getFormat ()Lio/github/thesobiaakbar/adroit/AdFormat;
 	public fun getLoadAgain ()Z
+	public final fun getLoadAhead ()I
 	public fun getLoadTimeoutSeconds ()Ljava/lang/Integer;
 	public fun getLoadingSeconds ()Ljava/lang/Integer;
 	public final fun getMaxPerSession ()I

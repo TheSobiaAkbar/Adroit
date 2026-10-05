@@ -3,7 +3,9 @@ package io.github.thesobiaakbar.adroit.internal.reliability
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.AdPlacement
 import io.github.thesobiaakbar.adroit.config.FrequencyRule
+import io.github.thesobiaakbar.adroit.internal.config.CounterPlan
 import io.github.thesobiaakbar.adroit.internal.time.Clock
+import kotlin.math.ceil
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -25,6 +27,10 @@ internal sealed interface FrequencyDecision {
  * enforcement. Main thread only.
  *
  * Shows are counted with [recordShown] when the ad is actually shown, never when it's requested.
+ *
+ * The counter ([CounterPlan]) starts at its `start`, gains its `step` at every counted call, and is due at the current
+ * max counter. [recordShown] puts it back to 0 and moves to the next max counter; [recordNotShown] puts it back to 0
+ * only with `resetOnFail`.
  */
 internal class FrequencyGate(
     private val clock: Clock,
@@ -37,7 +43,10 @@ internal class FrequencyGate(
     private class Record(var count: Int, var lastShownAtElapsed: Long)
 
     private val records = mutableMapOf<AdPlacement, Record>()
-    private val triggers = mutableMapOf<AdPlacement, Int>()
+    /** A placement's counter: its [value], and which max counter it's heading for ([index], wrapping around). */
+    private class Counter(var value: Double, var index: Int = 0)
+
+    private val counters = mutableMapOf<AdPlacement, Counter>()
     private var lastGlobalShownAtElapsed: Long? = null
     private var interstitialsShown = 0
 
@@ -49,11 +58,13 @@ internal class FrequencyGate(
     fun check(placement: AdPlacement, countTrigger: Boolean = false): FrequencyDecision {
         val rule = ruleFor(placement)
         val splash = isSplash(placement)
-        val counting = countTrigger && rule.counter > 0 && !splash
-        if (counting) {
-            val count = (triggers[placement] ?: 0) + 1
-            triggers[placement] = count
-            if (count < rule.counter) return FrequencyDecision.CounterNotReached(rule.counter - count)
+        val plan = rule.plan
+        val counted = usesCounter(placement, plan)
+        if (countTrigger && counted) {
+            val counter = counterOf(placement, plan)
+            counter.value += plan.stepValue
+            val remaining = remainingCalls(counter, plan)
+            if (remaining > 0) return FrequencyDecision.CounterNotReached(remaining)
         }
         if (placement.format == AdFormat.INTERSTITIAL && !splash && interstitialsShown >= maxInterstitials()) {
             return FrequencyDecision.Capped(Duration.INFINITE)
@@ -62,7 +73,7 @@ internal class FrequencyGate(
         if ((record?.count ?: 0) >= rule.maxPerSession) return FrequencyDecision.Capped(Duration.INFINITE)
 
         var wait = Duration.ZERO
-        if (record != null && !counting) wait = maxOf(wait, remaining(rule.minInterval, record.lastShownAtElapsed))
+        if (record != null && !counted) wait = maxOf(wait, remaining(rule.minInterval, record.lastShownAtElapsed))
         val lastGlobal = lastGlobalShownAtElapsed
         if (lastGlobal != null && placement.format in globalFormats) {
             wait = maxOf(wait, remaining(globalInterval(), lastGlobal))
@@ -73,23 +84,63 @@ internal class FrequencyGate(
     /** Shows of [placement] counted this session, for diagnostics. */
     fun showsThisSession(placement: AdPlacement): Int = records[placement]?.count ?: 0
 
-    /** Show calls counted toward [placement]'s counter since its last show, for diagnostics. */
-    fun triggersSinceShow(placement: AdPlacement): Int = triggers[placement] ?: 0
+    /** How many more counted calls [placement] needs before it's due (0 = due now); null when it has no counter. */
+    fun remainingCalls(placement: AdPlacement): Int? {
+        val plan = ruleFor(placement).plan
+        return if (usesCounter(placement, plan)) remainingCalls(counterOf(placement, plan), plan) else null
+    }
+
+    /**
+     * For an ad on a timer (an interval and no counter): how long until [placement] may show again, zero when it may
+     * now. Null when it has no timer.
+     */
+    fun timerRemaining(placement: AdPlacement): Duration? {
+        val rule = ruleFor(placement)
+        if (!rule.minInterval.isPositive() || usesCounter(placement, rule.plan)) return null
+        val record = records[placement] ?: return Duration.ZERO
+        return maxOf(Duration.ZERO, remaining(rule.minInterval, record.lastShownAtElapsed))
+    }
+
+    /** A show of [placement] ended without an ad: with `resetOnFail`, a due counter starts again from 0. */
+    fun recordNotShown(placement: AdPlacement) {
+        val plan = ruleFor(placement).plan
+        val counter = counters[placement] ?: return
+        if (plan.resetOnFail == true && usesCounter(placement, plan) && remainingCalls(counter, plan) == 0) counter.value = 0.0
+    }
 
     fun recordShown(placement: AdPlacement) {
         val now = clock.elapsedRealtimeMillis()
         val record = records.getOrPut(placement) { Record(0, now) }
         record.count++
         record.lastShownAtElapsed = now
-        triggers.remove(placement)
+        counters[placement]?.let {
+            it.value = 0.0
+            it.index++
+        }
         if (placement.format in globalFormats) lastGlobalShownAtElapsed = now
         if (placement.format == AdFormat.INTERSTITIAL && !isSplash(placement)) interstitialsShown++
+    }
+
+    /** Only interstitial and rewarded interstitial calls are counted, and never the splash ad's. */
+    private fun usesCounter(placement: AdPlacement, plan: CounterPlan): Boolean =
+        plan.isOn && !isSplash(placement) &&
+            (placement.format == AdFormat.INTERSTITIAL || placement.format == AdFormat.REWARDED_INTERSTITIAL)
+
+    private fun counterOf(placement: AdPlacement, plan: CounterPlan): Counter =
+        counters.getOrPut(placement) { Counter(plan.startValue) }
+
+    private fun remainingCalls(counter: Counter, plan: CounterPlan): Int {
+        val max = plan.thresholds[counter.index % plan.thresholds.size]
+        return maxOf(0, ceil((max - counter.value) / plan.stepValue - EPSILON).toInt())
     }
 
     private fun remaining(interval: Duration, since: Long): Duration =
         interval - (clock.elapsedRealtimeMillis() - since).milliseconds
 
     companion object {
+        /** Absorbs the rounding of fractional steps: ten steps of 0.1 reach a max counter of 1. */
+        private const val EPSILON = 1e-9
+
         /** Formats sharing the global interval. Rewarded joins only when the host opts in, since the user asks for it. */
         fun globalFormats(includeRewarded: Boolean): Set<AdFormat> =
             setOf(AdFormat.INTERSTITIAL, AdFormat.REWARDED_INTERSTITIAL, AdFormat.APP_OPEN) +

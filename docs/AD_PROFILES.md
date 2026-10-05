@@ -165,8 +165,12 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `counter` | number | `0` | 0 = off. With N, an ad shows at most on every Nth `show` call: with 3, on the 3rd, 6th, 9th call. Other calls return `NotShown(CounterNotReached)`. |
-| `timerSeconds` | number | `0` | 0 = off. The minimum time between two showings of this ad. Ignored while `counter` is set. |
+| `counter` | number, or list of numbers | `0` | 0 = off. The max counter: with 3, an ad shows on the 3rd, 6th, 9th `show` call. Other calls return `NotShown(CounterNotReached)`. A list, `[3, 2]`, is several max counters used one after the other. See [Counter](#counter). |
+| `counterStart` | number | `0` | The counter's value when the app starts. Decimals allowed. |
+| `counterStep` | number | `1` | What each `show` call adds to the counter. Above 0; decimals allowed (`0.5`, `1.25`). |
+| `counterResetOnFail` | true/false | `false` | When the ad is due and can't be shown: `false` tries again on the very next call, `true` counts again from 0. |
+| `loadAhead` | number | `1` | How many calls before it's due the ad loads: `0` on the call it's due, `1` one call earlier, `2` two calls earlier… See [Where the ad loads](#where-the-ad-loads). |
+| `timerSeconds` | number | `0` | 0 = off. The [timer](#timer): the minimum time between two showings of this ad, and when its next ad is requested. Ignored while `counter` is set. |
 | `maxPerSession` | number | `0` | 0 = no limit. Showings of this ad per app session. |
 | `splash` | true/false | `false` | Interstitial only, file only. The splash ad: shown with `showOnSplash`, not counted in the overall limit, and no counter. |
 | `splashTimeoutSeconds` | number | `8` | How long `showOnSplash` waits for an ad. |
@@ -228,6 +232,96 @@ Rules:
 Fetch with `RemoteConfigSession.start(application)` in `Application.onCreate` (see
 [Remote configuration](REMOTE_CONFIG.md#fetching-once-per-session)): once per session, without making anything wait. Pass `settingsKey` to use a name other than `AdSettings`.
 
+## Counter and timer
+
+An interstitial or a rewarded interstitial follows one of three strategies. Its `counter` and `timerSeconds` choose
+it, and Firebase can change them at any time:
+
+| `counter` | `timerSeconds` | Strategy |
+|---|---|---|
+| `0` | `0` | None. Every `show` call may show an ad. |
+| set | anything | [Counter](#counter). The timer is ignored. |
+| `0` | set | [Timer](#timer). |
+
+### Counter
+
+Call `AdSlots.showFullScreen` every time the event happens (a tap, a level end); the counter decides.
+
+1. The counter starts at `counterStart` when the app starts.
+2. Every `show` call adds `counterStep` to it.
+3. When it reaches the max counter (`counter`), the ad is due and shows.
+4. When the ad was really shown, the counter goes back to 0 and counting starts again, toward the next max counter
+   if `counter` is a list.
+
+The plain case, an ad on every 3rd call:
+
+```json
+{ "counter": 3 }
+```
+
+Several max counters, with a start. The counter starts at 1, so the first ad comes on the 2nd call; the next one 2
+calls later, the one after 3 calls later, then 2, then 3, and so on:
+
+```json
+{ "counter": [3, 2], "counterStart": 1, "counterStep": 1 }
+```
+
+| Call | Counter | Max counter | Result |
+|---|---|---|---|
+| 1 | 1 → 2 | 3 | no ad |
+| 2 | 2 → 3 | 3 | **ad**, counter back to 0 |
+| 3 | 0 → 1 | 2 | no ad |
+| 4 | 1 → 2 | 2 | **ad**, counter back to 0 |
+| 5, 6 | 0 → 1 → 2 | 3 | no ad |
+| 7 | 2 → 3 | 3 | **ad**; the next max counter is 2 again |
+
+A smaller step makes the same max counter take more calls: with `"counter": 3, "counterStep": 0.5`, the ad shows on
+the 6th call. `counterStart` counts once, at the start of the session; after every showing the counter restarts at 0.
+
+**When a due ad can't be shown** (it didn't load, the user is offline, another limit said no), the counter isn't
+lost. `counterResetOnFail` chooses what happens next:
+
+| `counterResetOnFail` | After a due ad wasn't shown |
+|---|---|
+| `false` (default) | The counter keeps its value: the very next call tries to show the ad again. |
+| `true` | The counter goes back to 0: the ad is due again after a full count to the same max counter. |
+
+The counter only goes back to 0 and moves to the next max counter when an ad was really shown (its impression).
+
+#### Where the ad loads
+
+`loadAhead` says how many calls before the ad is due the library requests it, so it's ready in time without loading
+ads nobody will see:
+
+| You want the ad to load… | Set |
+|---|---|
+| One call before it's due (the default: with a max counter of 3, on the 2nd call) | `"loadAhead": 1` |
+| Two calls before it's due, for slow networks | `"loadAhead": 2` (and so on) |
+| Only on the call it's due, and show as soon as it arrives | `"loadAhead": 0`. The show waits up to `loadTimeoutSeconds` behind the "Loading ad…" screen. |
+| Only on the call it's due, without ever making the user wait | `"loadAhead": 0, "loadTimeoutSeconds": 0`. That call returns `NotShown(NotReady)`; the next call shows the ad. |
+| Right after each ad is shown, so one is always ready | `"loadAgain": true` |
+
+An `AdSlots.load` call from your app still loads the ad at once, whatever `loadAhead` says.
+
+### Timer
+
+With `"counter": 0` and, for example, `"timerSeconds": 30`:
+
+1. The ad is shown (its first load is your `AdSlots.load` call, or the first `show`, which waits for it).
+2. The timer starts. For 30 seconds this ad isn't shown again (`NotShown(FrequencyCapped)`), and nothing is requested,
+   not even by `AdSlots.load`.
+3. After 30 seconds the library requests the next ad, once.
+4. That ad stays loaded, however long it takes, until a `show` call shows it. No other request is made meanwhile.
+5. Once it's shown, the timer starts again: back to step 2.
+
+```json
+{ "counter": 0, "timerSeconds": 30 }
+```
+
+With `"loadAgain": true` as well, the next ad is requested right after each show instead of when the timer ends; the
+timer then only spaces the showings. A request that fails when the timer ends isn't repeated by itself: the next
+`AdSlots.load` or `show` call asks again. For an app open ad, `timerSeconds` works the same way.
+
 ## Loading
 
 Ads load only when your app asks, so no ad loads that the app won't show, which keeps AdMob's show rate (shown ads
@@ -284,6 +378,8 @@ and none waits while ads are off (ad-free, consent). Refresh (`load(refresh = tr
   composables; a composable's own `placeholder` replaces it. Its colours are the `adroit_shimmer_card`, `adroit_shimmer_base` and
   `adroit_shimmer_highlight` colour resources (with night variants), which your app can override.
 - An ad that expires unshown (after an hour for most formats) isn't replaced until the next `AdSlots.load`.
+- An ad with a **counter** also loads by itself shortly before it's due (`loadAhead`), and an ad on a **timer** when
+  its timer ends: see [Counter and timer](#counter-and-timer).
 - After a show, an ad with **`loadAgain`** set loads the next one straight away: with `adUnitIds` of `[A, B]`, showing
   the ad from A requests one from B. Without it (the default), the ad loads again only at the next `AdSlots.load`. For
   a native ad, "shown" means handed to a view. Firebase can turn it on or off per ad: `{ "loadAgain": true }`.
@@ -424,16 +520,16 @@ interstitial, is your choice: check the AdMob policies for your app.
 For an interstitial `show`, the first "no" wins:
 
 1. Ads can run (consent, ad-free, `adsEnabled`) and this ad is `enabled`. Otherwise `NotShown(Disabled)`.
-2. The counter, when set: the call is counted. Not yet due → `NotShown(CounterNotReached)`.
+2. The [counter](#counter), when set: the call adds `counterStep`. Not yet due → `NotShown(CounterNotReached)`.
 3. `maxInterstitialsPerSession` (not for splash ads) → `NotShown(FrequencyCapped)`.
 4. The ad's `maxPerSession` → `NotShown(FrequencyCapped)`.
-5. `timerSeconds`, when no counter is set → `NotShown(FrequencyCapped)`.
+5. `timerSeconds` (the [timer](#timer)), when no counter is set → `NotShown(FrequencyCapped)`.
 6. `minSecondsBetweenFullScreenAds` → `NotShown(FrequencyCapped)`.
 7. An ad is loaded; otherwise `NotShown(NotReady)`, and one loads for next time.
 
-A due counter stays due until an ad actually shows. Only real showings count toward the limits, and they're
-counted per app session (per process), in memory.
+A due counter stays due until an ad actually shows (or, with `counterResetOnFail`, starts again from 0). Only real
+showings count toward the limits, and they're counted per app session (per process), in memory.
 
 These limits are a user-experience safeguard, not a replacement for AdMob's own frequency capping.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-10-05
