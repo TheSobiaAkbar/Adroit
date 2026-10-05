@@ -46,6 +46,7 @@ fun HomeScreen(coins: CoinsViewModel, onOpenDetails: () -> Unit) {
     val activity = LocalActivity.current
     val launcher = rememberFullScreenAdLauncher()
     val balance by coins.coins.collectAsStateWithLifecycle()
+    val strategyStatus by coins.strategyStatus.collectAsStateWithLifecycle()
     var showBonusIntro by rememberSaveable { mutableStateOf(false) }
     // Each tap on "Refresh" changes the key: a new banner loads in the background, the shown one stays until then.
     var bannerRefresh by rememberSaveable { mutableIntStateOf(0) }
@@ -79,6 +80,18 @@ fun HomeScreen(coins: CoinsViewModel, onOpenDetails: () -> Unit) {
             Button(onClick = { showBonusIntro = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.bonus_round))
             }
+            // The counter and timer strategies (docs/AD_PROFILES.md, "Counter and timer"): tap again and again, and
+            // the line below says what each tap did.
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = { activity?.let { coins.onStrategyDemo(it, SampleAds.CounterDemoAd) } },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(stringResource(R.string.counter_ad)) }
+            Button(
+                onClick = { activity?.let { coins.onStrategyDemo(it, SampleAds.TimerDemoAd) } },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(stringResource(R.string.timer_ad)) }
+            Text(strategyStatus, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(16.dp))
             OutlinedButton(onClick = { bannerRefresh++ }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.refresh_banner))

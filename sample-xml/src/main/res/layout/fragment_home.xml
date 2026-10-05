@@ -41,6 +41,27 @@
                 android:layout_height="wrap_content"
                 android:text="@string/bonus_round" />
 
+            <!-- The counter and timer strategies (docs/AD_PROFILES.md, "Counter and timer"): tap again and again,
+                 and the line below says what each tap did. -->
+            <Button
+                android:id="@+id/counter_ad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/counter_ad" />
+
+            <Button
+                android:id="@+id/timer_ad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/timer_ad" />
+
+            <TextView
+                android:id="@+id/strategy_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+
             <!-- Replaces the home banner with a new one; the shown one stays until the new one has loaded. -->
             <Button
                 android:id="@+id/refresh_banner"

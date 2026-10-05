@@ -29,8 +29,20 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
     /** Shown on the splash screen when it loads before the splash timer ends (docs/SPLASH.md). */
     SplashAd(AdProfile.interstitial(splash = true)),
 
-    /** Home screen: "Level complete". At most one per minute. */
-    LevelCompleteAd(AdProfile.interstitial(timerSeconds = 60, loadAgain = true)),
+    /** Home screen: "Level complete". On a timer: at most one per minute; the next ad loads when the minute is over. */
+    LevelCompleteAd(AdProfile.interstitial(timerSeconds = 60)),
+
+    /**
+     * Home screen: "Counter ad", the counter strategy. The counter starts at 1 and each tap adds 1: an ad when it
+     * reaches 3 (the 2nd tap), then when it reaches 2, then 3 again, in a loop. It loads one tap before it's due.
+     */
+    CounterDemoAd(AdProfile.interstitial(counters = listOf(3, 2), counterStart = 1)),
+
+    /**
+     * Home screen: "Timer ad", the timer strategy. For 30 s after each show there's no ad and no request; then the
+     * next ad loads once and waits to be shown.
+     */
+    TimerDemoAd(AdProfile.interstitial(timerSeconds = 30)),
 
     /** Home screen: "Extra life". */
     ExtraLifeRewarded(AdProfile.rewarded(loadAgain = true)),
@@ -44,7 +56,6 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
      */
     AppOpenAd(
         AdProfile.appOpen(
-            timerSeconds = 240,
             excludedActivities = listOf("io.github.thesobiaakbar.adroit.sample.compose.SplashActivity"),
             loadAgain = true,
         ),
@@ -68,6 +79,6 @@ enum class SampleAds(override val defaults: AdProfile) : AdDefinition {
 
     companion object {
         /** The defaults of the Firebase `AdSettings` parameter. */
-        val settings = AdSettings(minSecondsBetweenFullScreenAds = 30, splashSeconds = 11)
+        val settings = AdSettings(splashSeconds = 11)
     }
 }

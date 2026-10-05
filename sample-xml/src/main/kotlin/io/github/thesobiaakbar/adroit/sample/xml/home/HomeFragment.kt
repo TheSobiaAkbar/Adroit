@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import io.github.thesobiaakbar.adroit.sample.xml.DetailsActivity
 import io.github.thesobiaakbar.adroit.sample.xml.R
+import io.github.thesobiaakbar.adroit.sample.xml.ads.SampleAds
 import io.github.thesobiaakbar.adroit.sample.xml.databinding.FragmentHomeBinding
 import kotlinx.coroutines.launch
 
@@ -30,6 +31,8 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val b = checkNotNull(binding)
         b.levelComplete.setOnClickListener { coins.onLevelComplete(requireActivity()) }
+        b.counterAd.setOnClickListener { coins.onStrategyDemo(requireActivity(), SampleAds.CounterDemoAd) }
+        b.timerAd.setOnClickListener { coins.onStrategyDemo(requireActivity(), SampleAds.TimerDemoAd) }
         b.extraLife.setOnClickListener { coins.onExtraLife(requireActivity()) }
         b.bonusRound.setOnClickListener { BonusIntroDialogFragment().show(childFragmentManager, BonusIntroDialogFragment.TAG) }
         // A new banner loads in the background; the shown one stays until it's loaded, and stays if it fails.
@@ -37,6 +40,7 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { coins.coins.collect { b.coins.text = getString(R.string.coins, it) } }
+                launch { coins.strategyStatus.collect { b.strategyStatus.text = it } }
                 launch { coins.openDetails.collect { startActivity(Intent(requireContext(), DetailsActivity::class.java)) } }
             }
         }

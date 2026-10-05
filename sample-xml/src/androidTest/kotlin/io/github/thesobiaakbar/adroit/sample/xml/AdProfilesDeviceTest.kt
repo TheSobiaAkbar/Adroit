@@ -31,8 +31,9 @@ class AdProfilesDeviceTest {
             val placements = Adroit.diagnostics.snapshot().placements.associateBy { it.key }
             assertEquals(
                 setOf(
-                    "SplashAd", "LevelCompleteAd", "ExtraLifeRewarded", "BonusRewardedInterstitial", "AppOpenAd",
-                    "HomeBanner", "DetailsBanner", "FeedNative", "ArticleNative",
+                    "SplashAd", "LevelCompleteAd", "CounterDemoAd", "TimerDemoAd", "ExtraLifeRewarded",
+                    "BonusRewardedInterstitial", "AppOpenAd", "HomeBanner", "DetailsBanner", "FeedBanner", "FeedNative",
+                    "ArticleNative",
                 ),
                 placements.keys,
             )

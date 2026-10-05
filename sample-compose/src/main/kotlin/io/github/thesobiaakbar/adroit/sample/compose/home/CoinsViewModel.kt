@@ -3,9 +3,11 @@ package io.github.thesobiaakbar.adroit.sample.compose.home
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.thesobiaakbar.adroit.AdError
 import io.github.thesobiaakbar.adroit.AdSlots
 import io.github.thesobiaakbar.adroit.AdsClient
 import io.github.thesobiaakbar.adroit.Adroit
+import io.github.thesobiaakbar.adroit.FullScreenResult
 import io.github.thesobiaakbar.adroit.RewardResult
 import io.github.thesobiaakbar.adroit.sample.compose.ads.SampleAds
 import kotlinx.coroutines.channels.Channel
@@ -28,8 +30,13 @@ class CoinsViewModel(ads: AdsClient = Adroit.client) : ViewModel() {
     private val grantedRewardIds = mutableSetOf<String>()
     private val mutableCoins = MutableStateFlow(0)
     private val navigation = Channel<Unit>(Channel.BUFFERED)
+    private val strategyTaps = mutableMapOf<SampleAds, Int>()
+    private val mutableStrategyStatus = MutableStateFlow("")
 
     val coins: StateFlow<Int> = mutableCoins.asStateFlow()
+
+    /** What the last tap on "Counter ad" or "Timer ad" did. */
+    val strategyStatus: StateFlow<String> = mutableStrategyStatus.asStateFlow()
 
     /** One event per finished "Level complete": the screen navigates to the details, whether an ad showed or not. */
     val openDetails: Flow<Unit> = navigation.receiveAsFlow()
@@ -59,6 +66,26 @@ class CoinsViewModel(ads: AdsClient = Adroit.client) : ViewModel() {
         // Both branches continue: an ad that wasn't ready, was capped, or failed never blocks the user. AdSlots shows
         // LevelCompleteAd in its current format: an interstitial, or an app open ad if Firebase swapped it.
         AdSlots.showFullScreen(activity, SampleAds.LevelCompleteAd) { navigation.trySend(Unit) }
+    }
+
+    /**
+     * A tap on "Counter ad" or "Timer ad": the call is the same every time, and the ad's strategy (its counter or its
+     * timer, from SampleAds or Firebase) decides whether an ad shows. [strategyStatus] then says what it decided.
+     * These two ads are never loaded from [loadAds]: the library loads them itself, the counter ad `loadAhead` calls
+     * before it's due and the timer ad when its timer ends (watch the `AdEvents` log).
+     */
+    fun onStrategyDemo(activity: Activity, ad: SampleAds) {
+        val tap = (strategyTaps[ad] ?: 0) + 1
+        strategyTaps[ad] = tap
+        AdSlots.showFullScreen(activity, ad) { result ->
+            val outcome = when (val error = (result as? FullScreenResult.NotShown)?.error) {
+                null -> "ad shown"
+                is AdError.CounterNotReached -> "no ad, ${error.remaining} more tap(s) to go"
+                is AdError.FrequencyCapped -> "no ad, timer running: ${error.retryAfter.inWholeSeconds} s left"
+                else -> "no ad (${error.code})"
+            }
+            mutableStrategyStatus.value = "${ad.name}, tap $tap: $outcome"
+        }
     }
 
     /** The result of the "Extra life" or "Bonus round" ad: coins only for [RewardResult.Earned]. */
