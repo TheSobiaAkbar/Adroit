@@ -1,7 +1,7 @@
 [versions]
 # Build toolchain
 agp = "9.1.1"
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 compileSdk = "37"
 minSdk = "24"
 # The compileSdk the published AARs ask apps for (aar-metadata minCompileSdk). Without it AGP 9 publishes compileSdk
