@@ -4,27 +4,14 @@ This page takes an app from nothing to its first banner and interstitial. Each l
 
 ## 1. Add the repository
 
-Adroit is published privately to GitHub Packages, so you need access first: see [Getting access](ACCESS.md). Then put
-your credentials in `~/.gradle/gradle.properties`, never in the project:
-
-```properties
-gpr.user=<your GitHub user>
-gpr.key=<a personal access token with read:packages>
-```
-
-Then in `settings.gradle.kts`:
+Adroit is on Maven Central: no account and no token. `settings.gradle.kts` needs `mavenCentral()`, which a new
+Android Studio project already has:
 
 ```kotlin
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://maven.pkg.github.com/TheSobiaAkbar/Adroit") {
-            credentials {
-                username = providers.gradleProperty("gpr.user").get()
-                password = providers.gradleProperty("gpr.key").get()
-            }
-        }
     }
 }
 ```
@@ -33,9 +20,9 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc4") // Compose apps (brings adroit-core and adroit-views)
-    // implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc4") // XML/View apps without Compose (brings adroit-core)
-    testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0-rc4")
+    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc5") // Compose apps (brings adroit-core and adroit-views)
+    // implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc5") // XML/View apps without Compose (brings adroit-core)
+    testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0-rc5")
 }
 ```
 

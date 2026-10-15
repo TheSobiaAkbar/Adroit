@@ -33,8 +33,9 @@ abstract class AdroitPublishingExtension {
  * - The AGP `release` variant, with sources and javadoc jars, as publication `release`.
  * - POM metadata from `adroit.pom.*` Gradle properties; the dependency scopes come from AGP (`api` →
  *   compile, `implementation` → runtime).
- * - Repositories: `mavenLocal()` always; GitHub Packages only when its credentials are supplied through Gradle
- *   properties or environment variables (never committed).
+ * - Repositories: `mavenLocal()` always; `CentralBundle`, a folder in the root build directory that the root
+ *   `centralBundle` task zips for Maven Central; GitHub Packages only when its credentials are supplied through
+ *   Gradle properties or environment variables (never committed).
  * - Signing only when `SIGNING_KEY` and `SIGNING_PASSWORD` are set (in-memory ASCII-armored key).
  * - `verifyPublication` publishes to a repository in the build directory and checks the files and the POM scopes.
  */
@@ -64,6 +65,10 @@ class PublishingConventionPlugin : Plugin<Project> {
                 maven {
                     name = VERIFICATION_REPO
                     url = uri(verificationRepo)
+                }
+                maven {
+                    name = CENTRAL_BUNDLE_REPO
+                    url = uri(rootProject.layout.buildDirectory.dir(CENTRAL_BUNDLE_DIR))
                 }
                 gitHubPackagesUrl()?.let { packagesUrl ->
                     val user = propertyOrEnv("gpr.user", "GITHUB_ACTOR")
@@ -122,6 +127,7 @@ class PublishingConventionPlugin : Plugin<Project> {
             licenses {
                 license {
                     name.set(project.requiredProperty("adroit.pom.license.name"))
+                    url.set(project.requiredProperty("adroit.pom.license.url"))
                 }
             }
             developers {
@@ -190,5 +196,9 @@ class PublishingConventionPlugin : Plugin<Project> {
         const val VARIANT = "release"
         const val PUBLICATION = "release"
         const val VERIFICATION_REPO = "VerificationBuildDir"
+        const val CENTRAL_BUNDLE_REPO = "CentralBundle"
+
+        /** Under the root build directory; the root build file's `centralBundle` task zips it. */
+        const val CENTRAL_BUNDLE_DIR = "central-bundle"
     }
 }

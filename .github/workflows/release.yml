@@ -56,6 +56,21 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew publishAllPublicationsToGitHubPackagesRepository --stacktrace
 
+      # Public, no credentials needed to download. Secrets: CENTRAL_TOKEN is base64("<user token name>:<user token
+      # password>") from central.sonatype.com → View Account → Generate User Token. AUTOMATIC releases the version
+      # once Central's checks pass; it cannot be deleted or replaced afterwards.
+      - name: Publish to Maven Central
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
+        run: |
+          ./gradlew centralBundle --stacktrace
+          curl --fail-with-body --request POST \
+            --header "Authorization: Bearer $CENTRAL_TOKEN" \
+            --form bundle=@build/central-bundle.zip \
+            "https://central.sonatype.com/api/v1/publisher/upload?name=adroit-${GITHUB_REF_NAME#v}&publishingType=AUTOMATIC"
+
       - name: Create the GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:

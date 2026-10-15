@@ -9,7 +9,7 @@ There's no third-party publishing plugin, and no Dokka plugin (see "Javadoc" bel
 For each module: `io.github.thesobiaakbar:<artifactId>:<adroit.version>` with the release AAR, the POM, Gradle module
 metadata (`.module`), a sources jar and a javadoc jar.
 
-- **POM metadata:** comes from `adroit.pom.*` in `gradle.properties`.
+- **POM metadata:** comes from `adroit.pom.*` in `gradle.properties`, Apache 2.0 license included.
 - **Dependency scopes** follow the Gradle declarations. `api` becomes `compile`: coroutines-core, lifecycle-common, and
   adroit-core for the other modules. `implementation` becomes `runtime`: `ads-mobile-sdk`, UMP and the rest. So hosts
   never compile against Google types.
@@ -41,6 +41,35 @@ Commands:
 ```bash
 ./gradlew publishToMavenLocal
 ./gradlew publishAllPublicationsToGitHubPackagesRepository
+```
+
+## Maven Central
+
+The public channel: apps add only `mavenCentral()`. Each library also publishes into `CentralBundle`, the folder
+`build/central-bundle` at the root; `./gradlew centralBundle` zips this version's files (AAR, POM, `.module`, sources
+and javadoc jars, their `.asc` signatures and checksums) into `build/central-bundle.zip`, which the Central Portal's
+Publisher API takes in one upload. The release workflow does both after GitHub Packages. `centralBundle` fails without
+`SIGNING_KEY`, or on a `-SNAPSHOT` version, since Central rejects both. A released version can never be removed or
+replaced.
+
+**Once, by the owner** (Central accounts can't be made from a build):
+
+1. Sign in at [central.sonatype.com](https://central.sonatype.com) with the GitHub account **TheSobiaAkbar**. That
+   verifies the namespace `io.github.thesobiaakbar` by itself; check it under **Namespaces**.
+2. A signing key: `gpg --quick-generate-key "Sobia Akbar <email>" rsa4096 sign 0`, then publish the public half,
+   `gpg --keyserver keyserver.ubuntu.com --send-keys <key id>` (Central checks signatures against it).
+3. **View Account → Generate User Token**, then in the Adroit repository's **Settings → Secrets → Actions**:
+   - `SIGNING_KEY`: `gpg --armor --export-secret-keys <key id>`
+   - `SIGNING_PASSWORD`: that key's passphrase
+   - `CENTRAL_TOKEN`: base64 of `<token name>:<token password>`
+4. Tag the version (`git tag v1.0.0-rc5 && git push origin v1.0.0-rc5`). The workflow uploads it; it appears on
+   central.sonatype.com at once and on repo1.maven.org after Central's checks, usually within 30 minutes.
+
+By hand, from a machine with the same three values in the environment:
+
+```bash
+./gradlew centralBundle
+curl --request POST --header "Authorization: Bearer $CENTRAL_TOKEN" --form bundle=@build/central-bundle.zip   "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC"
 ```
 
 ## Snapshots

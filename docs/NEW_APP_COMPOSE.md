@@ -25,7 +25,7 @@ Most of the setup is the same in every app: copy it once, then change only this.
 
 | File | What you change in each project | Step |
 |---|---|---|
-| `settings.gradle.kts` | Add the Adroit repository | [2](#2-add-the-adroit-repository) |
+| `settings.gradle.kts` | Check that it has `mavenCentral()` | [2](#2-check-the-repository) |
 | `build.gradle.kts` (root) and `app/build.gradle.kts` | Add the Google services plugin and the dependencies | [3](#3-connect-firebase), [4](#4-add-the-dependencies) |
 | `app/google-services.json` | This app's file, from its Firebase project | [3](#3-connect-firebase) |
 | `AndroidManifest.xml` | This app's AdMob app ID | [7](#7-the-manifest) |
@@ -38,7 +38,7 @@ Most of the setup is the same in every app: copy it once, then change only this.
 **Contents**
 
 1. [What you need](#1-what-you-need)
-2. [Add the Adroit repository](#2-add-the-adroit-repository)
+2. [Check the repository](#2-check-the-repository)
 3. [Connect Firebase](#3-connect-firebase)
 4. [Add the dependencies](#4-add-the-dependencies)
 5. [List your ads: AppAds.kt](#5-list-your-ads-appadskt)
@@ -61,22 +61,13 @@ Most of the setup is the same in every app: copy it once, then change only this.
 | An AdMob app ID | AdMob → Apps → your app → App settings | `ca-app-pub-1234567890123456~1234567890` |
 | One ad unit ID per ad | AdMob → Apps → your app → Ad units, each of the right format | `ca-app-pub-1234567890123456/1234567890` |
 | A Firebase project | [console.firebase.google.com](https://console.firebase.google.com) | |
-| Access to Adroit | An invite and a GitHub token: [Getting access](ACCESS.md) | |
 
 You can start without ad unit IDs: an ad without IDs shows Google's test ads, and debug builds always do.
 
-## 2. Add the Adroit repository
+## 2. Check the repository
 
-Adroit is private: you need an invite and a GitHub token first ([Getting access](ACCESS.md)). Put the token in
-`~/.gradle/gradle.properties` on your computer (`C:\Users\<you>\.gradle\gradle.properties` on Windows), never in the
-project:
-
-```properties
-gpr.user=<your GitHub user name>
-gpr.key=<your token with read:packages>
-```
-
-**In your app**, add the repository to `settings.gradle.kts`:
+Adroit is on Maven Central: no account and no token. Check that `settings.gradle.kts` lists `mavenCentral()`, as a
+new Android Studio project already does:
 
 ```kotlin
 dependencyResolutionManagement {
@@ -84,12 +75,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://maven.pkg.github.com/TheSobiaAkbar/Adroit") {
-            credentials {
-                username = providers.gradleProperty("gpr.user").get()
-                password = providers.gradleProperty("gpr.key").get()
-            }
-        }
     }
 }
 ```
@@ -138,8 +123,8 @@ android {
 }
 
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc4")
-    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc4")
+    implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc5")
+    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc5")
 
     // Your usual Compose libraries (Android Studio's "Empty Activity" template adds most of them):
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))
@@ -155,8 +140,8 @@ dependencies {
 `adroit-compose` needs a `compileSdk` of 37 (its Compose version asks for it). With an older one, the build says so:
 raise `compileSdk` in `android { }`.
 
-**Check:** *Sync Project with Gradle Files* succeeds. If `io.github.thesobiaakbar:adroit-compose` isn't found, check step 2: the repository
-in `settings.gradle.kts`, and `gpr.user` and `gpr.key` in `~/.gradle/gradle.properties`.
+**Check:** *Sync Project with Gradle Files* succeeds. If `io.github.thesobiaakbar:adroit-compose` isn't found, check step 2: `mavenCentral()`
+in `settings.gradle.kts`, and the version number.
 
 ## 5. List your ads: AppAds.kt
 

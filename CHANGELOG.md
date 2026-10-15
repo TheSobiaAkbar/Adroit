@@ -6,6 +6,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+## [1.0.0-rc5] - 2026-10-15
+
 ### Added
 - Counter strategies for interstitials and rewarded interstitials, all settable from Firebase
   (docs/AD_PROFILES.md, "Counter and timer"): `counter` also takes a list of max counters used in a loop
@@ -16,6 +18,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `loadAhead`. Recompile code that calls these two functions.
 
 ### Changed
+- **Public, on Maven Central, under the Apache License 2.0.** Apps need only `mavenCentral()`: no GitHub account,
+  invitation or token. The coordinates are unchanged (`io.github.thesobiaakbar:adroit-*`). docs/ACCESS.md is gone,
+  and the guides' repository step is now a check that `mavenCentral()` is there.
+- The release workflow uploads a signed bundle to the Maven Central Portal (`./gradlew centralBundle`), after
+  GitHub Packages. The POM carries the license URL.
 - An ad with a counter loads by itself one call before it's due (`loadAhead`, default 1), and on the call it's due
   when it still isn't loaded. Set `"loadAhead": 0` to load only when due.
 - The timer strategy: an ad profile with `timerSeconds` and no counter requests its next ad when the timer ends

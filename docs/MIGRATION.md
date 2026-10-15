@@ -12,7 +12,7 @@ The library was renamed. Nothing else changed: replace the names below, then reb
 | `CompanyAdMobTestRule`, `CompanyAdMobVersion` | `AdroitTestRule`, `AdroitVersion` |
 | XML attributes `app:company_admob_placement`, `app:company_admob_template`, … | `app:adroit_placement`, `app:adroit_template`, … |
 | Resource overrides `@color/company_admob_…`, `@dimen/company_admob_…`, `@style/…` | `@color/adroit_…`, `@dimen/adroit_…` |
-| The repository `maven.pkg.github.com/TheSobiaAkbar/AdsPlugin` | `maven.pkg.github.com/TheSobiaAkbar/Adroit` ([Getting access](ACCESS.md)) |
+| The repository `maven.pkg.github.com/TheSobiaAkbar/AdsPlugin` | `maven.pkg.github.com/TheSobiaAkbar/Adroit` (from 1.0.0-rc5: Maven Central, no credentials) |
 
 A find-and-replace of `com.company.admob` → `io.github.thesobiaakbar.adroit`, `CompanyAdMob` → `Adroit` and
 `company_admob_` → `adroit_` covers it. Firebase Remote Config parameters keep their names.

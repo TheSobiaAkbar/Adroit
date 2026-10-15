@@ -17,7 +17,6 @@ and add a few lines to three others. The other pages explain each part in depth;
 | An ad unit ID per ad | AdMob, Apps, your app, Ad units. One per ad, of the right format. | `ca-app-pub-1234567890123456/1234567890` |
 | A Firebase project with the app added | [Firebase console](https://console.firebase.google.com), Add app, Android, the **exact** package name | |
 | `google-services.json` | Firebase, Project settings, your Android app, Download | |
-| Access to the library | An invite and a GitHub token with `read:packages`: [Getting access](ACCESS.md) | |
 
 You can start without the ad unit IDs: an ad without IDs shows Google's test ads until you add them.
 
@@ -32,8 +31,8 @@ plugins {
     id("com.google.gms.google-services") // reads google-services.json
 }
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc4") // or adroit-compose for Compose apps
-    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc4") // Remote Config and Analytics; brings Firebase itself
+    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc5") // or adroit-compose for Compose apps
+    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc5") // Remote Config and Analytics; brings Firebase itself
 }
 ```
 

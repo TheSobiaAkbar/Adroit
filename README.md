@@ -17,8 +17,7 @@ one Kotlin file, and every ad can then be tuned from Firebase without releasing 
 | **Kotlin + XML (Views, Fragments)** | **[Adding ads to a new Kotlin + XML app](docs/NEW_APP_XML.md)** |
 | **Jetpack Compose** | **[Adding ads to a new Jetpack Compose app](docs/NEW_APP_COMPOSE.md)** |
 
-Adroit is private: to add it to your build you need an invite and a GitHub token.
-**[Getting access](docs/ACCESS.md)** takes two minutes.
+Adroit is on Maven Central under the Apache 2.0 license: add the dependency, nothing else.
 
 Each guide goes from an empty app to a splash screen with consent, banners, native ads, interstitials, rewarded ads and
 app open ads, with complete files you can copy and a check after every step. The `sample-xml` and `sample-compose`
@@ -59,7 +58,7 @@ Compose screens adds `adroit-compose`, which includes `adroit-views`.
 
 ```kotlin
 // build.gradle.kts
-dependencies { implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc4") }
+dependencies { implementation("io.github.thesobiaakbar:adroit-compose:1.0.0-rc5") }
 
 // Application.onCreate
 Adroit.initialize(this, adMobConfig {
@@ -87,7 +86,7 @@ The guides above set this up properly, with every ad in one enum and Firebase co
 ## Documentation
 
 **Start here:**
-[Getting access](docs/ACCESS.md) · [Getting started](docs/GETTING_STARTED.md) ·
+[Getting started](docs/GETTING_STARTED.md) ·
 [New XML app](docs/NEW_APP_XML.md) · [New Compose app](docs/NEW_APP_COMPOSE.md) ·
 [Integration checklist](docs/INTEGRATION_GUIDE.md)
 
@@ -131,7 +130,6 @@ choices, and your Google Play data safety form.
 
 ## License
 
-Copyright © 2026 Sobia Akbar. All rights reserved. Adroit is not open source: you may use it only with the author's
-written permission, under the terms in [LICENSE](LICENSE). For access, see [Getting access](docs/ACCESS.md).
+Copyright © 2026 Sobia Akbar. Licensed under the [Apache License, Version 2.0](LICENSE).
 
 Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-30
