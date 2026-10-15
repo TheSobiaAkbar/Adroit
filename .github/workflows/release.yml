@@ -18,7 +18,6 @@ jobs:
     timeout-minutes: 90
     permissions:
       contents: write # create the GitHub Release
-      packages: write # publish to GitHub Packages
     steps:
       - name: Check out (full history, for the forbidden-patterns check)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,13 +47,6 @@ jobs:
           ./gradlew build lint apiCheck checkModuleDependencies testDebugUnitTest verifyPublication
           :sample-xml:assembleRelease :sample-compose:assembleRelease
           --stacktrace
-
-      - name: Publish to GitHub Packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew publishAllPublicationsToGitHubPackagesRepository --stacktrace
 
       # Public, no credentials needed to download. Secrets: CENTRAL_TOKEN is base64("<user token name>:<user token
       # password>") from central.sonatype.com → View Account → Generate User Token. AUTOMATIC releases the version

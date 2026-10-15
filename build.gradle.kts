@@ -19,10 +19,12 @@ tasks.register<Zip>("centralBundle") {
     }
     archiveFileName.set("central-bundle.zip")
     destinationDirectory.set(layout.buildDirectory)
+    // Locals, not the script-level vals: doFirst must not capture the script object (configuration cache).
     val signingKey = providers.environmentVariable("SIGNING_KEY")
+    val version = adroitVersion
     doFirst {
         // Central rejects unsigned files and snapshot versions; say so here rather than after the upload.
         check(!signingKey.orNull.isNullOrBlank()) { "Maven Central needs signed files: set SIGNING_KEY and SIGNING_PASSWORD" }
-        check(!adroitVersion.endsWith("-SNAPSHOT")) { "Maven Central takes no -SNAPSHOT versions" }
+        check(!version.endsWith("-SNAPSHOT")) { "Maven Central takes no -SNAPSHOT versions" }
     }
 }
