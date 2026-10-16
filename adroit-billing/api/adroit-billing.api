@@ -465,6 +465,7 @@ public final class io/github/thesobiaakbar/adroit/billing/BillingLogLevel : java
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/BillingPeriod {
+	public static final field Companion Lio/github/thesobiaakbar/adroit/billing/BillingPeriod$Companion;
 	public fun <init> ()V
 	public fun <init> (IIII)V
 	public synthetic fun <init> (IIIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -475,12 +476,18 @@ public final class io/github/thesobiaakbar/adroit/billing/BillingPeriod {
 	public final fun copy (IIII)Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
 	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;IIIIILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApproxDays ()D
 	public final fun getDays ()I
 	public final fun getMonths ()I
 	public final fun getWeeks ()I
 	public final fun getYears ()I
 	public fun hashCode ()I
+	public static final fun parse (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingPeriod$Companion {
+	public final fun parse (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/BillingSettings {
@@ -691,11 +698,16 @@ public final class io/github/thesobiaakbar/adroit/billing/OfferInfo {
 	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
 	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBasePhase ()Lio/github/thesobiaakbar/adroit/billing/PricingPhase;
 	public final fun getBasePlanId ()Ljava/lang/String;
+	public final fun getFirstPayment ()Lio/github/thesobiaakbar/adroit/billing/PricingPhase;
+	public final fun getFreeTrial ()Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
+	public final fun getIntroPhases ()Ljava/util/List;
 	public final fun getOfferId ()Ljava/lang/String;
 	public final fun getOfferTags ()Ljava/util/List;
 	public final fun getPhases ()Ljava/util/List;
 	public fun hashCode ()I
+	public final fun isPrepaid ()Z
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -901,6 +913,15 @@ public final class io/github/thesobiaakbar/adroit/billing/Price {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/thesobiaakbar/adroit/billing/PriceText {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/PriceText;
+	public static final fun duration (Landroid/content/res/Resources;Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;)Ljava/lang/String;
+	public static final fun every (Landroid/content/res/Resources;Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;)Ljava/lang/String;
+	public static final fun fill (Landroid/content/res/Resources;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;)Ljava/lang/String;
+	public static final fun fill (Landroid/content/res/Resources;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;)Ljava/lang/String;
+	public static synthetic fun fill$default (Landroid/content/res/Resources;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;ILjava/lang/Object;)Ljava/lang/String;
+}
+
 public final class io/github/thesobiaakbar/adroit/billing/PricingPhase {
 	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/Price;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;ILio/github/thesobiaakbar/adroit/billing/Recurrence;)V
 	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/Price;
@@ -916,6 +937,7 @@ public final class io/github/thesobiaakbar/adroit/billing/PricingPhase {
 	public final fun getPeriod ()Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
 	public final fun getPrice ()Lio/github/thesobiaakbar/adroit/billing/Price;
 	public final fun getRecurrence ()Lio/github/thesobiaakbar/adroit/billing/Recurrence;
+	public final fun getTotalPeriod ()Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -1236,6 +1258,7 @@ public final class io/github/thesobiaakbar/adroit/billing/SubscriptionPlan {
 	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;
 	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBaseOffer ()Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
 	public final fun getBasePlanId ()Ljava/lang/String;
 	public final fun getOffers ()Ljava/util/List;
 	public fun hashCode ()I

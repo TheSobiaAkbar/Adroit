@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A duration, for a free trial or an intro price: "7 days", "1 week", "3 months", "1 year". -->
+    <plurals name="adroit_billing_duration_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="adroit_billing_duration_weeks">
+        <item quantity="one">%d week</item>
+        <item quantity="other">%d weeks</item>
+    </plurals>
+    <plurals name="adroit_billing_duration_months">
+        <item quantity="one">%d month</item>
+        <item quantity="other">%d months</item>
+    </plurals>
+    <plurals name="adroit_billing_duration_years">
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
+
+    <!-- A billing period after a price, as in "€4.99 / month" or "€9.99 / 3 months". -->
+    <plurals name="adroit_billing_every_days">
+        <item quantity="one">day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="adroit_billing_every_weeks">
+        <item quantity="one">week</item>
+        <item quantity="other">%d weeks</item>
+    </plurals>
+    <plurals name="adroit_billing_every_months">
+        <item quantity="one">month</item>
+        <item quantity="other">%d months</item>
+    </plurals>
+    <plurals name="adroit_billing_every_years">
+        <item quantity="one">year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
+
+    <!-- Joins the parts of a combined period, as in "1 year 2 months". -->
+    <string name="adroit_billing_period_join">%1$s %2$s</string>
+</resources>
