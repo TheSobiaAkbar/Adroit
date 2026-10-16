@@ -10,6 +10,7 @@ import android.content.pm.ApplicationInfo
 import androidx.annotation.VisibleForTesting
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
 import io.github.thesobiaakbar.adroit.billing.internal.BillingRuntime
+import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingAdapter
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingPort
 import io.github.thesobiaakbar.adroit.billing.internal.validate
@@ -45,6 +46,9 @@ public object AdroitBilling : BillingClientApi {
 
     internal val sharedPurchaseUpdates: MutableSharedFlow<PurchaseUpdate> =
         MutableSharedFlow(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** The listeners of [BillingSettings.events] and [addEventListener]. */
+    internal val events: EventBus = EventBus(emptyList(), log)
 
     /** Bought consumables the app hasn't confirmed yet. */
     internal val sharedConsumables: MutableStateFlow<List<ConsumableGrant>> = MutableStateFlow(emptyList())
@@ -100,9 +104,10 @@ public object AdroitBilling : BillingClientApi {
                 return
             }
             this.settings = settings
+            settings.events.forEach(events::add)
             runtime = BillingRuntime(
                 application, portFactory(application), settings, sharedConnection, sharedCatalog, sharedPurchaseUpdates,
-                sharedConsumables, sharedEntitlements, log,
+                sharedConsumables, sharedEntitlements, log, events,
                 account = { requestedAccount }, debuggable = application.isDebuggable(),
             ).also { it.start() }
         }
@@ -153,6 +158,21 @@ public object AdroitBilling : BillingClientApi {
         runtime.showInAppMessages(activity)
     }
 
+    /**
+     * Adds a listener of every [BillingEvent], next to [BillingSettings.events]. Callable at any time, from any thread,
+     * also before [initialize]; adding the same listener twice has no effect.
+     */
+    @JvmStatic
+    public fun addEventListener(listener: BillingEventListener) {
+        events.add(listener)
+    }
+
+    /** Removes a listener added with [addEventListener] or passed in [BillingSettings.events]. */
+    @JvmStatic
+    public fun removeEventListener(listener: BillingEventListener) {
+        events.remove(listener)
+    }
+
     override fun setAccount(accountId: String?) {
         requestedAccount = accountId
         runtime?.entitlements?.setAccount(accountId)
@@ -182,6 +202,7 @@ public object AdroitBilling : BillingClientApi {
             settings = null
             requestedAccount = null
             log.minLevel = BillingLogLevel.WARN
+            events.clear()
             sharedEntitlements.value = EntitlementSnapshot.EMPTY_UNKNOWN
             sharedConnection.value = BillingConnectionState.Disconnected
             sharedCatalog.value = CatalogState.Loading

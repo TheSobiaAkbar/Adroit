@@ -9,6 +9,7 @@ import io.github.thesobiaakbar.adroit.billing.ConsumableGrant
 import io.github.thesobiaakbar.adroit.billing.EntitlementGrant
 import io.github.thesobiaakbar.adroit.billing.GrantSource
 import io.github.thesobiaakbar.adroit.billing.GrantState
+import io.github.thesobiaakbar.adroit.billing.Price
 import io.github.thesobiaakbar.adroit.billing.ProductDefinition
 import io.github.thesobiaakbar.adroit.billing.ProductType
 import io.github.thesobiaakbar.adroit.billing.PurchaseResult
@@ -23,7 +24,7 @@ import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchase
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchaseState
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
 import io.github.thesobiaakbar.adroit.billing.internal.sha256Hex
-import io.github.thesobiaakbar.adroit.billing.internal.tokenHash
+import io.github.thesobiaakbar.adroit.billing.internal.redact
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -53,12 +54,14 @@ internal class PurchaseProcessor(
     private val account: () -> String?,
     private val now: () -> Long = System::currentTimeMillis,
     private val verifierTimeoutMillis: Long = VERIFIER_TIMEOUT_MILLIS,
+    /** What the attributed plan or option costs per the loaded catalog, for [BillingEvent.PurchaseCompleted]. */
+    private val price: (Attribution) -> Price? = { null },
 ) {
     private val locks = ConcurrentHashMap<String, Mutex>()
 
     /** The outcome to report, or null when there is nothing to report (a suspended or unspecified purchase). */
     suspend fun process(purchase: PlayPurchase, attribution: Attribution): PurchaseResult? = locked(purchase) {
-        val hash = tokenHash(purchase.purchaseToken)
+        val hash = redact(purchase.purchaseToken)
         when {
             purchase.state == PlayPurchaseState.UNSPECIFIED -> null
                 .also { log.log(BillingLogLevel.WARN, "Ignored purchase $hash in an unspecified state") }
@@ -74,7 +77,7 @@ internal class PurchaseProcessor(
 
     private suspend fun purchased(purchase: PlayPurchase, attribution: Attribution): PurchaseResult {
         val token = purchase.purchaseToken
-        val hash = tokenHash(token)
+        val hash = redact(token)
         val definitions = purchase.products.mapNotNull { id -> settings.products.firstOrNull { it.defaults.productId == id } }
         if (definitions.isEmpty()) {
             log.log(BillingLogLevel.WARN, "Purchase $hash of undeclared products ${purchase.products}; nothing granted")
@@ -83,12 +86,16 @@ internal class PurchaseProcessor(
         val type = definitions.first().defaults.type
         var state = ledger[token]
         var acknowledgedByBackend = false
+        var verified = false
         when (state) {
             TokenState.REJECTED ->
                 return PurchaseResult.Failed(BillingError.VerificationFailed("Rejected earlier by the verifier"), attribution)
             null -> {
                 when (val verdict = verify(purchase, type, attribution)) {
-                    is VerificationResult.Verified -> acknowledgedByBackend = verdict.acknowledgedByBackend
+                    is VerificationResult.Verified -> {
+                        acknowledgedByBackend = verdict.acknowledgedByBackend
+                        verified = settings.verifier != null
+                    }
                     is VerificationResult.Rejected -> {
                         write(token, TokenState.REJECTED)
                         log.log(BillingLogLevel.WARN, "Purchase $hash rejected by the verifier: ${verdict.reason}")
@@ -102,7 +109,13 @@ internal class PurchaseProcessor(
                 // Recorded before acknowledging: a crash in between acknowledges on the next sync, without a second grant.
                 write(token, TokenState.GRANTED)
                 state = TokenState.GRANTED
-                events.emit(BillingEvent.PurchaseCompleted(purchase.products, attribution, now()))
+                val paid = price(attribution)
+                events.emit(
+                    BillingEvent.PurchaseCompleted(
+                        purchase.products, attribution, now(), paid?.micros?.times(purchase.quantity), paid?.currencyCode,
+                    ),
+                )
+                if (verified) events.emit(BillingEvent.PurchaseVerified(attribution, now()))
                 if (type != ProductType.CONSUMABLE) definitions.forEach {
                     events.emit(BillingEvent.EntitlementActivated(it.defaults.productId, it.defaults.entitlements, attribution, now()))
                 }
@@ -143,7 +156,6 @@ internal class PurchaseProcessor(
         } catch (e: Exception) {
             VerificationResult.Unreachable("Verifier threw ${e::class.java.name}")
         }
-        if (verdict is VerificationResult.Verified) events.emit(BillingEvent.PurchaseVerified(attribution, now()))
         return verdict
     }
 
@@ -155,7 +167,7 @@ internal class PurchaseProcessor(
         }
         val failure = BillingError.AcknowledgeFailed(error.playResponseCode, error.debugMessage)
         events.emit(BillingEvent.AcknowledgeFailed(failure, attribution, now()))
-        log.log(BillingLogLevel.WARN, "Acknowledging ${tokenHash(purchase.purchaseToken)} failed (${error.code}); retried on the next sync")
+        log.log(BillingLogLevel.WARN, "Acknowledging ${redact(purchase.purchaseToken)} failed (${error.code}); retried on the next sync")
     }
 
     /**
@@ -189,7 +201,7 @@ internal class PurchaseProcessor(
         }
         val failure = BillingError.ConsumeFailed(error.playResponseCode, error.debugMessage)
         events.emit(BillingEvent.ConsumeFailed(failure, attribution, now()))
-        log.log(BillingLogLevel.WARN, "Consuming ${tokenHash(purchase.purchaseToken)} failed (${error.code}); retried on the next sync")
+        log.log(BillingLogLevel.WARN, "Consuming ${redact(purchase.purchaseToken)} failed (${error.code}); retried on the next sync")
     }
 
     /** Up to [TRIES] calls, backing off between them. Null on success, else the last error. */
@@ -208,11 +220,11 @@ internal class PurchaseProcessor(
     }
 
     private fun write(token: String, state: TokenState) {
-        if (!ledger.set(token, state)) log.log(BillingLogLevel.WARN, "Couldn't save the state of ${tokenHash(token)} ($state)")
+        if (!ledger.set(token, state)) log.log(BillingLogLevel.WARN, "Couldn't save the state of ${redact(token)} ($state)")
     }
 
     private suspend fun <T> locked(purchase: PlayPurchase, block: suspend () -> T): T =
-        locks.getOrPut(tokenHash(purchase.purchaseToken)) { Mutex() }.withLock { block() }
+        locks.getOrPut(redact(purchase.purchaseToken)) { Mutex() }.withLock { block() }
 
     private companion object {
         const val VERIFIER_TIMEOUT_MILLIS = 15_000L

@@ -5,8 +5,9 @@ import io.github.thesobiaakbar.adroit.billing.BillingLogLevel
 import java.security.MessageDigest
 
 /**
- * The billing library's only path to logcat (tag `AdroitBilling`). Never pass it a purchase token or an account ID.
- * [sink] is replaceable for tests.
+ * The billing library's only path to logcat (tag `AdroitBilling`). Never pass it a purchase token or an account ID: a
+ * token goes through [redact], the single way a token may reach a log or a string (a unit test scans `src/main` for
+ * any other). [sink] is replaceable for tests.
  */
 internal class BillingLog(
     @Volatile var minLevel: BillingLogLevel,
@@ -30,8 +31,8 @@ internal class BillingLog(
     }
 }
 
-/** A purchase token's first 12 hex digits of SHA-256, to tell purchases apart in logs without the token. */
-internal fun tokenHash(token: String): String = sha256Hex(token).take(12)
+/** A purchase token's first 12 hex digits of SHA-256, to tell purchases apart in logs and strings without the token. */
+internal fun redact(token: String): String = sha256Hex(token).take(12)
 
 /** SHA-256 of [text] as 64 lowercase hex digits. */
 internal fun sha256Hex(text: String): String =

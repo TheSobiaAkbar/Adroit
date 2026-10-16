@@ -1,11 +1,16 @@
 package io.github.thesobiaakbar.adroit.billing.internal.catalog
 
+import io.github.thesobiaakbar.adroit.billing.Attribution
 import io.github.thesobiaakbar.adroit.billing.BillingError
+import io.github.thesobiaakbar.adroit.billing.BillingEvent
 import io.github.thesobiaakbar.adroit.billing.BillingLogLevel
 import io.github.thesobiaakbar.adroit.billing.CatalogState
 import io.github.thesobiaakbar.adroit.billing.ProductDefinition
+import io.github.thesobiaakbar.adroit.billing.Price
 import io.github.thesobiaakbar.adroit.billing.ProductInfo
+import io.github.thesobiaakbar.adroit.billing.ProductType
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
+import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.OfferKey
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
@@ -31,6 +36,7 @@ internal class CatalogRepository(
     private val log: BillingLog,
     private val maxAgeMillis: Long,
     private val now: () -> Long = System::currentTimeMillis,
+    private val events: EventBus = EventBus(emptyList(), log),
 ) {
     private var loading: Deferred<Unit>? = null
     private var loadedAt: Long? = null
@@ -81,6 +87,7 @@ internal class CatalogRepository(
         synchronized(this) { loadedAt = now() }
         state.value = CatalogState.Ready(infos, missing)
         log.log(BillingLogLevel.INFO, "Catalog loaded: ${infos.size} products, ${missing.size} missing")
+        events.emit(BillingEvent.CatalogLoaded(infos.size, missing.map { it.defaults.productId }, now()))
     }
 
     private fun missing(missing: MutableSet<ProductDefinition>, definition: ProductDefinition, reason: String) {
@@ -95,5 +102,22 @@ internal class CatalogRepository(
             "Loading products failed: ${error.code} ${error.debugMessage.orEmpty()}" + if (kept) "; kept the last catalog" else "",
         )
         if (!kept) state.value = CatalogState.Failed(error)
+        events.emit(BillingEvent.CatalogFailed(error, now()))
+    }
+}
+
+/**
+ * What the plan or option of [attribution] charges at purchase (a free trial costs 0), or null when that can't be
+ * told for sure: no loaded catalog, an unmatched purchase, or more than one option it could be.
+ */
+internal fun CatalogState.priceOf(attribution: Attribution): Price? {
+    if (attribution.attemptId == null) return null
+    val info = (this as? CatalogState.Ready)?.products?.values?.firstOrNull { it.productId == attribution.productId } ?: return null
+    return if (info.type == ProductType.SUBSCRIPTION) {
+        info.plans.firstOrNull { it.basePlanId == attribution.basePlanId }
+            ?.offers?.firstOrNull { it.offerId == attribution.offerId }
+            ?.phases?.firstOrNull()?.price
+    } else {
+        info.oneTimeOptions.singleOrNull { it.offerId == attribution.offerId }?.price
     }
 }

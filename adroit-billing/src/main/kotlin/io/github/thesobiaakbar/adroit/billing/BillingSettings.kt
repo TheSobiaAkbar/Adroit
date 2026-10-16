@@ -42,7 +42,7 @@ public enum class AttributionToken {
  * @property overrides JSON values by key that win over [config], for values the app sets in code.
  * @property verifier checks purchases with the app's backend before granting; null trusts Play on the device.
  * @property entitlementProvider the app's backend as an extra source of entitlements; null for none.
- * @property events listeners of every [BillingEvent].
+ * @property events listeners of every [BillingEvent]; more can be added with [AdroitBilling.addEventListener].
  * @property adFreeEntitlements the entitlements that make the user ad-free ([EntitlementSnapshot.adFree]); null means
  *   any entitlement of [products]. The `AdroitBilling` Firebase parameter can change it.
  * @property offlineGraceHours how long a saved subscription is trusted without a successful Play query, 1 to 720.

@@ -18,6 +18,9 @@ import io.github.thesobiaakbar.adroit.billing.GrantSource
 import io.github.thesobiaakbar.adroit.billing.GrantState
 import io.github.thesobiaakbar.adroit.billing.ProductDefinition
 import io.github.thesobiaakbar.adroit.billing.ProductSpec
+import io.github.thesobiaakbar.adroit.billing.PurchaseVerifier
+import io.github.thesobiaakbar.adroit.billing.VerificationResult
+import io.github.thesobiaakbar.adroit.billing.internal.catalog.priceOf
 import io.github.thesobiaakbar.adroit.billing.ProductType
 import io.github.thesobiaakbar.adroit.billing.ReplacementMode
 import io.github.thesobiaakbar.adroit.billing.SnapshotStatus
@@ -89,9 +92,10 @@ class PurchaseLauncherTest {
         token: AttributionToken = AttributionToken.LOCAL_ONLY,
         account: String? = null,
         products: List<ProductDefinition> = TestProducts.entries,
+        verifier: PurchaseVerifier? = null,
     ): PurchaseLauncher {
         val settings = BillingSettings(
-            products, TestPaywalls.entries, events = listOf(BillingEventListener { events += it }),
+            products, TestPaywalls.entries, verifier = verifier, events = listOf(BillingEventListener { events += it }),
             attributionToken = token,
         )
         val connection = ConnectionManager(port, backgroundScope, MutableStateFlow(BillingConnectionState.Connected), log)
@@ -103,6 +107,7 @@ class PurchaseLauncherTest {
             PurchaseProcessor(
                 connection, settings, TokenLedger(application), updates, MutableStateFlow(emptyList()),
                 EventBus(settings.events, log), log, application.packageName, { account },
+                price = { catalogState.value.priceOf(it) },
             ),
             snapshot,
         )
@@ -143,16 +148,38 @@ class PurchaseLauncherTest {
             Attribution(attribution.attemptId, "home", null, "spring", "premium_sub", "monthly", "trial", recovered = false),
             attribution,
         )
+        val price = catalogState.value.priceOf(attribution)!!
         assertEquals(
             listOf(
                 BillingEvent.PurchaseInitiated(attribution, 0),
-                BillingEvent.PurchaseCompleted(listOf("premium_sub"), attribution, 0),
+                BillingEvent.PurchaseCompleted(listOf("premium_sub"), attribution, 0, price.micros, price.currencyCode),
                 BillingEvent.EntitlementActivated("premium_sub", setOf("premium", "ad_free"), attribution, 0),
             ),
             events.map { it.withTime(0) },
         )
         assertEquals(listOf("token-1"), port.acknowledged)
         assertEquals(emptyList<PurchaseUpdate>(), received)
+    }
+
+    @Test
+    fun `a verified purchase reports Initiated, Completed, Verified, then EntitlementActivated`() = runTest {
+        val launcher = launcher(verifier = PurchaseVerifier { VerificationResult.Verified() })
+        val result = start(launcher, sub.copy(offer = OfferSelection.BaseOnly))
+        play(PlayPurchasesUpdate.Purchased(listOf(purchase())))
+        assertTrue(result.await() is PurchaseResult.Purchased)
+        assertEquals(
+            listOf(
+                BillingEvent.PurchaseInitiated::class, BillingEvent.PurchaseCompleted::class,
+                BillingEvent.PurchaseVerified::class, BillingEvent.EntitlementActivated::class,
+            ),
+            events.map { it::class },
+        )
+        val completed = events.filterIsInstance<BillingEvent.PurchaseCompleted>().single()
+        val base = (catalogState.value as CatalogState.Ready).products.getValue(TestProducts.PremiumSub)
+            .plans.single { it.basePlanId == "monthly" }.baseOffer!!.phases.first().price
+        assertTrue(base.micros > 0)
+        assertEquals(base.micros, completed.priceMicros)
+        assertEquals(base.currencyCode, completed.currency)
     }
 
     @Test

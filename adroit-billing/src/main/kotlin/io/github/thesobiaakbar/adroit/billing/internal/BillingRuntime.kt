@@ -13,6 +13,7 @@ import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
 import io.github.thesobiaakbar.adroit.billing.PurchaseUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
 import io.github.thesobiaakbar.adroit.billing.internal.catalog.CatalogRepository
+import io.github.thesobiaakbar.adroit.billing.internal.catalog.priceOf
 import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementCache
 import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementEngine
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
@@ -44,18 +45,18 @@ internal class BillingRuntime(
     consumables: MutableStateFlow<List<ConsumableGrant>>,
     entitlementState: MutableStateFlow<EntitlementSnapshot>,
     log: BillingLog,
+    private val events: EventBus,
     private val account: () -> String?,
     debuggable: Boolean,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    val connection = ConnectionManager(port, scope, connectionState, log)
+    val connection = ConnectionManager(port, scope, connectionState, log, events)
 
     val catalog = CatalogRepository(
         connection, settings.products, catalogState, scope, log, maxAgeMillis = settings.catalogMaxAgeHours * HOUR_MILLIS,
+        events = events,
     )
-
-    private val events = EventBus(settings.events, log)
 
     private val attempts = AttemptStore(application)
 
@@ -63,6 +64,7 @@ internal class BillingRuntime(
 
     private val processor = PurchaseProcessor(
         connection, settings, ledger, purchaseUpdates, consumables, events, log, application.packageName, account,
+        price = { catalogState.value.priceOf(it) },
     )
 
     val entitlements = EntitlementEngine(

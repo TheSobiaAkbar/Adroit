@@ -208,6 +208,26 @@ class AdroitBillingTest {
     }
 
     @Test
+    fun `listeners from settings and addEventListener get events until removed`() = runTest {
+        val fromSettings = mutableListOf<BillingEvent>()
+        val added = mutableListOf<BillingEvent>()
+        val listener = BillingEventListener { added += it }
+        AdroitBilling.addEventListener(listener)
+        AdroitBilling.initialize(application, BillingSettings(TestProducts.entries, events = listOf(BillingEventListener { fromSettings += it })))
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(added.first() is BillingEvent.ConnectionStarted)
+        assertEquals(fromSettings, added)
+
+        AdroitBilling.removeEventListener(listener)
+        val before = added.size
+        AdroitBilling.refresh()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(fromSettings.last() is BillingEvent.CatalogLoaded)
+        assertEquals(before + 1, fromSettings.size)
+        assertEquals(before, added.size)
+    }
+
+    @Test
     fun `initialize connects to Play`() {
         AdroitBilling.initialize(application, valid)
         assertEquals(BillingConnectionState.Connected, AdroitBilling.connection.value)

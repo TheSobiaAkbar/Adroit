@@ -2,8 +2,10 @@ package io.github.thesobiaakbar.adroit.billing.internal.play
 
 import io.github.thesobiaakbar.adroit.billing.BillingConnectionState
 import io.github.thesobiaakbar.adroit.billing.BillingError
+import io.github.thesobiaakbar.adroit.billing.BillingEvent
 import io.github.thesobiaakbar.adroit.billing.BillingLogLevel
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
+import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -27,6 +29,7 @@ internal class ConnectionManager(
     private val scope: CoroutineScope,
     private val state: MutableStateFlow<BillingConnectionState>,
     private val log: BillingLog,
+    private val events: EventBus = EventBus(emptyList(), log),
     private val now: () -> Long = System::currentTimeMillis,
     private val callTimeoutMillis: Long = CALL_TIMEOUT_MILLIS,
 ) {
@@ -78,9 +81,11 @@ internal class ConnectionManager(
     private suspend fun connectWithRetries() {
         repeat(MAX_RETRIES + 1) { attempt ->
             state.value = BillingConnectionState.Connecting
+            events.emit(BillingEvent.ConnectionStarted(now()))
             val error = when (val result = port.connect(::onDisconnected)) {
                 is PlayResult.Ok -> {
                     log.log(BillingLogLevel.INFO, "Connected to Play")
+                    events.emit(BillingEvent.ConnectionEstablished(now()))
                     state.value = BillingConnectionState.Connected
                     return
                 }
@@ -88,6 +93,7 @@ internal class ConnectionManager(
                 is PlayResult.Cancelled -> BillingError.Unknown(debugMessage = "Connecting was cancelled")
             }
             log.log(BillingLogLevel.WARN, "Connecting to Play failed: ${error.code} ${error.debugMessage.orEmpty()}")
+            events.emit(BillingEvent.ConnectionFailed(error, now()))
             if (error is BillingError.Unavailable) {
                 state.value = BillingConnectionState.Unavailable(error)
                 return

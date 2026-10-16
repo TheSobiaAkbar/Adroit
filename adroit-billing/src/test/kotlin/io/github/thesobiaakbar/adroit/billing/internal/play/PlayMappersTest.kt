@@ -10,7 +10,7 @@ import io.github.thesobiaakbar.adroit.billing.Price
 import io.github.thesobiaakbar.adroit.billing.Recurrence
 import io.github.thesobiaakbar.adroit.billing.TestProducts
 import io.github.thesobiaakbar.adroit.billing.internal.play.CatalogFixtures.productDetails
-import io.github.thesobiaakbar.adroit.billing.internal.tokenHash
+import io.github.thesobiaakbar.adroit.billing.internal.redact
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -80,8 +80,8 @@ class PlayMappersTest {
         assertEquals(PlayPurchaseState.PURCHASED, purchase.state)
         assertEquals(true, purchase.isAcknowledged)
         assertFalse(purchase.toString().contains("secret-token"))
-        assertEquals(true, purchase.toString().contains(tokenHash("secret-token")))
-        assertEquals(12, tokenHash("secret-token").length)
+        assertEquals(true, purchase.toString().contains(redact("secret-token")))
+        assertEquals(12, redact("secret-token").length)
     }
 
     @Test

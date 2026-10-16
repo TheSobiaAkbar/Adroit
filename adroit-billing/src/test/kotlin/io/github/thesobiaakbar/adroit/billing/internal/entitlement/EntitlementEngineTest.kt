@@ -13,6 +13,7 @@ import io.github.thesobiaakbar.adroit.billing.BillingEventListener
 import io.github.thesobiaakbar.adroit.billing.BillingLogLevel
 import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.EntitlementGrant
+import io.github.thesobiaakbar.adroit.billing.EntitlementLossReason
 import io.github.thesobiaakbar.adroit.billing.EntitlementProvider
 import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
 import io.github.thesobiaakbar.adroit.billing.GrantSource
@@ -20,6 +21,7 @@ import io.github.thesobiaakbar.adroit.billing.GrantState
 import io.github.thesobiaakbar.adroit.billing.ProductType
 import io.github.thesobiaakbar.adroit.billing.PurchaseResult
 import io.github.thesobiaakbar.adroit.billing.RestoreResult
+import io.github.thesobiaakbar.adroit.billing.ServerLifecycleKind
 import io.github.thesobiaakbar.adroit.billing.SnapshotStatus
 import io.github.thesobiaakbar.adroit.billing.TestProducts
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
@@ -68,10 +70,11 @@ class EntitlementEngineTest {
         remote: String? = null,
         provider: EntitlementProvider? = null,
         adFree: Set<String>? = null,
+        config: BillingConfigSource = BillingConfigSource { if (it == "AdroitBilling") remote else null },
     ): EntitlementEngine {
         val settings = BillingSettings(
             TestProducts.entries,
-            config = BillingConfigSource { if (it == "AdroitBilling") remote else null },
+            config = config,
             entitlementProvider = provider,
             events = listOf(BillingEventListener { events += it }),
             adFreeEntitlements = adFree,
@@ -254,6 +257,104 @@ class EntitlementEngineTest {
         assertEquals(listOf(sub), state.value.grants)
         engine(provider = { error("down") }).sync()
         assertEquals(listOf(sub), state.value.grants)
+    }
+
+    private fun losses() = events.filterIsInstance<BillingEvent.EntitlementLost>().map { it.entitlement to it.reason }
+
+    private fun lifecycle() = events.filterIsInstance<BillingEvent.ServerLifecycle>().map { it.kind }
+
+    @Test
+    fun `each lost entitlement is reported once with its client-side reason`() = runTest {
+        cache.save(SavedGrants(listOf(sub), atMillis = 0))
+        val engine = engine()
+        owns(purchase())
+        engine.sync()
+        assertEquals(emptyList<Any>(), losses())
+
+        owns(purchase(suspended = true))
+        engine.sync()
+        engine.sync()
+        val issue = EntitlementLossReason.PAYMENT_ISSUE
+        assertEquals(listOf("premium" to issue, "ad_free" to issue), losses())
+
+        events.clear()
+        owns(purchase())
+        engine.sync()
+        owns()
+        engine.sync()
+        val gone = EntitlementLossReason.NOT_OWNED
+        assertEquals(listOf("premium" to gone, "ad_free" to gone), losses())
+    }
+
+    @Test
+    fun `a subscription dropped by the grace period is lost for that reason`() = runTest {
+        owns(purchase())
+        val engine = engine()
+        engine.sync()
+        repeat(4) { port.purchasesResults += failed }
+        advanceTimeBy(72 * 3_600_000L + 2)
+        assertEquals(EntitlementLossReason.OFFLINE_GRACE_ENDED, losses().map { it.second }.distinct().single())
+    }
+
+    @Test
+    fun `an account switch and a remote remap are reported as such`() = runTest {
+        var remote: String? = null
+        val config = BillingConfigSource { if (it == "AdroitBilling") remote else null }
+        owns(purchase())
+        val engine = engine(config = config)
+        engine.sync()
+        remote = """{"products": {"PremiumSub": {"entitlements": ["premium"]}}}"""
+        engine.publish()
+        assertEquals(listOf("ad_free" to EntitlementLossReason.CONFIG_CHANGED), losses())
+
+        events.clear()
+        engine.setAccount("alice")
+        runCurrent()
+        engine.setAccount("bob")
+        runCurrent()
+        assertEquals("premium" to EntitlementLossReason.ACCOUNT_SWITCHED, losses().first())
+    }
+
+    @Test
+    fun `server lifecycle events come only from the provider's changes between syncs`() = runTest {
+        var backend: List<EntitlementGrant>? = listOf(grant("premium_sub", ProductType.SUBSCRIPTION, source = GrantSource.BACKEND))
+        owns(purchase())
+        val engine = engine(provider = { backend })
+        engine.sync()
+        engine.sync()
+        assertEquals(emptyList<ServerLifecycleKind>(), lifecycle())
+
+        for (next in listOf(GrantState.GRACE_FROM_BACKEND, GrantState.ACTIVE, GrantState.SUSPENDED, GrantState.ACTIVE)) {
+            backend = listOf(grant("premium_sub", ProductType.SUBSCRIPTION, next, GrantSource.BACKEND))
+            engine.sync()
+        }
+        backend = null
+        engine.sync()
+        backend = emptyList()
+        engine.sync()
+        assertEquals(
+            listOf(ServerLifecycleKind.GRACE_PERIOD, ServerLifecycleKind.RECOVERED, ServerLifecycleKind.ON_HOLD, ServerLifecycleKind.RECOVERED),
+            lifecycle(),
+        )
+        assertTrue(events.filterIsInstance<BillingEvent.ServerLifecycle>().all { it.source == GrantSource.BACKEND })
+    }
+
+    @Test
+    fun `the provider ending a grant it reported is ENDED, and Play alone never produces lifecycle events`() = runTest {
+        var backend: List<EntitlementGrant>? = listOf(grant("premium_sub", ProductType.SUBSCRIPTION, source = GrantSource.BACKEND))
+        val engine = engine(provider = { backend })
+        engine.sync()
+        backend = emptyList()
+        engine.sync()
+        assertEquals(listOf(ServerLifecycleKind.ENDED), lifecycle())
+
+        events.clear()
+        val play = engine()
+        owns(purchase(suspended = true))
+        play.sync()
+        owns()
+        play.sync()
+        assertEquals(emptyList<ServerLifecycleKind>(), lifecycle())
     }
 
     @Test

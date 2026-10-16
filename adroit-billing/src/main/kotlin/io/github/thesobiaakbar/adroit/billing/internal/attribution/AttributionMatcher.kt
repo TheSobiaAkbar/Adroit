@@ -2,7 +2,7 @@ package io.github.thesobiaakbar.adroit.billing.internal.attribution
 
 import io.github.thesobiaakbar.adroit.billing.Attribution
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchase
-import io.github.thesobiaakbar.adroit.billing.internal.tokenHash
+import io.github.thesobiaakbar.adroit.billing.internal.redact
 
 /**
  * Finds the attempt a Play purchase came from (06 §6), in this order:
@@ -15,7 +15,7 @@ import io.github.thesobiaakbar.adroit.billing.internal.tokenHash
  */
 internal class AttributionMatcher(private val store: AttemptStore) {
     fun match(purchase: PlayPurchase): Attribution {
-        val hash = tokenHash(purchase.purchaseToken)
+        val hash = redact(purchase.purchaseToken)
         val attempts = store.all()
         attempts.firstOrNull { it.tokenHash == hash }?.let { return it.attribution }
         val profileId = purchase.obfuscatedProfileId

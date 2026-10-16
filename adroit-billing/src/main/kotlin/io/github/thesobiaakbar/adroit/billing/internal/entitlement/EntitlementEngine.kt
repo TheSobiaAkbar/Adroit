@@ -6,12 +6,14 @@ import io.github.thesobiaakbar.adroit.billing.BillingEvent
 import io.github.thesobiaakbar.adroit.billing.BillingLogLevel
 import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.EntitlementGrant
+import io.github.thesobiaakbar.adroit.billing.EntitlementLossReason
 import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
 import io.github.thesobiaakbar.adroit.billing.GrantSource
 import io.github.thesobiaakbar.adroit.billing.GrantState
 import io.github.thesobiaakbar.adroit.billing.ProductType
 import io.github.thesobiaakbar.adroit.billing.PurchaseResult
 import io.github.thesobiaakbar.adroit.billing.RestoreResult
+import io.github.thesobiaakbar.adroit.billing.ServerLifecycleKind
 import io.github.thesobiaakbar.adroit.billing.SnapshotStatus
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
@@ -47,6 +49,9 @@ import org.json.JSONObject
  *
  * Grants are mapped to entitlements when published, so a new `AdroitBilling` remote value applies at once. The remote
  * value can remap only declared products; it can't add one.
+ *
+ * Each entitlement that leaves [EntitlementSnapshot.active] is reported as [BillingEvent.EntitlementLost]; a change in
+ * the provider's grants between two syncs that both reached it, as [BillingEvent.ServerLifecycle].
  *
  * Runs on [scope]'s (main) thread.
  */
@@ -95,6 +100,7 @@ internal class EntitlementEngine(
         }
         val play = purchases.flatMap { grants(it) }
         val backend = backend()
+        if (backend != null) lifecycle(saved?.grants.orEmpty().filter { it.source == GrantSource.BACKEND }, backend)
         val merged = if (backend == null) play else play.filter { p -> backend.none { it.productId == p.productId } } + backend
         saved = SavedGrants(merged, now()).also(cache::save)
         freshInProcess = true
@@ -157,7 +163,7 @@ internal class EntitlementEngine(
                 attempts.clear()
                 saved = null
                 freshInProcess = false
-                publish()
+                publish(EntitlementLossReason.ACCOUNT_SWITCHED)
                 true
             }
             if (switched) sync()
@@ -204,8 +210,45 @@ internal class EntitlementEngine(
         return error
     }
 
-    /** Publishes [saved] as it stands now: remapped, with the grace period applied. */
-    fun publish() {
+    /** Reports how each backend grant in [before] became the one in [after]. */
+    private fun lifecycle(before: List<EntitlementGrant>, after: List<EntitlementGrant>) {
+        val now = now()
+        for (old in before) {
+            val new = after.firstOrNull { it.productId == old.productId }
+            val kind = when {
+                new == null -> ServerLifecycleKind.ENDED
+                new.state == old.state -> null
+                new.state == GrantState.GRACE_FROM_BACKEND -> ServerLifecycleKind.GRACE_PERIOD
+                new.state == GrantState.SUSPENDED -> ServerLifecycleKind.ON_HOLD
+                new.state == GrantState.ACTIVE && old.state in RECOVERABLE -> ServerLifecycleKind.RECOVERED
+                else -> null
+            }
+            if (kind != null) events.emit(BillingEvent.ServerLifecycle(kind, old.productId, now))
+        }
+    }
+
+    /**
+     * Publishes [saved] as it stands now: remapped, with the grace period applied. An entitlement lost for no reason
+     * seen here is reported with [lossReason].
+     */
+    fun publish(lossReason: EntitlementLossReason = EntitlementLossReason.NOT_OWNED) {
+        val before = state.value
+        val expired = publishSaved()
+        val after = state.value
+        for (entitlement in before.active - after.active) {
+            val providers = before.grants.filter { it.grantsAccess && entitlement in it.entitlements }.map { it.productId }
+            val reason = when {
+                after.grants.any { it.needsPaymentFix && entitlement in it.entitlements } -> EntitlementLossReason.PAYMENT_ISSUE
+                after.grants.any { it.grantsAccess && it.productId in providers } -> EntitlementLossReason.CONFIG_CHANGED
+                expired && saved?.grants.orEmpty().any { it.productId in providers } -> EntitlementLossReason.OFFLINE_GRACE_ENDED
+                else -> lossReason
+            }
+            events.emit(BillingEvent.EntitlementLost(entitlement, reason, now()))
+        }
+    }
+
+    /** Sets [state] from [saved]; true when the offline grace period has run out. */
+    private fun publishSaved(): Boolean {
         val remote = remote()
         val mapping = settings.products.associate { def ->
             def.defaults.productId to (remote.entitlements[def.name] ?: def.defaults.entitlements)
@@ -214,7 +257,7 @@ internal class EntitlementEngine(
         val current = saved
         if (current == null) {
             state.value = EntitlementSnapshot(emptyList(), SnapshotStatus.Unknown, adFree)
-            return
+            return false
         }
         val graceMillis = (remote.graceHours ?: settings.offlineGraceHours) * HOUR_MILLIS
         val expiresAt = current.atMillis + graceMillis
@@ -235,6 +278,7 @@ internal class EntitlementEngine(
                 publish()
             }
         }
+        return expired
     }
 
     private class Remote(val adFree: Set<String>?, val graceHours: Int?, val entitlements: Map<String, Set<String>>)
@@ -262,5 +306,6 @@ internal class EntitlementEngine(
         const val HOUR_MILLIS = 3_600_000L
         const val FOREGROUND_DEBOUNCE_MILLIS = 30_000L
         const val PROVIDER_TIMEOUT_MILLIS = 15_000L
+        val RECOVERABLE = setOf(GrantState.GRACE_FROM_BACKEND, GrantState.SUSPENDED)
     }
 }

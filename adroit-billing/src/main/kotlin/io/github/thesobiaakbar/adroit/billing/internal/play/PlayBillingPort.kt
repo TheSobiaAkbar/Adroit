@@ -6,7 +6,7 @@ import io.github.thesobiaakbar.adroit.billing.ProductDefinition
 import io.github.thesobiaakbar.adroit.billing.ProductInfo
 import io.github.thesobiaakbar.adroit.billing.ProductType
 import io.github.thesobiaakbar.adroit.billing.ReplacementMode
-import io.github.thesobiaakbar.adroit.billing.internal.tokenHash
+import io.github.thesobiaakbar.adroit.billing.internal.redact
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -91,7 +91,7 @@ internal data class LaunchParams(
 
 /** The subscription a purchase replaces. [toString] shows a hash of the token, never the token. */
 internal data class Replacement(val oldProductId: String, val oldPurchaseToken: String, val mode: ReplacementMode) {
-    override fun toString(): String = "Replacement(old=$oldProductId, token#=${tokenHash(oldPurchaseToken)}, mode=$mode)"
+    override fun toString(): String = "Replacement(old=$oldProductId, token#=${redact(oldPurchaseToken)}, mode=$mode)"
 }
 
 /** One purchase from Play. [toString] shows a hash of the token, never the token. */
@@ -111,7 +111,7 @@ internal data class PlayPurchase(
     val signature: String,
 ) {
     override fun toString(): String =
-        "PlayPurchase(products=$products, token#=${tokenHash(purchaseToken)}, state=$state, " +
+        "PlayPurchase(products=$products, token#=${redact(purchaseToken)}, state=$state, " +
             "acknowledged=$isAcknowledged, autoRenewing=$isAutoRenewing, suspended=$isSuspended)"
 }
 

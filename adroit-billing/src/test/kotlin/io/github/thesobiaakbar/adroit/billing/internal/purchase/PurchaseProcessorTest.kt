@@ -103,6 +103,19 @@ class PurchaseProcessorTest {
     }
 
     @Test
+    fun `a listener that throws doesn't break processing`() = runTest {
+        val settings = BillingSettings(TestProducts.entries, events = listOf(BillingEventListener { error("listener bug") }))
+        val connection = ConnectionManager(port, backgroundScope, MutableStateFlow(BillingConnectionState.Connected), log)
+        val processor = PurchaseProcessor(
+            connection, settings, TokenLedger(application), updates, consumables, EventBus(settings.events, log), log, "com.example", { null },
+        )
+        assertTrue(processor.process(purchase(), attribution) is PurchaseResult.Purchased)
+        assertEquals(listOf("secret-token"), port.acknowledged)
+        assertEquals(TokenState.ACKNOWLEDGED, ledger())
+        assertEquals(1, logged.count { it.startsWith("Event listener") })
+    }
+
+    @Test
     fun `a suspended subscription grants nothing and is reported`() = runTest {
         assertNull(processor().process(purchase(suspended = true), attribution))
         assertEquals(listOf(PurchaseUpdate.Suspended("premium_sub")), updates.replayCache)
