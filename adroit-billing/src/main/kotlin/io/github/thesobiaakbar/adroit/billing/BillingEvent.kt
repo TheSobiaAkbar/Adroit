@@ -26,6 +26,46 @@ public sealed interface BillingEvent {
         public val attribution: Attribution?,
         override val timestampMillis: Long,
     ) : BillingEvent
+
+    /** A purchase is waiting for payment; nothing is granted yet. */
+    public data class PurchasePending(
+        public val productIds: List<String>,
+        public val attribution: Attribution,
+        override val timestampMillis: Long,
+    ) : BillingEvent
+
+    /** The app's [PurchaseVerifier] accepted a purchase. */
+    public data class PurchaseVerified(public val attribution: Attribution, override val timestampMillis: Long) :
+        BillingEvent
+
+    /** A purchase was granted: once per purchase, however often Play reports it. */
+    public data class PurchaseCompleted(
+        public val productIds: List<String>,
+        public val attribution: Attribution,
+        override val timestampMillis: Long,
+    ) : BillingEvent
+
+    /** A newly granted product unlocked [entitlements]. */
+    public data class EntitlementActivated(
+        public val productId: String,
+        public val entitlements: Set<String>,
+        public val attribution: Attribution,
+        override val timestampMillis: Long,
+    ) : BillingEvent
+
+    /** Acknowledging a granted purchase failed; it is tried again on the next sync. */
+    public data class AcknowledgeFailed(
+        public val error: BillingError,
+        public val attribution: Attribution,
+        override val timestampMillis: Long,
+    ) : BillingEvent
+
+    /** Consuming a confirmed consumable failed; it is tried again on the next sync. */
+    public data class ConsumeFailed(
+        public val error: BillingError,
+        public val attribution: Attribution,
+        override val timestampMillis: Long,
+    ) : BillingEvent
 }
 
 /** Receives every [BillingEvent] on the main thread. A listener that throws is logged and never breaks billing. */

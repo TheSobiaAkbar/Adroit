@@ -45,7 +45,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Every purchase Play reports goes through [handle]: it is matched to its attempt, processed by [processor], and its
  * outcome returned to the waiting `purchase()` call, or published on [updates] when nobody waits (the caller's scope
- * was cancelled, a pending payment completed, a purchase from outside the app).
+ * was cancelled, a pending payment completed, a purchase from outside the app). A pending payment is published either
+ * way.
  */
 internal class PurchaseLauncher(
     private val connection: ConnectionManager,
@@ -58,7 +59,7 @@ internal class PurchaseLauncher(
     private val log: BillingLog,
     private val account: () -> String?,
     private val debuggable: Boolean,
-    private val processor: PurchaseProcessor = PurchaseProcessor.ReportOnly,
+    private val processor: PurchaseProcessor,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     private val matcher = AttributionMatcher(store)
@@ -140,6 +141,8 @@ internal class PurchaseLauncher(
         val live = current?.takeIf { matched.attemptId != null && it.attribution.attemptId == matched.attemptId }
         val attribution = if (live == null && matched.attemptId != null) matched.copy(recovered = true) else matched
         val result = processor.process(purchase, attribution)
+            ?: live?.let { PurchaseResult.Failed(BillingError.Unknown(debugMessage = "Purchase in an unspecified state"), attribution) }
+            ?: return
         if (live != null) finish(live, result, purchase.products) else publish(result, purchase.products)
     }
 
@@ -215,7 +218,7 @@ internal class PurchaseLauncher(
         log.log(BillingLogLevel.INFO, "Purchase of ${attempt.attribution.productId}: ${result::class.java.simpleName}")
         attempt.outcome = result to products
         attempt.result.complete(result)
-        if (attempt.callerGone) publish(result, products)
+        if (attempt.callerGone || result is PurchaseResult.Pending) publish(result, products)
         return result
     }
 

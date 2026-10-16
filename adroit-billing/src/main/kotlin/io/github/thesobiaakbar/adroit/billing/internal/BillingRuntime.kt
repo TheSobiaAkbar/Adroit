@@ -7,6 +7,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import io.github.thesobiaakbar.adroit.billing.BillingConnectionState
 import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.CatalogState
+import io.github.thesobiaakbar.adroit.billing.ConsumableGrant
 import io.github.thesobiaakbar.adroit.billing.PurchaseUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
 import io.github.thesobiaakbar.adroit.billing.internal.catalog.CatalogRepository
@@ -14,6 +15,8 @@ import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingPort
 import io.github.thesobiaakbar.adroit.billing.internal.purchase.PurchaseLauncher
+import io.github.thesobiaakbar.adroit.billing.internal.purchase.PurchaseProcessor
+import io.github.thesobiaakbar.adroit.billing.internal.purchase.TokenLedger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,8 +26,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Everything billing runs once initialized, created once per process by `AdroitBilling.initialize`. Purchases and
- * entitlements join it in B07-B08.
+ * Everything billing runs once initialized, created once per process by `AdroitBilling.initialize`. Entitlements
+ * join it in B08.
  */
 internal class BillingRuntime(
     application: Application,
@@ -33,6 +36,7 @@ internal class BillingRuntime(
     private val connectionState: MutableStateFlow<BillingConnectionState>,
     catalogState: MutableStateFlow<CatalogState>,
     purchaseUpdates: MutableSharedFlow<PurchaseUpdate>,
+    consumables: MutableStateFlow<List<ConsumableGrant>>,
     log: BillingLog,
     account: () -> String?,
     debuggable: Boolean,
@@ -45,9 +49,15 @@ internal class BillingRuntime(
         connection, settings.products, catalogState, scope, log, maxAgeMillis = settings.catalogMaxAgeHours * HOUR_MILLIS,
     )
 
+    private val events = EventBus(settings.events, log)
+
     val purchases = PurchaseLauncher(
-        connection, catalog, catalogState, settings, AttemptStore(application), purchaseUpdates,
-        EventBus(settings.events, log), log, account, debuggable,
+        connection, catalog, catalogState, settings, AttemptStore(application), purchaseUpdates, events, log, account,
+        debuggable,
+        PurchaseProcessor(
+            connection, settings, TokenLedger(application), purchaseUpdates, consumables, events, log,
+            application.packageName, account,
+        ),
     )
 
     /**

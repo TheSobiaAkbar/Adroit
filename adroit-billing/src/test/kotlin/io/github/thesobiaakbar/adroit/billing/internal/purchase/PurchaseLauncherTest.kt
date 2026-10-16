@@ -86,6 +86,10 @@ class PurchaseLauncherTest {
         val launcher = PurchaseLauncher(
             connection, catalog, catalogState, settings, store, updates, EventBus(settings.events, log), log,
             account = { account }, debuggable = true,
+            PurchaseProcessor(
+                connection, settings, TokenLedger(application), updates, MutableStateFlow(emptyList()),
+                EventBus(settings.events, log), log, application.packageName, { account },
+            ),
         )
         backgroundScope.launch { launcher.handle(port.purchasesUpdates) }
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { updates.collect { received += it } }
@@ -124,7 +128,15 @@ class PurchaseLauncherTest {
             Attribution(attribution.attemptId, "home", null, "spring", "premium_sub", "monthly", "trial", recovered = false),
             attribution,
         )
-        assertEquals(listOf<BillingEvent>(BillingEvent.PurchaseInitiated(attribution, 0)), events.map { it.withTime(0) })
+        assertEquals(
+            listOf(
+                BillingEvent.PurchaseInitiated(attribution, 0),
+                BillingEvent.PurchaseCompleted(listOf("premium_sub"), attribution, 0),
+                BillingEvent.EntitlementActivated("premium_sub", setOf("premium", "ad_free"), attribution, 0),
+            ),
+            events.map { it.withTime(0) },
+        )
+        assertEquals(listOf("token-1"), port.acknowledged)
         assertEquals(emptyList<PurchaseUpdate>(), received)
     }
 
@@ -242,7 +254,13 @@ class PurchaseLauncherTest {
         val attribution = (result.await() as PurchaseResult.Pending).attribution
 
         play(PlayPurchasesUpdate.Purchased(listOf(purchase())))
-        assertEquals(listOf(PurchaseUpdate.Completed(listOf("premium_sub"), attribution.copy(recovered = true))), received)
+        assertEquals(
+            listOf(
+                PurchaseUpdate.Pending(listOf("premium_sub"), attribution),
+                PurchaseUpdate.Completed(listOf("premium_sub"), attribution.copy(recovered = true)),
+            ),
+            received,
+        )
     }
 
     @Test
@@ -290,6 +308,8 @@ class PurchaseLauncherTest {
 
     private fun BillingEvent.withTime(time: Long): BillingEvent = when (this) {
         is BillingEvent.PurchaseInitiated -> copy(timestampMillis = time)
+        is BillingEvent.PurchaseCompleted -> copy(timestampMillis = time)
+        is BillingEvent.EntitlementActivated -> copy(timestampMillis = time)
         else -> this
     }
 }

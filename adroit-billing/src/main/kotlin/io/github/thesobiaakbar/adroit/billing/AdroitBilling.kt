@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 
 /**
  * The process-wide entry point to Adroit Billing.
@@ -41,6 +41,9 @@ public object AdroitBilling : BillingClientApi {
 
     internal val sharedPurchaseUpdates: MutableSharedFlow<PurchaseUpdate> =
         MutableSharedFlow(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** Bought consumables the app hasn't confirmed yet. */
+    internal val sharedConsumables: MutableStateFlow<List<ConsumableGrant>> = MutableStateFlow(emptyList())
 
     /** The settings passed to the first valid [initialize], or null before it. */
     @Volatile
@@ -90,7 +93,8 @@ public object AdroitBilling : BillingClientApi {
             }
             this.settings = settings
             runtime = BillingRuntime(
-                application, portFactory(application), settings, sharedConnection, sharedCatalog, sharedPurchaseUpdates, log,
+                application, portFactory(application), settings, sharedConnection, sharedCatalog, sharedPurchaseUpdates,
+                sharedConsumables, log,
                 account = { requestedAccount }, debuggable = application.isDebuggable(),
             ).also { it.start() }
         }
@@ -104,7 +108,11 @@ public object AdroitBilling : BillingClientApi {
 
     override val purchaseUpdates: SharedFlow<PurchaseUpdate> = sharedPurchaseUpdates.asSharedFlow()
 
-    override val consumables: Flow<ConsumableGrant> get() = emptyFlow()
+    /** Each collector gets every unconfirmed grant once, the ones already waiting first. */
+    override val consumables: Flow<ConsumableGrant> = flow {
+        val delivered = HashSet<ConsumableGrant>()
+        sharedConsumables.collect { grants -> grants.filter(delivered::add).forEach { emit(it) } }
+    }
 
     override suspend fun purchase(activity: Activity, request: PurchaseRequest): PurchaseResult {
         val runtime = runtime ?: return PurchaseResult.Failed(BillingError.NotInitialized, attribution = null)
@@ -159,6 +167,7 @@ public object AdroitBilling : BillingClientApi {
             sharedEntitlements.value = EntitlementSnapshot.EMPTY_UNKNOWN
             sharedConnection.value = BillingConnectionState.Disconnected
             sharedCatalog.value = CatalogState.Loading
+            sharedConsumables.value = emptyList()
         }
     }
 }

@@ -91,9 +91,31 @@ internal class FakePlayBillingPort : PlayBillingPort {
         return launchResults.removeFirstOrNull() ?: PlayResult.Ok(Unit)
     }
 
-    override suspend fun acknowledge(purchaseToken: String): PlayResult<Unit> = PlayResult.Ok(Unit)
+    /** Results of the next [acknowledge] calls, in order; [PlayResult.Ok] once empty. */
+    val acknowledgeResults = ArrayDeque<PlayResult<Unit>>()
 
-    override suspend fun consume(purchaseToken: String): PlayResult<Unit> = PlayResult.Ok(Unit)
+    /** Tokens passed to [acknowledge], one per call. */
+    val acknowledged = mutableListOf<String>()
+
+    /** While set, [acknowledge] waits for it. */
+    var acknowledgeGate: CompletableDeferred<Unit>? = null
+
+    /** Results of the next [consume] calls, in order; [PlayResult.Ok] once empty. */
+    val consumeResults = ArrayDeque<PlayResult<Unit>>()
+
+    /** Tokens passed to [consume], one per call. */
+    val consumed = mutableListOf<String>()
+
+    override suspend fun acknowledge(purchaseToken: String): PlayResult<Unit> {
+        acknowledged += purchaseToken
+        acknowledgeGate?.await()
+        return acknowledgeResults.removeFirstOrNull() ?: PlayResult.Ok(Unit)
+    }
+
+    override suspend fun consume(purchaseToken: String): PlayResult<Unit> {
+        consumed += purchaseToken
+        return consumeResults.removeFirstOrNull() ?: PlayResult.Ok(Unit)
+    }
 
     override fun isFeatureSupported(feature: PlayFeature): PlayResult<Unit> =
         PlayResult.Failed(BillingError.FeatureNotSupported())

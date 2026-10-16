@@ -12,6 +12,7 @@ import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchasesUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -164,6 +165,14 @@ class AdroitBillingTest {
         port.emit(PlayPurchasesUpdate.Cancelled)
         shadowOf(Looper.getMainLooper()).idle()
         assertEquals("shop", (result.await() as PurchaseResult.Cancelled).attribution.placement)
+    }
+
+    @Test
+    fun `consumables hands each collector the grants still waiting`() = runTest {
+        val grant = ConsumableGrant("coins_100", 1, Attribution.unknown("coins_100"), "order-hash") {}
+        AdroitBilling.sharedConsumables.value = listOf(grant)
+        assertEquals(grant, AdroitBilling.consumables.first())
+        assertEquals(grant, AdroitBilling.consumables.first())
     }
 
     @Test
