@@ -8,9 +8,12 @@ import io.github.thesobiaakbar.adroit.billing.BillingConnectionState
 import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.CatalogState
 import io.github.thesobiaakbar.adroit.billing.ConsumableGrant
+import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
 import io.github.thesobiaakbar.adroit.billing.PurchaseUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
 import io.github.thesobiaakbar.adroit.billing.internal.catalog.CatalogRepository
+import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementCache
+import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementEngine
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingPort
@@ -26,19 +29,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Everything billing runs once initialized, created once per process by `AdroitBilling.initialize`. Entitlements
- * join it in B08.
+ * Everything billing runs once initialized, created once per process by `AdroitBilling.initialize`. Creating it reads
+ * the saved entitlements into `entitlementState` synchronously; Play is contacted from [start] on.
  */
 internal class BillingRuntime(
     application: Application,
     private val port: PlayBillingPort,
-    settings: BillingSettings,
+    private val settings: BillingSettings,
     private val connectionState: MutableStateFlow<BillingConnectionState>,
     catalogState: MutableStateFlow<CatalogState>,
     purchaseUpdates: MutableSharedFlow<PurchaseUpdate>,
     consumables: MutableStateFlow<List<ConsumableGrant>>,
+    entitlementState: MutableStateFlow<EntitlementSnapshot>,
     log: BillingLog,
-    account: () -> String?,
+    private val account: () -> String?,
     debuggable: Boolean,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -51,34 +55,51 @@ internal class BillingRuntime(
 
     private val events = EventBus(settings.events, log)
 
+    private val attempts = AttemptStore(application)
+
+    private val ledger = TokenLedger(application)
+
+    private val processor = PurchaseProcessor(
+        connection, settings, ledger, purchaseUpdates, consumables, events, log, application.packageName, account,
+    )
+
+    val entitlements = EntitlementEngine(
+        connection, settings, processor, ledger, attempts, EntitlementCache(application), entitlementState, events, scope,
+        log, account,
+    )
+
     val purchases = PurchaseLauncher(
-        connection, catalog, catalogState, settings, AttemptStore(application), purchaseUpdates, events, log, account,
-        debuggable,
-        PurchaseProcessor(
-            connection, settings, TokenLedger(application), purchaseUpdates, consumables, events, log,
-            application.packageName, account,
-        ),
+        connection, catalog, catalogState, settings, attempts, purchaseUpdates, events, log, account, debuggable,
+        processor, entitlements::afterPurchase,
     )
 
     /**
-     * Reconnects, and reloads an old catalog, when the app returns to the foreground; also fires once on registering
-     * in a started app.
+     * Reconnects, or reloads an old catalog and syncs purchases, when the app returns to the foreground; also fires
+     * once on registering in a started app.
      */
     private val foreground = object : DefaultLifecycleObserver {
         override fun onStart(owner: LifecycleOwner) {
             connection.trigger()
-            if (connectionState.value == BillingConnectionState.Connected) catalog.loadIfStale()
+            if (connectionState.value != BillingConnectionState.Connected) return
+            catalog.loadIfStale()
+            entitlements.onForeground()
         }
     }
 
     fun start() {
+        entitlements.setAccount(account())
         scope.launch {
             ProcessLifecycleOwner.get().lifecycle.addObserver(foreground)
             connection.trigger()
         }
         scope.launch {
-            connectionState.collect { if (it == BillingConnectionState.Connected) catalog.loadIfStale() }
+            connectionState.collect {
+                if (it != BillingConnectionState.Connected) return@collect
+                catalog.loadIfStale()
+                entitlements.requestSync()
+            }
         }
+        scope.launch { settings.config.updates.collect { entitlements.publish() } }
         scope.launch { purchases.handle(port.purchasesUpdates) }
     }
 

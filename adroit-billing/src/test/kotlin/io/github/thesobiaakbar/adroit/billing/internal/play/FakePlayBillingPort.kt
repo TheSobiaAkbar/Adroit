@@ -22,8 +22,17 @@ internal class FakePlayBillingPort : PlayBillingPort {
     var endConnectionCalls = 0
         private set
 
-    /** Results of the next [queryPurchases] calls, in order; an empty list once empty. */
+    /** Results of the next [queryPurchases] calls, in order; [owned] once empty. */
     val purchasesResults = ArrayDeque<PlayResult<List<PlayPurchase>>>()
+
+    /** The user's purchases per type, returned by [queryPurchases]. */
+    val owned = mutableMapOf<PlayProductType, List<PlayPurchase>>()
+
+    /** The `includeSuspended` of each [queryPurchases] call. */
+    val includeSuspendedArgs = mutableListOf<Boolean>()
+
+    /** Whether [isFeatureSupported] says yes. */
+    var featuresSupported = false
 
     var queryPurchasesCalls = 0
         private set
@@ -82,7 +91,8 @@ internal class FakePlayBillingPort : PlayBillingPort {
 
     override suspend fun queryPurchases(type: PlayProductType, includeSuspended: Boolean): PlayResult<List<PlayPurchase>> {
         queryPurchasesCalls++
-        return purchasesResults.removeFirstOrNull() ?: PlayResult.Ok(emptyList())
+        includeSuspendedArgs += includeSuspended
+        return purchasesResults.removeFirstOrNull() ?: PlayResult.Ok(owned[type].orEmpty())
     }
 
     override suspend fun launch(activity: Activity, params: LaunchParams): PlayResult<Unit> {
@@ -118,7 +128,7 @@ internal class FakePlayBillingPort : PlayBillingPort {
     }
 
     override fun isFeatureSupported(feature: PlayFeature): PlayResult<Unit> =
-        PlayResult.Failed(BillingError.FeatureNotSupported())
+        if (featuresSupported) PlayResult.Ok(Unit) else PlayResult.Failed(BillingError.FeatureNotSupported())
 
     override suspend fun showInAppMessages(activity: Activity): PlayResult<String?> = PlayResult.Ok(null)
 

@@ -66,6 +66,13 @@ public sealed interface BillingEvent {
         public val attribution: Attribution,
         override val timestampMillis: Long,
     ) : BillingEvent
+
+    /** `restore()` started reading the user's purchases. */
+    public data class RestoreInitiated(override val timestampMillis: Long) : BillingEvent
+
+    /** `restore()` read the purchases; [restored] holds the entitlements that weren't active before. */
+    public data class RestoreCompleted(public val restored: Set<String>, override val timestampMillis: Long) :
+        BillingEvent
 }
 
 /** Receives every [BillingEvent] on the main thread. A listener that throws is logged and never breaks billing. */

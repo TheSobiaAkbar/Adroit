@@ -32,6 +32,11 @@ internal class AttemptStore(context: Context, private val now: () -> Long = Syst
         prefs.edit().remove(KEY + attemptId).apply()
     }
 
+    /** Forgets every attempt; the install ID stays. */
+    fun clear() {
+        prefs.edit().apply { prefs.all.keys.filter { it.startsWith(KEY) }.forEach(::remove) }.apply()
+    }
+
     /** Every attempt younger than 72 h. Older ones, and unreadable ones, are deleted. */
     fun all(): List<Attempt> {
         val (kept, expired) = prefs.all.filterKeys { it.startsWith(KEY) }

@@ -67,10 +67,11 @@ public object AdroitBilling : BillingClientApi {
 
     /**
      * Sets up the library. Call it once, in `Application.onCreate()`. Cheap and synchronous: it checks [settings] and
-     * reads the saved entitlements; Play is contacted in the background. Callable from any thread.
+     * reads the saved entitlements, so [entitlements] holds them when it returns; Play is contacted in the background.
+     * Callable from any thread.
      *
-     * Later calls are ignored: with equal settings silently, with different ones with an error log; the first
-     * settings are kept.
+     * A later call with equal settings does nothing. One with different settings throws [IllegalStateException] in a
+     * debuggable app; in a release app it is logged and the first settings are kept.
      *
      * Invalid settings (for example a paywall using an undeclared product) throw [IllegalStateException] listing every
      * problem in a debuggable app. In a release app they are logged, and billing stays off (every call reports
@@ -80,7 +81,10 @@ public object AdroitBilling : BillingClientApi {
     public fun initialize(application: Application, settings: BillingSettings) {
         synchronized(lock) {
             this.settings?.let {
-                if (it != settings) log.log(BillingLogLevel.ERROR, "initialize called again with different settings; kept the first")
+                if (it == settings) return
+                val message = "initialize called again with different settings; kept the first"
+                check(!application.isDebuggable()) { message }
+                log.log(BillingLogLevel.ERROR, message)
                 return
             }
             log.minLevel = settings.logLevel
@@ -94,7 +98,7 @@ public object AdroitBilling : BillingClientApi {
             this.settings = settings
             runtime = BillingRuntime(
                 application, portFactory(application), settings, sharedConnection, sharedCatalog, sharedPurchaseUpdates,
-                sharedConsumables, log,
+                sharedConsumables, sharedEntitlements, log,
                 account = { requestedAccount }, debuggable = application.isDebuggable(),
             ).also { it.start() }
         }
@@ -121,14 +125,15 @@ public object AdroitBilling : BillingClientApi {
     }
 
     override suspend fun restore(): RestoreResult {
-        notReady("restore")
-        return RestoreResult.Failed(BillingError.NotInitialized)
+        val runtime = runtime ?: return RestoreResult.Failed(BillingError.NotInitialized).also { notReady("restore") }
+        return runtime.entitlements.restore()
     }
 
     override suspend fun refresh() {
         val runtime = runtime ?: return notReady("refresh")
         runtime.connection.trigger()
         runtime.catalog.load()
+        runtime.entitlements.sync()
     }
 
     override fun openManageSubscriptions(activity: Activity, product: ProductDefinition?): Boolean {
@@ -138,6 +143,7 @@ public object AdroitBilling : BillingClientApi {
 
     override fun setAccount(accountId: String?) {
         requestedAccount = accountId
+        runtime?.entitlements?.setAccount(accountId)
     }
 
     private fun notReady(call: String) {

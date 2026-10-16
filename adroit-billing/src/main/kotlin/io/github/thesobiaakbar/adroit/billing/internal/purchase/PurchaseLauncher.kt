@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Every purchase Play reports goes through [handle]: it is matched to its attempt, processed by [processor], and its
  * outcome returned to the waiting `purchase()` call, or published on [updates] when nobody waits (the caller's scope
  * was cancelled, a pending payment completed, a purchase from outside the app). A pending payment is published either
- * way.
+ * way. [afterPurchase] runs before the outcome is reported, so entitlements are current by then.
  */
 internal class PurchaseLauncher(
     private val connection: ConnectionManager,
@@ -60,6 +60,7 @@ internal class PurchaseLauncher(
     private val account: () -> String?,
     private val debuggable: Boolean,
     private val processor: PurchaseProcessor,
+    private val afterPurchase: suspend (PurchaseResult) -> Unit = {},
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     private val matcher = AttributionMatcher(store)
@@ -143,6 +144,7 @@ internal class PurchaseLauncher(
         val result = processor.process(purchase, attribution)
             ?: live?.let { PurchaseResult.Failed(BillingError.Unknown(debugMessage = "Purchase in an unspecified state"), attribution) }
             ?: return
+        afterPurchase(result)
         if (live != null) finish(live, result, purchase.products) else publish(result, purchase.products)
     }
 
@@ -202,8 +204,9 @@ internal class PurchaseLauncher(
         else PurchaseResult.Failed(error, attribution)
 
     /** Ends an attempt that produced no purchase, so no later purchase is matched to it. */
-    private fun abandon(attempt: InFlight, result: PurchaseResult): PurchaseResult {
+    private suspend fun abandon(attempt: InFlight, result: PurchaseResult): PurchaseResult {
         store.remove(attempt.attribution.attemptId!!)
+        if (result is PurchaseResult.AlreadyOwned) afterPurchase(result)
         return finish(attempt, result, listOf(attempt.attribution.productId))
     }
 

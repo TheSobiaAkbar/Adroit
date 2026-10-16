@@ -5,11 +5,17 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
+import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementCache
+import io.github.thesobiaakbar.adroit.billing.internal.entitlement.SavedGrants
 import io.github.thesobiaakbar.adroit.billing.internal.play.FakePlayBillingPort
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayProductType
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchase
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchaseState
 import io.github.thesobiaakbar.adroit.billing.internal.play.OfferKey
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayProduct
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchasesUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -95,10 +101,53 @@ class AdroitBillingTest {
     }
 
     @Test
-    fun `a second initialize keeps the first settings`() {
+    fun `a second initialize with equal settings does nothing`() {
+        setDebuggable(true)
+        AdroitBilling.initialize(application, valid)
+        val runtime = AdroitBilling.runtime
+        AdroitBilling.initialize(application, BillingSettings(TestProducts.entries, TestPaywalls.entries))
+        assertSame(runtime, AdroitBilling.runtime)
+    }
+
+    @Test
+    fun `a second initialize with different settings throws in a debuggable app`() {
+        setDebuggable(true)
+        AdroitBilling.initialize(application, valid)
+        assertThrows(IllegalStateException::class.java) {
+            AdroitBilling.initialize(application, BillingSettings(listOf(TestProducts.Coins)))
+        }
+        assertSame(valid, AdroitBilling.settings)
+    }
+
+    @Test
+    fun `a second initialize keeps the first settings in a release app`() {
+        setDebuggable(false)
         AdroitBilling.initialize(application, valid)
         AdroitBilling.initialize(application, BillingSettings(listOf(TestProducts.Coins)))
         assertSame(valid, AdroitBilling.settings)
+    }
+
+    @Test
+    fun `saved entitlements are available as soon as initialize returns`() {
+        val lifetime = EntitlementGrant("premium_lifetime", ProductType.NON_CONSUMABLE, setOf("premium"), GrantState.ACTIVE, GrantSource.CLIENT, 1)
+        EntitlementCache(application).save(SavedGrants(listOf(lifetime), atMillis = 1))
+        port.connectGate = CompletableDeferred()
+        AdroitBilling.initialize(application, valid)
+        assertEquals(SnapshotStatus.Cached(1), AdroitBilling.entitlements.value.status)
+        assertTrue(AdroitBilling.entitlements.value.has("premium"))
+    }
+
+    @Test
+    fun `initialize syncs purchases once connected, and restore reads them again`() = runTest {
+        port.owned[PlayProductType.INAPP] = listOf(
+            PlayPurchase(listOf("premium_lifetime"), "life-token", null, 1, PlayPurchaseState.PURCHASED, 1, true, false, false, null, null, "{}", ""),
+        )
+        AdroitBilling.initialize(application, valid)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(AdroitBilling.entitlements.value.status is SnapshotStatus.Fresh)
+        assertTrue(AdroitBilling.entitlements.value.adFree)
+        val restored = AdroitBilling.restore() as RestoreResult.Restored
+        assertEquals(emptySet<String>(), restored.newlyActive)
     }
 
     @Test
