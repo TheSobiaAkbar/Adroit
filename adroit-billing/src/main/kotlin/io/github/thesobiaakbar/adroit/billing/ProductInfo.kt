@@ -66,6 +66,10 @@ public data class SubscriptionPlan(
     /** The base plan's own offer (no offer ID): its regular price, without trial or intro price. */
     public val baseOffer: OfferInfo?
         get() = offers.firstOrNull { it.offerId == null }
+
+    /** The price the base plan renews at, from [baseOffer]. Null without a base offer, or for a prepaid plan. */
+    public val basePhase: PricingPhase?
+        get() = baseOffer?.basePhase
 }
 
 /**

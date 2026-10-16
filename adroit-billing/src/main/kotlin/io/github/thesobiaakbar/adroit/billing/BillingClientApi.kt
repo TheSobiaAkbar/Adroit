@@ -5,6 +5,10 @@ import androidx.annotation.MainThread
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The Adroit Billing API. Use [AdroitBilling] directly, or inject `BillingClientApi` (bound to [AdroitBilling]) so
@@ -25,6 +29,19 @@ public interface BillingClientApi {
 
     /** The app's products as Play describes them to this user. */
     public val catalog: StateFlow<CatalogState>
+
+    /** [definition] as Play describes it now, or null when the catalog isn't loaded or Play didn't return it. */
+    public fun product(definition: ProductDefinition): ProductInfo? =
+        (catalog.value as? CatalogState.Ready)?.products?.get(definition)
+
+    /**
+     * [definition] as Play describes it, waiting up to [timeout] for the first catalog load. Null when the load fails
+     * or takes longer, or when Play didn't return the product.
+     */
+    public suspend fun awaitProduct(definition: ProductDefinition, timeout: Duration = 5.seconds): ProductInfo? {
+        withTimeoutOrNull(timeout) { catalog.first { it !is CatalogState.Loading } }
+        return product(definition)
+    }
 
     /** Purchase changes seen outside a waiting [purchase] call: completed pending payments, suspensions and more. */
     public val purchaseUpdates: SharedFlow<PurchaseUpdate>

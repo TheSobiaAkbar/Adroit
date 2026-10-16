@@ -73,7 +73,9 @@ internal class PlayBillingAdapter(appContext: Context) : PlayBillingPort {
                             details[product.productId] = product
                             byId[product.productId]?.let { product.toPlayProduct(it) }
                         }
-                        PlayProducts(playProducts, byId.keys - playProducts.map { it.info.productId }.toSet())
+                        val reasons = found.unfetchedProductList.associate { it.productId to unfetchedReason(it.statusCode) }
+                        val returned = playProducts.map { it.info.productId }.toSet()
+                        PlayProducts(playProducts, (byId.keys - returned).associateWith { reasons[it] ?: "not returned" })
                     },
                 )
             }

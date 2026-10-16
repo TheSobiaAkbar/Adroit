@@ -4,6 +4,12 @@ import com.android.billingclient.api.BillingClient.BillingResponseCode
 import com.android.billingclient.api.BillingClient.OnPurchasesUpdatedSubResponseCode
 import com.android.billingclient.api.Purchase
 import io.github.thesobiaakbar.adroit.billing.BillingError
+import io.github.thesobiaakbar.adroit.billing.BillingPeriod
+import io.github.thesobiaakbar.adroit.billing.OneTimeOption
+import io.github.thesobiaakbar.adroit.billing.Price
+import io.github.thesobiaakbar.adroit.billing.Recurrence
+import io.github.thesobiaakbar.adroit.billing.TestProducts
+import io.github.thesobiaakbar.adroit.billing.internal.play.CatalogFixtures.productDetails
 import io.github.thesobiaakbar.adroit.billing.internal.tokenHash
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -76,5 +82,71 @@ class PlayMappersTest {
         assertFalse(purchase.toString().contains("secret-token"))
         assertEquals(true, purchase.toString().contains(tokenHash("secret-token")))
         assertEquals(12, tokenHash("secret-token").length)
+    }
+
+    @Test
+    fun `a subscription maps every base plan, offer and phase`() {
+        val product = productDetails(CatalogFixtures.subscription).toPlayProduct(TestProducts.PremiumSub)
+        val info = product.info
+        assertEquals("premium_sub", info.productId)
+        assertEquals("Premium", info.displayName)
+        assertEquals(listOf("weekly", "monthly", "yearly"), info.plans.map { it.basePlanId })
+        assertEquals(emptyList<OneTimeOption>(), info.oneTimeOptions)
+
+        val (weekly, monthly, yearly) = info.plans
+        assertEquals(listOf<String?>(null), weekly.offers.map { it.offerId })
+        assertEquals(BillingPeriod(weeks = 1), weekly.basePhase?.period)
+        assertEquals(1_990_000L, weekly.basePhase?.price?.micros)
+
+        val trial = monthly.offers.single { it.offerId == "trial" }
+        assertEquals(listOf("trial"), trial.offerTags)
+        assertEquals(BillingPeriod(weeks = 1), trial.freeTrial)
+        assertEquals(Price("$4.99", 4_990_000, "USD"), monthly.basePhase?.price)
+
+        val intro = yearly.offers.single { it.offerId == "intro" }
+        assertEquals(listOf("intro", "discount"), intro.offerTags)
+        assertEquals(null, intro.freeTrial)
+        assertEquals(3, intro.introPhases.single().billingCycleCount)
+        assertEquals(Recurrence.FINITE, intro.introPhases.single().recurrence)
+        assertEquals(BillingPeriod(years = 1), yearly.basePhase?.period)
+
+        assertEquals(
+            mapOf(
+                OfferKey("weekly", null) to "token-weekly-base",
+                OfferKey("monthly", null) to "token-monthly-base",
+                OfferKey("monthly", "trial") to "token-monthly-trial",
+                OfferKey("yearly", null) to "token-yearly-base",
+                OfferKey("yearly", "intro") to "token-yearly-intro",
+            ),
+            product.offerTokens,
+        )
+        assertFalse(info.toString().contains("token-"))
+    }
+
+    @Test
+    fun `a non-consumable maps each purchase option`() {
+        val product = productDetails(CatalogFixtures.lifetime).toPlayProduct(TestProducts.Lifetime)
+        assertEquals(
+            listOf(
+                OneTimeOption("buy", null, emptyList(), Price("$59.99", 59_990_000, "USD")),
+                OneTimeOption("buy", "launch", listOf("launch"), Price("$29.99", 29_990_000, "USD")),
+            ),
+            product.info.oneTimeOptions,
+        )
+        assertEquals(mapOf(OfferKey("buy", null) to "token-buy", OfferKey("buy", "launch") to "token-buy-launch"), product.offerTokens)
+    }
+
+    @Test
+    fun `a consumable in the single-offer shape maps to one option`() {
+        val product = productDetails(CatalogFixtures.coins).toPlayProduct(TestProducts.Coins)
+        assertEquals(990_000L, product.info.oneTimeOptions.single().price.micros)
+        assertEquals("token-coins", product.offerTokens.values.single())
+    }
+
+    @Test
+    fun `unfetched status codes have a reason`() {
+        assertEquals("not found in Play Console, or inactive (status 3)", unfetchedReason(3))
+        assertEquals("no offer this user is eligible for (status 4)", unfetchedReason(4))
+        assertEquals("unknown reason (status 99)", unfetchedReason(99))
     }
 }

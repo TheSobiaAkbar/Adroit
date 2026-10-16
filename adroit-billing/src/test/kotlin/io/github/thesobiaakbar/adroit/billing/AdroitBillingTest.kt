@@ -5,7 +5,10 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import androidx.test.core.app.ApplicationProvider
 import io.github.thesobiaakbar.adroit.billing.internal.play.FakePlayBillingPort
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayProduct
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -19,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(RobolectricTestRunner::class)
 class AdroitBillingTest {
@@ -110,6 +114,34 @@ class AdroitBillingTest {
         assertTrue(AdroitBilling.connection.value is BillingConnectionState.Unavailable)
         AdroitBilling.refresh()
         assertEquals(BillingConnectionState.Connected, AdroitBilling.connection.value)
+    }
+
+    @Test
+    fun `the catalog loads once connected and products can be looked up`() = runTest {
+        assertNull(AdroitBilling.product(TestProducts.Coins))
+        val coins = ProductInfo(TestProducts.Coins, "coins_100", ProductType.CONSUMABLE, "t", "n", "d",
+            listOf(OneTimeOption(null, null, emptyList(), Price("$0.99", 990_000, "USD"))), emptyList())
+        port.products["coins_100"] = PlayProduct(coins, emptyMap())
+        AdroitBilling.initialize(application, valid)
+        assertEquals(setOf(TestProducts.PremiumSub, TestProducts.Lifetime), (AdroitBilling.catalog.value as CatalogState.Ready).missing)
+        assertEquals(coins, AdroitBilling.product(TestProducts.Coins))
+        assertEquals(coins, AdroitBilling.awaitProduct(TestProducts.Coins))
+        assertNull(AdroitBilling.awaitProduct(TestProducts.Lifetime))
+    }
+
+    @Test
+    fun `refresh reloads the catalog`() = runTest {
+        AdroitBilling.initialize(application, valid)
+        val calls = port.queryProductsCalls
+        AdroitBilling.refresh()
+        assertEquals(calls + 2, port.queryProductsCalls)
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun `awaitProduct gives up after its timeout`() = runTest {
+        assertNull(AdroitBilling.awaitProduct(TestProducts.Coins, timeout = 1.seconds))
+        assertEquals(1_000L, currentTime)
     }
 
     @Test

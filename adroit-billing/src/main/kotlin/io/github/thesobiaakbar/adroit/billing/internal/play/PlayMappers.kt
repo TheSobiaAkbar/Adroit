@@ -5,6 +5,7 @@ import com.android.billingclient.api.BillingClient.OnPurchasesUpdatedSubResponse
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.UnfetchedProduct
 import io.github.thesobiaakbar.adroit.billing.BillingError
 import io.github.thesobiaakbar.adroit.billing.BillingPeriod
 import io.github.thesobiaakbar.adroit.billing.OfferInfo
@@ -64,6 +65,14 @@ internal fun playOutcome(code: Int, subCode: Int, debugMessage: String?, product
 
 internal fun BillingResult.outcome(productId: String? = null): PlayResult<Unit> =
     playOutcome(responseCode, onPurchasesUpdatedSubResponseCode, debugMessage, productId)
+
+/** Why Play didn't return a product, from `UnfetchedProduct.getStatusCode`. */
+internal fun unfetchedReason(statusCode: Int): String = when (statusCode) {
+    UnfetchedProduct.StatusCode.INVALID_PRODUCT_ID_FORMAT -> "invalid product ID format"
+    UnfetchedProduct.StatusCode.PRODUCT_NOT_FOUND -> "not found in Play Console, or inactive"
+    UnfetchedProduct.StatusCode.NO_ELIGIBLE_OFFER -> "no offer this user is eligible for"
+    else -> "unknown reason"
+} + " (status $statusCode)"
 
 internal fun ProductDetails.toPlayProduct(definition: ProductDefinition): PlayProduct {
     val tokens = mutableMapOf<OfferKey, String>()

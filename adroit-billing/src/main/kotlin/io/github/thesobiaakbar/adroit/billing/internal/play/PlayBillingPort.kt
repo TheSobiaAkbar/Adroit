@@ -68,8 +68,8 @@ internal val ProductType.playType: PlayProductType
 
 internal enum class PlayFeature { SUBSCRIPTIONS, SUBSCRIPTIONS_UPDATE, IN_APP_MESSAGING, INCLUDE_SUSPENDED_SUBSCRIPTIONS }
 
-/** The found products and the IDs of declared products Play didn't return. */
-internal data class PlayProducts(val products: List<PlayProduct>, val unfetched: Set<String>)
+/** The found products, and the declared products Play didn't return: product ID to Play's reason. */
+internal data class PlayProducts(val products: List<PlayProduct>, val unfetched: Map<String, String>)
 
 /**
  * A product with the offer tokens its offers are bought with, which never leave the library. Keys are

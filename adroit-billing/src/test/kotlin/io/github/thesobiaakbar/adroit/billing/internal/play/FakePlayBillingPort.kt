@@ -28,6 +28,18 @@ internal class FakePlayBillingPort : PlayBillingPort {
     var queryPurchasesCalls = 0
         private set
 
+    /** What Play returns per product ID; a declared ID not in here is unfetched. */
+    val products = mutableMapOf<String, PlayProduct>()
+
+    /** Results of the next [queryProducts] calls, in order, instead of [products]. */
+    val productsResults = ArrayDeque<PlayResult<PlayProducts>>()
+
+    /** While set, [queryProducts] waits for it. */
+    var productsGate: CompletableDeferred<Unit>? = null
+
+    var queryProductsCalls = 0
+        private set
+
     private var onDisconnected: () -> Unit = {}
     private val updates = Channel<PlayPurchasesUpdate>(Channel.UNLIMITED)
 
@@ -47,8 +59,18 @@ internal class FakePlayBillingPort : PlayBillingPort {
         return connectResults.removeFirstOrNull() ?: PlayResult.Ok(Unit)
     }
 
-    override suspend fun queryProducts(type: PlayProductType, products: List<ProductDefinition>): PlayResult<PlayProducts> =
-        PlayResult.Ok(PlayProducts(emptyList(), products.map { it.defaults.productId }.toSet()))
+    override suspend fun queryProducts(type: PlayProductType, products: List<ProductDefinition>): PlayResult<PlayProducts> {
+        queryProductsCalls++
+        productsGate?.await()
+        productsResults.removeFirstOrNull()?.let { return it }
+        val ids = products.map { it.defaults.productId }
+        return PlayResult.Ok(
+            PlayProducts(
+                ids.mapNotNull { this.products[it] },
+                ids.filter { it !in this.products }.associateWith { unfetchedReason(3) },
+            ),
+        )
+    }
 
     override suspend fun queryPurchases(type: PlayProductType, includeSuspended: Boolean): PlayResult<List<PlayPurchase>> {
         queryPurchasesCalls++

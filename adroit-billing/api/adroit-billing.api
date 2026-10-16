@@ -68,6 +68,8 @@ public final class io/github/thesobiaakbar/adroit/billing/BackBehavior : java/la
 }
 
 public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingClientApi {
+	public fun awaitProduct-8Mi8wO0 (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun awaitProduct-8Mi8wO0$default (Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getCatalog ()Lkotlinx/coroutines/flow/StateFlow;
 	public abstract fun getConnection ()Lkotlinx/coroutines/flow/StateFlow;
 	public abstract fun getConsumables ()Lkotlinx/coroutines/flow/Flow;
@@ -75,6 +77,7 @@ public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingCl
 	public abstract fun getPurchaseUpdates ()Lkotlinx/coroutines/flow/SharedFlow;
 	public abstract fun openManageSubscriptions (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;)Z
 	public static synthetic fun openManageSubscriptions$default (Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;ILjava/lang/Object;)Z
+	public fun product (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;)Lio/github/thesobiaakbar/adroit/billing/ProductInfo;
 	public abstract fun purchase (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun refresh (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun restore (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -1259,6 +1262,7 @@ public final class io/github/thesobiaakbar/adroit/billing/SubscriptionPlan {
 	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBaseOffer ()Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
+	public final fun getBasePhase ()Lio/github/thesobiaakbar/adroit/billing/PricingPhase;
 	public final fun getBasePlanId ()Ljava/lang/String;
 	public final fun getOffers ()Ljava/util/List;
 	public fun hashCode ()I

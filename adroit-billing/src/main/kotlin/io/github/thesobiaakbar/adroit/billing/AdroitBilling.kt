@@ -89,7 +89,7 @@ public object AdroitBilling : BillingClientApi {
                 return
             }
             this.settings = settings
-            runtime = BillingRuntime(portFactory(application), sharedConnection, log).also { it.start() }
+            runtime = BillingRuntime(portFactory(application), settings, sharedConnection, sharedCatalog, log).also { it.start() }
         }
     }
 
@@ -116,6 +116,7 @@ public object AdroitBilling : BillingClientApi {
     override suspend fun refresh() {
         val runtime = runtime ?: return notReady("refresh")
         runtime.connection.trigger()
+        runtime.catalog.load()
     }
 
     override fun openManageSubscriptions(activity: Activity, product: ProductDefinition?): Boolean {
