@@ -1,5 +1,6 @@
 package io.github.thesobiaakbar.adroit.billing.internal
 
+import android.app.Activity
 import android.app.Application
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -17,6 +18,7 @@ import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementEn
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingPort
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
 import io.github.thesobiaakbar.adroit.billing.internal.purchase.PurchaseLauncher
 import io.github.thesobiaakbar.adroit.billing.internal.purchase.PurchaseProcessor
 import io.github.thesobiaakbar.adroit.billing.internal.purchase.TokenLedger
@@ -70,7 +72,7 @@ internal class BillingRuntime(
 
     val purchases = PurchaseLauncher(
         connection, catalog, catalogState, settings, attempts, purchaseUpdates, events, log, account, debuggable,
-        processor, entitlements::afterPurchase,
+        processor, entitlementState, entitlements::afterPurchase,
     )
 
     /**
@@ -101,6 +103,14 @@ internal class BillingRuntime(
         }
         scope.launch { settings.config.updates.collect { entitlements.publish() } }
         scope.launch { purchases.handle(port.purchasesUpdates) }
+    }
+
+    /** Shows Play's transactional messages over [activity]; syncs when one changed a subscription. */
+    fun showInAppMessages(activity: Activity) {
+        scope.launch {
+            val shown = connection.call("showInAppMessages") { showInAppMessages(activity) }
+            if (shown is PlayResult.Ok && shown.value != null) entitlements.requestSync()
+        }
     }
 
     fun shutdown() {

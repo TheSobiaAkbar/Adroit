@@ -11,6 +11,7 @@ public final class io/github/thesobiaakbar/adroit/billing/AdroitBilling : io/git
 	public fun refresh (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun restore (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setAccount (Ljava/lang/String;)V
+	public fun showInAppMessages (Landroid/app/Activity;)V
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/AdroitBillingVersion {
@@ -82,6 +83,7 @@ public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingCl
 	public abstract fun refresh (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun restore (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setAccount (Ljava/lang/String;)V
+	public fun showInAppMessages (Landroid/app/Activity;)V
 }
 
 public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingConfigSource {
@@ -781,6 +783,7 @@ public final class io/github/thesobiaakbar/adroit/billing/EntitlementGrant {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEntitlements ()Ljava/util/Set;
 	public final fun getGrantsAccess ()Z
+	public final fun getNeedsPaymentFix ()Z
 	public final fun getProductId ()Ljava/lang/String;
 	public final fun getPurchaseTimeMillis ()J
 	public final fun getSource ()Lio/github/thesobiaakbar/adroit/billing/GrantSource;
@@ -808,6 +811,7 @@ public final class io/github/thesobiaakbar/adroit/billing/EntitlementSnapshot {
 	public final fun getAdFree ()Z
 	public final fun getAdFreeEntitlements ()Ljava/util/Set;
 	public final fun getGrants ()Ljava/util/List;
+	public final fun getNeedsPaymentFix ()Z
 	public final fun getStatus ()Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus;
 	public final fun has (Ljava/lang/String;)Z
 	public fun hashCode ()I
@@ -1165,15 +1169,17 @@ public final class io/github/thesobiaakbar/adroit/billing/PurchaseRequest {
 	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;)V
 	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;)V
 	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;)V
+	public synthetic fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Lio/github/thesobiaakbar/adroit/billing/OfferSelection;
 	public final fun component5 ()Ljava/lang/String;
 	public final fun component6 ()Ljava/lang/String;
-	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;
-	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;
+	public final fun component7 ()Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;)Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBasePlanId ()Ljava/lang/String;
 	public final fun getCampaignId ()Ljava/lang/String;
@@ -1181,6 +1187,7 @@ public final class io/github/thesobiaakbar/adroit/billing/PurchaseRequest {
 	public final fun getPaywallId ()Ljava/lang/String;
 	public final fun getPlacement ()Ljava/lang/String;
 	public final fun getProduct ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public final fun getReplace ()Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -1323,6 +1330,18 @@ public final class io/github/thesobiaakbar/adroit/billing/Recurrence : java/lang
 	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/Recurrence;
 }
 
+public final class io/github/thesobiaakbar/adroit/billing/ReplacementMode : java/lang/Enum {
+	public static final field CHARGE_FULL_PRICE Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public static final field CHARGE_PRORATED_PRICE Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public static final field DEFERRED Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public static final field KEEP_EXISTING Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public static final field WITHOUT_PRORATION Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public static final field WITH_TIME_PRORATION Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+}
+
 public abstract interface class io/github/thesobiaakbar/adroit/billing/RestoreResult {
 }
 
@@ -1420,6 +1439,19 @@ public final class io/github/thesobiaakbar/adroit/billing/SubscriptionPlan {
 	public final fun getBasePhase ()Lio/github/thesobiaakbar/adroit/billing/PricingPhase;
 	public final fun getBasePlanId ()Ljava/lang/String;
 	public final fun getOffers ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/SubscriptionReplacement {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;)Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/SubscriptionReplacement;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMode ()Lio/github/thesobiaakbar/adroit/billing/ReplacementMode;
+	public final fun getOldProduct ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

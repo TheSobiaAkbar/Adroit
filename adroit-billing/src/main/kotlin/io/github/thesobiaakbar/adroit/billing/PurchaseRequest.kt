@@ -34,6 +34,9 @@ public sealed interface OfferSelection {
  * @property offer the subscription offer.
  * @property campaignId the campaign the purchase belongs to, if any.
  * @property paywallId the [PaywallDefinition.name] the purchase starts from, if any.
+ * @property replace the active subscription this purchase replaces (a plan change). Required when the user already has
+ *   an active subscription sharing an entitlement with [product]: without it the purchase fails with
+ *   [BillingError.DeveloperError] instead of starting a second subscription.
  */
 public data class PurchaseRequest @JvmOverloads constructor(
     public val product: ProductDefinition,
@@ -42,6 +45,7 @@ public data class PurchaseRequest @JvmOverloads constructor(
     public val offer: OfferSelection = OfferSelection.Auto,
     public val campaignId: String? = null,
     public val paywallId: String? = null,
+    public val replace: SubscriptionReplacement? = null,
 ) {
     init {
         require(PLACEMENT.matches(placement)) {
@@ -53,4 +57,39 @@ public data class PurchaseRequest @JvmOverloads constructor(
     private companion object {
         val PLACEMENT = Regex("[A-Za-z0-9_.-]{1,64}")
     }
+}
+
+/**
+ * A plan change: the new subscription replaces [oldProduct], which must be active. Works for another base plan of the
+ * same product (monthly to yearly) and for another product (basic to pro). Play checks whether [mode] is allowed for
+ * the change and fails with [BillingError.DeveloperError], carrying Play's message, when it isn't.
+ */
+public data class SubscriptionReplacement(public val oldProduct: ProductDefinition, public val mode: ReplacementMode)
+
+/**
+ * When and how Play bills a plan change, mirroring Play's `SubscriptionProductReplacementParams.ReplacementMode`.
+ *
+ * Stability: new modes may be added in minor versions; include an `else` branch when matching exhaustively.
+ */
+public enum class ReplacementMode {
+    /** Changes now; the unused time of the old plan is credited towards the new one. */
+    WITH_TIME_PRORATION,
+
+    /** Changes now and charges the price difference for the rest of the current period. Upgrades only. */
+    CHARGE_PRORATED_PRICE,
+
+    /** Changes now and charges the new plan's full price; the unused time of the old plan is credited. */
+    CHARGE_FULL_PRICE,
+
+    /** Changes now; the new price is charged from the next renewal. */
+    WITHOUT_PRORATION,
+
+    /**
+     * Changes at the next renewal. Until then the old plan stays in the entitlements, and the new one appears when
+     * Play reports it.
+     */
+    DEFERRED,
+
+    /** Keeps the old item's billing schedule (subscriptions with add-ons). */
+    KEEP_EXISTING,
 }

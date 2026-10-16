@@ -12,6 +12,16 @@ import io.github.thesobiaakbar.adroit.billing.BillingEventListener
 import io.github.thesobiaakbar.adroit.billing.BillingLogLevel
 import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.CatalogState
+import io.github.thesobiaakbar.adroit.billing.EntitlementGrant
+import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
+import io.github.thesobiaakbar.adroit.billing.GrantSource
+import io.github.thesobiaakbar.adroit.billing.GrantState
+import io.github.thesobiaakbar.adroit.billing.ProductDefinition
+import io.github.thesobiaakbar.adroit.billing.ProductSpec
+import io.github.thesobiaakbar.adroit.billing.ProductType
+import io.github.thesobiaakbar.adroit.billing.ReplacementMode
+import io.github.thesobiaakbar.adroit.billing.SnapshotStatus
+import io.github.thesobiaakbar.adroit.billing.SubscriptionReplacement
 import io.github.thesobiaakbar.adroit.billing.OfferSelection
 import io.github.thesobiaakbar.adroit.billing.PurchaseRequest
 import io.github.thesobiaakbar.adroit.billing.PurchaseResult
@@ -26,10 +36,12 @@ import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.CatalogFixtures
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.FakePlayBillingPort
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayProductType
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchase
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchaseState
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchasesUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
+import io.github.thesobiaakbar.adroit.billing.internal.play.Replacement
 import io.github.thesobiaakbar.adroit.billing.internal.play.toPlayProduct
 import io.github.thesobiaakbar.adroit.billing.internal.sha256Hex
 import kotlinx.coroutines.Deferred
@@ -65,6 +77,7 @@ class PurchaseLauncherTest {
     private val received = mutableListOf<PurchaseUpdate>()
     private val store = AttemptStore(application)
     private val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+    private val snapshot = MutableStateFlow(EntitlementSnapshot.EMPTY_UNKNOWN)
 
     @Before
     fun setUp() {
@@ -75,9 +88,10 @@ class PurchaseLauncherTest {
     private suspend fun TestScope.launcher(
         token: AttributionToken = AttributionToken.LOCAL_ONLY,
         account: String? = null,
+        products: List<ProductDefinition> = TestProducts.entries,
     ): PurchaseLauncher {
         val settings = BillingSettings(
-            TestProducts.entries, TestPaywalls.entries, events = listOf(BillingEventListener { events += it }),
+            products, TestPaywalls.entries, events = listOf(BillingEventListener { events += it }),
             attributionToken = token,
         )
         val connection = ConnectionManager(port, backgroundScope, MutableStateFlow(BillingConnectionState.Connected), log)
@@ -90,6 +104,7 @@ class PurchaseLauncherTest {
                 connection, settings, TokenLedger(application), updates, MutableStateFlow(emptyList()),
                 EventBus(settings.events, log), log, application.packageName, { account },
             ),
+            snapshot,
         )
         backgroundScope.launch { launcher.handle(port.purchasesUpdates) }
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { updates.collect { received += it } }
@@ -311,5 +326,83 @@ class PurchaseLauncherTest {
         is BillingEvent.PurchaseCompleted -> copy(timestampMillis = time)
         is BillingEvent.EntitlementActivated -> copy(timestampMillis = time)
         else -> this
+    }
+
+    private enum class Plans(override val defaults: ProductSpec) : ProductDefinition {
+        Basic(ProductSpec.subscription("basic_sub", setOf("premium"))),
+        Pro(ProductSpec.subscription("pro_sub", setOf("premium", "pro"))),
+    }
+
+    private fun owns(productId: String, state: GrantState = GrantState.ACTIVE) {
+        snapshot.value = EntitlementSnapshot(
+            listOf(EntitlementGrant(productId, ProductType.SUBSCRIPTION, setOf("premium"), state, GrantSource.CLIENT, 1)),
+            SnapshotStatus.Fresh(1), emptySet(),
+        )
+        port.owned[PlayProductType.SUBS] = listOf(purchase(productId).copy(purchaseToken = "old-token"))
+    }
+
+    @Test
+    fun `a base plan change replaces the owned plan with the requested mode`() = runTest {
+        owns("premium_sub")
+        val launcher = launcher()
+        start(launcher, sub.copy(basePlanId = "yearly", offer = OfferSelection.BaseOnly, replace = SubscriptionReplacement(TestProducts.PremiumSub, ReplacementMode.CHARGE_PRORATED_PRICE)))
+        val params = port.launches.single()
+        assertEquals("token-yearly-base", params.offerToken)
+        assertEquals(Replacement("premium_sub", "old-token", ReplacementMode.CHARGE_PRORATED_PRICE), params.replacement)
+        assertFalse(params.replacement.toString().contains("old-token"))
+    }
+
+    @Test
+    fun `a product change replaces the other product`() = runTest {
+        for ((plan, id) in listOf(Plans.Basic to "basic_sub", Plans.Pro to "pro_sub")) {
+            port.products[id] = CatalogFixtures.productDetails(CatalogFixtures.subscription.replace("premium_sub", id)).toPlayProduct(plan)
+        }
+        owns("basic_sub")
+        val launcher = launcher(products = Plans.entries)
+        start(launcher, PurchaseRequest(Plans.Pro, "upgrade", basePlanId = "monthly", replace = SubscriptionReplacement(Plans.Basic, ReplacementMode.DEFERRED)))
+        assertEquals(Replacement("basic_sub", "old-token", ReplacementMode.DEFERRED), port.launches.single().replacement)
+    }
+
+    @Test
+    fun `replacing a subscription the user doesn't own fails with ItemNotOwned`() = runTest {
+        val launcher = launcher()
+        val replace = sub.copy(replace = SubscriptionReplacement(TestProducts.PremiumSub, ReplacementMode.WITH_TIME_PRORATION))
+        assertTrue((launcher.purchase(activity, replace) as PurchaseResult.Failed).error is BillingError.ItemNotOwned)
+
+        owns("premium_sub", GrantState.SUSPENDED)
+        assertTrue((launcher.purchase(activity, replace) as PurchaseResult.Failed).error is BillingError.ItemNotOwned)
+
+        owns("premium_sub")
+        port.owned[PlayProductType.SUBS] = emptyList()
+        assertTrue((launcher.purchase(activity, replace) as PurchaseResult.Failed).error is BillingError.ItemNotOwned)
+        assertTrue(port.launches.isEmpty())
+    }
+
+    @Test
+    fun `a second subscription in the same entitlement group needs replace`() = runTest {
+        port.products["basic_sub"] = CatalogFixtures.productDetails(CatalogFixtures.subscription.replace("premium_sub", "basic_sub")).toPlayProduct(Plans.Basic)
+        port.products["pro_sub"] = CatalogFixtures.productDetails(CatalogFixtures.subscription.replace("premium_sub", "pro_sub")).toPlayProduct(Plans.Pro)
+        owns("basic_sub")
+        val launcher = launcher(products = Plans.entries)
+        val result = launcher.purchase(activity, PurchaseRequest(Plans.Pro, "upgrade", basePlanId = "monthly")) as PurchaseResult.Failed
+        assertEquals(BillingError.DeveloperError(debugMessage = "active subscription basic_sub; pass replace"), result.error)
+        assertTrue(port.launches.isEmpty())
+    }
+
+    @Test
+    fun `the guard ignores subscriptions without access`() = runTest {
+        owns("premium_sub", GrantState.SUSPENDED)
+        start(launcher(), sub)
+        assertEquals("premium_sub", port.launches.single().productId)
+        assertNull(port.launches.single().replacement)
+    }
+
+    @Test
+    fun `Play's developer error for a replacement is passed through with its message`() = runTest {
+        owns("premium_sub")
+        port.launchResults += PlayResult.Failed(BillingError.DeveloperError(5, "Invalid replacement mode"))
+        val launcher = launcher()
+        val result = launcher.purchase(activity, sub.copy(replace = SubscriptionReplacement(TestProducts.PremiumSub, ReplacementMode.KEEP_EXISTING)))
+        assertEquals(BillingError.DeveloperError(5, "Invalid replacement mode"), (result as PurchaseResult.Failed).error)
     }
 }

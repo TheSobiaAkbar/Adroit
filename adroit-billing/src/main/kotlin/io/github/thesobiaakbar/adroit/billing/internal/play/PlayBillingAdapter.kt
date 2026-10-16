@@ -6,6 +6,7 @@ import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingFlowParams.ProductDetailsParams.SubscriptionProductReplacementParams
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.ConsumeParams
 import com.android.billingclient.api.InAppMessageParams
@@ -16,6 +17,7 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import io.github.thesobiaakbar.adroit.billing.BillingError
 import io.github.thesobiaakbar.adroit.billing.ProductDefinition
+import io.github.thesobiaakbar.adroit.billing.ReplacementMode
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -95,14 +97,23 @@ internal class PlayBillingAdapter(appContext: Context) : PlayBillingPort {
     override suspend fun launch(activity: Activity, params: LaunchParams): PlayResult<Unit> = guard {
         val product = details[params.productId]
             ?: return@guard PlayResult.Failed(BillingError.ProductNotFound(params.productId))
-        val flow = BillingFlowParams.newBuilder().setProductDetailsParamsList(
-            listOf(
-                BillingFlowParams.ProductDetailsParams.newBuilder()
-                    .setProductDetails(product)
-                    .setOfferToken(params.offerToken)
+        val productParams = BillingFlowParams.ProductDetailsParams.newBuilder()
+            .setProductDetails(product)
+            .setOfferToken(params.offerToken)
+        val flow = BillingFlowParams.newBuilder()
+        params.replacement?.let {
+            // The mode goes on the product (PBL 8.1+); SubscriptionUpdateParams' own mode setter is deprecated.
+            productParams.setSubscriptionProductReplacementParams(
+                SubscriptionProductReplacementParams.newBuilder()
+                    .setOldProductId(it.oldProductId)
+                    .setReplacementMode(it.mode.play)
                     .build(),
-            ),
-        )
+            )
+            flow.setSubscriptionUpdateParams(
+                BillingFlowParams.SubscriptionUpdateParams.newBuilder().setOldPurchaseToken(it.oldPurchaseToken).build(),
+            )
+        }
+        flow.setProductDetailsParamsList(listOf(productParams.build()))
         params.obfuscatedAccountId?.let { flow.setObfuscatedAccountId(it) }
         params.obfuscatedProfileId?.let { flow.setObfuscatedProfileId(it) }
         client.launchBillingFlow(activity, flow.build()).outcome(params.productId)
@@ -141,6 +152,16 @@ internal class PlayBillingAdapter(appContext: Context) : PlayBillingPort {
     override fun endConnection() {
         runCatching { client.endConnection() }
     }
+
+    private val ReplacementMode.play: Int
+        get() = when (this) {
+            ReplacementMode.WITH_TIME_PRORATION -> SubscriptionProductReplacementParams.ReplacementMode.WITH_TIME_PRORATION
+            ReplacementMode.CHARGE_PRORATED_PRICE -> SubscriptionProductReplacementParams.ReplacementMode.CHARGE_PRORATED_PRICE
+            ReplacementMode.CHARGE_FULL_PRICE -> SubscriptionProductReplacementParams.ReplacementMode.CHARGE_FULL_PRICE
+            ReplacementMode.WITHOUT_PRORATION -> SubscriptionProductReplacementParams.ReplacementMode.WITHOUT_PRORATION
+            ReplacementMode.DEFERRED -> SubscriptionProductReplacementParams.ReplacementMode.DEFERRED
+            ReplacementMode.KEEP_EXISTING -> SubscriptionProductReplacementParams.ReplacementMode.KEEP_EXISTING
+        }
 
     private val PlayProductType.play: String
         get() = when (this) {

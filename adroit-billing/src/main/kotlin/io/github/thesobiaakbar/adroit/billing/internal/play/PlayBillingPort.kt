@@ -5,6 +5,7 @@ import io.github.thesobiaakbar.adroit.billing.BillingError
 import io.github.thesobiaakbar.adroit.billing.ProductDefinition
 import io.github.thesobiaakbar.adroit.billing.ProductInfo
 import io.github.thesobiaakbar.adroit.billing.ProductType
+import io.github.thesobiaakbar.adroit.billing.ReplacementMode
 import io.github.thesobiaakbar.adroit.billing.internal.tokenHash
 import kotlinx.coroutines.flow.Flow
 
@@ -85,7 +86,13 @@ internal data class LaunchParams(
     val offerToken: String,
     val obfuscatedAccountId: String? = null,
     val obfuscatedProfileId: String? = null,
+    val replacement: Replacement? = null,
 )
+
+/** The subscription a purchase replaces. [toString] shows a hash of the token, never the token. */
+internal data class Replacement(val oldProductId: String, val oldPurchaseToken: String, val mode: ReplacementMode) {
+    override fun toString(): String = "Replacement(old=$oldProductId, token#=${tokenHash(oldPurchaseToken)}, mode=$mode)"
+}
 
 /** One purchase from Play. [toString] shows a hash of the token, never the token. */
 internal data class PlayPurchase(

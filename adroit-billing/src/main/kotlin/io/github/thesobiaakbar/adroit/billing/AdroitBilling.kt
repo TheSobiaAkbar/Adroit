@@ -1,7 +1,11 @@
 package io.github.thesobiaakbar.adroit.billing
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.content.pm.ApplicationInfo
 import androidx.annotation.VisibleForTesting
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
@@ -136,9 +140,17 @@ public object AdroitBilling : BillingClientApi {
         runtime.entitlements.sync()
     }
 
-    override fun openManageSubscriptions(activity: Activity, product: ProductDefinition?): Boolean {
-        notReady("openManageSubscriptions")
-        return false
+    override fun openManageSubscriptions(activity: Activity, product: ProductDefinition?): Boolean = try {
+        activity.startActivity(Intent(Intent.ACTION_VIEW, manageSubscriptionsUri(activity.packageName, product?.defaults?.productId)))
+        true
+    } catch (e: ActivityNotFoundException) {
+        log.log(BillingLogLevel.WARN, "No app can open Play's subscription management: $e")
+        false
+    }
+
+    override fun showInAppMessages(activity: Activity) {
+        val runtime = runtime ?: return notReady("showInAppMessages")
+        runtime.showInAppMessages(activity)
     }
 
     override fun setAccount(accountId: String?) {
@@ -177,3 +189,11 @@ public object AdroitBilling : BillingClientApi {
         }
     }
 }
+
+/** Play's subscription management, for [productId] or, when null, for all of [packageName]'s subscriptions. */
+@SuppressLint("UseKtx")
+internal fun manageSubscriptionsUri(packageName: String, productId: String?): Uri =
+    Uri.parse("https://play.google.com/store/account/subscriptions").buildUpon()
+        .apply { productId?.let { appendQueryParameter("sku", it) } }
+        .appendQueryParameter("package", packageName)
+        .build()

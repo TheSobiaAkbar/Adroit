@@ -2,6 +2,7 @@ package io.github.thesobiaakbar.adroit.billing
 
 import android.app.Activity
 import android.app.Application
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
@@ -76,7 +77,57 @@ class AdroitBillingTest {
         val result = AdroitBilling.purchase(activity, PurchaseRequest(TestProducts.PremiumSub, placement = "home"))
         assertEquals(PurchaseResult.Failed(BillingError.NotInitialized, null), result)
         assertEquals(RestoreResult.Failed(BillingError.NotInitialized), AdroitBilling.restore())
-        assertFalse(AdroitBilling.openManageSubscriptions(activity))
+        AdroitBilling.showInAppMessages(activity)
+        assertEquals(0, port.inAppMessageCalls)
+    }
+
+    @Test
+    fun `the manage subscriptions link names the product when given`() {
+        assertEquals(
+            "https://play.google.com/store/account/subscriptions?sku=premium_sub&package=com.example",
+            manageSubscriptionsUri("com.example", "premium_sub").toString(),
+        )
+        assertEquals(
+            "https://play.google.com/store/account/subscriptions?package=com.example",
+            manageSubscriptionsUri("com.example", null).toString(),
+        )
+    }
+
+    @Test
+    fun `openManageSubscriptions opens Play's page for the app`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        assertTrue(AdroitBilling.openManageSubscriptions(activity, TestProducts.PremiumSub))
+        val intent = shadowOf(activity).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, intent.action)
+        assertEquals(manageSubscriptionsUri(activity.packageName, "premium_sub"), intent.data)
+    }
+
+    @Test
+    fun `an in-app message that changed a subscription syncs purchases`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        AdroitBilling.initialize(application, valid)
+        shadowOf(Looper.getMainLooper()).idle()
+        val queries = port.queryPurchasesCalls
+
+        AdroitBilling.showInAppMessages(activity)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(1, port.inAppMessageCalls)
+        assertEquals(queries, port.queryPurchasesCalls)
+
+        port.inAppMessageResult = PlayResult.Ok("fixed-token")
+        AdroitBilling.showInAppMessages(activity)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(queries + 2, port.queryPurchasesCalls)
+    }
+
+    @Test
+    fun `needsPaymentFix marks suspended grants`() {
+        val suspended = EntitlementGrant("premium_sub", ProductType.SUBSCRIPTION, setOf("premium"), GrantState.SUSPENDED, GrantSource.CLIENT, 1)
+        val snapshot = EntitlementSnapshot(listOf(suspended), SnapshotStatus.Fresh(1), emptySet())
+        assertTrue(suspended.needsPaymentFix)
+        assertTrue(snapshot.needsPaymentFix)
+        assertFalse(snapshot.has("premium"))
+        assertFalse(suspended.copy(state = GrantState.ACTIVE).needsPaymentFix)
     }
 
     @Test

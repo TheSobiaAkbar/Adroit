@@ -49,6 +49,10 @@ public data class EntitlementGrant(
     /** Whether this grant gives access now: [GrantState.ACTIVE] or [GrantState.GRACE_FROM_BACKEND]. */
     public val grantsAccess: Boolean
         get() = state == GrantState.ACTIVE || state == GrantState.GRACE_FROM_BACKEND
+
+    /** Whether the user must fix their payment ([GrantState.SUSPENDED]): offer `openManageSubscriptions`. */
+    public val needsPaymentFix: Boolean
+        get() = state == GrantState.SUSPENDED
 }
 
 /**
@@ -96,6 +100,10 @@ public data class EntitlementSnapshot(
     /** Whether the user has any of [adFreeEntitlements]: pass it to `Adroit.setAdFree`. */
     public val adFree: Boolean
         get() = adFreeEntitlements.any(::has)
+
+    /** Whether any grant [needs a payment fix][EntitlementGrant.needsPaymentFix]. */
+    public val needsPaymentFix: Boolean
+        get() = grants.any { it.needsPaymentFix }
 
     /** Constants. */
     public companion object {

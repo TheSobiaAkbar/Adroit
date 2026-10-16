@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
  * tests can substitute `FakeBilling` from `adroit-billing-testing`.
  *
  * Threading: flows emit on the main thread. No function throws because of a billing failure; failures are reported
- * through results. Only [purchase] and [openManageSubscriptions] need an Activity, used during the call and never
+ * through results. Only [purchase], [openManageSubscriptions] and [showInAppMessages] need an Activity, used during the call and never
  * kept; everything else can be called from a ViewModel or any other code.
  *
  * Stability: members may be added in minor versions, always with a default implementation.
@@ -72,6 +72,14 @@ public interface BillingClientApi {
      */
     @MainThread
     public fun openManageSubscriptions(activity: Activity, product: ProductDefinition? = null): Boolean
+
+    /**
+     * Shows Google Play's transactional messages over [activity], for example a declined renewal or an account hold,
+     * and reads the purchases again when the user fixes one. Call it in the main Activity's `onResume`. Play shows
+     * nothing when there is nothing to show.
+     */
+    @MainThread
+    public fun showInAppMessages(activity: Activity) {}
 
     /**
      * Sets the app's own account ID of the signed-in user (null when signed out). Only a hash leaves the device.

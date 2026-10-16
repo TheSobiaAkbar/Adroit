@@ -130,7 +130,16 @@ internal class FakePlayBillingPort : PlayBillingPort {
     override fun isFeatureSupported(feature: PlayFeature): PlayResult<Unit> =
         if (featuresSupported) PlayResult.Ok(Unit) else PlayResult.Failed(BillingError.FeatureNotSupported())
 
-    override suspend fun showInAppMessages(activity: Activity): PlayResult<String?> = PlayResult.Ok(null)
+    /** What [showInAppMessages] returns: Ok(token) when a message changed a subscription. */
+    var inAppMessageResult: PlayResult<String?> = PlayResult.Ok(null)
+
+    var inAppMessageCalls = 0
+        private set
+
+    override suspend fun showInAppMessages(activity: Activity): PlayResult<String?> {
+        inAppMessageCalls++
+        return inAppMessageResult
+    }
 
     override fun endConnection() {
         endConnectionCalls++

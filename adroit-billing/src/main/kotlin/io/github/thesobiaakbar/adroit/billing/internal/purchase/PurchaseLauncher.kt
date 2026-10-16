@@ -9,6 +9,7 @@ import io.github.thesobiaakbar.adroit.billing.BillingEvent
 import io.github.thesobiaakbar.adroit.billing.BillingLogLevel
 import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.CatalogState
+import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
 import io.github.thesobiaakbar.adroit.billing.OfferInfo
 import io.github.thesobiaakbar.adroit.billing.OfferSelection
 import io.github.thesobiaakbar.adroit.billing.OneTimeOption
@@ -25,9 +26,12 @@ import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.LaunchParams
 import io.github.thesobiaakbar.adroit.billing.internal.play.OfferKey
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayProductType
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchase
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchaseState
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchasesUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
+import io.github.thesobiaakbar.adroit.billing.internal.play.Replacement
 import io.github.thesobiaakbar.adroit.billing.internal.sha256Hex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -47,6 +51,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  * outcome returned to the waiting `purchase()` call, or published on [updates] when nobody waits (the caller's scope
  * was cancelled, a pending payment completed, a purchase from outside the app). A pending payment is published either
  * way. [afterPurchase] runs before the outcome is reported, so entitlements are current by then.
+ *
+ * A plan change (`PurchaseRequest.replace`) needs the old subscription active in [entitlements]; Play's token for it
+ * is read fresh. A subscription purchase without `replace` while a subscription sharing an entitlement is active
+ * fails, so no second subscription starts by accident.
  */
 internal class PurchaseLauncher(
     private val connection: ConnectionManager,
@@ -60,6 +68,7 @@ internal class PurchaseLauncher(
     private val account: () -> String?,
     private val debuggable: Boolean,
     private val processor: PurchaseProcessor,
+    private val entitlements: StateFlow<EntitlementSnapshot>,
     private val afterPurchase: suspend (PurchaseResult) -> Unit = {},
     private val now: () -> Long = System::currentTimeMillis,
 ) {
@@ -92,6 +101,11 @@ internal class PurchaseLauncher(
                 is Choice.None -> return fail(choice.error)
                 is Choice.Offer -> choice
             }
+            val replacement = when (val replace = replacement(request)) {
+                is PlayResult.Ok -> replace.value
+                is PlayResult.Failed -> return fail(replace.error)
+                is PlayResult.Cancelled -> return fail(BillingError.Unknown(debugMessage = "Purchases query cancelled"))
+            }
             val attribution = Attribution(
                 UUID.randomUUID().toString(), request.placement, request.paywallId, request.campaignId,
                 request.product.defaults.productId, offer.basePlanId, offer.offerId, recovered = false,
@@ -102,7 +116,7 @@ internal class PurchaseLauncher(
             attempt = InFlight(attribution).also { current = it }
             events.emit(BillingEvent.PurchaseInitiated(attribution, now()))
             log.log(BillingLogLevel.INFO, "Purchase of ${attribution.productId} from ${attribution.placement}")
-            val params = LaunchParams(attribution.productId, offer.token, accountId(), profileId(attribution))
+            val params = LaunchParams(attribution.productId, offer.token, accountId(), profileId(attribution), replacement)
             when (val launch = connection.call("launchBillingFlow") { launch(activity, params) }) {
                 is PlayResult.Ok -> launched = true
                 is PlayResult.Cancelled -> return abandon(attempt, PurchaseResult.Cancelled(attribution))
@@ -177,6 +191,33 @@ internal class PurchaseLauncher(
         val token = catalog.offerTokens[definition]?.get(OfferKey(planOrOption, offerId))
             ?: return Choice.None(BillingError.OfferNotFound(productId, planOrOption, offerId))
         return Choice.Offer(planOrOption.takeIf { subscription }, offerId, token)
+    }
+
+    /** The subscription [request] replaces (null when none), or why it can't be bought. */
+    private suspend fun replacement(request: PurchaseRequest): PlayResult<Replacement?> {
+        val product = request.product.defaults
+        val owned = entitlements.value.grants.filter { it.type == ProductType.SUBSCRIPTION && it.grantsAccess }
+        val replace = request.replace
+        if (replace == null) {
+            if (product.type != ProductType.SUBSCRIPTION) return PlayResult.Ok(null)
+            val active = owned.firstOrNull { it.productId == product.productId || it.entitlements.any(product.entitlements::contains) }
+                ?: return PlayResult.Ok(null)
+            return PlayResult.Failed(BillingError.DeveloperError(debugMessage = "active subscription ${active.productId}; pass replace"))
+        }
+        val old = replace.oldProduct.defaults
+        if (product.type != ProductType.SUBSCRIPTION || old.type != ProductType.SUBSCRIPTION) {
+            return PlayResult.Failed(BillingError.DeveloperError(debugMessage = "replace is for subscriptions only"))
+        }
+        val notOwned = PlayResult.Failed(BillingError.ItemNotOwned(debugMessage = "${old.productId} isn't an active subscription"))
+        if (owned.none { it.productId == old.productId }) return notOwned
+        val purchases = when (val query = connection.call("queryPurchases") { queryPurchases(PlayProductType.SUBS, includeSuspended = false) }) {
+            is PlayResult.Ok -> query.value
+            is PlayResult.Failed -> return query
+            is PlayResult.Cancelled -> return query
+        }
+        val token = purchases.firstOrNull { old.productId in it.products && it.state == PlayPurchaseState.PURCHASED }?.purchaseToken
+            ?: return notOwned
+        return PlayResult.Ok(Replacement(old.productId, token, replace.mode))
     }
 
     /** The requested offer only; never another one in its place. */
