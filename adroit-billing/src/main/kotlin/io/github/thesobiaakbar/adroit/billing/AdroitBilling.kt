@@ -89,7 +89,10 @@ public object AdroitBilling : BillingClientApi {
                 return
             }
             this.settings = settings
-            runtime = BillingRuntime(portFactory(application), settings, sharedConnection, sharedCatalog, log).also { it.start() }
+            runtime = BillingRuntime(
+                application, portFactory(application), settings, sharedConnection, sharedCatalog, sharedPurchaseUpdates, log,
+                account = { requestedAccount }, debuggable = application.isDebuggable(),
+            ).also { it.start() }
         }
     }
 
@@ -104,8 +107,9 @@ public object AdroitBilling : BillingClientApi {
     override val consumables: Flow<ConsumableGrant> get() = emptyFlow()
 
     override suspend fun purchase(activity: Activity, request: PurchaseRequest): PurchaseResult {
-        notReady("purchase")
-        return PurchaseResult.Failed(BillingError.NotInitialized, attribution = null)
+        val runtime = runtime ?: return PurchaseResult.Failed(BillingError.NotInitialized, attribution = null)
+            .also { notReady("purchase") }
+        return runtime.purchases.purchase(activity, request)
     }
 
     override suspend fun restore(): RestoreResult {

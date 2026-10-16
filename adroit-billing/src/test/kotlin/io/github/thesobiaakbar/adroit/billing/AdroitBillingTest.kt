@@ -3,12 +3,17 @@ package io.github.thesobiaakbar.adroit.billing
 import android.app.Activity
 import android.app.Application
 import android.content.pm.ApplicationInfo
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import io.github.thesobiaakbar.adroit.billing.internal.play.FakePlayBillingPort
+import io.github.thesobiaakbar.adroit.billing.internal.play.OfferKey
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayProduct
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayPurchasesUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -22,6 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import kotlin.time.Duration.Companion.seconds
 
 @RunWith(RobolectricTestRunner::class)
@@ -142,6 +148,22 @@ class AdroitBillingTest {
     fun `awaitProduct gives up after its timeout`() = runTest {
         assertNull(AdroitBilling.awaitProduct(TestProducts.Coins, timeout = 1.seconds))
         assertEquals(1_000L, currentTime)
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun `purchase runs through the initialized runtime`() = runTest {
+        val coins = ProductInfo(TestProducts.Coins, "coins_100", ProductType.CONSUMABLE, "t", "n", "d",
+            listOf(OneTimeOption(null, null, emptyList(), Price("$0.99", 990_000, "USD"))), emptyList())
+        port.products["coins_100"] = PlayProduct(coins, mapOf(OfferKey(null, null) to "token-coins"))
+        AdroitBilling.initialize(application, valid)
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val result = backgroundScope.async { AdroitBilling.purchase(activity, PurchaseRequest(TestProducts.Coins, placement = "shop")) }
+        runCurrent()
+        assertEquals("token-coins", port.launches.single().offerToken)
+        port.emit(PlayPurchasesUpdate.Cancelled)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals("shop", (result.await() as PurchaseResult.Cancelled).attribution.placement)
     }
 
     @Test

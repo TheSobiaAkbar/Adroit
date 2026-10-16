@@ -40,6 +40,14 @@ internal class FakePlayBillingPort : PlayBillingPort {
     var queryProductsCalls = 0
         private set
 
+    /** Results of the next [launch] calls, in order; [PlayResult.Ok] once empty. */
+    val launchResults = ArrayDeque<PlayResult<Unit>>()
+
+    val launches = mutableListOf<LaunchParams>()
+
+    /** Runs inside each [launch], before it returns. */
+    var onLaunch: () -> Unit = {}
+
     private var onDisconnected: () -> Unit = {}
     private val updates = Channel<PlayPurchasesUpdate>(Channel.UNLIMITED)
 
@@ -77,7 +85,11 @@ internal class FakePlayBillingPort : PlayBillingPort {
         return purchasesResults.removeFirstOrNull() ?: PlayResult.Ok(emptyList())
     }
 
-    override suspend fun launch(activity: Activity, params: LaunchParams): PlayResult<Unit> = PlayResult.Ok(Unit)
+    override suspend fun launch(activity: Activity, params: LaunchParams): PlayResult<Unit> {
+        launches += params
+        onLaunch()
+        return launchResults.removeFirstOrNull() ?: PlayResult.Ok(Unit)
+    }
 
     override suspend fun acknowledge(purchaseToken: String): PlayResult<Unit> = PlayResult.Ok(Unit)
 

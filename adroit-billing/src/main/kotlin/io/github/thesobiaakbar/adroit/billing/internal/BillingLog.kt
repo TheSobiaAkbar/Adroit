@@ -31,5 +31,8 @@ internal class BillingLog(
 }
 
 /** A purchase token's first 12 hex digits of SHA-256, to tell purchases apart in logs without the token. */
-internal fun tokenHash(token: String): String =
-    MessageDigest.getInstance("SHA-256").digest(token.toByteArray()).joinToString("") { "%02x".format(it) }.take(12)
+internal fun tokenHash(token: String): String = sha256Hex(token).take(12)
+
+/** SHA-256 of [text] as 64 lowercase hex digits. */
+internal fun sha256Hex(text: String): String =
+    MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }

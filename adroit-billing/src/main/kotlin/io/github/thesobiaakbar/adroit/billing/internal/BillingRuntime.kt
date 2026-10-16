@@ -1,31 +1,41 @@
 package io.github.thesobiaakbar.adroit.billing.internal
 
+import android.app.Application
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import io.github.thesobiaakbar.adroit.billing.BillingConnectionState
 import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.CatalogState
+import io.github.thesobiaakbar.adroit.billing.PurchaseUpdate
+import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
 import io.github.thesobiaakbar.adroit.billing.internal.catalog.CatalogRepository
+import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingPort
+import io.github.thesobiaakbar.adroit.billing.internal.purchase.PurchaseLauncher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
  * Everything billing runs once initialized, created once per process by `AdroitBilling.initialize`. Purchases and
- * entitlements join it in B06-B08.
+ * entitlements join it in B07-B08.
  */
 internal class BillingRuntime(
-    port: PlayBillingPort,
+    application: Application,
+    private val port: PlayBillingPort,
     settings: BillingSettings,
     private val connectionState: MutableStateFlow<BillingConnectionState>,
     catalogState: MutableStateFlow<CatalogState>,
+    purchaseUpdates: MutableSharedFlow<PurchaseUpdate>,
     log: BillingLog,
+    account: () -> String?,
+    debuggable: Boolean,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -33,6 +43,11 @@ internal class BillingRuntime(
 
     val catalog = CatalogRepository(
         connection, settings.products, catalogState, scope, log, maxAgeMillis = settings.catalogMaxAgeHours * HOUR_MILLIS,
+    )
+
+    val purchases = PurchaseLauncher(
+        connection, catalog, catalogState, settings, AttemptStore(application), purchaseUpdates,
+        EventBus(settings.events, log), log, account, debuggable,
     )
 
     /**
@@ -54,6 +69,7 @@ internal class BillingRuntime(
         scope.launch {
             connectionState.collect { if (it == BillingConnectionState.Connected) catalog.loadIfStale() }
         }
+        scope.launch { purchases.handle(port.purchasesUpdates) }
     }
 
     fun shutdown() {

@@ -451,6 +451,47 @@ public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingEv
 	public abstract fun getTimestampMillis ()J
 }
 
+public final class io/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseCancelled : io/github/thesobiaakbar/adroit/billing/BillingEvent {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/Attribution;J)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun component2 ()J
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/Attribution;J)Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseCancelled;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseCancelled;Lio/github/thesobiaakbar/adroit/billing/Attribution;JILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseCancelled;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public fun getTimestampMillis ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseFailed : io/github/thesobiaakbar/adroit/billing/BillingEvent {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;J)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun component3 ()J
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;J)Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseFailed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseFailed;Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;JILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun getError ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public fun getTimestampMillis ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseInitiated : io/github/thesobiaakbar/adroit/billing/BillingEvent {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/Attribution;J)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun component2 ()J
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/Attribution;J)Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseInitiated;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseInitiated;Lio/github/thesobiaakbar/adroit/billing/Attribution;JILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingEvent$PurchaseInitiated;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public fun getTimestampMillis ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingEventListener {
 	public abstract fun onEvent (Lio/github/thesobiaakbar/adroit/billing/BillingEvent;)V
 }

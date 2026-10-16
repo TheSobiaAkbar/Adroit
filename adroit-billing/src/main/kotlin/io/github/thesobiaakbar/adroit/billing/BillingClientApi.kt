@@ -53,6 +53,9 @@ public interface BillingClientApi {
      * Starts the Play purchase screen for [request] from [activity] and suspends until the purchase is processed,
      * cancelled or failed. Only one purchase runs at a time. If the caller's scope is cancelled first (for example
      * the screen closed), the outcome still arrives on [purchaseUpdates].
+     *
+     * Call it from a ViewModel's scope rather than `lifecycleScope`: a rotation while Play's sheet is open recreates
+     * the Activity and cancels `lifecycleScope`, so the result would then arrive only on [purchaseUpdates].
      */
     @MainThread
     public suspend fun purchase(activity: Activity, request: PurchaseRequest): PurchaseResult
