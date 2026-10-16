@@ -1,0 +1,5 @@
+public final class io/github/thesobiaakbar/adroit/billing/compose/PaywallDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/compose/PaywallDefaults;
+}
+

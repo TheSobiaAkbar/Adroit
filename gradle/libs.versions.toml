@@ -22,6 +22,10 @@ kotlinxCoroutines = "1.10.2"
 composeBom = "2026.09.00"
 # adroit-firebase only (PROMPT 24): the BoM sets firebase-config and firebase-analytics
 firebaseBom = "34.19.0"
+# adroit-billing only (billing B01). The Java artifact, not billing-ktx: ktx would raise kotlin-stdlib to 2.2.10 for
+# consumers (coreLibrariesVersion is 2.2.0) for four suspend wrappers the library writes itself. PBL 9.1.0 needs
+# minSdk 23 and pulls androidx.core 1.15.0, whose AAR metadata asks consumers for compileSdk 35.
+playBilling = "9.1.0"
 
 # Samples only
 coreKtx = "1.19.0"
@@ -90,6 +94,9 @@ ssp-android = { module = "com.intuit.ssp:ssp-android", version.ref = "sdp" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 leakcanary-android-instrumentation = { module = "com.squareup.leakcanary:leakcanary-android-instrumentation", version.ref = "leakcanary" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+
+# adroit-billing only
+play-billing = { module = "com.android.billingclient:billing", version.ref = "playBilling" }
 
 # adroit-firebase only
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

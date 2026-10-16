@@ -72,7 +72,50 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
         "project :adroit-views",
         "project :adroit-compose",
     ),
+    // Billing (06_BILLING_ARCHITECTURE §2): no edge to the ads modules or the Mobile Ads SDK in any direction, so a
+    // billing-only app never gets ads; each optional module stays out of the others.
+    ":adroit-billing" to BILLING_NEVER + listOf(
+        "androidx\\.compose\\..*:.*",
+        "com\\.google\\.android\\.material:.*",
+        FIREBASE_SDK,
+        "project :adroit-billing-.*",
+    ),
+    ":adroit-billing-views" to BILLING_NEVER + listOf(
+        "androidx\\.compose\\..*:.*",
+        FIREBASE_SDK,
+        "project :adroit-billing-(compose|firebase|testing)",
+    ),
+    // Material3 is allowed here: a paywall is a whole screen, not a slot inside the app's design (B17).
+    ":adroit-billing-compose" to BILLING_NEVER + listOf(
+        "com\\.google\\.android\\.material:.*",
+        "androidx\\.navigation:.*",
+        FIREBASE_SDK,
+        "project :adroit-billing-(views|firebase|testing)",
+    ),
+    ":adroit-billing-firebase" to BILLING_NEVER + listOf(
+        "androidx\\.compose\\..*:.*",
+        "com\\.google\\.android\\.material:.*",
+        "project :adroit-billing-(views|compose|testing)",
+    ),
+    ":adroit-billing-testing" to BILLING_NEVER + listOf(
+        FIREBASE_SDK,
+        "project :adroit-billing-(views|compose|firebase)",
+    ),
 )
+
+/**
+ * Any Firebase SDK except `firebase-encoders*`: Play Billing's telemetry (datatransport) pulls those small
+ * serializers, which are not Firebase products.
+ */
+private const val FIREBASE_SDK = "com\\.google\\.firebase:(?!firebase-encoders).*"
+
+/** Forbidden on every billing module's release runtime classpath: the ads modules and the Mobile Ads SDK. */
+private val BILLING_NEVER: List<String>
+    get() = listOf(
+        "project :adroit-(core|views|compose|firebase|testing)",
+        "com\\.google\\.android\\.libraries\\.ads\\.mobile\\.sdk:.*",
+        "com\\.google\\.dagger:.*",
+    )
 
 /**
  * Checked against direct (first-level) dependencies only.
@@ -105,6 +148,29 @@ private val FORBIDDEN_DIRECT_BY_PROJECT = mapOf(
     ":adroit-firebase" to listOf(
         "androidx\\.appcompat:.*",
         "androidx\\.fragment:.*",
+    ),
+    // Play Billing pulls androidx.fragment through play-services-basement; Adroit code never adds it (ADR-014).
+    ":adroit-billing" to listOf(
+        "androidx\\.appcompat:.*",
+        "androidx\\.fragment:.*",
+    ),
+    ":adroit-billing-views" to listOf(
+        "androidx\\.appcompat:.*",
+        "androidx\\.fragment:.*",
+        "com\\.google\\.android\\.material:.*",
+    ),
+    ":adroit-billing-compose" to listOf(
+        "androidx\\.appcompat:.*",
+        "androidx\\.fragment:.*",
+    ),
+    ":adroit-billing-firebase" to listOf(
+        "androidx\\.appcompat:.*",
+        "androidx\\.fragment:.*",
+    ),
+    // Fakes never call Play: Play Billing arrives only through adroit-billing.
+    ":adroit-billing-testing" to listOf(
+        "com\\.android\\.billingclient:.*",
+        "junit:junit",
     ),
 )
 

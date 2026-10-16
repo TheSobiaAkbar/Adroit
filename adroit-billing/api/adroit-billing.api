@@ -1,0 +1,5 @@
+public final class io/github/thesobiaakbar/adroit/billing/AdroitBillingVersion {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/AdroitBillingVersion;
+	public static final field NAME Ljava/lang/String;
+}
+
