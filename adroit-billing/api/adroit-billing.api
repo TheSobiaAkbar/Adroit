@@ -1,5 +1,1292 @@
+public final class io/github/thesobiaakbar/adroit/billing/AdroitBilling : io/github/thesobiaakbar/adroit/billing/BillingClientApi {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/AdroitBilling;
+	public fun getCatalog ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun getConnection ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun getConsumables ()Lkotlinx/coroutines/flow/Flow;
+	public fun getEntitlements ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun getPurchaseUpdates ()Lkotlinx/coroutines/flow/SharedFlow;
+	public static final fun initialize (Landroid/app/Application;Lio/github/thesobiaakbar/adroit/billing/BillingSettings;)V
+	public fun openManageSubscriptions (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;)Z
+	public fun purchase (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun refresh (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun restore (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setAccount (Ljava/lang/String;)V
+}
+
 public final class io/github/thesobiaakbar/adroit/billing/AdroitBillingVersion {
 	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/AdroitBillingVersion;
 	public static final field NAME Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/Attribution {
+	public static final field Companion Lio/github/thesobiaakbar/adroit/billing/Attribution$Companion;
+	public static final field UNKNOWN_PLACEMENT Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/Attribution;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttemptId ()Ljava/lang/String;
+	public final fun getBasePlanId ()Ljava/lang/String;
+	public final fun getCampaignId ()Ljava/lang/String;
+	public final fun getOfferId ()Ljava/lang/String;
+	public final fun getPaywallId ()Ljava/lang/String;
+	public final fun getPlacement ()Ljava/lang/String;
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getRecovered ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final fun unknown (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/Attribution;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/Attribution$Companion {
+	public final fun unknown (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/Attribution;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/AttributionToken : java/lang/Enum {
+	public static final field LOCAL_ONLY Lio/github/thesobiaakbar/adroit/billing/AttributionToken;
+	public static final field PROFILE_ID Lio/github/thesobiaakbar/adroit/billing/AttributionToken;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/AttributionToken;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/AttributionToken;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BackBehavior : java/lang/Enum {
+	public static final field AFTER_DELAY Lio/github/thesobiaakbar/adroit/billing/BackBehavior;
+	public static final field ALWAYS Lio/github/thesobiaakbar/adroit/billing/BackBehavior;
+	public static final field NEVER Lio/github/thesobiaakbar/adroit/billing/BackBehavior;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BackBehavior;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/BackBehavior;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingClientApi {
+	public abstract fun getCatalog ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun getConnection ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun getConsumables ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getEntitlements ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun getPurchaseUpdates ()Lkotlinx/coroutines/flow/SharedFlow;
+	public abstract fun openManageSubscriptions (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;)Z
+	public static synthetic fun openManageSubscriptions$default (Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;ILjava/lang/Object;)Z
+	public abstract fun purchase (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun refresh (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun restore (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setAccount (Ljava/lang/String;)V
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingConfigSource {
+	public static final field Companion Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource$Companion;
+	public fun getUpdates ()Lkotlinx/coroutines/flow/Flow;
+	public static fun none ()Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;
+	public static fun of (Ljava/util/Map;)Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;
+	public abstract fun raw (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingConfigSource$Companion {
+	public final fun none ()Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;
+	public final fun of (Ljava/util/Map;)Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingConnectionState {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingConnectionState$Connected : io/github/thesobiaakbar/adroit/billing/BillingConnectionState {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Connected;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingConnectionState$Connecting : io/github/thesobiaakbar/adroit/billing/BillingConnectionState {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Connecting;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingConnectionState$Disconnected : io/github/thesobiaakbar/adroit/billing/BillingConnectionState {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Disconnected;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingConnectionState$Error : io/github/thesobiaakbar/adroit/billing/BillingConnectionState {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/BillingError;Ljava/lang/Long;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/BillingError;Ljava/lang/Long;)Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Error;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Error;Lio/github/thesobiaakbar/adroit/billing/BillingError;Ljava/lang/Long;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun getRetryAtMillis ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingConnectionState$Unavailable : io/github/thesobiaakbar/adroit/billing/BillingConnectionState {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/BillingError;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/BillingError;)Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Unavailable;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Unavailable;Lio/github/thesobiaakbar/adroit/billing/BillingError;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingConnectionState$Unavailable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingError {
+	public abstract fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public abstract fun isRetryable ()Z
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$AcknowledgeFailed : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$AcknowledgeFailed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$AcknowledgeFailed;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$AcknowledgeFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$BackendError : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$BackendError;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$BackendError;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$BackendError;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$ConsumeFailed : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ConsumeFailed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$ConsumeFailed;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ConsumeFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$DeveloperError : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$DeveloperError;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$DeveloperError;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$DeveloperError;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$FeatureNotSupported : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$FeatureNotSupported;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$FeatureNotSupported;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$FeatureNotSupported;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$ItemAlreadyOwned : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ItemAlreadyOwned;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$ItemAlreadyOwned;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ItemAlreadyOwned;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$ItemNotOwned : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ItemNotOwned;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$ItemNotOwned;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ItemNotOwned;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$NetworkError : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$NetworkError;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$NetworkError;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$NetworkError;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$NoActivity : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/BillingError$NoActivity;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$NotInitialized : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/BillingError$NotInitialized;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$OfferNotFound : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$OfferNotFound;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$OfferNotFound;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$OfferNotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBasePlanId ()Ljava/lang/String;
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public final fun getOfferId ()Ljava/lang/String;
+	public final fun getProductId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$PaymentDeclined : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$PaymentDeclined;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$PaymentDeclined;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$PaymentDeclined;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$ProductNotFound : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ProductNotFound;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$ProductNotFound;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ProductNotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public final fun getProductId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$PurchaseInProgress : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/BillingError$PurchaseInProgress;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$ServiceDisconnected : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ServiceDisconnected;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$ServiceDisconnected;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$ServiceDisconnected;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$Unavailable : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$Unavailable;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$Unavailable;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$Unavailable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$Unknown : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$Unknown;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$Unknown;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$Unknown;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$UserIneligible : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$UserIneligible;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$UserIneligible;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$UserIneligible;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public fun getPlayResponseCode ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingError$VerificationFailed : io/github/thesobiaakbar/adroit/billing/BillingError {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingError$VerificationFailed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingError$VerificationFailed;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingError$VerificationFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public fun getDebugMessage ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isRetryable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingEvent {
+	public abstract fun getTimestampMillis ()J
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/BillingEventListener {
+	public abstract fun onEvent (Lio/github/thesobiaakbar/adroit/billing/BillingEvent;)V
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingLogLevel : java/lang/Enum {
+	public static final field DEBUG Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public static final field ERROR Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public static final field INFO Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public static final field NONE Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public static final field VERBOSE Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public static final field WARN Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingPeriod {
+	public fun <init> ()V
+	public fun <init> (IIII)V
+	public synthetic fun <init> (IIIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun copy (IIII)Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;IIIIILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDays ()I
+	public final fun getMonths ()I
+	public final fun getWeeks ()I
+	public final fun getYears ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/BillingSettings {
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;I)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;II)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdFreeEntitlements ()Ljava/util/Set;
+	public final fun getAttributionToken ()Lio/github/thesobiaakbar/adroit/billing/AttributionToken;
+	public final fun getCatalogMaxAgeHours ()I
+	public final fun getConfig ()Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;
+	public final fun getEntitlementProvider ()Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;
+	public final fun getEvents ()Ljava/util/List;
+	public final fun getLogLevel ()Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public final fun getOfflineGraceHours ()I
+	public final fun getOverrides ()Ljava/util/Map;
+	public final fun getPaywalls ()Ljava/util/List;
+	public final fun getProducts ()Ljava/util/List;
+	public final fun getVerifier ()Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/Campaign {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Long;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnalyticsId ()Ljava/lang/String;
+	public final fun getEndMillis ()Ljava/lang/Long;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getStartMillis ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/CatalogState {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/CatalogState$Failed : io/github/thesobiaakbar/adroit/billing/CatalogState {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/BillingError;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/BillingError;)Lio/github/thesobiaakbar/adroit/billing/CatalogState$Failed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/CatalogState$Failed;Lio/github/thesobiaakbar/adroit/billing/BillingError;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/CatalogState$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/CatalogState$Loading : io/github/thesobiaakbar/adroit/billing/CatalogState {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/CatalogState$Loading;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/CatalogState$Ready : io/github/thesobiaakbar/adroit/billing/CatalogState {
+	public fun <init> (Ljava/util/Map;Ljava/util/Set;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (Ljava/util/Map;Ljava/util/Set;)Lio/github/thesobiaakbar/adroit/billing/CatalogState$Ready;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/CatalogState$Ready;Ljava/util/Map;Ljava/util/Set;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/CatalogState$Ready;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMissing ()Ljava/util/Set;
+	public final fun getProducts ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/CloseBehavior {
+	public static final field Companion Lio/github/thesobiaakbar/adroit/billing/CloseBehavior$Companion;
+	public static final field NO_CLOSE_BUTTON I
+	public fun <init> ()V
+	public fun <init> (I)V
+	public fun <init> (IZ)V
+	public fun <init> (IZLio/github/thesobiaakbar/adroit/billing/CloseButtonPosition;)V
+	public fun <init> (IZLio/github/thesobiaakbar/adroit/billing/CloseButtonPosition;Lio/github/thesobiaakbar/adroit/billing/BackBehavior;)V
+	public synthetic fun <init> (IZLio/github/thesobiaakbar/adroit/billing/CloseButtonPosition;Lio/github/thesobiaakbar/adroit/billing/BackBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBack ()Lio/github/thesobiaakbar/adroit/billing/BackBehavior;
+	public final fun getDelaySeconds ()I
+	public final fun getPosition ()Lio/github/thesobiaakbar/adroit/billing/CloseButtonPosition;
+	public final fun getShowCountdown ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/CloseBehavior$Companion {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/CloseButtonPosition : java/lang/Enum {
+	public static final field TOP_END Lio/github/thesobiaakbar/adroit/billing/CloseButtonPosition;
+	public static final field TOP_START Lio/github/thesobiaakbar/adroit/billing/CloseButtonPosition;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/CloseButtonPosition;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/CloseButtonPosition;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/ConsumableGrant {
+	public final fun confirm (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun getOrderIdHash ()Ljava/lang/String;
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getQuantity ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/EntitlementGrant {
+	public fun <init> (Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/ProductType;Ljava/util/Set;Lio/github/thesobiaakbar/adroit/billing/GrantState;Lio/github/thesobiaakbar/adroit/billing/GrantSource;J)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun component4 ()Lio/github/thesobiaakbar/adroit/billing/GrantState;
+	public final fun component5 ()Lio/github/thesobiaakbar/adroit/billing/GrantSource;
+	public final fun component6 ()J
+	public final fun copy (Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/ProductType;Ljava/util/Set;Lio/github/thesobiaakbar/adroit/billing/GrantState;Lio/github/thesobiaakbar/adroit/billing/GrantSource;J)Lio/github/thesobiaakbar/adroit/billing/EntitlementGrant;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/EntitlementGrant;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/ProductType;Ljava/util/Set;Lio/github/thesobiaakbar/adroit/billing/GrantState;Lio/github/thesobiaakbar/adroit/billing/GrantSource;JILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/EntitlementGrant;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntitlements ()Ljava/util/Set;
+	public final fun getGrantsAccess ()Z
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getPurchaseTimeMillis ()J
+	public final fun getSource ()Lio/github/thesobiaakbar/adroit/billing/GrantSource;
+	public final fun getState ()Lio/github/thesobiaakbar/adroit/billing/GrantState;
+	public final fun getType ()Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/EntitlementProvider {
+	public abstract fun fetch (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/EntitlementSnapshot {
+	public static final field Companion Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot$Companion;
+	public static final field EMPTY_UNKNOWN Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;
+	public fun <init> (Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus;Ljava/util/Set;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun copy (Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus;Ljava/util/Set;)Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus;Ljava/util/Set;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActive ()Ljava/util/Set;
+	public final fun getAdFree ()Z
+	public final fun getAdFreeEntitlements ()Ljava/util/Set;
+	public final fun getGrants ()Ljava/util/List;
+	public final fun getStatus ()Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus;
+	public final fun has (Ljava/lang/String;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/EntitlementSnapshot$Companion {
+}
+
+public abstract interface annotation class io/github/thesobiaakbar/adroit/billing/ExperimentalAdroitBillingApi : java/lang/annotation/Annotation {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/GrantSource : java/lang/Enum {
+	public static final field BACKEND Lio/github/thesobiaakbar/adroit/billing/GrantSource;
+	public static final field CLIENT Lio/github/thesobiaakbar/adroit/billing/GrantSource;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/GrantSource;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/GrantSource;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/GrantState : java/lang/Enum {
+	public static final field ACTIVE Lio/github/thesobiaakbar/adroit/billing/GrantState;
+	public static final field GRACE_FROM_BACKEND Lio/github/thesobiaakbar/adroit/billing/GrantState;
+	public static final field PENDING Lio/github/thesobiaakbar/adroit/billing/GrantState;
+	public static final field SUSPENDED Lio/github/thesobiaakbar/adroit/billing/GrantState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/GrantState;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/GrantState;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OfferFallback : java/lang/Enum {
+	public static final field BASE_PLAN Lio/github/thesobiaakbar/adroit/billing/OfferFallback;
+	public static final field HIDE_PAYWALL Lio/github/thesobiaakbar/adroit/billing/OfferFallback;
+	public static final field HIDE_PLAN Lio/github/thesobiaakbar/adroit/billing/OfferFallback;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/OfferFallback;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/OfferFallback;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OfferInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBasePlanId ()Ljava/lang/String;
+	public final fun getOfferId ()Ljava/lang/String;
+	public final fun getOfferTags ()Ljava/util/List;
+	public final fun getPhases ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OfferPolicy : java/lang/Enum {
+	public static final field BASE_ONLY Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;
+	public static final field LOWEST_FIRST_PAYMENT Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;
+	public static final field PREFER_FREE_TRIAL Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;
+	public static final field PREFER_INTRO_PRICE Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OfferRule {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/Integer;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/Integer;Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/Integer;Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIds ()Ljava/util/List;
+	public final fun getPolicy ()Lio/github/thesobiaakbar/adroit/billing/OfferPolicy;
+	public final fun getTags ()Ljava/util/List;
+	public final fun getTrialDays ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/OfferSelection {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OfferSelection$Auto : io/github/thesobiaakbar/adroit/billing/OfferSelection {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/OfferSelection$Auto;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OfferSelection$BaseOnly : io/github/thesobiaakbar/adroit/billing/OfferSelection {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/OfferSelection$BaseOnly;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OfferSelection$Id : io/github/thesobiaakbar/adroit/billing/OfferSelection {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/OfferSelection$Id;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/OfferSelection$Id;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/OfferSelection$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOfferId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OfferSelection$Tags : io/github/thesobiaakbar/adroit/billing/OfferSelection {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lio/github/thesobiaakbar/adroit/billing/OfferSelection$Tags;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/OfferSelection$Tags;Ljava/util/List;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/OfferSelection$Tags;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTags ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/OneTimeOption {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Price;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Lio/github/thesobiaakbar/adroit/billing/Price;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Price;)Lio/github/thesobiaakbar/adroit/billing/OneTimeOption;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/OneTimeOption;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Price;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/OneTimeOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOfferId ()Ljava/lang/String;
+	public final fun getOfferTags ()Ljava/util/List;
+	public final fun getPrice ()Lio/github/thesobiaakbar/adroit/billing/Price;
+	public final fun getPurchaseOptionId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/PaywallDefinition {
+	public abstract fun getDefaults ()Lio/github/thesobiaakbar/adroit/billing/PaywallSpec;
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallSpec {
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Z)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;I)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;Ljava/lang/String;)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;Lio/github/thesobiaakbar/adroit/billing/PaywallStyle;)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;Lio/github/thesobiaakbar/adroit/billing/PaywallStyle;Z)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;Lio/github/thesobiaakbar/adroit/billing/PaywallStyle;ZZ)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;Lio/github/thesobiaakbar/adroit/billing/PaywallStyle;ZZZ)V
+	public fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;Lio/github/thesobiaakbar/adroit/billing/PaywallStyle;ZZZLio/github/thesobiaakbar/adroit/billing/SuccessAction;)V
+	public synthetic fun <init> (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/billing/PaywallTemplate;ILio/github/thesobiaakbar/adroit/billing/OfferFallback;Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;Lio/github/thesobiaakbar/adroit/billing/ShowRules;Lio/github/thesobiaakbar/adroit/billing/Campaign;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;Lio/github/thesobiaakbar/adroit/billing/PaywallStyle;ZZZLio/github/thesobiaakbar/adroit/billing/SuccessAction;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCampaign ()Lio/github/thesobiaakbar/adroit/billing/Campaign;
+	public final fun getClose ()Lio/github/thesobiaakbar/adroit/billing/CloseBehavior;
+	public final fun getEnabled ()Z
+	public final fun getExitPaywall ()Ljava/lang/String;
+	public final fun getOnOfferUnavailable ()Lio/github/thesobiaakbar/adroit/billing/OfferFallback;
+	public final fun getPlans ()Ljava/util/List;
+	public final fun getSelected ()I
+	public final fun getShow ()Lio/github/thesobiaakbar/adroit/billing/ShowRules;
+	public final fun getShowManage ()Z
+	public final fun getShowRestore ()Z
+	public final fun getShowTerms ()Z
+	public final fun getStyle ()Lio/github/thesobiaakbar/adroit/billing/PaywallStyle;
+	public final fun getSuccessAction ()Lio/github/thesobiaakbar/adroit/billing/SuccessAction;
+	public final fun getTemplate ()Lio/github/thesobiaakbar/adroit/billing/PaywallTemplate;
+	public final fun getTexts ()Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallStyle {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;)V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;)V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccent ()Ljava/lang/Integer;
+	public final fun getBackground ()Ljava/lang/Integer;
+	public final fun getDark ()Ljava/lang/Boolean;
+	public final fun getHeaderImage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallTemplate : java/lang/Enum {
+	public static final field BOTTOM_SHEET Lio/github/thesobiaakbar/adroit/billing/PaywallTemplate;
+	public static final field DIALOG Lio/github/thesobiaakbar/adroit/billing/PaywallTemplate;
+	public static final field PLANS Lio/github/thesobiaakbar/adroit/billing/PaywallTemplate;
+	public static final field SINGLE Lio/github/thesobiaakbar/adroit/billing/PaywallTemplate;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/PaywallTemplate;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/PaywallTemplate;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallTexts {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCta ()Ljava/lang/String;
+	public final fun getCtaTrial ()Ljava/lang/String;
+	public final fun getFeatures ()Ljava/util/List;
+	public final fun getFooter ()Ljava/lang/String;
+	public final fun getSubtitle ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PlanSpec {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferRule;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferRule;Ljava/lang/String;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferRule;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferRule;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBadge ()Ljava/lang/String;
+	public final fun getBasePlanId ()Ljava/lang/String;
+	public final fun getOffer ()Lio/github/thesobiaakbar/adroit/billing/OfferRule;
+	public final fun getProduct ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public final fun getSavingsVs ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/Price {
+	public fun <init> (Ljava/lang/String;JLjava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;JLjava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/Price;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/Price;Ljava/lang/String;JLjava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/Price;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCurrencyCode ()Ljava/lang/String;
+	public final fun getFormatted ()Ljava/lang/String;
+	public final fun getMicros ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PricingPhase {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/Price;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;ILio/github/thesobiaakbar/adroit/billing/Recurrence;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/Price;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
+	public final fun component4 ()I
+	public final fun component5 ()Lio/github/thesobiaakbar/adroit/billing/Recurrence;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/Price;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;ILio/github/thesobiaakbar/adroit/billing/Recurrence;)Lio/github/thesobiaakbar/adroit/billing/PricingPhase;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PricingPhase;Lio/github/thesobiaakbar/adroit/billing/Price;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;ILio/github/thesobiaakbar/adroit/billing/Recurrence;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PricingPhase;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBillingCycleCount ()I
+	public final fun getBillingPeriod ()Ljava/lang/String;
+	public final fun getPeriod ()Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;
+	public final fun getPrice ()Lio/github/thesobiaakbar/adroit/billing/Price;
+	public final fun getRecurrence ()Lio/github/thesobiaakbar/adroit/billing/Recurrence;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/ProductDefinition {
+	public abstract fun getDefaults ()Lio/github/thesobiaakbar/adroit/billing/ProductSpec;
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/ProductInfo {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/ProductType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/ProductType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/billing/ProductInfo;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/ProductInfo;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/ProductType;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/ProductInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefinition ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getDisplayName ()Ljava/lang/String;
+	public final fun getOneTimeOptions ()Ljava/util/List;
+	public final fun getPlans ()Ljava/util/List;
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getType ()Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/ProductSpec {
+	public static final field Companion Lio/github/thesobiaakbar/adroit/billing/ProductSpec$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/ProductType;Ljava/util/Set;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun consumable (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/ProductSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntitlements ()Ljava/util/Set;
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getType ()Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public fun hashCode ()I
+	public static final fun nonConsumable (Ljava/lang/String;Ljava/util/Set;)Lio/github/thesobiaakbar/adroit/billing/ProductSpec;
+	public static final fun subscription (Ljava/lang/String;Ljava/util/Set;)Lio/github/thesobiaakbar/adroit/billing/ProductSpec;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/ProductSpec$Companion {
+	public final fun consumable (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/ProductSpec;
+	public final fun nonConsumable (Ljava/lang/String;Ljava/util/Set;)Lio/github/thesobiaakbar/adroit/billing/ProductSpec;
+	public final fun subscription (Ljava/lang/String;Ljava/util/Set;)Lio/github/thesobiaakbar/adroit/billing/ProductSpec;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/ProductType : java/lang/Enum {
+	public static final field CONSUMABLE Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public static final field NON_CONSUMABLE Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public static final field SUBSCRIPTION Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/ProductType;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseRequest {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;)V
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lio/github/thesobiaakbar/adroit/billing/OfferSelection;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferSelection;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBasePlanId ()Ljava/lang/String;
+	public final fun getCampaignId ()Ljava/lang/String;
+	public final fun getOffer ()Lio/github/thesobiaakbar/adroit/billing/OfferSelection;
+	public final fun getPaywallId ()Ljava/lang/String;
+	public final fun getPlacement ()Ljava/lang/String;
+	public final fun getProduct ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/PurchaseResult {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseResult$AlreadyOwned : io/github/thesobiaakbar/adroit/billing/PurchaseResult {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/Attribution;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/Attribution;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$AlreadyOwned;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$AlreadyOwned;Lio/github/thesobiaakbar/adroit/billing/Attribution;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$AlreadyOwned;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseResult$Cancelled : io/github/thesobiaakbar/adroit/billing/PurchaseResult {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/Attribution;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/Attribution;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Cancelled;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Cancelled;Lio/github/thesobiaakbar/adroit/billing/Attribution;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Cancelled;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseResult$Failed : io/github/thesobiaakbar/adroit/billing/PurchaseResult {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Failed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Failed;Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun getError ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseResult$Pending : io/github/thesobiaakbar/adroit/billing/PurchaseResult {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/Attribution;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/Attribution;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Pending;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Pending;Lio/github/thesobiaakbar/adroit/billing/Attribution;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Pending;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseResult$Purchased : io/github/thesobiaakbar/adroit/billing/PurchaseResult {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/EntitlementGrant;Lio/github/thesobiaakbar/adroit/billing/Attribution;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/EntitlementGrant;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/EntitlementGrant;Lio/github/thesobiaakbar/adroit/billing/Attribution;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Purchased;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Purchased;Lio/github/thesobiaakbar/adroit/billing/EntitlementGrant;Lio/github/thesobiaakbar/adroit/billing/Attribution;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseResult$Purchased;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun getGrant ()Lio/github/thesobiaakbar/adroit/billing/EntitlementGrant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseToVerify {
+	public final fun getAccountIdHash ()Ljava/lang/String;
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun getPackageName ()Ljava/lang/String;
+	public final fun getProductIds ()Ljava/util/List;
+	public final fun getPurchaseToken ()Ljava/lang/String;
+	public final fun getType ()Lio/github/thesobiaakbar/adroit/billing/ProductType;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/PurchaseUpdate {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Completed : io/github/thesobiaakbar/adroit/billing/PurchaseUpdate {
+	public fun <init> (Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Attribution;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun copy (Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Attribution;)Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Completed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Completed;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Attribution;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Completed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun getProductIds ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Failed : io/github/thesobiaakbar/adroit/billing/PurchaseUpdate {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;)Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Failed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Failed;Lio/github/thesobiaakbar/adroit/billing/BillingError;Lio/github/thesobiaakbar/adroit/billing/Attribution;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun getError ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Pending : io/github/thesobiaakbar/adroit/billing/PurchaseUpdate {
+	public fun <init> (Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Attribution;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun copy (Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Attribution;)Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Pending;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Pending;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Attribution;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Pending;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;
+	public final fun getProductIds ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Suspended : io/github/thesobiaakbar/adroit/billing/PurchaseUpdate {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Suspended;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Suspended;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PurchaseUpdate$Suspended;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProductId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/PurchaseVerifier {
+	public abstract fun verify (Lio/github/thesobiaakbar/adroit/billing/PurchaseToVerify;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/Recurrence : java/lang/Enum {
+	public static final field FINITE Lio/github/thesobiaakbar/adroit/billing/Recurrence;
+	public static final field INFINITE Lio/github/thesobiaakbar/adroit/billing/Recurrence;
+	public static final field NON_RECURRING Lio/github/thesobiaakbar/adroit/billing/Recurrence;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/Recurrence;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/Recurrence;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/RestoreResult {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/RestoreResult$Failed : io/github/thesobiaakbar/adroit/billing/RestoreResult {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/BillingError;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/BillingError;)Lio/github/thesobiaakbar/adroit/billing/RestoreResult$Failed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/RestoreResult$Failed;Lio/github/thesobiaakbar/adroit/billing/BillingError;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/RestoreResult$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/RestoreResult$NothingToRestore : io/github/thesobiaakbar/adroit/billing/RestoreResult {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/RestoreResult$NothingToRestore;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/RestoreResult$Restored : io/github/thesobiaakbar/adroit/billing/RestoreResult {
+	public fun <init> (Ljava/util/Set;Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;
+	public final fun copy (Ljava/util/Set;Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;)Lio/github/thesobiaakbar/adroit/billing/RestoreResult$Restored;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/RestoreResult$Restored;Ljava/util/Set;Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/RestoreResult$Restored;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNewlyActive ()Ljava/util/Set;
+	public final fun getSnapshot ()Lio/github/thesobiaakbar/adroit/billing/EntitlementSnapshot;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/ShowRules {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public fun <init> (II)V
+	public fun <init> (III)V
+	public fun <init> (IIII)V
+	public fun <init> (IIIII)V
+	public fun <init> (IIIIILjava/util/Set;)V
+	public synthetic fun <init> (IIIIILjava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCounter ()I
+	public final fun getFirstAfterLaunches ()I
+	public final fun getHideIfEntitled ()Ljava/util/Set;
+	public final fun getMaxPerDay ()I
+	public final fun getMaxPerSession ()I
+	public final fun getTimerSeconds ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/SnapshotStatus {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/SnapshotStatus$Cached : io/github/thesobiaakbar/adroit/billing/SnapshotStatus {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus$Cached;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus$Cached;JILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus$Cached;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSinceMillis ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/SnapshotStatus$Fresh : io/github/thesobiaakbar/adroit/billing/SnapshotStatus {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus$Fresh;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus$Fresh;JILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus$Fresh;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAtMillis ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/SnapshotStatus$Unknown : io/github/thesobiaakbar/adroit/billing/SnapshotStatus {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/SnapshotStatus$Unknown;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/SubscriptionPlan {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBasePlanId ()Ljava/lang/String;
+	public final fun getOffers ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/SuccessAction : java/lang/Enum {
+	public static final field CLOSE Lio/github/thesobiaakbar/adroit/billing/SuccessAction;
+	public static final field STAY_WITH_MESSAGE Lio/github/thesobiaakbar/adroit/billing/SuccessAction;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/SuccessAction;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/SuccessAction;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/VerificationResult {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/VerificationResult$Rejected : io/github/thesobiaakbar/adroit/billing/VerificationResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Rejected;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Rejected;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Rejected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/VerificationResult$Unreachable : io/github/thesobiaakbar/adroit/billing/VerificationResult {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Unreachable;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Unreachable;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Unreachable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/VerificationResult$Verified : io/github/thesobiaakbar/adroit/billing/VerificationResult {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Verified;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Verified;ZILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/VerificationResult$Verified;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAcknowledgedByBackend ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
