@@ -2,6 +2,7 @@ package io.github.thesobiaakbar.adroit.billing.internal
 
 import android.util.Log
 import io.github.thesobiaakbar.adroit.billing.BillingLogLevel
+import java.security.MessageDigest
 
 /**
  * The billing library's only path to logcat (tag `AdroitBilling`). Never pass it a purchase token or an account ID.
@@ -28,3 +29,7 @@ internal class BillingLog(
         const val TAG: String = "AdroitBilling"
     }
 }
+
+/** A purchase token's first 12 hex digits of SHA-256, to tell purchases apart in logs without the token. */
+internal fun tokenHash(token: String): String =
+    MessageDigest.getInstance("SHA-256").digest(token.toByteArray()).joinToString("") { "%02x".format(it) }.take(12)

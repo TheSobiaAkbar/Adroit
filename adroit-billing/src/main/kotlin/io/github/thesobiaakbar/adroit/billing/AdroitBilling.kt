@@ -5,6 +5,9 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import androidx.annotation.VisibleForTesting
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
+import io.github.thesobiaakbar.adroit.billing.internal.BillingRuntime
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingAdapter
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingPort
 import io.github.thesobiaakbar.adroit.billing.internal.validate
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -48,6 +51,15 @@ public object AdroitBilling : BillingClientApi {
     @Volatile
     internal var requestedAccount: String? = null
 
+    /** The running library, from the first valid [initialize] on. */
+    @Volatile
+    internal var runtime: BillingRuntime? = null
+        private set
+
+    /** Builds the Play port; tests replace it with a fake. */
+    @VisibleForTesting
+    internal var portFactory: (Application) -> PlayBillingPort = ::PlayBillingAdapter
+
     private val lock = Any()
 
     /**
@@ -77,7 +89,7 @@ public object AdroitBilling : BillingClientApi {
                 return
             }
             this.settings = settings
-            // The runtime (Play connection, catalog, purchases, entitlements) is created here from B04-B08 on.
+            runtime = BillingRuntime(portFactory(application), sharedConnection, log).also { it.start() }
         }
     }
 
@@ -102,7 +114,8 @@ public object AdroitBilling : BillingClientApi {
     }
 
     override suspend fun refresh() {
-        notReady("refresh")
+        val runtime = runtime ?: return notReady("refresh")
+        runtime.connection.trigger()
     }
 
     override fun openManageSubscriptions(activity: Activity, product: ProductDefinition?): Boolean {
@@ -120,10 +133,21 @@ public object AdroitBilling : BillingClientApi {
 
     private fun Application.isDebuggable(): Boolean = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
 
+    /** Stops the runtime and ends the Play connection. The only place the connection is ever ended. */
+    @VisibleForTesting
+    internal fun shutdownForTests() {
+        synchronized(lock) {
+            runtime?.shutdown()
+            runtime = null
+        }
+    }
+
     /** Forgets [initialize] and every shared value, so each test starts clean. */
     @VisibleForTesting
     internal fun resetForTests() {
         synchronized(lock) {
+            shutdownForTests()
+            portFactory = ::PlayBillingAdapter
             settings = null
             requestedAccount = null
             log.minLevel = BillingLogLevel.WARN

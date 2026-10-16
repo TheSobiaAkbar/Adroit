@@ -4,6 +4,8 @@ import android.app.Activity
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import androidx.test.core.app.ApplicationProvider
+import io.github.thesobiaakbar.adroit.billing.internal.play.FakePlayBillingPort
+import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -24,8 +26,13 @@ class AdroitBillingTest {
     private val valid = BillingSettings(TestProducts.entries, TestPaywalls.entries)
     private val invalid = BillingSettings(emptyList())
 
+    private val port = FakePlayBillingPort()
+
     @Before
-    fun setUp() = AdroitBilling.resetForTests()
+    fun setUp() {
+        AdroitBilling.resetForTests()
+        AdroitBilling.portFactory = { port }
+    }
 
     @After
     fun tearDown() {
@@ -87,5 +94,31 @@ class AdroitBillingTest {
     fun `setAccount before initialize is remembered`() {
         AdroitBilling.setAccount("user-1")
         assertEquals("user-1", AdroitBilling.requestedAccount)
+    }
+
+    @Test
+    fun `initialize connects to Play`() {
+        AdroitBilling.initialize(application, valid)
+        assertEquals(BillingConnectionState.Connected, AdroitBilling.connection.value)
+        assertEquals(1, port.connectCalls)
+    }
+
+    @Test
+    fun `refresh reconnects after billing was unavailable`() = runTest {
+        port.connectResults += PlayResult.Failed(BillingError.Unavailable(3))
+        AdroitBilling.initialize(application, valid)
+        assertTrue(AdroitBilling.connection.value is BillingConnectionState.Unavailable)
+        AdroitBilling.refresh()
+        assertEquals(BillingConnectionState.Connected, AdroitBilling.connection.value)
+    }
+
+    @Test
+    fun `only shutdownForTests ends the connection`() {
+        AdroitBilling.initialize(application, valid)
+        Robolectric.buildActivity(Activity::class.java).setup().destroy()
+        assertEquals(0, port.endConnectionCalls)
+        AdroitBilling.shutdownForTests()
+        assertEquals(1, port.endConnectionCalls)
+        assertEquals(BillingConnectionState.Disconnected, AdroitBilling.connection.value)
     }
 }
