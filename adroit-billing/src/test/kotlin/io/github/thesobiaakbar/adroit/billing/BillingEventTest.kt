@@ -36,6 +36,7 @@ class BillingEventTest {
         BillingEvent.ConsumeFailed(BillingError.ConsumeFailed(6, null), attribution, 1),
         BillingEvent.ConfigLoaded("7", 1),
         BillingEvent.ConfigInvalid("AdroitBilling", "not json", 1),
+        BillingEvent.HardPaywall("Onboarding", 1),
         BillingEvent.ServerLifecycle(ServerLifecycleKind.GRACE_PERIOD, "premium_sub", 1),
     )
 
@@ -100,6 +101,7 @@ class BillingEventTest {
             attributionParams + mapOf("error_code" to "consume_failed", "play_response_code" to 6L),
             mapOf("version" to "7"),
             mapOf("key" to "AdroitBilling", "reason" to "not json"),
+            mapOf("paywall_id" to "Onboarding"),
             mapOf("kind" to "grace_period", "product_id" to "premium_sub", "source" to "backend"),
         )
         all.zip(expected).forEach { (event, params) -> assertEquals(event.name, params, event.toParams()) }

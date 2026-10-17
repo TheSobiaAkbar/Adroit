@@ -14,6 +14,7 @@ import io.github.thesobiaakbar.adroit.billing.PurchaseUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
 import io.github.thesobiaakbar.adroit.billing.internal.catalog.CatalogRepository
 import io.github.thesobiaakbar.adroit.billing.internal.catalog.priceOf
+import io.github.thesobiaakbar.adroit.billing.internal.config.BillingConfig
 import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementCache
 import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementEngine
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
@@ -67,9 +68,11 @@ internal class BillingRuntime(
         price = { catalogState.value.priceOf(it) },
     )
 
+    val config = BillingConfig(settings, events, log)
+
     val entitlements = EntitlementEngine(
         connection, settings, processor, ledger, attempts, EntitlementCache(application), entitlementState, events, scope,
-        log, account,
+        log, account, config = config,
     )
 
     val purchases = PurchaseLauncher(
@@ -103,7 +106,12 @@ internal class BillingRuntime(
                 entitlements.requestSync()
             }
         }
-        scope.launch { settings.config.updates.collect { entitlements.publish() } }
+        scope.launch {
+            settings.config.updates.collect {
+                config.reload()
+                entitlements.publish()
+            }
+        }
         scope.launch { purchases.handle(port.purchasesUpdates) }
     }
 

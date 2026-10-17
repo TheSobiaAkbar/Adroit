@@ -1,0 +1,24 @@
+{
+  "enabled": false,
+  "template": "bottom_sheet",
+  "plans": [
+    { "product": "PremiumSub", "basePlan": "monthly",
+      "offer": { "ids": ["intro-1"], "tags": ["trial"], "trialDays": 7, "policy": "PREFER_INTRO_PRICE" },
+      "badge": "POPULAR", "savingsVs": "weekly" },
+    { "product": "Lifetime" }
+  ],
+  "selected": 1,
+  "onOfferUnavailable": "HIDE_PLAN",
+  "close": { "delaySeconds": 5, "showCountdown": true, "position": "TOP_START", "back": "AFTER_DELAY" },
+  "show": { "counter": 2, "maxPerSession": 1, "maxPerDay": 3, "timerSeconds": 60, "firstAfterLaunches": 2,
+            "hideIfEntitled": ["premium"] },
+  "campaign": { "id": "autumn26", "start": "2026-10-01T00:00:00Z", "end": "2026-10-31T23:59:59Z",
+                "analyticsId": "autumn26_onb" },
+  "exitPaywall": "ExitDiscount",
+  "texts": { "title": "Go Premium", "subtitle": "Everything unlocked", "features": ["No ads", "All filters"],
+             "cta": "Continue", "ctaTrial": "Start {trial} free trial", "footer": "Thanks" },
+  "style": { "accent": "#7C4DFF", "background": "#80101014", "headerImage": "https://example.com/h.png", "dark": true },
+  "showRestore": false, "showManage": true, "showTerms": false,
+  "successAction": "STAY_WITH_MESSAGE",
+  "futureField": { "ignored": true }
+}

@@ -18,6 +18,7 @@ import io.github.thesobiaakbar.adroit.billing.SnapshotStatus
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttributionMatcher
+import io.github.thesobiaakbar.adroit.billing.internal.config.BillingConfig
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayFeature
@@ -37,7 +38,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
-import org.json.JSONObject
 
 /**
  * Keeps [state], the answer to "what does this user own now" (06 §4, §5.1, §7).
@@ -47,7 +47,7 @@ import org.json.JSONObject
  * process the cache is published as [SnapshotStatus.Cached]. A failed sync changes nothing: it never adds a grant and
  * never removes one. Subscriptions confirmed longer than `offlineGraceHours` ago are dropped; other products stay.
  *
- * Grants are mapped to entitlements when published, so a new `AdroitBilling` remote value applies at once. The remote
+ * Grants are mapped to entitlements when published, so a reloaded `AdroitBilling` value applies at once. The value
  * value can remap only declared products; it can't add one.
  *
  * Each entitlement that leaves [EntitlementSnapshot.active] is reported as [BillingEvent.EntitlementLost]; a change in
@@ -69,6 +69,7 @@ internal class EntitlementEngine(
     private val account: () -> String?,
     private val now: () -> Long = System::currentTimeMillis,
     private val providerTimeoutMillis: Long = PROVIDER_TIMEOUT_MILLIS,
+    private val config: BillingConfig = BillingConfig(settings, events, log, now),
 ) {
     private val matcher = AttributionMatcher(attempts)
     private val mutex = Mutex()
@@ -249,17 +250,17 @@ internal class EntitlementEngine(
 
     /** Sets [state] from [saved]; true when the offline grace period has run out. */
     private fun publishSaved(): Boolean {
-        val remote = remote()
+        val global = config.global
         val mapping = settings.products.associate { def ->
-            def.defaults.productId to (remote.entitlements[def.name] ?: def.defaults.entitlements)
+            def.defaults.productId to (global.productEntitlements[def.name] ?: def.defaults.entitlements)
         }
-        val adFree = remote.adFree ?: settings.adFreeEntitlements ?: mapping.values.flatten().toSet()
+        val adFree = global.adFreeEntitlements ?: mapping.values.flatten().toSet()
         val current = saved
         if (current == null) {
             state.value = EntitlementSnapshot(emptyList(), SnapshotStatus.Unknown, adFree)
             return false
         }
-        val graceMillis = (remote.graceHours ?: settings.offlineGraceHours) * HOUR_MILLIS
+        val graceMillis = global.offlineGraceHours * HOUR_MILLIS
         val expiresAt = current.atMillis + graceMillis
         val expired = now() > expiresAt
         val grants = current.grants
@@ -281,28 +282,7 @@ internal class EntitlementEngine(
         return expired
     }
 
-    private class Remote(val adFree: Set<String>?, val graceHours: Int?, val entitlements: Map<String, Set<String>>)
-
-    // ponytail: reads only what entitlements need from the `AdroitBilling` key; B11 brings the full schema.
-    private fun remote(): Remote {
-        val json = settings.overrides[REMOTE_KEY] ?: settings.config.raw(REMOTE_KEY) ?: return Remote(null, null, emptyMap())
-        return runCatching {
-            val o = JSONObject(json)
-            fun strings(key: String, from: JSONObject = o) = from.optJSONArray(key)?.let { a -> List(a.length()) { a.getString(it) }.toSet() }
-            val products = o.optJSONObject("products")
-            Remote(
-                strings("adFreeEntitlements"),
-                o.optInt("offlineGraceHours", 0).takeIf { it in 1..720 },
-                settings.products.mapNotNull { def -> products?.optJSONObject(def.name)?.let { strings("entitlements", it) }?.let { def.name to it } }.toMap(),
-            )
-        }.getOrElse {
-            log.log(BillingLogLevel.WARN, "Ignored the invalid $REMOTE_KEY remote value")
-            Remote(null, null, emptyMap())
-        }
-    }
-
     private companion object {
-        const val REMOTE_KEY = "AdroitBilling"
         const val HOUR_MILLIS = 3_600_000L
         const val FOREGROUND_DEBOUNCE_MILLIS = 30_000L
         const val PROVIDER_TIMEOUT_MILLIS = 15_000L

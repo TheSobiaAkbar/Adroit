@@ -183,15 +183,24 @@ public sealed interface BillingEvent {
         override val timestampMillis: Long,
     ) : BillingEvent
 
-    /** The remote billing configuration was applied; [version] is its `version` value, if it has one. */
+    /** The billing configuration was (re)resolved; [version] is the `AdroitBilling` key's `configVersion`, if set. */
     public data class ConfigLoaded(public val version: String?, override val timestampMillis: Long) : BillingEvent
 
-    /** The remote value [key] was invalid and ignored ([reason] says why); the in-code defaults apply. */
+    /**
+     * A field of the value [key] was invalid and ignored ([reason] says why, prefixed by the layer: `remote` or
+     * `override`); the next layer's value applies, down to the in-code default.
+     */
     public data class ConfigInvalid(
         public val key: String,
         public val reason: String,
         override val timestampMillis: Long,
     ) : BillingEvent
+
+    /**
+     * The paywall [paywallId] can't be closed: no close button (`close.delaySeconds = -1`) and `close.back = NEVER`.
+     * Allowed, but reported once per process.
+     */
+    public data class HardPaywall(public val paywallId: String, override val timestampMillis: Long) : BillingEvent
 
     /**
      * A subscription's lifecycle changed according to the app's backend ([EntitlementProvider]), between two syncs.
@@ -294,6 +303,7 @@ private fun eventName(event: BillingEvent): String = PREFIX + when (event) {
     is BillingEvent.ConsumeFailed -> "consume_failed"
     is BillingEvent.ConfigLoaded -> "config_loaded"
     is BillingEvent.ConfigInvalid -> "config_invalid"
+    is BillingEvent.HardPaywall -> "hard_paywall"
     is BillingEvent.ServerLifecycle -> "server_lifecycle"
 }
 
@@ -401,6 +411,7 @@ private fun eventParams(event: BillingEvent): Map<String, Any> {
             p["key"] = event.key
             p["reason"] = event.reason
         }
+        is BillingEvent.HardPaywall -> p["paywall_id"] = event.paywallId
         is BillingEvent.ServerLifecycle -> {
             p["kind"] = event.kind.name.lowercase()
             p["product_id"] = event.productId

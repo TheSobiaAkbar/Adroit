@@ -1,0 +1,16 @@
+{
+  "enabled": "yes",
+  "template": "carousel",
+  "plans": [ { "product": "Hacker" }, { "product": "Lifetime", "basePlan": "monthly" }, 7 ],
+  "selected": -1,
+  "onOfferUnavailable": "PANIC",
+  "close": { "delaySeconds": -5, "showCountdown": 1, "position": "BOTTOM", "back": "SOMETIMES" },
+  "show": { "counter": -1, "maxPerSession": 1.5, "maxPerDay": "3", "timerSeconds": -60, "firstAfterLaunches": null,
+            "hideIfEntitled": "premium" },
+  "campaign": { "id": 5, "start": "yesterday", "end": "2026-13-45T00:00:00Z" },
+  "exitPaywall": "Onboarding",
+  "texts": { "title": "<b>Go</b>", "subtitle": 5, "cta": "&nbsp;Continue" },
+  "style": { "accent": "purple", "background": "#12345", "headerImage": "http://example.com/h.png", "dark": "true" },
+  "showRestore": 0, "showManage": "true", "showTerms": [],
+  "successAction": "EXPLODE"
+}

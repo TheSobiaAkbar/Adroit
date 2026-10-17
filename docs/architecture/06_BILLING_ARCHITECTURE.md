@@ -256,7 +256,7 @@ Two kinds of Remote Config keys. Both are optional, and a missing or invalid val
   "template": "plans",                       // plans | single | bottom_sheet | dialog
   "plans": [
     { "product": "PremiumSub", "basePlan": "monthly",
-      "offer": { "trialDays": 7, "tags": ["trial"], "policy": "PREFER_FREE_TRIAL" },
+      "offer": { "ids": ["trial-7d"], "trialDays": 7, "tags": ["trial"], "policy": "PREFER_FREE_TRIAL" },
       "badge": "POPULAR" },
     { "product": "PremiumSub", "basePlan": "yearly",
       "offer": { "policy": "LOWEST_FIRST_PAYMENT" }, "badge": "BEST_VALUE", "savingsVs": "monthly" },
@@ -310,6 +310,42 @@ A miss applies `onOfferUnavailable`. The app can override any of this in code wi
 
 `close.back = NEVER` together with `delaySeconds = -1` is a hard paywall. It's allowed for apps whose whole value is
 premium, and logs a warning. The guides advise against it for onboarding.
+
+### 5.3 Layers and validation (what the parser accepts)
+Each field comes from the first layer that sets it **validly**: `BillingSettings.overrides` (the app) > the
+`BillingConfigSource` (Firebase, or `BillingConfigSource.local(context, R.raw.…)`: one JSON object whose top-level keys
+are the parameter names) > the enum defaults. Nested objects (`close`, `show`, `campaign`, `texts`, `style`) merge field
+by field; `plans` replaces the whole list. An invalid field is ignored with a WARN log and a `ConfigInvalid` event and
+the next layer's value applies; nothing throws. Unknown fields are ignored. `PaywallDefinition.toJson()` prints the
+complete defaults in this JSON.
+
+| Field | Accepted |
+|---|---|
+| whole value | a JSON object of at most 64 KB; empty means unset |
+| `enabled`, `show*`, `showCountdown`, `dark` | `true` / `false` |
+| `template` | `plans`, `single`, `bottom_sheet`, `dialog` (any case) |
+| `plans[].product` | a `ProductDefinition` entry name, else the plan is dropped |
+| `plans[].basePlan` | a Play ID on a subscription, else the plan is dropped |
+| `plans[].offer.ids`, `savingsVs` | Play IDs (`[a-z0-9][a-z0-9-]*`) |
+| `plans[].offer.trialDays` | a whole number, 1 or more |
+| `plans` | at least one valid plan, else the field is ignored |
+| `selected` | a whole number, 0 or more, clamped to the last plan |
+| `onOfferUnavailable`, `close.position`, `close.back`, `offer.policy`, `successAction` | the names above (any case) |
+| `close.delaySeconds` | a whole number from −1; above 60 is clamped to 60 |
+| `show.*` counts | whole numbers, 0 or more |
+| `campaign.start` / `end` | ISO-8601 with a zone (`2026-10-01T00:00:00Z`, `…+02:00`, optional `.SSS`); end after start |
+| `campaign.id` | required when the defaults have no campaign |
+| `exitPaywall` | the name of another registered paywall |
+| `texts.*`, `badge` | up to 300 characters, no HTML tags or entities; placeholders are carried as is |
+| `style.accent`, `style.background` | `#RRGGBB` or `#AARRGGBB` |
+| `style.headerImage` | an `https://` URL |
+| `AdroitBilling.offlineGraceHours` | 1 to 720 |
+| `AdroitBilling.products` | only declared product names; others are ignored |
+| `AdroitBilling.configVersion` | a number or text, reported in `ConfigLoaded` |
+
+`AdroitBilling.enabled = false` stops every paywall from showing; purchases still work. A config update (the source's
+`updates`) re-resolves everything; an open paywall keeps the settings it opened with. A hard paywall is reported once
+per process with a WARN and a `HardPaywall` event.
 
 ---
 

@@ -39,7 +39,8 @@ public enum class AttributionToken {
  * @property products every product the app sells. Product names and Play IDs must be unique.
  * @property paywalls every paywall of the app. Names must be unique, and their plans must use [products].
  * @property config where the remote JSON values come from; [BillingConfigSource.none] uses only the in-code defaults.
- * @property overrides JSON values by key that win over [config], for values the app sets in code.
+ * @property overrides JSON values by key that win over [config], field by field, for values the app sets in code.
+ *   Each field comes from the first of [overrides], [config] and the in-code defaults that sets it validly.
  * @property verifier checks purchases with the app's backend before granting; null trusts Play on the device.
  * @property entitlementProvider the app's backend as an extra source of entitlements; null for none.
  * @property events listeners of every [BillingEvent]; more can be added with [AdroitBilling.addEventListener].

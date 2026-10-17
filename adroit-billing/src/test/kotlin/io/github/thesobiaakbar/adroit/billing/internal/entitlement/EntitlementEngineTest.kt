@@ -27,6 +27,7 @@ import io.github.thesobiaakbar.adroit.billing.TestProducts
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.Attempt
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
+import io.github.thesobiaakbar.adroit.billing.internal.config.BillingConfig
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.FakePlayBillingPort
@@ -65,6 +66,7 @@ class EntitlementEngineTest {
     private val state = MutableStateFlow(EntitlementSnapshot.EMPTY_UNKNOWN)
     private val attempts = AttemptStore(application)
     private val cache = EntitlementCache(application)
+    private lateinit var billingConfig: BillingConfig
 
     private fun TestScope.engine(
         remote: String? = null,
@@ -86,9 +88,10 @@ class EntitlementEngineTest {
             connection, settings, ledger, MutableSharedFlow(), MutableStateFlow(emptyList()), bus, log, "com.example",
             { null }, now = { currentTime },
         )
+        billingConfig = BillingConfig(settings, bus, log)
         return EntitlementEngine(
             connection, settings, processor, ledger, attempts, cache, state, bus, backgroundScope, log, { "user-1" },
-            now = { currentTime },
+            now = { currentTime }, config = billingConfig,
         )
     }
 
@@ -304,6 +307,7 @@ class EntitlementEngineTest {
         val engine = engine(config = config)
         engine.sync()
         remote = """{"products": {"PremiumSub": {"entitlements": ["premium"]}}}"""
+        billingConfig.reload()
         engine.publish()
         assertEquals(listOf("ad_free" to EntitlementLossReason.CONFIG_CHANGED), losses())
 
@@ -366,7 +370,7 @@ class EntitlementEngineTest {
         assertEquals(state.value, result.snapshot)
         assertEquals(setOf("premium", "ad_free"), (events.last() as BillingEvent.RestoreCompleted).restored)
         assertEquals(emptySet<String>(), (engine.restore() as RestoreResult.Restored).newlyActive)
-        assertTrue(events.first() is BillingEvent.RestoreInitiated)
+        assertTrue(events.first { it !is BillingEvent.ConfigLoaded } is BillingEvent.RestoreInitiated)
     }
 
     @Test

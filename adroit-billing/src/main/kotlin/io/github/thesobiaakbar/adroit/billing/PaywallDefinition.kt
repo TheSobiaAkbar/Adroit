@@ -1,5 +1,7 @@
 package io.github.thesobiaakbar.adroit.billing
 
+import io.github.thesobiaakbar.adroit.billing.internal.config.PaywallJson
+
 /**
  * One paywall of the app, with its default settings: usually an enum entry.
  *
@@ -21,6 +23,12 @@ public interface PaywallDefinition {
 
     /** The values used until, and wherever, Firebase doesn't set one. */
     public val defaults: PaywallSpec
+
+    /**
+     * [defaults] as the complete JSON this paywall's Firebase parameter takes, ready to paste into the console and
+     * edit. Parsing it back gives [defaults] again.
+     */
+    public fun toJson(): String = PaywallJson.write(defaults).toString(2)
 }
 
 /** How a paywall is laid out (JSON `template`). */

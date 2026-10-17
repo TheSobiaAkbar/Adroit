@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "adFreeEntitlements": ["ad_free"],
+  "offlineGraceHours": 24,
+  "products": { "PremiumSub": { "entitlements": ["premium"] }, "Hacker": { "entitlements": ["premium"] } },
+  "configVersion": 3
+}

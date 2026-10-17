@@ -19,6 +19,7 @@ import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
@@ -215,7 +216,8 @@ class AdroitBillingTest {
         AdroitBilling.addEventListener(listener)
         AdroitBilling.initialize(application, BillingSettings(TestProducts.entries, events = listOf(BillingEventListener { fromSettings += it })))
         shadowOf(Looper.getMainLooper()).idle()
-        assertTrue(added.first() is BillingEvent.ConnectionStarted)
+        assertEquals(BillingEvent.ConfigLoaded(null, added[0].timestampMillis), added[0])
+        assertTrue(added[1] is BillingEvent.ConnectionStarted)
         assertEquals(fromSettings, added)
 
         AdroitBilling.removeEventListener(listener)
@@ -303,5 +305,24 @@ class AdroitBillingTest {
         AdroitBilling.shutdownForTests()
         assertEquals(1, port.endConnectionCalls)
         assertEquals(BillingConnectionState.Disconnected, AdroitBilling.connection.value)
+    }
+
+    @Test
+    fun `a config update re-resolves paywalls for the next opening`() {
+        var value: String? = null
+        val changes = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        val source = object : BillingConfigSource {
+            override fun raw(key: String) = if (key == "Onboarding") value else null
+            override val updates = changes
+        }
+        AdroitBilling.initialize(application, BillingSettings(TestProducts.entries, TestPaywalls.entries, config = source))
+        shadowOf(Looper.getMainLooper()).idle()
+        val config = AdroitBilling.runtime!!.config
+        val opened = config.paywall(TestPaywalls.Onboarding)
+        value = """{"close": {"delaySeconds": 9}}"""
+        changes.tryEmit(Unit)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(9, config.paywall(TestPaywalls.Onboarding).spec.close.delaySeconds)
+        assertEquals(3, opened.spec.close.delaySeconds)
     }
 }
