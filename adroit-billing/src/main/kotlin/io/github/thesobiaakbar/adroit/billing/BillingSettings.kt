@@ -51,6 +51,10 @@ public enum class AttributionToken {
  *   returns to the foreground, 1 or more.
  * @property attributionToken how purchases are matched to their attempts.
  * @property logLevel the log verbosity.
+ * @property offerSelector chooses paywall offers in place of the [OfferRule] logic; null uses the library's.
+ * @property offerEligibility decides who gets a developer-determined offer; null shows none.
+ * @property developerDeterminedTags the Play offer tags that mark an offer as developer-determined: Play returns it to
+ *   every user, so it is shown only when [offerEligibility] says so.
  */
 public class BillingSettings @JvmOverloads constructor(
     public val products: List<ProductDefinition>,
@@ -65,6 +69,9 @@ public class BillingSettings @JvmOverloads constructor(
     public val catalogMaxAgeHours: Int = 6,
     public val attributionToken: AttributionToken = AttributionToken.LOCAL_ONLY,
     public val logLevel: BillingLogLevel = BillingLogLevel.WARN,
+    public val offerSelector: OfferSelector? = null,
+    public val offerEligibility: OfferEligibility? = null,
+    public val developerDeterminedTags: Set<String> = setOf("dev"),
 ) {
     init {
         require(offlineGraceHours in 1..720) { "offlineGraceHours must be 1 to 720, was $offlineGraceHours" }
@@ -73,7 +80,8 @@ public class BillingSettings @JvmOverloads constructor(
 
     private fun fields(): List<Any?> = listOf(
         products, paywalls, config, overrides, verifier, entitlementProvider, events, adFreeEntitlements,
-        offlineGraceHours, catalogMaxAgeHours, attributionToken, logLevel,
+        offlineGraceHours, catalogMaxAgeHours, attributionToken, logLevel, offerSelector, offerEligibility,
+        developerDeterminedTags,
     )
 
     override fun equals(other: Any?): Boolean = other is BillingSettings && fields() == other.fields()
@@ -85,5 +93,6 @@ public class BillingSettings @JvmOverloads constructor(
             "overrides=${overrides.keys}, verifier=${verifier != null}, entitlementProvider=" +
             "${entitlementProvider != null}, events=${events.size}, adFreeEntitlements=$adFreeEntitlements, " +
             "offlineGraceHours=$offlineGraceHours, catalogMaxAgeHours=$catalogMaxAgeHours, " +
-            "attributionToken=$attributionToken, logLevel=$logLevel)"
+            "attributionToken=$attributionToken, logLevel=$logLevel, offerSelector=${offerSelector != null}, " +
+            "offerEligibility=${offerEligibility != null}, developerDeterminedTags=$developerDeterminedTags)"
 }

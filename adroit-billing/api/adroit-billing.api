@@ -5,6 +5,7 @@ public final class io/github/thesobiaakbar/adroit/billing/AdroitBilling : io/git
 	public fun getConnection ()Lkotlinx/coroutines/flow/StateFlow;
 	public fun getConsumables ()Lkotlinx/coroutines/flow/Flow;
 	public fun getEntitlements ()Lkotlinx/coroutines/flow/StateFlow;
+	public static final fun getPaywalls ()Lio/github/thesobiaakbar/adroit/billing/Paywalls;
 	public fun getPurchaseUpdates ()Lkotlinx/coroutines/flow/SharedFlow;
 	public static final fun initialize (Landroid/app/Application;Lio/github/thesobiaakbar/adroit/billing/BillingSettings;)V
 	public fun openManageSubscriptions (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;)Z
@@ -931,15 +932,21 @@ public final class io/github/thesobiaakbar/adroit/billing/BillingSettings {
 	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;II)V
 	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;)V
 	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;)V
-	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;Ljava/util/Set;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdFreeEntitlements ()Ljava/util/Set;
 	public final fun getAttributionToken ()Lio/github/thesobiaakbar/adroit/billing/AttributionToken;
 	public final fun getCatalogMaxAgeHours ()I
 	public final fun getConfig ()Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;
+	public final fun getDeveloperDeterminedTags ()Ljava/util/Set;
 	public final fun getEntitlementProvider ()Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;
 	public final fun getEvents ()Ljava/util/List;
 	public final fun getLogLevel ()Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;
+	public final fun getOfferEligibility ()Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;
+	public final fun getOfferSelector ()Lio/github/thesobiaakbar/adroit/billing/OfferSelector;
 	public final fun getOfflineGraceHours ()I
 	public final fun getOverrides ()Ljava/util/Map;
 	public final fun getPaywalls ()Ljava/util/List;
@@ -1121,6 +1128,23 @@ public final class io/github/thesobiaakbar/adroit/billing/GrantState : java/lang
 	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/GrantState;
 }
 
+public final class io/github/thesobiaakbar/adroit/billing/OfferContext {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/OfferContext;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/OfferContext;Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/OfferContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPaywallId ()Ljava/lang/String;
+	public final fun getProduct ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/OfferEligibility {
+	public abstract fun isEligible (Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Lio/github/thesobiaakbar/adroit/billing/OfferContext;)Z
+}
+
 public final class io/github/thesobiaakbar/adroit/billing/OfferFallback : java/lang/Enum {
 	public static final field BASE_PLAN Lio/github/thesobiaakbar/adroit/billing/OfferFallback;
 	public static final field HIDE_PAYWALL Lio/github/thesobiaakbar/adroit/billing/OfferFallback;
@@ -1217,6 +1241,10 @@ public final class io/github/thesobiaakbar/adroit/billing/OfferSelection$Tags : 
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class io/github/thesobiaakbar/adroit/billing/OfferSelector {
+	public abstract fun select (Lio/github/thesobiaakbar/adroit/billing/SubscriptionPlan;Lio/github/thesobiaakbar/adroit/billing/OfferRule;Lio/github/thesobiaakbar/adroit/billing/OfferContext;)Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
+}
+
 public final class io/github/thesobiaakbar/adroit/billing/OneTimeOption {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/Price;)V
 	public final fun component1 ()Ljava/lang/String;
@@ -1248,6 +1276,93 @@ public abstract interface class io/github/thesobiaakbar/adroit/billing/PaywallDe
 	public abstract fun getDefaults ()Lio/github/thesobiaakbar/adroit/billing/PaywallSpec;
 	public abstract fun getName ()Ljava/lang/String;
 	public fun toJson ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallModel {
+	public fun <init> (Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallSpec;Ljava/util/List;I)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/PaywallSpec;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()I
+	public final fun copy (Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallSpec;Ljava/util/List;I)Lio/github/thesobiaakbar/adroit/billing/PaywallModel;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PaywallModel;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallSpec;Ljava/util/List;IILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PaywallModel;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPlans ()Ljava/util/List;
+	public final fun getSelected ()I
+	public final fun getSpec ()Lio/github/thesobiaakbar/adroit/billing/PaywallSpec;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/thesobiaakbar/adroit/billing/PaywallModelState {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallModelState$Failed : io/github/thesobiaakbar/adroit/billing/PaywallModelState {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/BillingError;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/BillingError;)Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Failed;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Failed;Lio/github/thesobiaakbar/adroit/billing/BillingError;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lio/github/thesobiaakbar/adroit/billing/BillingError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallModelState$Loading : io/github/thesobiaakbar/adroit/billing/PaywallModelState {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Loading;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallModelState$Ready : io/github/thesobiaakbar/adroit/billing/PaywallModelState {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/PaywallModel;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/PaywallModel;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/PaywallModel;)Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Ready;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Ready;Lio/github/thesobiaakbar/adroit/billing/PaywallModel;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Ready;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getModel ()Lio/github/thesobiaakbar/adroit/billing/PaywallModel;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallModelState$Unavailable : io/github/thesobiaakbar/adroit/billing/PaywallModelState {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/SkipReason;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/SkipReason;)Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Unavailable;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Unavailable;Lio/github/thesobiaakbar/adroit/billing/SkipReason;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PaywallModelState$Unavailable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallPlan {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/PlanSpec;Lio/github/thesobiaakbar/adroit/billing/ProductInfo;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Lio/github/thesobiaakbar/adroit/billing/OneTimeOption;ZLjava/lang/Integer;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/PlanSpec;
+	public final fun component2 ()Lio/github/thesobiaakbar/adroit/billing/ProductInfo;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
+	public final fun component5 ()Lio/github/thesobiaakbar/adroit/billing/OneTimeOption;
+	public final fun component6 ()Z
+	public final fun component7 ()Ljava/lang/Integer;
+	public final fun component8 ()Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/PlanSpec;Lio/github/thesobiaakbar/adroit/billing/ProductInfo;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Lio/github/thesobiaakbar/adroit/billing/OneTimeOption;ZLjava/lang/Integer;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;)Lio/github/thesobiaakbar/adroit/billing/PaywallPlan;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/PaywallPlan;Lio/github/thesobiaakbar/adroit/billing/PlanSpec;Lio/github/thesobiaakbar/adroit/billing/ProductInfo;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Lio/github/thesobiaakbar/adroit/billing/OneTimeOption;ZLjava/lang/Integer;Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PaywallPlan;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBasePlanId ()Ljava/lang/String;
+	public final fun getOffer ()Lio/github/thesobiaakbar/adroit/billing/OfferInfo;
+	public final fun getOfferId ()Ljava/lang/String;
+	public final fun getOfferSelection ()Lio/github/thesobiaakbar/adroit/billing/OfferSelection;
+	public final fun getOfferUnavailable ()Z
+	public final fun getOption ()Lio/github/thesobiaakbar/adroit/billing/OneTimeOption;
+	public final fun getProduct ()Lio/github/thesobiaakbar/adroit/billing/ProductInfo;
+	public final fun getSavingsPercent ()Ljava/lang/Integer;
+	public final fun getSpec ()Lio/github/thesobiaakbar/adroit/billing/PlanSpec;
+	public final fun getTexts ()Lio/github/thesobiaakbar/adroit/billing/PaywallTexts;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/PaywallSpec {
@@ -1331,6 +1446,13 @@ public final class io/github/thesobiaakbar/adroit/billing/PaywallTexts {
 	public final fun getTitle ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/Paywalls {
+	public final fun model (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;)Lkotlinx/coroutines/flow/StateFlow;
+	public final fun recordClosed (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallCloseReason;)Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;
+	public final fun recordShown (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)V
+	public final fun shouldShow (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/ShowDecision;
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/PlanSpec {
@@ -1676,6 +1798,27 @@ public final class io/github/thesobiaakbar/adroit/billing/ServerLifecycleKind : 
 	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/ServerLifecycleKind;
 }
 
+public abstract interface class io/github/thesobiaakbar/adroit/billing/ShowDecision {
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/ShowDecision$Show : io/github/thesobiaakbar/adroit/billing/ShowDecision {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/ShowDecision$Show;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/ShowDecision$Skip : io/github/thesobiaakbar/adroit/billing/ShowDecision {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/SkipReason;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/SkipReason;)Lio/github/thesobiaakbar/adroit/billing/ShowDecision$Skip;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/ShowDecision$Skip;Lio/github/thesobiaakbar/adroit/billing/SkipReason;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/ShowDecision$Skip;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/github/thesobiaakbar/adroit/billing/ShowRules {
 	public fun <init> ()V
 	public fun <init> (I)V
@@ -1694,6 +1837,25 @@ public final class io/github/thesobiaakbar/adroit/billing/ShowRules {
 	public final fun getTimerSeconds ()I
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/SkipReason : java/lang/Enum {
+	public static final field COUNTER_NOT_REACHED Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field DAILY_CAP Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field ENTITLED Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field GLOBAL_DISABLED Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field LAUNCHES_NOT_REACHED Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field NOT_INITIALIZED Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field NOT_REGISTERED Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field NO_PLANS Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field OFFER_UNAVAILABLE Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field OUTSIDE_CAMPAIGN Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field PAYWALL_DISABLED Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field SESSION_CAP Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static final field TIMER Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/SkipReason;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/SkipReason;
 }
 
 public abstract interface class io/github/thesobiaakbar/adroit/billing/SnapshotStatus {

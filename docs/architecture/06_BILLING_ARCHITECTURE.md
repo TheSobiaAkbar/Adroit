@@ -289,13 +289,26 @@ Every field is optional. `{trial}`, `{price}`, `{period}`, `{renewalPrice}` and 
 data only**. A text that references `{trial}` on a plan without an eligible free-trial offer falls back to `cta`,
 so a trial is never advertised that Play won't give.
 
-**Offer selection** (`offer`) runs in order:
-1. explicit `ids`;
-2. `tags` (all must match);
-3. `trialDays` (an eligible offer whose free phase equals N days);
-4. `policy`: `PREFER_FREE_TRIAL`, `PREFER_INTRO_PRICE`, `LOWEST_FIRST_PAYMENT`, or `BASE_ONLY`.
+**Offer selection** (`offer`) only ever picks among the offers Play returned for this user, minus
+developer-determined ones (a tag in `BillingSettings.developerDeterminedTags`, default `dev`) that the app's
+`OfferEligibility` didn't allow:
+1. explicit `ids`: the first listed ID Play gave wins; none is a miss;
+2. otherwise `tags` (all must match) and `trialDays` (a free first phase of exactly N days, `P1W` = 7) narrow the
+   offers; nothing left is a miss, so a 7-day trial request never shows Play's 3-day trial;
+3. `policy` picks among what is left (among every offer, base plan included, when neither is set):
+   `PREFER_FREE_TRIAL`, `PREFER_INTRO_PRICE` (each falling back to the base plan), `LOWEST_FIRST_PAYMENT` (a free
+   trial counts as 0), or `BASE_ONLY`. Ties go to Play's order.
 
-A miss applies `onOfferUnavailable`. The app can override any of this in code with an `OfferSelector`.
+A miss applies `onOfferUnavailable` and emits `OfferUnavailable`. The app can replace steps 1–3 with an
+`OfferSelector`, whose answer must still be one of the eligible offers. `OfferSelection.Auto` in a manual purchase
+with a `paywallId` uses the same selection, falling back to the base plan.
+
+**Show rules** (`AdroitBilling.paywalls.shouldShow`), first failing one wins, each a `PaywallSuppressed` event:
+global `enabled`, paywall `enabled`, the campaign window (device clock), `hideIfEntitled` (default: the paywall's
+products' entitlements), `firstAfterLaunches`, `maxPerSession`, `maxPerDay` (local date), `counter` (every call counts,
+due after N calls since the last showing, as with the ads), `timerSeconds` (only without a counter;
+`elapsedRealtime` within a process, wall clock across processes), then no purchasable plan (`NO_PLANS`) or
+`OFFER_UNAVAILABLE` once the catalog is ready. While it loads, the paywall shows its loading state.
 
 **Rules for disclosures (always on, not configurable):**
 - the renewal price and period are always shown under a trial or intro price;

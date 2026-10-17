@@ -119,6 +119,10 @@ public object AdroitBilling : BillingClientApi {
 
     override val catalog: StateFlow<CatalogState> = sharedCatalog.asStateFlow()
 
+    /** Paywall show rules and content. Before [initialize], every paywall is skipped as not initialized. */
+    @JvmStatic
+    public val paywalls: Paywalls = Paywalls { runtime?.paywalls }
+
     override val purchaseUpdates: SharedFlow<PurchaseUpdate> = sharedPurchaseUpdates.asSharedFlow()
 
     /** Each collector gets every unconfirmed grant once, the ones already waiting first. */

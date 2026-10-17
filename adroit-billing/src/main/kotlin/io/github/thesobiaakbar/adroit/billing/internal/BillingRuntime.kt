@@ -10,6 +10,7 @@ import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.CatalogState
 import io.github.thesobiaakbar.adroit.billing.ConsumableGrant
 import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
+import io.github.thesobiaakbar.adroit.billing.OfferContext
 import io.github.thesobiaakbar.adroit.billing.PurchaseUpdate
 import io.github.thesobiaakbar.adroit.billing.internal.attribution.AttemptStore
 import io.github.thesobiaakbar.adroit.billing.internal.catalog.CatalogRepository
@@ -18,6 +19,9 @@ import io.github.thesobiaakbar.adroit.billing.internal.config.BillingConfig
 import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementCache
 import io.github.thesobiaakbar.adroit.billing.internal.entitlement.EntitlementEngine
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
+import io.github.thesobiaakbar.adroit.billing.internal.paywall.PaywallEngine
+import io.github.thesobiaakbar.adroit.billing.internal.paywall.PaywallResolver
+import io.github.thesobiaakbar.adroit.billing.internal.paywall.ShowCounterStore
 import io.github.thesobiaakbar.adroit.billing.internal.play.ConnectionManager
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingPort
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayResult
@@ -75,9 +79,22 @@ internal class BillingRuntime(
         log, account, config = config,
     )
 
+    private val resolver = PaywallResolver(settings, application.resources)
+
+    private val shows = ShowCounterStore(application)
+
+    val paywalls = PaywallEngine(settings, config, resolver, shows, catalogState, entitlementState, events, scope)
+
     val purchases = PurchaseLauncher(
         connection, catalog, catalogState, settings, attempts, purchaseUpdates, events, log, account, debuggable,
         processor, entitlementState, entitlements::afterPurchase,
+        paywallPlan = { request ->
+            settings.paywalls.firstOrNull { it.name == request.paywallId }?.let { config.paywall(it).spec.plans }
+                ?.firstOrNull { it.product == request.product && (request.basePlanId == null || it.basePlanId == request.basePlanId) }
+        },
+        autoOffer = { plan, sub, request ->
+            plan?.let { resolver.select(sub, it.offer, OfferContext(request.product, request.paywallId)) } ?: sub.baseOffer
+        },
     )
 
     /**
@@ -94,6 +111,7 @@ internal class BillingRuntime(
     }
 
     fun start() {
+        shows.countLaunch()
         entitlements.setAccount(account())
         scope.launch {
             ProcessLifecycleOwner.get().lifecycle.addObserver(foreground)

@@ -11,6 +11,8 @@ import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.CatalogState
 import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
 import io.github.thesobiaakbar.adroit.billing.OfferInfo
+import io.github.thesobiaakbar.adroit.billing.PlanSpec
+import io.github.thesobiaakbar.adroit.billing.SubscriptionPlan
 import io.github.thesobiaakbar.adroit.billing.OfferSelection
 import io.github.thesobiaakbar.adroit.billing.OneTimeOption
 import io.github.thesobiaakbar.adroit.billing.ProductType
@@ -71,6 +73,13 @@ internal class PurchaseLauncher(
     private val entitlements: StateFlow<EntitlementSnapshot>,
     private val afterPurchase: suspend (PurchaseResult) -> Unit = {},
     private val now: () -> Long = System::currentTimeMillis,
+    /** The paywall plan [PurchaseRequest] buys, when it names a paywall. */
+    private val paywallPlan: (PurchaseRequest) -> PlanSpec? = { request ->
+        settings.paywalls.firstOrNull { it.name == request.paywallId }?.defaults?.plans
+            ?.firstOrNull { it.product == request.product && (request.basePlanId == null || it.basePlanId == request.basePlanId) }
+    },
+    /** The offer [OfferSelection.Auto] buys on a base plan: the paywall plan's [OfferRule] choice, else the base plan. */
+    private val autoOffer: (PlanSpec?, SubscriptionPlan, PurchaseRequest) -> OfferInfo? = { _, plan, _ -> plan.baseOffer },
 ) {
     private val matcher = AttributionMatcher(store)
     private val busy = AtomicBoolean(false)
@@ -177,10 +186,14 @@ internal class PurchaseLauncher(
         }
         val subscription = info.type == ProductType.SUBSCRIPTION
         val (planOrOption, offerId) = if (subscription) {
-            val wanted = request.basePlanId ?: paywallBasePlan(request)
+            val paywall = paywallPlan(request)
+            val wanted = request.basePlanId ?: paywall?.basePlanId
             val plan = (if (wanted == null) info.plans.firstOrNull() else info.plans.firstOrNull { it.basePlanId == wanted })
                 ?: return Choice.None(BillingError.OfferNotFound(productId, wanted, null))
-            val offer = plan.offers.pick(selection, OfferInfo::offerId, OfferInfo::offerTags)
+            val offer = (
+                if (selection == OfferSelection.Auto) autoOffer(paywall, plan, request)
+                else plan.offers.pick(selection, OfferInfo::offerId, OfferInfo::offerTags)
+                )
                 ?: return Choice.None(BillingError.OfferNotFound(productId, plan.basePlanId, requested))
             plan.basePlanId to offer.offerId
         } else {
@@ -223,15 +236,11 @@ internal class PurchaseLauncher(
     /** The requested offer only; never another one in its place. */
     private fun <T> List<T>.pick(selection: OfferSelection, id: (T) -> String?, tags: (T) -> List<String>): T? =
         when (selection) {
-            // ponytail: Auto is the base price until B12 brings the paywall's offer rules.
+            // Auto reaches here only for a one-time product: its regular price.
             OfferSelection.Auto, OfferSelection.BaseOnly -> firstOrNull { id(it) == null }
             is OfferSelection.Id -> firstOrNull { id(it) == selection.offerId }
             is OfferSelection.Tags -> firstOrNull { id(it) != null && tags(it).containsAll(selection.tags) }
         }
-
-    private fun paywallBasePlan(request: PurchaseRequest): String? =
-        settings.paywalls.firstOrNull { it.name == request.paywallId }
-            ?.defaults?.plans?.firstOrNull { it.product == request.product }?.basePlanId
 
     /** A hash of the app's account ID, never the ID; with [AttributionToken.PROFILE_ID], Play needs one regardless. */
     private fun accountId(): String? = account()?.let(::sha256Hex)

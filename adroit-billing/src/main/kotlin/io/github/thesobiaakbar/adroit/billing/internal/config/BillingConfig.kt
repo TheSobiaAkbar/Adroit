@@ -6,6 +6,8 @@ import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.PaywallDefinition
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -31,6 +33,12 @@ internal class BillingConfig(
     val global: GlobalConfig
         get() = current.global
 
+    /** Changes on each [reload], so derived state can recompute. */
+    val revision: StateFlow<Int>
+        get() = revisions
+
+    private val revisions = MutableStateFlow(0)
+
     /** [definition]'s settings now; its defaults when it isn't registered in [BillingSettings.paywalls]. */
     fun paywall(definition: PaywallDefinition): ResolvedPaywall =
         current.paywalls[definition.name] ?: ResolvedPaywall(definition.name, definition.defaults)
@@ -38,6 +46,7 @@ internal class BillingConfig(
     /** Re-reads every key, for example after the source's `updates` emitted. */
     fun reload() {
         current = resolve()
+        revisions.value++
     }
 
     @Synchronized

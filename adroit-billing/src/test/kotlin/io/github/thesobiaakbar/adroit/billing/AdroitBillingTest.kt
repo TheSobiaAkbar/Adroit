@@ -325,4 +325,17 @@ class AdroitBillingTest {
         assertEquals(9, config.paywall(TestPaywalls.Onboarding).spec.close.delaySeconds)
         assertEquals(3, opened.spec.close.delaySeconds)
     }
+
+    @Test
+    fun `paywalls are skipped before initialize and shown after, counting the launch`() {
+        assertEquals(ShowDecision.Skip(SkipReason.NOT_INITIALIZED), AdroitBilling.paywalls.shouldShow(TestPaywalls.Onboarding, "home"))
+        assertEquals(PaywallModelState.Loading, AdroitBilling.paywalls.model(TestPaywalls.Onboarding).value)
+        assertNull(AdroitBilling.paywalls.recordClosed(TestPaywalls.Onboarding, "home", PaywallCloseReason.BACK))
+        val launches = application.getSharedPreferences("adroit_billing_paywalls", 0).getInt("launches", 0)
+        AdroitBilling.initialize(application, valid)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(launches + 1, application.getSharedPreferences("adroit_billing_paywalls", 0).getInt("launches", 0))
+        // The fake Play has no products: past every other rule, nothing can be bought.
+        assertEquals(ShowDecision.Skip(SkipReason.NO_PLANS), AdroitBilling.paywalls.shouldShow(TestPaywalls.Onboarding, "home"))
+    }
 }
