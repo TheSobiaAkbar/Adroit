@@ -1,7 +1,7 @@
 public final class io/github/thesobiaakbar/adroit/billing/compose/ComposableSingletons$PaywallKt {
 	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/compose/ComposableSingletons$PaywallKt;
 	public fun <init> ()V
-	public final fun getLambda$-367289367$adroit_billing_compose ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-1263408627$adroit_billing_compose ()Lkotlin/jvm/functions/Function3;
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/compose/ComposableSingletons$PaywallScopeKt {

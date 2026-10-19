@@ -935,12 +935,14 @@ public final class io/github/thesobiaakbar/adroit/billing/BillingSettings {
 	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;)V
 	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;)V
 	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;Ljava/util/Set;)V
-	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;Ljava/util/Set;Lio/github/thesobiaakbar/adroit/billing/DemoBilling;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;Ljava/util/Map;Lio/github/thesobiaakbar/adroit/billing/PurchaseVerifier;Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;Ljava/util/List;Ljava/util/Set;IILio/github/thesobiaakbar/adroit/billing/AttributionToken;Lio/github/thesobiaakbar/adroit/billing/BillingLogLevel;Lio/github/thesobiaakbar/adroit/billing/OfferSelector;Lio/github/thesobiaakbar/adroit/billing/OfferEligibility;Ljava/util/Set;Lio/github/thesobiaakbar/adroit/billing/DemoBilling;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdFreeEntitlements ()Ljava/util/Set;
 	public final fun getAttributionToken ()Lio/github/thesobiaakbar/adroit/billing/AttributionToken;
 	public final fun getCatalogMaxAgeHours ()I
 	public final fun getConfig ()Lio/github/thesobiaakbar/adroit/billing/BillingConfigSource;
+	public final fun getDemo ()Lio/github/thesobiaakbar/adroit/billing/DemoBilling;
 	public final fun getDeveloperDeterminedTags ()Ljava/util/Set;
 	public final fun getEntitlementProvider ()Lio/github/thesobiaakbar/adroit/billing/EntitlementProvider;
 	public final fun getEvents ()Ljava/util/List;
@@ -1050,6 +1052,16 @@ public final class io/github/thesobiaakbar/adroit/billing/ConsumableGrant {
 	public final fun getOrderIdHash ()Ljava/lang/String;
 	public final fun getProductId ()Ljava/lang/String;
 	public final fun getQuantity ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/DemoBilling {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnabled ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

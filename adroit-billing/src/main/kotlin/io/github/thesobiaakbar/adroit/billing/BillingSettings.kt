@@ -55,6 +55,7 @@ public enum class AttributionToken {
  * @property offerEligibility decides who gets a developer-determined offer; null shows none.
  * @property developerDeterminedTags the Play offer tags that mark an offer as developer-determined: Play returns it to
  *   every user, so it is shown only when [offerEligibility] says so.
+ * @property demo made-up products and purchases instead of Play, in debuggable apps only; see [DemoBilling].
  */
 public class BillingSettings @JvmOverloads constructor(
     public val products: List<ProductDefinition>,
@@ -72,6 +73,7 @@ public class BillingSettings @JvmOverloads constructor(
     public val offerSelector: OfferSelector? = null,
     public val offerEligibility: OfferEligibility? = null,
     public val developerDeterminedTags: Set<String> = setOf("dev"),
+    public val demo: DemoBilling = DemoBilling(),
 ) {
     init {
         require(offlineGraceHours in 1..720) { "offlineGraceHours must be 1 to 720, was $offlineGraceHours" }
@@ -81,7 +83,7 @@ public class BillingSettings @JvmOverloads constructor(
     private fun fields(): List<Any?> = listOf(
         products, paywalls, config, overrides, verifier, entitlementProvider, events, adFreeEntitlements,
         offlineGraceHours, catalogMaxAgeHours, attributionToken, logLevel, offerSelector, offerEligibility,
-        developerDeterminedTags,
+        developerDeterminedTags, demo,
     )
 
     override fun equals(other: Any?): Boolean = other is BillingSettings && fields() == other.fields()
@@ -94,5 +96,5 @@ public class BillingSettings @JvmOverloads constructor(
             "${entitlementProvider != null}, events=${events.size}, adFreeEntitlements=$adFreeEntitlements, " +
             "offlineGraceHours=$offlineGraceHours, catalogMaxAgeHours=$catalogMaxAgeHours, " +
             "attributionToken=$attributionToken, logLevel=$logLevel, offerSelector=${offerSelector != null}, " +
-            "offerEligibility=${offerEligibility != null}, developerDeterminedTags=$developerDeterminedTags)"
+            "offerEligibility=${offerEligibility != null}, developerDeterminedTags=$developerDeterminedTags, demo=$demo)"
 }

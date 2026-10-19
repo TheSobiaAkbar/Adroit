@@ -62,6 +62,9 @@
     <string name="adroit_billing_paywall_unavailable">Plans aren\'t available right now. Please try again later.</string>
     <string name="adroit_billing_paywall_premium_title">You\'re premium</string>
     <string name="adroit_billing_paywall_premium_text">Thank you! Your purchase is active.</string>
+    <!-- After buying a consumable (coins), which grants no premium. -->
+    <string name="adroit_billing_paywall_thanks_title">Thank you!</string>
+    <string name="adroit_billing_paywall_thanks_text">Your purchase is complete.</string>
     <string name="adroit_billing_paywall_done">Done</string>
     <string name="adroit_billing_paywall_save">Save %1$s</string>
     <string name="adroit_billing_paywall_price_per">%1$s / %2$s</string>

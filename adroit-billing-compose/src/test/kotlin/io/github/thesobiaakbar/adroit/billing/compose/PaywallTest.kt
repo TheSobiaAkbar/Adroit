@@ -32,6 +32,10 @@ import io.github.thesobiaakbar.adroit.billing.PaywallSpec
 import io.github.thesobiaakbar.adroit.billing.PaywallTemplate
 import io.github.thesobiaakbar.adroit.billing.PaywallUiState
 import io.github.thesobiaakbar.adroit.billing.PurchaseResult
+import io.github.thesobiaakbar.adroit.billing.GrantSource
+import io.github.thesobiaakbar.adroit.billing.GrantState
+import io.github.thesobiaakbar.adroit.billing.ProductType
+import io.github.thesobiaakbar.adroit.billing.EntitlementGrant
 import io.github.thesobiaakbar.adroit.billing.SuccessAction
 import io.github.thesobiaakbar.adroit.billing.Attribution
 import io.github.thesobiaakbar.adroit.billing.testing.FakeBilling
@@ -191,6 +195,17 @@ class PaywallTest {
     }
 
     @Test
+    fun `STAY_WITH_MESSAGE after a consumable thanks the user without saying premium`() {
+        show(Fixtures.spec(successAction = SuccessAction.STAY_WITH_MESSAGE))
+        billing.nextPurchaseResult = purchased(consumable = true)
+        rule.onNodeWithText("Start free trial").performClick()
+        settle()
+
+        rule.onNodeWithText("Thank you!").assertIsDisplayed()
+        rule.onNodeWithText("You're premium").assertDoesNotExist()
+    }
+
+    @Test
     fun `a paywall that can't load can always be closed`() {
         // AdroitBilling isn't initialized here: the controller is Unavailable even with no close button and back NEVER.
         val spec = Fixtures.spec(close = CloseBehavior(delaySeconds = -1, back = BackBehavior.NEVER))
@@ -260,6 +275,9 @@ class PaywallTest {
         assertEquals(3, (controller!!.state.value as PaywallUiState.Content).closeCountdownSeconds)
     }
 
-    private fun purchased() =
-        PurchaseResult.Purchased(null, Attribution("a", "home", "Onboarding", null, "premium_sub", "monthly", "trial", false))
+    private fun purchased(consumable: Boolean = false) = PurchaseResult.Purchased(
+        EntitlementGrant("premium_sub", ProductType.SUBSCRIPTION, setOf("premium"), GrantState.ACTIVE, GrantSource.CLIENT, 0)
+            .takeUnless { consumable },
+        Attribution("a", "home", "Onboarding", null, "premium_sub", "monthly", "trial", false),
+    )
 }

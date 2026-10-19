@@ -11,6 +11,7 @@ import androidx.annotation.VisibleForTesting
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
 import io.github.thesobiaakbar.adroit.billing.internal.BillingRuntime
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
+import io.github.thesobiaakbar.adroit.billing.internal.play.DemoBillingPort
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingAdapter
 import io.github.thesobiaakbar.adroit.billing.internal.play.PlayBillingPort
 import io.github.thesobiaakbar.adroit.billing.internal.validate
@@ -105,12 +106,24 @@ public object AdroitBilling : BillingClientApi {
             }
             this.settings = settings
             settings.events.forEach(events::add)
+            val debuggable = application.isDebuggable()
             runtime = BillingRuntime(
-                application, portFactory(application), settings, sharedConnection, sharedCatalog, sharedPurchaseUpdates,
+                application, port(application, settings, debuggable), settings, sharedConnection, sharedCatalog, sharedPurchaseUpdates,
                 sharedConsumables, sharedEntitlements, log, events,
-                account = { requestedAccount }, debuggable = application.isDebuggable(),
+                account = { requestedAccount }, debuggable = debuggable,
             ).also { it.start() }
         }
+    }
+
+    /** Play, or in a debuggable app with [BillingSettings.demo] on, the demo port. Never the demo in a release app. */
+    private fun port(application: Application, settings: BillingSettings, debuggable: Boolean): PlayBillingPort {
+        if (!settings.demo.enabled) return portFactory(application)
+        if (!debuggable) {
+            log.log(BillingLogLevel.ERROR, "DemoBilling is ignored: the app isn't debuggable. Using Google Play.")
+            return portFactory(application)
+        }
+        log.log(BillingLogLevel.WARN, "DEMO billing: made-up products and purchases, no Google Play")
+        return DemoBillingPort(application, settings.products, settings.paywalls)
     }
 
     override val entitlements: StateFlow<EntitlementSnapshot> = sharedEntitlements.asStateFlow()

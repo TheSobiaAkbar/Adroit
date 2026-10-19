@@ -213,7 +213,7 @@ internal fun PaywallBody(
                 AlwaysClose(controller, Modifier.align(corner))
             }
             is PaywallUiState.Purchased -> if (controller.spec.successAction == SuccessAction.STAY_WITH_MESSAGE) {
-                Premium(controller, Modifier.align(Alignment.Center))
+                Premium(controller, consumable = state.result.grant == null, Modifier.align(Alignment.Center))
             }
             is PaywallUiState.Closed -> Unit
         }
@@ -226,14 +226,15 @@ private fun AlwaysClose(controller: PaywallController, modifier: Modifier) {
 }
 
 @Composable
-private fun Premium(controller: PaywallController, modifier: Modifier) {
+// A consumable grants nothing (no grant): thank the user without calling them premium.
+private fun Premium(controller: PaywallController, consumable: Boolean, modifier: Modifier) {
     Column(
         modifier.padding(PaywallDefaults.ContentPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            stringResource(BillingR.string.adroit_billing_paywall_premium_title),
+            stringResource(if (consumable) BillingR.string.adroit_billing_paywall_thanks_title else BillingR.string.adroit_billing_paywall_premium_title),
             Modifier.semantics {
                 heading()
                 liveRegion = LiveRegionMode.Polite
@@ -241,7 +242,10 @@ private fun Premium(controller: PaywallController, modifier: Modifier) {
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
         )
-        Text(stringResource(BillingR.string.adroit_billing_paywall_premium_text), textAlign = TextAlign.Center)
+        Text(
+            stringResource(if (consumable) BillingR.string.adroit_billing_paywall_thanks_text else BillingR.string.adroit_billing_paywall_premium_text),
+            textAlign = TextAlign.Center,
+        )
         Button(onClick = controller::onCloseClicked) { Text(stringResource(BillingR.string.adroit_billing_paywall_done)) }
     }
 }

@@ -9,6 +9,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import io.github.thesobiaakbar.adroit.billing.AdroitBilling
+import io.github.thesobiaakbar.adroit.billing.views.AdroitPaywall
+import io.github.thesobiaakbar.adroit.sample.xml.billing.SamplePaywalls
 import io.github.thesobiaakbar.adroit.sample.xml.databinding.ActivityMainBinding
 import io.github.thesobiaakbar.adroit.sample.xml.feed.FeedFragment
 import io.github.thesobiaakbar.adroit.sample.xml.home.HomeFragment
@@ -35,10 +38,21 @@ class MainActivity : AppCompatActivity() {
             show(item.itemId)
             true
         }
-        if (savedInstanceState == null) show(R.id.nav_home)
+        if (savedInstanceState == null) {
+            show(R.id.nav_home)
+            // Right after the splash: the onboarding paywall, when its show rules allow (once per session, never
+            // to a premium user). Firebase's Onboarding key changes it on the next launch.
+            AdroitPaywall.show(this, SamplePaywalls.Onboarding, "onboarding")
+        }
         // Ads load only when asked: the app open ad now, for the user's first return to the app. It has loadAgain,
         // so each later return finds a new one. Nothing happens if it's loaded already.
         AdSlots.load(SampleAds.AppOpenAd)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Play's messages about the user's subscriptions, for example a declined payment.
+        AdroitBilling.showInAppMessages(this)
     }
 
     /** Shows [tab]'s Fragment, creating it the first time; the shown one is detached (its views go, it stays). */

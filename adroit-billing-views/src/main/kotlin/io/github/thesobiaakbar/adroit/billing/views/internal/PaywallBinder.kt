@@ -102,9 +102,15 @@ internal class PaywallBinder(
             PaywallUiState.Loading -> overlay(loading = true)
             is PaywallUiState.Unavailable -> overlay(statusText = context.getString(BillingR.string.adroit_billing_paywall_unavailable))
             is PaywallUiState.Purchased -> if (spec.successAction == SuccessAction.STAY_WITH_MESSAGE) {
+                // A consumable grants nothing (no grant): thank the user without calling them premium.
+                val consumable = state.result.grant == null
                 overlay(
-                    statusTitle = context.getString(BillingR.string.adroit_billing_paywall_premium_title),
-                    statusText = context.getString(BillingR.string.adroit_billing_paywall_premium_text),
+                    statusTitle = context.getString(
+                        if (consumable) BillingR.string.adroit_billing_paywall_thanks_title else BillingR.string.adroit_billing_paywall_premium_title,
+                    ),
+                    statusText = context.getString(
+                        if (consumable) BillingR.string.adroit_billing_paywall_thanks_text else BillingR.string.adroit_billing_paywall_premium_text,
+                    ),
                     done = true,
                 )
             } else {

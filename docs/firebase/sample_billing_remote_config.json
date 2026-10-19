@@ -1,0 +1,46 @@
+{
+  "parameters": {
+    "AdroitBilling": {
+      "defaultValue": {
+        "value": "{\"enabled\":true,\"adFreeEntitlements\":[\"premium\"],\"offlineGraceHours\":72,\"products\":{\"PremiumSub\":{\"entitlements\":[\"premium\"]}},\"configVersion\":\"sample-1\"}"
+      },
+      "valueType": "JSON",
+      "description": "Billing-wide settings (adroit-billing)"
+    },
+    "Onboarding": {
+      "defaultValue": {
+        "value": "{\"enabled\":true,\"template\":\"plans\",\"plans\":[{\"product\":\"PremiumSub\",\"basePlan\":\"yearly\",\"offer\":{\"policy\":\"PREFER_FREE_TRIAL\"},\"badge\":\"BEST_VALUE\",\"savingsVs\":\"monthly\"},{\"product\":\"PremiumSub\",\"basePlan\":\"monthly\",\"offer\":{\"tags\":[\"trial\"],\"policy\":\"PREFER_FREE_TRIAL\"}},{\"product\":\"PremiumLifetime\",\"offer\":{\"policy\":\"PREFER_FREE_TRIAL\"}}],\"selected\":0,\"onOfferUnavailable\":\"BASE_PLAN\",\"close\":{\"delaySeconds\":3,\"showCountdown\":true,\"position\":\"TOP_END\",\"back\":\"AFTER_DELAY\"},\"show\":{\"counter\":0,\"maxPerSession\":1,\"maxPerDay\":0,\"timerSeconds\":0,\"firstAfterLaunches\":0},\"exitPaywall\":\"ExitDiscount\",\"texts\":{\"title\":\"Go Premium\",\"features\":[\"No ads, anywhere\",\"Every level unlocked\",\"Support the developer\"]},\"style\":{},\"showRestore\":true,\"showManage\":false,\"showTerms\":true,\"successAction\":\"CLOSE\"}"
+      },
+      "valueType": "JSON",
+      "description": "The Onboarding paywall"
+    },
+    "HomeUpgrade": {
+      "defaultValue": {
+        "value": "{\"enabled\":true,\"template\":\"bottom_sheet\",\"plans\":[{\"product\":\"PremiumSub\",\"basePlan\":\"monthly\",\"offer\":{\"tags\":[\"trial\"],\"policy\":\"PREFER_FREE_TRIAL\"}},{\"product\":\"PremiumSub\",\"basePlan\":\"yearly\",\"offer\":{\"policy\":\"PREFER_FREE_TRIAL\"},\"savingsVs\":\"monthly\"}],\"selected\":0,\"onOfferUnavailable\":\"BASE_PLAN\",\"close\":{\"delaySeconds\":0,\"showCountdown\":false,\"position\":\"TOP_END\",\"back\":\"ALWAYS\"},\"show\":{\"counter\":0,\"maxPerSession\":0,\"maxPerDay\":0,\"timerSeconds\":0,\"firstAfterLaunches\":0},\"texts\":{\"title\":\"Remove ads\",\"features\":[]},\"style\":{},\"showRestore\":true,\"showManage\":false,\"showTerms\":true,\"successAction\":\"CLOSE\"}"
+      },
+      "valueType": "JSON",
+      "description": "The HomeUpgrade paywall"
+    },
+    "SettingsUpgrade": {
+      "defaultValue": {
+        "value": "{\"enabled\":true,\"template\":\"plans\",\"plans\":[{\"product\":\"PremiumSub\",\"basePlan\":\"weekly\",\"offer\":{\"policy\":\"PREFER_FREE_TRIAL\"}},{\"product\":\"PremiumSub\",\"basePlan\":\"monthly\",\"offer\":{\"tags\":[\"trial\"],\"policy\":\"PREFER_FREE_TRIAL\"}},{\"product\":\"PremiumSub\",\"basePlan\":\"yearly\",\"offer\":{\"policy\":\"PREFER_FREE_TRIAL\"},\"badge\":\"BEST_VALUE\",\"savingsVs\":\"monthly\"},{\"product\":\"PremiumLifetime\",\"offer\":{\"policy\":\"PREFER_FREE_TRIAL\"}}],\"selected\":2,\"onOfferUnavailable\":\"BASE_PLAN\",\"close\":{\"delaySeconds\":0,\"showCountdown\":false,\"position\":\"TOP_END\",\"back\":\"ALWAYS\"},\"show\":{\"counter\":0,\"maxPerSession\":0,\"maxPerDay\":0,\"timerSeconds\":0,\"firstAfterLaunches\":0,\"hideIfEntitled\":[]},\"texts\":{\"features\":[]},\"style\":{},\"showRestore\":true,\"showManage\":true,\"showTerms\":true,\"successAction\":\"CLOSE\"}"
+      },
+      "valueType": "JSON",
+      "description": "The SettingsUpgrade paywall"
+    },
+    "ExitDiscount": {
+      "defaultValue": {
+        "value": "{\"enabled\":true,\"template\":\"dialog\",\"plans\":[{\"product\":\"PremiumSub\",\"basePlan\":\"yearly\",\"offer\":{\"tags\":[\"intro\"],\"policy\":\"PREFER_INTRO_PRICE\"}}],\"selected\":0,\"onOfferUnavailable\":\"BASE_PLAN\",\"close\":{\"delaySeconds\":5,\"showCountdown\":true,\"position\":\"TOP_END\",\"back\":\"ALWAYS\"},\"show\":{\"counter\":0,\"maxPerSession\":0,\"maxPerDay\":1,\"timerSeconds\":0,\"firstAfterLaunches\":0},\"texts\":{\"title\":\"Wait! Your first year for less\",\"features\":[]},\"style\":{},\"showRestore\":true,\"showManage\":false,\"showTerms\":true,\"successAction\":\"CLOSE\"}"
+      },
+      "valueType": "JSON",
+      "description": "The ExitDiscount paywall"
+    },
+    "CreditsStore": {
+      "defaultValue": {
+        "value": "{\"enabled\":true,\"template\":\"single\",\"plans\":[{\"product\":\"Coins100\",\"offer\":{\"policy\":\"PREFER_FREE_TRIAL\"}}],\"selected\":0,\"onOfferUnavailable\":\"BASE_PLAN\",\"close\":{\"delaySeconds\":-1,\"showCountdown\":false,\"position\":\"TOP_END\",\"back\":\"ALWAYS\"},\"show\":{\"counter\":0,\"maxPerSession\":0,\"maxPerDay\":0,\"timerSeconds\":0,\"firstAfterLaunches\":0},\"texts\":{\"title\":\"100 coins\",\"features\":[],\"cta\":\"Buy coins\"},\"style\":{},\"showRestore\":false,\"showManage\":false,\"showTerms\":true,\"successAction\":\"STAY_WITH_MESSAGE\"}"
+      },
+      "valueType": "JSON",
+      "description": "The CreditsStore paywall"
+    }
+  }
+}

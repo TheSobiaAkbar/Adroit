@@ -180,6 +180,29 @@ class AdroitBillingTest {
     }
 
     @Test
+    fun `demo mode can't activate in a release app - it uses Play`() {
+        setDebuggable(false)
+        AdroitBilling.initialize(application, BillingSettings(TestProducts.entries, TestPaywalls.entries, demo = DemoBilling(true)))
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue(port.connectCalls > 0)
+        val catalog = AdroitBilling.catalog.value
+        assertFalse(catalog is CatalogState.Ready && catalog.products.values.any { "DEMO" in it.title })
+    }
+
+    @Test
+    fun `demo mode in a debuggable app serves DEMO products without Play`() {
+        setDebuggable(true)
+        AdroitBilling.initialize(application, BillingSettings(TestProducts.entries, TestPaywalls.entries, demo = DemoBilling(true)))
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(0, port.connectCalls)
+        val products = (AdroitBilling.catalog.value as CatalogState.Ready).products
+        assertEquals(TestProducts.entries.toSet(), products.keys)
+        assertTrue(products.values.all { "DEMO" in it.title })
+    }
+
+    @Test
     fun `saved entitlements are available as soon as initialize returns`() {
         val lifetime = EntitlementGrant("premium_lifetime", ProductType.NON_CONSUMABLE, setOf("premium"), GrantState.ACTIVE, GrantSource.CLIENT, 1)
         EntitlementCache(application).save(SavedGrants(listOf(lifetime), atMillis = 1))

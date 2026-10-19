@@ -10,11 +10,17 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import io.github.thesobiaakbar.adroit.AdsState
 import io.github.thesobiaakbar.adroit.Adroit
-import io.github.thesobiaakbar.adroit.UnavailableReason
-import io.github.thesobiaakbar.adroit.sample.xml.PremiumStore
+import io.github.thesobiaakbar.adroit.billing.AdroitBilling
+import io.github.thesobiaakbar.adroit.billing.EntitlementSnapshot
+import io.github.thesobiaakbar.adroit.billing.RestoreResult
+import io.github.thesobiaakbar.adroit.billing.SnapshotStatus
+import io.github.thesobiaakbar.adroit.billing.views.AdroitPaywall
+import io.github.thesobiaakbar.adroit.sample.xml.BuildConfig
 import io.github.thesobiaakbar.adroit.sample.xml.R
+import io.github.thesobiaakbar.adroit.sample.xml.billing.DemoMode
+import io.github.thesobiaakbar.adroit.sample.xml.billing.SamplePaywalls
+import io.github.thesobiaakbar.adroit.sample.xml.billing.SampleProducts
 import io.github.thesobiaakbar.adroit.sample.xml.databinding.FragmentSettingsBinding
 import io.github.thesobiaakbar.adroit.sample.xml.styles.NativeStylesActivity
 import kotlinx.coroutines.launch
@@ -22,8 +28,10 @@ import kotlinx.coroutines.launch
 /**
  * - "Privacy options": shown only while UMP requires a privacy options entry point (`isPrivacyOptionsRequired`),
  *   which Google requires apps to offer in that case.
- * - "Ad-free": `setAdFree`, as an app would after a purchase, saved in [PremiumStore] so the next launch's splash
- *   treats the user as premium (no consent form, no ad, a 3-second splash).
+ * - Premium: the entitlement and how sure it is (Fresh from Play, Cached while offline, Unknown), "Upgrade" (the
+ *   `SettingsUpgrade` paywall, forced: the user asked), "Restore purchases" and "Manage subscription". Premium comes
+ *   only from `AdroitBilling.entitlements`; `SampleApplication` turns it into `Adroit.setAdFree`.
+ * - "Demo billing" (debug builds): made-up products instead of Play, from the next launch (`DemoMode`).
  * - "Ad Inspector": Google's debugging tool; opens on test devices only.
  */
 class SettingsFragment : Fragment() {
@@ -37,12 +45,29 @@ class SettingsFragment : Fragment() {
                 error?.let { toast(getString(R.string.privacy_options_error, it.message)) }
             }
         }
-        // The library doesn't expose the ad-free flag; the state carries it (reported as an API gap in PROMPT 17).
-        // Read once, before the listener is attached, so restoring the switch never calls setAdFree.
-        binding.adFree.isChecked = Adroit.state.value == AdsState.Unavailable(UnavailableReason.AD_FREE_USER)
-        binding.adFree.setOnCheckedChangeListener { _, checked ->
-            Adroit.setAdFree(checked)
-            PremiumStore.setPremium(requireContext(), checked)
+        binding.upgrade.setOnClickListener {
+            AdroitPaywall.show(requireActivity(), SamplePaywalls.SettingsUpgrade, "settings", force = true)
+        }
+        binding.restore.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                toast(
+                    when (val result = AdroitBilling.restore()) {
+                        is RestoreResult.Restored -> if (result.newlyActive.isEmpty()) getString(R.string.restore_up_to_date)
+                        else getString(R.string.restore_done, result.newlyActive.joinToString())
+                        RestoreResult.NothingToRestore -> getString(R.string.restore_nothing)
+                        is RestoreResult.Failed -> getString(R.string.restore_failed, result.error.debugMessage ?: result.error.toString())
+                    },
+                )
+            }
+        }
+        binding.manage.setOnClickListener {
+            AdroitBilling.openManageSubscriptions(requireActivity(), SampleProducts.PremiumSub)
+        }
+        binding.demoBilling.isVisible = BuildConfig.DEBUG
+        binding.demoBilling.isChecked = DemoMode.isOn(requireContext())
+        binding.demoBilling.setOnCheckedChangeListener { _, checked ->
+            DemoMode.set(requireContext(), checked)
+            toast(getString(R.string.demo_billing_restart))
         }
         binding.adInspector.setOnClickListener {
             Adroit.diagnostics.openAdInspector(requireActivity()) { error ->
@@ -54,10 +79,21 @@ class SettingsFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                Adroit.privacy.isPrivacyOptionsRequired.collect { binding.privacyOptions.isVisible = it }
+                launch { Adroit.privacy.isPrivacyOptionsRequired.collect { binding.privacyOptions.isVisible = it } }
+                launch { AdroitBilling.entitlements.collect { binding.premiumStatus.text = status(it) } }
             }
         }
     }
+
+    private fun status(snapshot: EntitlementSnapshot): String = getString(
+        R.string.premium_status,
+        getString(if (snapshot.has("premium")) R.string.premium_yes else R.string.premium_no),
+        when (snapshot.status) {
+            is SnapshotStatus.Fresh -> "Fresh"
+            is SnapshotStatus.Cached -> "Cached"
+            SnapshotStatus.Unknown -> "Unknown"
+        },
+    )
 
     private fun toast(message: String) {
         context?.let { Toast.makeText(it, message, Toast.LENGTH_LONG).show() }

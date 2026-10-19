@@ -13,11 +13,41 @@
         android:text="@string/privacy_options"
         android:visibility="gone" />
 
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/ad_free"
+    <!-- Premium: from AdroitBilling.entitlements only. -->
+    <TextView
+        android:id="@+id/premium_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/ad_free" />
+        android:paddingVertical="8dp"
+        android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+    <Button
+        android:id="@+id/upgrade"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/upgrade" />
+
+    <Button
+        android:id="@+id/restore"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/restore_purchases" />
+
+    <Button
+        android:id="@+id/manage"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/manage_subscription" />
+
+    <!-- Debug builds only. -->
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/demo_billing"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/demo_billing"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/ad_inspector"

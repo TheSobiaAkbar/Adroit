@@ -16,6 +16,35 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- The HomeUpgrade paywall from placement home_banner; hidden for premium users. -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/upgrade_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/upgrade_card_title"
+                        android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/upgrade_card_body"
+                        android:textAppearance="?attr/textAppearanceBodyMedium" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <TextView
                 android:id="@+id/coins"
                 android:layout_width="wrap_content"
@@ -61,6 +90,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+            <Button
+                android:id="@+id/credits_store"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/credits_store" />
 
             <!-- Replaces the home banner with a new one; the shown one stays until the new one has loaded. -->
             <Button
