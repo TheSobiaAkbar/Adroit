@@ -10,14 +10,9 @@ import io.github.thesobiaakbar.adroit.billing.internal.paywall.Offers
 import io.github.thesobiaakbar.adroit.billing.internal.paywall.PaywallEngine
 import io.github.thesobiaakbar.adroit.billing.internal.paywall.PaywallResolver
 import io.github.thesobiaakbar.adroit.billing.internal.paywall.ShowCounterStore
-import kotlinx.coroutines.CompletableDeferred
+import io.github.thesobiaakbar.adroit.billing.testing.FakeBilling
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -48,26 +43,6 @@ class PaywallControllerTest {
     private val foreground = MutableStateFlow(true)
     private val billing = FakeBilling()
     private lateinit var config: BillingConfig
-
-    private class FakeBilling : BillingClientApi {
-        val requests = mutableListOf<PurchaseRequest>()
-        var result = CompletableDeferred<PurchaseResult>()
-        var restoreResult: RestoreResult = RestoreResult.NothingToRestore
-        var manageOpens = true
-        override val entitlements: StateFlow<EntitlementSnapshot> = MutableStateFlow(EntitlementSnapshot.EMPTY_UNKNOWN)
-        override val connection: StateFlow<BillingConnectionState> = MutableStateFlow(BillingConnectionState.Connected)
-        override val catalog: StateFlow<CatalogState> = MutableStateFlow(CatalogState.Loading)
-        override val purchaseUpdates: SharedFlow<PurchaseUpdate> = MutableSharedFlow()
-        override val consumables: Flow<ConsumableGrant> = emptyFlow()
-        override suspend fun purchase(activity: Activity, request: PurchaseRequest): PurchaseResult {
-            requests += request
-            return result.await()
-        }
-        override suspend fun restore(): RestoreResult = restoreResult
-        override suspend fun refresh() {}
-        override fun openManageSubscriptions(activity: Activity, product: ProductDefinition?): Boolean = manageOpens
-        override fun setAccount(accountId: String?) {}
-    }
 
     private fun TestScope.controller(close: String? = null, extra: String = "", initialized: Boolean = true): PaywallController {
         remote["Onboarding"] = """{${close?.let { "\"close\": $it," } ?: ""} "exitPaywall": "ExitDiscount" $extra}"""
@@ -178,6 +153,7 @@ class PaywallControllerTest {
     @Test
     fun `back and close are consumed during a purchase`() = runTest {
         val c = controller("""{"delaySeconds": 0, "back": "ALWAYS"}""")
+        billing.holdNextPurchase()
         c.purchase(activity)
         runCurrent()
         assertEquals(Busy.PURCHASING, c.content.busy)
@@ -188,20 +164,21 @@ class PaywallControllerTest {
         c.select(0)
         c.purchase(activity)
         runCurrent()
-        assertEquals(1, billing.requests.size)
+        assertEquals(1, billing.purchaseRequests.size)
     }
 
     @Test
     fun `a purchase uses the plan's offer and the paywall's attribution`() = runTest {
         val c = controller(extra = """, "campaign": {"id": "autumn"}""")
+        val held = billing.holdNextPurchase()
         c.purchase(activity)
         runCurrent()
         assertEquals(
             PurchaseRequest(TestProducts.PremiumSub, "home", "yearly", OfferSelection.Id("trial-3d"), "autumn", "Onboarding"),
-            billing.requests.single(),
+            billing.purchaseRequests.single(),
         )
         val attribution = Attribution("a", "home", "Onboarding", "autumn", "premium_sub", "yearly", "trial-3d", false)
-        billing.result.complete(PurchaseResult.Purchased(null, attribution))
+        held.complete(PurchaseResult.Purchased(null, attribution))
         runCurrent()
         assertEquals(PaywallUiState.Purchased(PurchaseResult.Purchased(null, attribution)), c.state.value)
         assertFalse(c.onBackPressed())
@@ -221,10 +198,10 @@ class PaywallControllerTest {
         )
         val c = controller()
         for ((result, message) in cases) {
-            billing.result = CompletableDeferred()
+            val held = billing.holdNextPurchase()
             c.purchase(activity)
             runCurrent()
-            billing.result.complete(result)
+            held.complete(result)
             runCurrent()
             assertEquals(result.toString(), message, c.content.message)
             assertNull(c.content.busy)
@@ -245,7 +222,7 @@ class PaywallControllerTest {
         c.restore()
         runCurrent()
         assertEquals(UiMessage(R.string.adroit_billing_msg_restored), c.content.message)
-        billing.manageOpens = false
+        billing.manageSubscriptionsResult = false
         c.manage(activity)
         assertEquals(UiMessage(R.string.adroit_billing_msg_manage_failed), c.content.message)
     }

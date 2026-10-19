@@ -34,6 +34,7 @@ import io.github.thesobiaakbar.adroit.billing.PaywallUiState
 import io.github.thesobiaakbar.adroit.billing.PurchaseResult
 import io.github.thesobiaakbar.adroit.billing.SuccessAction
 import io.github.thesobiaakbar.adroit.billing.Attribution
+import io.github.thesobiaakbar.adroit.billing.testing.FakeBilling
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -161,16 +162,15 @@ class PaywallTest {
     @Test
     fun `a purchase sends the selected plan with the placement, then closes`() {
         show(Fixtures.spec())
+        billing.nextPurchaseResult = purchased()
 
         rule.onNodeWithText("Start free trial").performClick()
         settle()
-        val request = billing.requests.single()
+
+        val request = billing.purchaseRequests.single()
         assertEquals("home", request.placement)
         assertEquals("monthly", request.basePlanId)
         assertEquals(OfferSelection.Id("trial"), request.offer)
-
-        billing.result.complete(purchased())
-        settle()
 
         assertEquals(listOf(PaywallCloseReason.PURCHASED), closes)
     }
@@ -178,9 +178,8 @@ class PaywallTest {
     @Test
     fun `successAction STAY_WITH_MESSAGE shows the premium state, Done closes`() {
         show(Fixtures.spec(successAction = SuccessAction.STAY_WITH_MESSAGE))
+        billing.nextPurchaseResult = purchased()
         rule.onNodeWithText("Start free trial").performClick()
-        settle()
-        billing.result.complete(purchased())
         settle()
 
         rule.onNodeWithText("You're premium").assertIsDisplayed()

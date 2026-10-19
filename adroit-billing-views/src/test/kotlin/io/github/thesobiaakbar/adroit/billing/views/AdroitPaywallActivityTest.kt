@@ -21,6 +21,7 @@ import io.github.thesobiaakbar.adroit.billing.PaywallTemplate
 import io.github.thesobiaakbar.adroit.billing.PurchaseResult
 import io.github.thesobiaakbar.adroit.billing.ShowDecision
 import io.github.thesobiaakbar.adroit.billing.SkipReason
+import io.github.thesobiaakbar.adroit.billing.testing.FakeBilling
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -163,12 +164,12 @@ class AdroitPaywallActivityTest {
         val cta = scenario.view(R.id.adroit_billing_cta) as Button
         assertEquals("Continue", cta.text)
 
+        billing.nextPurchaseResult = PurchaseResult.Purchased(null, Attribution("a", "home", "Onboarding", null, "premium_sub", "yearly", null, false))
         cta.performClick()
         idle()
-        assertEquals("home", billing.requests.single().placement)
-        assertEquals("yearly", billing.requests.single().basePlanId)
-        billing.result.complete(PurchaseResult.Purchased(null, Attribution("a", "home", "Onboarding", null, "premium_sub", "yearly", null, false)))
-        idle()
+
+        assertEquals("home", billing.purchaseRequests.single().placement)
+        assertEquals("yearly", billing.purchaseRequests.single().basePlanId)
 
         assertEquals(PaywallCloseReason.PURCHASED, scenario.reason())
     }

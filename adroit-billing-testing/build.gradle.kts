@@ -19,6 +19,6 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.androidx.test.core)
+    // No Robolectric: the tests prove FakeBilling works on the plain JVM.
+    testImplementation(libs.androidx.lifecycle.viewmodel.ktx)
 }

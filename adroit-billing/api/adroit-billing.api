@@ -1043,6 +1043,7 @@ public final class io/github/thesobiaakbar/adroit/billing/CloseButtonPosition : 
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/ConsumableGrant {
+	public fun <init> (Ljava/lang/String;ILio/github/thesobiaakbar/adroit/billing/Attribution;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public final fun confirm (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAttribution ()Lio/github/thesobiaakbar/adroit/billing/Attribution;

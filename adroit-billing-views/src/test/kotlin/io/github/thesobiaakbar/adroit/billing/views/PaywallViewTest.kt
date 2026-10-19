@@ -8,6 +8,7 @@ import io.github.thesobiaakbar.adroit.billing.BackBehavior
 import io.github.thesobiaakbar.adroit.billing.CloseBehavior
 import io.github.thesobiaakbar.adroit.billing.PaywallCloseReason
 import io.github.thesobiaakbar.adroit.billing.PaywallController
+import io.github.thesobiaakbar.adroit.billing.testing.FakeBilling
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

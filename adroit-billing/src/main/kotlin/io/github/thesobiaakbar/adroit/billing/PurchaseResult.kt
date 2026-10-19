@@ -68,8 +68,11 @@ public sealed interface RestoreResult {
  * @property quantity how many units were bought.
  * @property attribution where the purchase came from.
  * @property orderIdHash a stable hash of Play's order ID, to make crediting idempotent.
+ *
+ * The constructor is public for test doubles such as `FakeBilling`; the library creates the real grants. [onConfirm]
+ * runs on [confirm].
  */
-public class ConsumableGrant internal constructor(
+public class ConsumableGrant(
     public val productId: String,
     public val quantity: Int,
     public val attribution: Attribution,
