@@ -1293,14 +1293,14 @@ public final class io/github/thesobiaakbar/adroit/billing/PaywallCloseReason : j
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/PaywallController {
-	public static final field KEY_CLOSE_VISIBLE Ljava/lang/String;
-	public static final field KEY_REMAINING Ljava/lang/String;
-	public static final field KEY_SELECTED Ljava/lang/String;
-	public static final field KEY_SHOWN Ljava/lang/String;
-	public static final field KEY_VISIBLE_MILLIS Ljava/lang/String;
+	public static final field Companion Lio/github/thesobiaakbar/adroit/billing/PaywallController$Companion;
 	public final fun dispose ()V
+	public static final fun forModel (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Lio/github/thesobiaakbar/adroit/billing/PaywallModel;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;)Lio/github/thesobiaakbar/adroit/billing/PaywallController;
+	public static final fun forModel (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Lio/github/thesobiaakbar/adroit/billing/PaywallModel;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;Lkotlinx/coroutines/flow/Flow;)Lio/github/thesobiaakbar/adroit/billing/PaywallController;
+	public static final fun forModel (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Lio/github/thesobiaakbar/adroit/billing/PaywallModel;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;Lkotlinx/coroutines/flow/Flow;Lkotlin/jvm/functions/Function0;)Lio/github/thesobiaakbar/adroit/billing/PaywallController;
 	public final fun getPaywall ()Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;
 	public final fun getPlacement ()Ljava/lang/String;
+	public final fun getSpec ()Lio/github/thesobiaakbar/adroit/billing/PaywallSpec;
 	public final fun getState ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun manage (Landroid/app/Activity;)V
 	public final fun onBackPressed ()Z
@@ -1311,6 +1311,13 @@ public final class io/github/thesobiaakbar/adroit/billing/PaywallController {
 	public final fun restore (Ljava/util/Map;)V
 	public final fun saveState ()Ljava/util/Map;
 	public final fun select (I)V
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/PaywallController$Companion {
+	public final fun forModel (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Lio/github/thesobiaakbar/adroit/billing/PaywallModel;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;)Lio/github/thesobiaakbar/adroit/billing/PaywallController;
+	public final fun forModel (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Lio/github/thesobiaakbar/adroit/billing/PaywallModel;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;Lkotlinx/coroutines/flow/Flow;)Lio/github/thesobiaakbar/adroit/billing/PaywallController;
+	public final fun forModel (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Lio/github/thesobiaakbar/adroit/billing/PaywallModel;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;Lkotlinx/coroutines/flow/Flow;Lkotlin/jvm/functions/Function0;)Lio/github/thesobiaakbar/adroit/billing/PaywallController;
+	public static synthetic fun forModel$default (Lio/github/thesobiaakbar/adroit/billing/PaywallController$Companion;Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Lio/github/thesobiaakbar/adroit/billing/PaywallModel;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;Lio/github/thesobiaakbar/adroit/billing/BillingClientApi;Lkotlinx/coroutines/flow/Flow;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/PaywallController;
 }
 
 public abstract interface class io/github/thesobiaakbar/adroit/billing/PaywallDefinition {
@@ -1602,11 +1609,14 @@ public final class io/github/thesobiaakbar/adroit/billing/Price {
 
 public final class io/github/thesobiaakbar/adroit/billing/PriceText {
 	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/PriceText;
+	public static final fun cta (Landroid/content/res/Resources;Lio/github/thesobiaakbar/adroit/billing/PaywallPlan;)Ljava/lang/String;
+	public static final fun disclosure (Landroid/content/res/Resources;Lio/github/thesobiaakbar/adroit/billing/PaywallPlan;)Ljava/lang/String;
 	public static final fun duration (Landroid/content/res/Resources;Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;)Ljava/lang/String;
 	public static final fun every (Landroid/content/res/Resources;Lio/github/thesobiaakbar/adroit/billing/BillingPeriod;)Ljava/lang/String;
 	public static final fun fill (Landroid/content/res/Resources;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;)Ljava/lang/String;
 	public static final fun fill (Landroid/content/res/Resources;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;)Ljava/lang/String;
 	public static synthetic fun fill$default (Landroid/content/res/Resources;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;Lio/github/thesobiaakbar/adroit/billing/OfferInfo;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun planPrice (Landroid/content/res/Resources;Lio/github/thesobiaakbar/adroit/billing/PaywallPlan;)Ljava/lang/String;
 }
 
 public final class io/github/thesobiaakbar/adroit/billing/PricingPhase {

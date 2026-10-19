@@ -14,6 +14,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.net.InetSocketAddress
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /** Against a JDK `HttpServer` on 127.0.0.1 (no new dependency); Robolectric for the real `org.json`. */
 @RunWith(RobolectricTestRunner::class)
@@ -50,7 +51,7 @@ class HttpPurchaseVerifierTest {
         url = "$base/verify",
         headers = { mapOf("Authorization" to "Bearer t${++token}") },
         entitlementsUrl = "$base/entitlements",
-        timeout = 300.milliseconds,
+        timeout = 5.seconds,
         allowLocalHttp = true,
     )
 
@@ -106,8 +107,9 @@ class HttpPurchaseVerifierTest {
     fun `a timeout is unreachable`() {
         delayMillis = 1_000
         response = """{"status":"VERIFIED","productIds":["premium_sub"]}"""
+        val impatient = HttpPurchaseVerifier("$base/verify", timeout = 200.milliseconds, allowLocalHttp = true)
 
-        assertTrue(verify() is VerificationResult.Unreachable)
+        assertTrue(runBlocking { impatient.verify(purchase) } is VerificationResult.Unreachable)
     }
 
     @Test

@@ -51,4 +51,24 @@
     <string name="adroit_billing_msg_restored">Your purchases were restored.</string>
     <string name="adroit_billing_msg_nothing_to_restore">No purchases to restore.</string>
     <string name="adroit_billing_msg_manage_failed">Couldn\'t open your Google Play subscriptions.</string>
+    <!-- Paywall UI (adroit-billing-compose and adroit-billing-views). %s values are Google Play\'s prices and the
+         duration and period texts above. -->
+    <string name="adroit_billing_paywall_cta">Continue</string>
+    <string name="adroit_billing_paywall_cta_trial">Start free trial</string>
+    <string name="adroit_billing_paywall_close">Close</string>
+    <string name="adroit_billing_paywall_restore">Restore purchases</string>
+    <string name="adroit_billing_paywall_manage">Manage subscription</string>
+    <string name="adroit_billing_paywall_retry">Try again</string>
+    <string name="adroit_billing_paywall_unavailable">Plans aren\'t available right now. Please try again later.</string>
+    <string name="adroit_billing_paywall_premium_title">You\'re premium</string>
+    <string name="adroit_billing_paywall_premium_text">Thank you! Your purchase is active.</string>
+    <string name="adroit_billing_paywall_done">Done</string>
+    <string name="adroit_billing_paywall_save">Save %1$s</string>
+    <string name="adroit_billing_paywall_price_per">%1$s / %2$s</string>
+    <string name="adroit_billing_paywall_trial_badge">%1$s free</string>
+    <string name="adroit_billing_disclosure_trial">%1$s free, then %2$s/%3$s. Cancel anytime in Google Play.</string>
+    <string name="adroit_billing_disclosure_intro">%1$s for %2$s, then %3$s/%4$s. Cancel anytime in Google Play.</string>
+    <string name="adroit_billing_disclosure_renewing">%1$s/%2$s, renews automatically. Cancel anytime in Google Play.</string>
+    <string name="adroit_billing_disclosure_prepaid">%1$s for %2$s. Doesn\'t renew automatically.</string>
+    <string name="adroit_billing_disclosure_one_time">One-time payment of %1$s.</string>
 </resources>

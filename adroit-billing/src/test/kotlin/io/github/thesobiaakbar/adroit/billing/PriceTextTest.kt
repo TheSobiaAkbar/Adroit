@@ -103,4 +103,42 @@ class PriceTextTest {
         assertNull(PriceText.fill(resources, "Save {savings}", yearly))
         assertNull(PriceText.fill(resources, "Save {savings}", monthly, savingsVs = yearly))
     }
+
+    private fun plan(offer: OfferInfo? = null, option: OneTimeOption? = null, cta: String? = null): PaywallPlan {
+        val product = ProductInfo(TestProducts.PremiumSub, "premium_sub", ProductType.SUBSCRIPTION, "P", "P", "", emptyList(), emptyList())
+        return PaywallPlan(PlanSpec(TestProducts.PremiumSub), product, offer?.basePlanId, offer, option, false, null, PaywallTexts(cta = cta))
+    }
+
+    @Test
+    fun `disclosures say what is charged and when, from Play's data only`() {
+        val monthly = base("P1M", 4_990_000)
+        assertEquals(
+            "7 days free, then USD 4.99/month. Cancel anytime in Google Play.",
+            PriceText.disclosure(resources, plan(offer(free("P7D"), monthly))),
+        )
+        assertEquals(
+            "USD 0.99 for 3 months, then USD 4.99/month. Cancel anytime in Google Play.",
+            PriceText.disclosure(resources, plan(offer(phase("P1M", 990_000, Recurrence.FINITE, cycles = 3), monthly))),
+        )
+        assertEquals(
+            "USD 4.99/month, renews automatically. Cancel anytime in Google Play.",
+            PriceText.disclosure(resources, plan(offer(monthly))),
+        )
+        assertEquals(
+            "USD 9.99 for 1 month. Doesn't renew automatically.",
+            PriceText.disclosure(resources, plan(offer(phase("P1M", 9_990_000, Recurrence.NON_RECURRING)))),
+        )
+        val lifetime = OneTimeOption(null, null, emptyList(), Price("USD 19.99", 19_990_000, "USD"))
+        assertEquals("One-time payment of USD 19.99.", PriceText.disclosure(resources, plan(option = lifetime)))
+        assertNull(PriceText.disclosure(resources, plan(offer(phase("PXYZ", 4_990_000, Recurrence.INFINITE)))))
+    }
+
+    @Test
+    fun `plan price and purchase button`() {
+        val trial = plan(offer(free("P7D"), base("P1Y", 29_990_000)))
+        assertEquals("USD 29.99 / year", PriceText.planPrice(resources, trial))
+        assertEquals("Start free trial", PriceText.cta(resources, trial))
+        assertEquals("Continue", PriceText.cta(resources, plan(offer(base("P1M", 4_990_000)))))
+        assertEquals("Subscribe now", PriceText.cta(resources, plan(offer(base("P1M", 4_990_000)), cta = "Subscribe now")))
+    }
 }

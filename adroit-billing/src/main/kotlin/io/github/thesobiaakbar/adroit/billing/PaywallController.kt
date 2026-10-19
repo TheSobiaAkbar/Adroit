@@ -1,6 +1,8 @@
 package io.github.thesobiaakbar.adroit.billing
 
 import android.app.Activity
+import android.os.SystemClock
+import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
 import io.github.thesobiaakbar.adroit.billing.internal.config.ResolvedPaywall
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.paywall.PaywallEngine
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 /**
@@ -38,8 +41,13 @@ public class PaywallController internal constructor(
     resolved: ResolvedPaywall,
     foreground: Flow<Boolean>,
     private val clock: () -> Long,
+    fixed: PaywallModel? = null,
 ) {
-    private val spec = resolved.spec
+    /**
+     * The paywall's settings in force (app overrides > Firebase > defaults), fixed when it opened: the template, style
+     * and close behavior to render, available before the plans load.
+     */
+    public val spec: PaywallSpec = resolved.spec
     private val close = spec.close
     private val campaignId = spec.campaign?.id
 
@@ -63,8 +71,16 @@ public class PaywallController internal constructor(
     private val jobs = mutableListOf<Job>()
 
     init {
-        val blocked = if (engine == null) SkipReason.NOT_INITIALIZED else engine.availability(resolved)
-        if (blocked != null) {
+        val blocked = when {
+            fixed != null -> null
+            engine == null -> SkipReason.NOT_INITIALIZED
+            else -> engine.availability(resolved)
+        }
+        if (fixed != null) {
+            model = fixed
+            selected = fixed.selected.coerceIn(0, fixed.plans.lastIndex)
+            publish()
+        } else if (blocked != null) {
             mutableState.value = PaywallUiState.Unavailable(blocked, null)
         } else {
             jobs += scope.launch {
@@ -303,11 +319,37 @@ public class PaywallController internal constructor(
         return UiMessage(text, retry = error.isRetryable)
     }
 
-    private companion object {
-        const val KEY_SELECTED = "adroit_paywall_selected"
-        const val KEY_REMAINING = "adroit_paywall_close_remaining"
-        const val KEY_CLOSE_VISIBLE = "adroit_paywall_close_visible"
-        const val KEY_VISIBLE_MILLIS = "adroit_paywall_visible_millis"
-        const val KEY_SHOWN = "adroit_paywall_shown"
+    /** Creating a controller without `AdroitBilling`. */
+    public companion object {
+        /**
+         * A controller over a fixed [model], for previews, UI tests and design reviews: it behaves like a real one
+         * (close delay, back policy, selection, messages), buys through [billing], and records no show counts or
+         * events. Apps use `AdroitBilling.paywalls.controller` instead.
+         *
+         * @param foreground whether the app is in the foreground; the close delay counts only while it is true.
+         * @param clock elapsed milliseconds, for the visible time.
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun forModel(
+            paywall: PaywallDefinition,
+            model: PaywallModel,
+            placement: String,
+            scope: CoroutineScope,
+            billing: BillingClientApi,
+            foreground: Flow<Boolean> = flowOf(true),
+            clock: () -> Long = SystemClock::elapsedRealtime,
+        ): PaywallController {
+            require(model.plans.isNotEmpty()) { "The model has no plans" }
+            val events = EventBus(emptyList(), BillingLog(BillingLogLevel.NONE))
+            val resolved = ResolvedPaywall(model.name, model.spec)
+            return PaywallController(paywall, placement, scope, billing, null, events, resolved, foreground, clock, model)
+        }
+
+        private const val KEY_SELECTED = "adroit_paywall_selected"
+        private const val KEY_REMAINING = "adroit_paywall_close_remaining"
+        private const val KEY_CLOSE_VISIBLE = "adroit_paywall_close_visible"
+        private const val KEY_VISIBLE_MILLIS = "adroit_paywall_visible_millis"
+        private const val KEY_SHOWN = "adroit_paywall_shown"
     }
 }

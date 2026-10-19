@@ -71,6 +71,73 @@ public object PriceText {
         return text.takeUnless { missing }
     }
 
+    /**
+     * The renewal terms shown under a paywall's purchase button, from Play's data only:
+     *
+     * - free trial: "7 days free, then €4.99/month. Cancel anytime in Google Play.";
+     * - intro price: "€0.99 for 3 months, then €4.99/month. Cancel anytime in Google Play.";
+     * - regular subscription: "€4.99/month, renews automatically. Cancel anytime in Google Play.";
+     * - prepaid plan: "€9.99 for 1 month. Doesn't renew automatically.";
+     * - one-time product: "One-time payment of €19.99.".
+     *
+     * Null when Play's data can't fill it (an unreadable period). Texts are the `adroit_billing_disclosure_*` resources.
+     */
+    @JvmStatic
+    public fun disclosure(resources: Resources, plan: PaywallPlan): String? {
+        plan.option?.let { return resources.getString(R.string.adroit_billing_disclosure_one_time, it.price.formatted) }
+        val offer = plan.offer ?: return null
+        val base = offer.basePhase
+        val basePeriod = base?.period?.let { every(resources, it) }
+        val first = offer.firstPayment
+        return when {
+            offer.isPrepaid -> {
+                val length = first?.totalPeriod ?: return null
+                resources.getString(R.string.adroit_billing_disclosure_prepaid, first.price.formatted, duration(resources, length))
+            }
+            base == null || basePeriod == null -> null
+            offer.freeTrial != null -> resources.getString(
+                R.string.adroit_billing_disclosure_trial,
+                duration(resources, offer.freeTrial!!),
+                base.price.formatted,
+                basePeriod,
+            )
+            offer.introPhases.isNotEmpty() -> {
+                val intro = offer.introPhases.first()
+                val length = intro.totalPeriod ?: return null
+                resources.getString(
+                    R.string.adroit_billing_disclosure_intro,
+                    intro.price.formatted,
+                    duration(resources, length),
+                    base.price.formatted,
+                    basePeriod,
+                )
+            }
+            else -> resources.getString(R.string.adroit_billing_disclosure_renewing, base.price.formatted, basePeriod)
+        }
+    }
+
+    /**
+     * A plan's price as shown on its card: "€4.99 / month" for a subscription (what it renews at), "€9.99 / 1 month"
+     * for a prepaid plan, Play's price for a one-time product. Null when Play's data can't fill it.
+     */
+    @JvmStatic
+    public fun planPrice(resources: Resources, plan: PaywallPlan): String? {
+        plan.option?.let { return it.price.formatted }
+        val offer = plan.offer ?: return null
+        val phase = offer.basePhase ?: offer.firstPayment ?: return null
+        val period = (if (offer.isPrepaid) phase.totalPeriod?.let { duration(resources, it) } else null)
+            ?: phase.period?.let { every(resources, it) }
+            ?: return null
+        return resources.getString(R.string.adroit_billing_paywall_price_per, phase.price.formatted, period)
+    }
+
+    /** The purchase button's text: the remote `texts.cta` when set, else "Start free trial" or "Continue". */
+    @JvmStatic
+    public fun cta(resources: Resources, plan: PaywallPlan): String = plan.texts.cta
+        ?: resources.getString(
+            if (plan.offer?.freeTrial != null) R.string.adroit_billing_paywall_cta_trial else R.string.adroit_billing_paywall_cta,
+        )
+
     private fun savings(offer: OfferInfo, versus: OfferInfo?, locale: Locale): String? {
         val phase = offer.basePhase ?: return null
         val reference = versus?.basePhase ?: return null

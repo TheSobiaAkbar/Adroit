@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
@@ -315,5 +316,21 @@ class PaywallControllerTest {
         config.reload()
         runCurrent()
         assertEquals("yearly", c.content.selectedPlan.basePlanId)
+    }
+
+    @Test
+    fun `forModel renders a fixed model with the same close rules, recording nothing`() = runTest {
+        val model = (controller().state.value as PaywallUiState.Content).model
+        events.clear()
+        val spec = PaywallSpec(model.spec.plans, close = CloseBehavior(delaySeconds = 2))
+        val c = PaywallController.forModel(TestPaywalls.Onboarding, model.copy(spec = spec), "preview", backgroundScope, billing, flowOf(true)) { currentTime }
+
+        assertFalse(c.content.closeVisible)
+        c.onShown()
+        advanceTimeBy(2_001)
+        assertTrue(c.content.closeVisible)
+        c.onCloseClicked()
+        assertEquals(PaywallUiState.Closed(PaywallCloseReason.CLOSE_BUTTON, null), c.state.value)
+        assertTrue(events.isEmpty())
     }
 }
