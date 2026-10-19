@@ -1,0 +1,10 @@
+node_modules/
+lib/
+*.log
+.firebase/
+# Never commit credentials: the functions use the runtime service account (Application Default Credentials).
+*-key.json
+*.key.json
+service-account*.json
+*credentials*.json
+.runtimeconfig.json
