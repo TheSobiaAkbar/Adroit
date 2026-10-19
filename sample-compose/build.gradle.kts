@@ -54,6 +54,10 @@ dependencies {
     implementation(project(":adroit-compose"))
     // Remote Config and Analytics (Firebase BoM, from adroit-firebase); Firebase itself starts from google-services.json.
     implementation(project(":adroit-firebase"))
+    // In-app purchases and paywalls (docs/firebase/sample_billing_remote_config.json for their Firebase keys).
+    implementation(project(":adroit-billing"))
+    implementation(project(":adroit-billing-compose"))
+    implementation(project(":adroit-billing-firebase"))
 
     // Sample-only UI libraries. The Adroit libraries themselves never depend on these.
     implementation(libs.androidx.core.ktx)
@@ -68,6 +72,8 @@ dependencies {
     debugImplementation(libs.leakcanary.android)
 
     testImplementation(libs.robolectric)
+    testImplementation(project(":adroit-billing-testing"))
+    testImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)

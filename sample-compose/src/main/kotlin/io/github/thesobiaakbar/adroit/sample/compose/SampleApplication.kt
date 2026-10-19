@@ -5,12 +5,26 @@ import android.os.StrictMode
 import android.os.SystemClock
 import android.util.Log
 import io.github.thesobiaakbar.adroit.Adroit
+import io.github.thesobiaakbar.adroit.billing.AdroitBilling
+import io.github.thesobiaakbar.adroit.billing.BillingEventListener
+import io.github.thesobiaakbar.adroit.billing.BillingSettings
+import io.github.thesobiaakbar.adroit.billing.DemoBilling
+import io.github.thesobiaakbar.adroit.billing.firebase.FirebaseBillingConfig
+import io.github.thesobiaakbar.adroit.billing.firebase.FirebaseBillingEvents
 import io.github.thesobiaakbar.adroit.firebase.RemoteConfigSession
 import io.github.thesobiaakbar.adroit.sample.compose.ads.SampleAdsConfig
+import io.github.thesobiaakbar.adroit.sample.compose.billing.CoinWallet
+import io.github.thesobiaakbar.adroit.sample.compose.billing.DemoMode
+import io.github.thesobiaakbar.adroit.sample.compose.billing.SamplePaywalls
+import io.github.thesobiaakbar.adroit.sample.compose.billing.SampleProducts
 import io.github.thesobiaakbar.adroit.views.NativeTemplates
 import com.google.firebase.FirebaseApp
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class SampleApplication : Application() {
     override fun onCreate() {
@@ -27,12 +41,35 @@ class SampleApplication : Application() {
         NativeTemplates.register("sample_promo", R.layout.sample_native_promo)
         val initializeStart = SystemClock.elapsedRealtimeNanos()
         Adroit.initialize(this, config)
-        // A premium user from an earlier launch: no ads, before any screen asks for one.
-        if (PremiumStore.isPremium(this)) Adroit.setAdFree(true)
         val end = SystemClock.elapsedRealtimeNanos()
+        initializeBilling(firebase)
         // The performance audit's measurements (docs/audits/PERFORMANCE_AUDIT.md): building the configuration and
         // initialize(). Logged in every build type: release numbers are the ones that count.
         Log.i(PERF_TAG, "config took ${(initializeStart - configStart) / 1_000} µs, initialize took ${(end - initializeStart) / 1_000} µs")
+    }
+
+    // Billing, as in sample-xml (docs/firebase/sample_billing_remote_config.json for its Firebase keys). initialize
+    // reads the saved entitlements synchronously, so a premium user from an earlier launch is ad-free before any screen
+    // asks for an ad. Without Firebase, the paywalls use SamplePaywalls' defaults.
+    private fun initializeBilling(firebase: Boolean) {
+        val events = listOfNotNull(
+            FirebaseBillingEvents(this).takeIf { firebase },
+            // Every event in logcat (tag SampleBilling), with its placement: home_banner, settings, onboarding…
+            BillingEventListener { Log.i(BILLING_TAG, it.toString()) }.takeIf { BuildConfig.DEBUG },
+        )
+        AdroitBilling.initialize(
+            this,
+            BillingSettings(
+                products = SampleProducts.entries,
+                paywalls = SamplePaywalls.entries,
+                config = FirebaseBillingConfig.source(),
+                events = events,
+                demo = DemoBilling(DemoMode.isOn(this)),
+            ),
+        )
+        // The ads bridge: premium means no ads anywhere, from the next ad request on.
+        appScope.launch { AdroitBilling.entitlements.collect { Adroit.setAdFree(it.adFree) } }
+        CoinWallet.start(this, appScope)
     }
 
     // Fetches Remote Config (every ad's Firebase JSON) once this session, without making anything wait: at once, then
@@ -64,5 +101,9 @@ class SampleApplication : Application() {
     private companion object {
         const val TAG = "ComposeSample"
         const val PERF_TAG = "AdroitPerf"
+        const val BILLING_TAG = "SampleBilling"
+
+        /** The process's scope; Main.immediate, so the ads bridge applies the saved entitlements at once. */
+        val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     }
 }
