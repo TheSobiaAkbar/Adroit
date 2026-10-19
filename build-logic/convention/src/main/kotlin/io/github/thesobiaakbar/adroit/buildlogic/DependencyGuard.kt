@@ -80,8 +80,10 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
         FIREBASE_SDK,
         "project :adroit-billing-.*",
     ),
+    // No Compose. Except androidx.compose.runtime:runtime-annotation, which androidx.activity (≥ 1.12) brings through
+    // androidx.navigationevent: only the @Stable/@Immutable annotation classes, no Compose runtime or UI (B18).
     ":adroit-billing-views" to BILLING_NEVER + listOf(
-        "androidx\\.compose\\..*:.*",
+        "androidx\\.compose\\.(?!runtime:runtime-annotation).*:.*",
         FIREBASE_SDK,
         "project :adroit-billing-(compose|firebase|testing)",
     ),

@@ -1,2 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Every paywall template (full screen, dialog, bottom sheet) in one translucent Activity, so rotation and
+             process death keep its state. An app can override the theme Adroit.Billing.Theme.Paywall. -->
+        <activity
+            android:name="io.github.thesobiaakbar.adroit.billing.views.AdroitPaywallActivity"
+            android:exported="false"
+            android:theme="@style/Adroit.Billing.Theme.Paywall" />
+    </application>
+</manifest>

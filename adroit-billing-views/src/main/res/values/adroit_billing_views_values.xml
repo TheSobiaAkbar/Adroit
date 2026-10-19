@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="adroit_billing_accent">#FF6750A4</color>
+    <color name="adroit_billing_scrim">#99000000</color>
+
+    <dimen name="adroit_billing_touch_target">48dp</dimen>
+    <dimen name="adroit_billing_padding">24dp</dimen>
+    <dimen name="adroit_billing_spacing">16dp</dimen>
+    <dimen name="adroit_billing_corner">24dp</dimen>
+    <dimen name="adroit_billing_plan_corner">12dp</dimen>
+    <dimen name="adroit_billing_cta_height">56dp</dimen>
+    <dimen name="adroit_billing_max_width">560dp</dimen>
+    <dimen name="adroit_billing_title_text">24sp</dimen>
+    <dimen name="adroit_billing_body_text">16sp</dimen>
+    <dimen name="adroit_billing_small_text">12sp</dimen>
+    <dimen name="adroit_billing_price_text">28sp</dimen>
+
+    <!-- PaywallView: the paywall's name (its PaywallDefinition.name, as registered in BillingSettings.paywalls) and
+         the placement it's opened at. -->
+    <declare-styleable name="AdroitBillingPaywallView">
+        <attr name="adroit_billing_paywall" format="string" />
+        <attr name="adroit_billing_placement" format="string" />
+    </declare-styleable>
+</resources>

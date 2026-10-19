@@ -15,6 +15,11 @@ android {
 
 dependencies {
     api(project(":adroit-billing"))
+    // ComponentActivity, OnBackPressedDispatcher, edge-to-edge and ActivityResultContract. Not AppCompat (ADR-014).
+    implementation(libs.androidx.activity)
+    // lifecycleScope and repeatOnLifecycle, and the ViewModels that keep the controllers across rotation.
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

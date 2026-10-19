@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The paywall Activity's theme: platform Material, no action bar, translucent (the dialog and bottom-sheet
+         templates show the app behind a scrim; the full-screen templates draw an opaque background). Override it by
+         name to change fonts or default colors; Firebase `style` colors are applied on top. -->
+    <style name="Adroit.Billing.Theme.Paywall" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Activity</item>
+        <item name="android:colorAccent">@color/adroit_billing_accent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Adroit.Billing.Paywall.Title" parent="android:Widget.Material.TextView">
+        <item name="android:textSize">@dimen/adroit_billing_title_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="Adroit.Billing.Paywall.Body" parent="android:Widget.Material.TextView">
+        <item name="android:textSize">@dimen/adroit_billing_body_text</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="Adroit.Billing.Paywall.Small" parent="android:Widget.Material.TextView">
+        <item name="android:textSize">@dimen/adroit_billing_small_text</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <style name="Adroit.Billing.Paywall.TextButton" parent="android:Widget.Material.Button.Borderless">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">@dimen/adroit_billing_touch_target</item>
+    </style>
+</resources>

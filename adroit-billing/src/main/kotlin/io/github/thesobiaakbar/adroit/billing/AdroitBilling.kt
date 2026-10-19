@@ -121,7 +121,8 @@ public object AdroitBilling : BillingClientApi {
 
     /** Paywall show rules and content. Before [initialize], every paywall is skipped as not initialized. */
     @JvmStatic
-    public val paywalls: Paywalls = Paywalls({ runtime?.paywalls }, this, events)
+    public val paywalls: Paywalls =
+        Paywalls({ runtime?.paywalls }, this, events, definitions = { settings?.paywalls.orEmpty() })
 
     override val purchaseUpdates: SharedFlow<PurchaseUpdate> = sharedPurchaseUpdates.asSharedFlow()
 

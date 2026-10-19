@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- RTL support is the app's choice: a library setting android:supportsRtl would merge into, or clash with, the
+         app's manifest. The layouts use start/end, so they work either way. -->
+    <issue id="RtlEnabled" severity="ignore" />
+</lint>

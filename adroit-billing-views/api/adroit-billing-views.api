@@ -1,4 +1,43 @@
 public final class io/github/thesobiaakbar/adroit/billing/views/AdroitPaywall {
 	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/billing/views/AdroitPaywall;
+	public static final fun contract ()Landroidx/activity/result/contract/ActivityResultContract;
+	public static final fun getImageLoader ()Lkotlin/jvm/functions/Function2;
+	public static final fun intent (Landroid/content/Context;Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)Landroid/content/Intent;
+	public static final fun setImageLoader (Lkotlin/jvm/functions/Function2;)V
+	public static final fun show (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/ShowDecision;
+	public static final fun show (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;Z)Lio/github/thesobiaakbar/adroit/billing/ShowDecision;
+	public static synthetic fun show$default (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;ZILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/ShowDecision;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/views/AdroitPaywallActivity : androidx/activity/ComponentActivity {
+	public static final field EXTRA_PAYWALL Ljava/lang/String;
+	public static final field EXTRA_PLACEMENT Ljava/lang/String;
+	public static final field EXTRA_REASON Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/views/PaywallLaunch {
+	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)V
+	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/views/PaywallLaunch;
+	public static synthetic fun copy$default (Lio/github/thesobiaakbar/adroit/billing/views/PaywallLaunch;Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/billing/views/PaywallLaunch;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefinition ()Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;
+	public final fun getPlacement ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/billing/views/PaywallView : android/widget/FrameLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun bind (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)V
+	public final fun getOnClose ()Lkotlin/jvm/functions/Function1;
+	public final fun getOnExitPaywall ()Lkotlin/jvm/functions/Function1;
+	public final fun setOnClose (Lkotlin/jvm/functions/Function1;)V
+	public final fun setOnExitPaywall (Lkotlin/jvm/functions/Function1;)V
 }
 

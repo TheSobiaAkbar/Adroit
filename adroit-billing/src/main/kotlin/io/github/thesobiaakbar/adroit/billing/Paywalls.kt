@@ -146,6 +146,7 @@ public class Paywalls internal constructor(
         ProcessLifecycleOwner.get().lifecycle.currentStateFlow.map { it.isAtLeast(Lifecycle.State.STARTED) }
     },
     private val clock: () -> Long = SystemClock::elapsedRealtime,
+    private val definitions: () -> List<PaywallDefinition> = { emptyList() },
 ) {
     private val loading = MutableStateFlow<PaywallModelState>(PaywallModelState.Loading).asStateFlow()
 
@@ -158,6 +159,12 @@ public class Paywalls internal constructor(
      */
     public fun shouldShow(paywall: PaywallDefinition, placement: String): ShowDecision =
         engine()?.shouldShow(paywall, placement) ?: ShowDecision.Skip(SkipReason.NOT_INITIALIZED)
+
+    /**
+     * The registered paywall named [name] (its [PaywallDefinition.name], for example from an Intent extra or an XML
+     * attribute), or null when `BillingSettings.paywalls` has none or `AdroitBilling.initialize` hasn't run.
+     */
+    public fun definition(name: String): PaywallDefinition? = definitions().firstOrNull { it.name == name }
 
     /** [paywall]'s content, updated when the products or the configuration change. */
     public fun model(paywall: PaywallDefinition): StateFlow<PaywallModelState> = engine()?.model(paywall) ?: loading

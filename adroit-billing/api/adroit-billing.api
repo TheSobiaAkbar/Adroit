@@ -1569,6 +1569,7 @@ public final class io/github/thesobiaakbar/adroit/billing/PaywallUiState$Unavail
 
 public final class io/github/thesobiaakbar/adroit/billing/Paywalls {
 	public final fun controller (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;)Lio/github/thesobiaakbar/adroit/billing/PaywallController;
+	public final fun definition (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;
 	public final fun model (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;)Lkotlinx/coroutines/flow/StateFlow;
 	public final fun recordClosed (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;Lio/github/thesobiaakbar/adroit/billing/PaywallCloseReason;)Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;
 	public final fun recordShown (Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)V
