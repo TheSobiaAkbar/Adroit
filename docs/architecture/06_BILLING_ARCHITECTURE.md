@@ -385,6 +385,9 @@ per process with a WARN and a `HardPaywall` event.
 - With a verifier, the library grants only after `Verified`. On `Rejected` it doesn't grant or acknowledge. On a
   network error the purchase stays unacknowledged, and the library retries on the next sync. Acknowledgement can be
   done by the backend (`acknowledgedByBackend = true`) or by the client.
+- The contract with a backend is `docs/BILLING_BACKEND.md` (`POST /verify`, `GET /entitlements`). `HttpPurchaseVerifier`
+  (in `adroit-billing`, `HttpURLConnection` + `org.json`, no new dependency) implements both interfaces over it: HTTPS
+  only, no redirects, 64 KB responses, any non-2xx or unreadable answer is `Unreachable`.
 - An optional `EntitlementProvider` lets a backend be the authoritative source of the snapshot (grace period,
   account hold, expiry, refunds through RTDN).
 - No service-account keys, API secrets or license keys go in the app or in Remote Config. Remote Config JSON is

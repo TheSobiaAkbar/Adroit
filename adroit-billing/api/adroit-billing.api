@@ -1136,6 +1136,18 @@ public final class io/github/thesobiaakbar/adroit/billing/GrantState : java/lang
 	public static fun values ()[Lio/github/thesobiaakbar/adroit/billing/GrantState;
 }
 
+public final class io/github/thesobiaakbar/adroit/billing/HttpPurchaseVerifier : io/github/thesobiaakbar/adroit/billing/EntitlementProvider, io/github/thesobiaakbar/adroit/billing/PurchaseVerifier {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;JZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;JZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun fetch (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+	public fun verify (Lio/github/thesobiaakbar/adroit/billing/PurchaseToVerify;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class io/github/thesobiaakbar/adroit/billing/OfferContext {
 	public fun <init> (Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;Ljava/lang/String;)V
 	public final fun component1 ()Lio/github/thesobiaakbar/adroit/billing/ProductDefinition;
