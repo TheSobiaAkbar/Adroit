@@ -1,6 +1,14 @@
 package io.github.thesobiaakbar.adroit.billing
 
+import android.os.SystemClock
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
+import io.github.thesobiaakbar.adroit.billing.internal.config.ResolvedPaywall
+import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
 import io.github.thesobiaakbar.adroit.billing.internal.paywall.PaywallEngine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -130,7 +138,15 @@ public data class PaywallPlan(
  * if (AdroitBilling.paywalls.shouldShow(AppPaywalls.Onboarding, "onboarding") == ShowDecision.Show) { … }
  * ```
  */
-public class Paywalls internal constructor(private val engine: () -> PaywallEngine?) {
+public class Paywalls internal constructor(
+    private val engine: () -> PaywallEngine?,
+    private val billing: BillingClientApi,
+    private val events: EventBus,
+    private val foreground: () -> Flow<Boolean> = {
+        ProcessLifecycleOwner.get().lifecycle.currentStateFlow.map { it.isAtLeast(Lifecycle.State.STARTED) }
+    },
+    private val clock: () -> Long = SystemClock::elapsedRealtime,
+) {
     private val loading = MutableStateFlow<PaywallModelState>(PaywallModelState.Loading).asStateFlow()
 
     /**
@@ -146,7 +162,21 @@ public class Paywalls internal constructor(private val engine: () -> PaywallEngi
     /** [paywall]'s content, updated when the products or the configuration change. */
     public fun model(paywall: PaywallDefinition): StateFlow<PaywallModelState> = engine()?.model(paywall) ?: loading
 
-    /** Records that [paywall] is now visible, for the caps, counter and timer. The UI modules call it. Main thread. */
+    /**
+     * A [PaywallController] for [paywall] opened at [placement], working in [scope] (a `viewModelScope`). It is
+     * [PaywallUiState.Unavailable] when [paywall] can't be shown at all (disabled, out of its campaign, the user is
+     * entitled, no plans): the frequency rules aren't checked again, since the app already decided to show it.
+     */
+    public fun controller(paywall: PaywallDefinition, placement: String, scope: CoroutineScope): PaywallController {
+        val engine = engine()
+        val resolved = engine?.resolved(paywall) ?: ResolvedPaywall(paywall.name, paywall.defaults)
+        return PaywallController(paywall, placement, scope, billing, engine, events, resolved, foreground(), clock)
+    }
+
+    /**
+     * Records that [paywall] is now visible, for the caps, counter and timer. [PaywallController.onShown] calls it;
+     * a custom paywall without a controller calls it itself. Main thread.
+     */
     public fun recordShown(paywall: PaywallDefinition, placement: String) {
         engine()?.recordShown(paywall)
     }

@@ -38,4 +38,17 @@
 
     <!-- Joins the parts of a combined period, as in "1 year 2 months". -->
     <string name="adroit_billing_period_join">%1$s %2$s</string>
+
+    <!-- Paywall messages (PaywallController.UiMessage). -->
+    <string name="adroit_billing_msg_pending">Payment pending. You\'ll get access as soon as it completes.</string>
+    <string name="adroit_billing_msg_network">No connection. Check your internet and try again.</string>
+    <string name="adroit_billing_msg_billing_unavailable">Google Play purchases aren\'t available on this device.</string>
+    <string name="adroit_billing_msg_declined">The payment was declined.</string>
+    <string name="adroit_billing_msg_already_owned">You already own this.</string>
+    <string name="adroit_billing_msg_plan_unavailable">This plan isn\'t available right now.</string>
+    <string name="adroit_billing_msg_in_progress">A purchase is already in progress.</string>
+    <string name="adroit_billing_msg_error">Something went wrong. Please try again.</string>
+    <string name="adroit_billing_msg_restored">Your purchases were restored.</string>
+    <string name="adroit_billing_msg_nothing_to_restore">No purchases to restore.</string>
+    <string name="adroit_billing_msg_manage_failed">Couldn\'t open your Google Play subscriptions.</string>
 </resources>

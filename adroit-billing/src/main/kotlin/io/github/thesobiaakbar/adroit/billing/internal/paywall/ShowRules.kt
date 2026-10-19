@@ -69,8 +69,26 @@ internal class PaywallEngine(
         val spec = paywall.spec
         val show = spec.show
         val nowMillis = now()
+        availability(paywall)?.let { return it }
+        return when {
+            store.launches < show.firstAfterLaunches -> SkipReason.LAUNCHES_NOT_REACHED
+            show.maxPerSession > 0 && (shownThisSession[name] ?: 0) >= show.maxPerSession -> SkipReason.SESSION_CAP
+            show.maxPerDay > 0 && store.shownOn(name, day(nowMillis)) >= show.maxPerDay -> SkipReason.DAILY_CAP
+            show.counter > 0 && count < show.counter -> SkipReason.COUNTER_NOT_REACHED
+            show.counter == 0 && show.timerSeconds > 0 && sinceLastShown(name) < show.timerSeconds * 1000L -> SkipReason.TIMER
+            else -> plansReason(paywall, placement)
+        }
+    }
+
+    /**
+     * Why [paywall] can't be shown at all, whatever the frequency rules: the enabled flags, the campaign window or
+     * the user's entitlements. Null when it can. The controller checks this when a paywall opens.
+     */
+    fun availability(paywall: ResolvedPaywall): SkipReason? {
+        val spec = paywall.spec
+        val nowMillis = now()
         val campaign = spec.campaign
-        val hide = show.hideIfEntitled
+        val hide = spec.show.hideIfEntitled
             ?: spec.plans.flatMap { config.global.productEntitlements[it.product.name] ?: it.product.defaults.entitlements }.toSet()
         return when {
             !config.global.enabled -> SkipReason.GLOBAL_DISABLED
@@ -78,12 +96,7 @@ internal class PaywallEngine(
             campaign != null && (campaign.startMillis?.let { nowMillis < it } == true || campaign.endMillis?.let { nowMillis > it } == true) ->
                 SkipReason.OUTSIDE_CAMPAIGN
             entitlements.value.active.any { it in hide } -> SkipReason.ENTITLED
-            store.launches < show.firstAfterLaunches -> SkipReason.LAUNCHES_NOT_REACHED
-            show.maxPerSession > 0 && (shownThisSession[name] ?: 0) >= show.maxPerSession -> SkipReason.SESSION_CAP
-            show.maxPerDay > 0 && store.shownOn(name, day(nowMillis)) >= show.maxPerDay -> SkipReason.DAILY_CAP
-            show.counter > 0 && count < show.counter -> SkipReason.COUNTER_NOT_REACHED
-            show.counter == 0 && show.timerSeconds > 0 && sinceLastShown(name) < show.timerSeconds * 1000L -> SkipReason.TIMER
-            else -> plansReason(paywall, placement)
+            else -> null
         }
     }
 
@@ -95,6 +108,9 @@ internal class PaywallEngine(
         }
         return (result.state as? PaywallModelState.Unavailable)?.reason
     }
+
+    /** [definition]'s settings now. */
+    fun resolved(definition: PaywallDefinition): ResolvedPaywall = config.paywall(definition)
 
     fun model(definition: PaywallDefinition): StateFlow<PaywallModelState> = models.getOrPut(definition.name) {
         combine(catalog, config.revision) { catalog, _ -> resolver.resolve(config.paywall(definition), catalog).state }
