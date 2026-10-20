@@ -2,6 +2,7 @@ package io.github.thesobiaakbar.adroit.billing
 
 import android.app.Activity
 import android.os.SystemClock
+import androidx.annotation.MainThread
 import io.github.thesobiaakbar.adroit.billing.internal.BillingLog
 import io.github.thesobiaakbar.adroit.billing.internal.config.ResolvedPaywall
 import io.github.thesobiaakbar.adroit.billing.internal.events.EventBus
@@ -106,6 +107,7 @@ public class PaywallController internal constructor(
     }
 
     /** Call when the paywall's first frame is visible: starts the close-button delay and reports the showing. */
+    @MainThread
     public fun onShown() {
         if (shown) return
         shown = true
@@ -119,6 +121,7 @@ public class PaywallController internal constructor(
     }
 
     /** Selects plan [index]. Ignored while busy or out of range. */
+    @MainThread
     public fun select(index: Int) {
         val plans = model?.plans ?: return
         if (busy != null || index !in plans.indices || index == selected || mutableState.value !is PaywallUiState.Content) return
@@ -129,6 +132,7 @@ public class PaywallController internal constructor(
     }
 
     /** Buys the selected plan, with this paywall's placement, campaign and offer. [activity] is used only for this call. */
+    @MainThread
     public fun purchase(activity: Activity) {
         val plan = (mutableState.value as? PaywallUiState.Content)?.selectedPlan ?: return
         if (busy != null) return
@@ -157,6 +161,7 @@ public class PaywallController internal constructor(
     }
 
     /** Restores purchases and reports the outcome as a message. */
+    @MainThread
     public fun restore() {
         if (busy != null || mutableState.value !is PaywallUiState.Content) return
         busy = Busy.RESTORING
@@ -175,6 +180,7 @@ public class PaywallController internal constructor(
     }
 
     /** Opens Google Play's subscription management, for the selected plan's product when it is a subscription. */
+    @MainThread
     public fun manage(activity: Activity) {
         val plan = (mutableState.value as? PaywallUiState.Content)?.selectedPlan ?: return
         val product = plan.product.definition.takeIf { plan.product.type == ProductType.SUBSCRIPTION }
@@ -185,6 +191,7 @@ public class PaywallController internal constructor(
     }
 
     /** The close button: closes when it is visible, and always on a paywall that is loading, unavailable or purchased. */
+    @MainThread
     public fun onCloseClicked() {
         when (val current = mutableState.value) {
             is PaywallUiState.Content -> if (current.closeVisible && busy == null) close(PaywallCloseReason.CLOSE_BUTTON)
@@ -199,6 +206,7 @@ public class PaywallController internal constructor(
      * The back gesture. Returns true when it is consumed and the paywall stays; false when the paywall closes (the
      * state becomes [PaywallUiState.Closed]).
      */
+    @MainThread
     public fun onBackPressed(): Boolean {
         when (val current = mutableState.value) {
             is PaywallUiState.Content -> {
@@ -214,6 +222,7 @@ public class PaywallController internal constructor(
     }
 
     /** Stops the controller's work. The UI calls it when the paywall is gone (a ViewModel's `onCleared`). */
+    @MainThread
     public fun dispose() {
         stopClock()
         jobs.forEach { it.cancel() }

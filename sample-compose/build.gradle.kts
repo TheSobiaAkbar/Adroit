@@ -70,6 +70,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     debugImplementation(libs.leakcanary.android)
+    // The empty Activity of createAndroidComposeRule<ComponentActivity>() (PaywallLeakTest); debug builds only.
+    debugImplementation(libs.compose.ui.test.manifest)
 
     testImplementation(libs.robolectric)
     testImplementation(project(":adroit-billing-testing"))

@@ -161,3 +161,50 @@ temporary worktree, never committed:
 Almost all of the delta is the Google Mobile Ads Next-Gen and UMP SDKs and their dependencies (WorkManager, Room,
 webkit, Play Services), which any AdMob integration carries. For comparison, the full sample-xml release APK is
 3,723,416 B.
+
+## 8. Billing (B22)
+
+Toolchain: as above, plus Play Billing Library 9.1.0 (its AAR ships its own consumer rules). Device: the same Pixel 7a.
+
+### 8.1 Consumer rules
+
+| Module | Rules | Why |
+|---|---|---|
+| `adroit-billing` | none | No reflection. Play Billing keeps what it needs itself. |
+| `adroit-billing-compose` | none | No reflection. |
+| `adroit-billing-views` | none | `AdroitPaywallActivity` is kept by its manifest entry, `PaywallView` by AAPT when a layout uses it (`mapping.txt`: both keep their names). |
+| `adroit-billing-firebase` | none | No reflection. |
+| `adroit-billing-testing` | none | Test-only artifact. |
+
+**Paywall and product names.** The library finds a definition by its name with `entries.firstOrNull { it.name == … }`
+(Remote Config keys, the paywall Activity's Intent extra, `exitPaywall`), never `valueOf` by reflection, so no rule is
+needed. R8 renames the enum classes (`SamplePaywalls -> q23`) but keeps each constant's name: the release `classes.dex`
+of both samples still holds `SettingsUpgrade`, `HomeUpgrade`, `CreditsStore`, `PremiumLifetime` and `Coins100`, so the
+Firebase keys match in a minified app. sample-compose's own `SamplePaywalls.valueOf(name)` (its navigation route) is
+covered by the default enum rules.
+
+**`missing_rules.txt`:** none for sample-xml release and minifiedDebug, or sample-compose release.
+
+### 8.2 Minified builds on the device
+
+- **Release (R8 full mode, obfuscated):** sample-xml release (5,002,390 B) started 10 times in a row for the timing in
+  `PERFORMANCE_AUDIT.md` (billing section), with no crash. sample-compose release (4,387,688 B) started, connected to
+  Play and reached its splash ad, with no crash. Demo mode is off in release, and the sample's products
+  don't exist in Play Console yet, so no paywall can show there: Play reports every product as not found.
+- **minifiedDebug (R8, debuggable, demo mode on):** sample-compose minifiedDebug (8,627,435 B) started, closed its
+  splash ad and showed the Onboarding paywall with the demo prices; Continue opened the demo purchase sheet. sample-xml
+  minifiedDebug runs `PaywallLeakTest` (every paywall opened and closed 5 times, §8.3).
+- **Caveat found:** AGP 9 warns that a debuggable build type gets no R8 optimization or obfuscation ("All code
+  optimizations and obfuscation are disabled for debuggable builds"). minifiedDebug is shrunk only, so §5's instrumented
+  tests run against shrunk, not obfuscated, code. Only the release builds above prove obfuscated code.
+
+### 8.3 Leak tests
+
+| Module (build) | Test | Result |
+|---|---|---|
+| sample-xml (minifiedDebug) | `PaywallLeakTest`: each of the 5 paywalls opened in `AdroitPaywallActivity` and finished, 5 times (25 openings, every template) | pass, no leaks |
+| sample-compose (debug) | `PaywallLeakTest`: each of the 5 paywalls composed and removed, 5 times; logcat shows `PaywallShown` 5 times for each | pass, no leaks |
+
+`ActivityScenario.close()` didn't work for the paywall Activity on Android 17: it moves the Activity behind a
+trampoline and waits for `onStop`, which never came (stuck in PAUSED for 45 s). The test finishes the Activity as the
+paywall does itself, then waits for DESTROYED.

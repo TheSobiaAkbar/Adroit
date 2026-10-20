@@ -38,7 +38,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Everything billing runs once initialized, created once per process by `AdroitBilling.initialize`. Creating it reads
- * the saved entitlements into `entitlementState` synchronously; Play is contacted from [start] on.
+ * the saved entitlements into `entitlementState` synchronously, the only file it reads on the calling thread; the
+ * other stores are read on the IO dispatcher from [start], and Play is contacted from [start] on.
  */
 internal class BillingRuntime(
     application: Application,
@@ -81,7 +82,7 @@ internal class BillingRuntime(
 
     private val resolver = PaywallResolver(settings, application.resources)
 
-    private val shows = ShowCounterStore(application)
+    private val shows = ShowCounterStore(application, countsLaunch = true)
 
     val paywalls = PaywallEngine(settings, config, resolver, shows, catalogState, entitlementState, events, scope)
 
@@ -111,7 +112,12 @@ internal class BillingRuntime(
     }
 
     fun start() {
-        shows.countLaunch()
+        // A store first used on the main thread before this finishes waits for it there, but never reads the disk.
+        scope.launch(Dispatchers.IO) {
+            shows.warmUp()
+            ledger.warmUp()
+            attempts.warmUp()
+        }
         entitlements.setAccount(account())
         scope.launch {
             ProcessLifecycleOwner.get().lifecycle.addObserver(foreground)

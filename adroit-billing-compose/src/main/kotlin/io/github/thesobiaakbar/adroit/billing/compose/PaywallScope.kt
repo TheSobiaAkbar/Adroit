@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -184,7 +184,8 @@ public class PaywallScope internal constructor(
         Button(
             onClick = { activity?.let(controller::purchase) },
             enabled = state.busy == null && activity != null,
-            modifier = modifier.fillMaxWidth().height(56.dp),
+            // At least 56dp: a large font needs more, and a fixed height would cut the label.
+            modifier = modifier.fillMaxWidth().heightIn(min = 56.dp),
         ) {
             if (state.busy == Busy.PURCHASING) {
                 CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)

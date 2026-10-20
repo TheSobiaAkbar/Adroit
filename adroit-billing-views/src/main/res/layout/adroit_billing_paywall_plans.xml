@@ -91,7 +91,8 @@
             <Button
                 android:id="@+id/adroit_billing_cta"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/adroit_billing_cta_height"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/adroit_billing_cta_height"
                 android:stateListAnimator="@null"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"

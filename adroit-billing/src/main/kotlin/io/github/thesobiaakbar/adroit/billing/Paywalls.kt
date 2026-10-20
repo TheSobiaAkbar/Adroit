@@ -1,6 +1,8 @@
 package io.github.thesobiaakbar.adroit.billing
 
 import android.os.SystemClock
+import androidx.annotation.CheckResult
+import androidx.annotation.MainThread
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import io.github.thesobiaakbar.adroit.billing.internal.config.ResolvedPaywall
@@ -157,6 +159,8 @@ public class Paywalls internal constructor(
      * answers [ShowDecision.Show] and the paywall shows its loading state. A skip is reported as
      * [BillingEvent.PaywallSuppressed]. Main thread.
      */
+    @MainThread
+    @CheckResult
     public fun shouldShow(paywall: PaywallDefinition, placement: String): ShowDecision =
         engine()?.shouldShow(paywall, placement) ?: ShowDecision.Skip(SkipReason.NOT_INITIALIZED)
 
@@ -174,6 +178,7 @@ public class Paywalls internal constructor(
      * [PaywallUiState.Unavailable] when [paywall] can't be shown at all (disabled, out of its campaign, the user is
      * entitled, no plans): the frequency rules aren't checked again, since the app already decided to show it.
      */
+    @MainThread
     public fun controller(paywall: PaywallDefinition, placement: String, scope: CoroutineScope): PaywallController {
         val engine = engine()
         val resolved = engine?.resolved(paywall) ?: ResolvedPaywall(paywall.name, paywall.defaults)
@@ -184,6 +189,7 @@ public class Paywalls internal constructor(
      * Records that [paywall] is now visible, for the caps, counter and timer. [PaywallController.onShown] calls it;
      * a custom paywall without a controller calls it itself. Main thread.
      */
+    @MainThread
     public fun recordShown(paywall: PaywallDefinition, placement: String) {
         engine()?.recordShown(paywall)
     }
@@ -193,6 +199,7 @@ public class Paywalls internal constructor(
      * [PaywallCloseReason.CLOSE_BUTTON] or [PaywallCloseReason.BACK], at most once per session, and only when
      * [shouldShow] allows it. Main thread.
      */
+    @MainThread
     public fun recordClosed(paywall: PaywallDefinition, placement: String, reason: PaywallCloseReason): PaywallDefinition? =
         engine()?.recordClosed(paywall, placement, reason)
 }

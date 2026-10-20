@@ -357,8 +357,9 @@ class AdroitBillingTest {
         val launches = application.getSharedPreferences("adroit_billing_paywalls", 0).getInt("launches", 0)
         AdroitBilling.initialize(application, valid)
         shadowOf(Looper.getMainLooper()).idle()
-        assertEquals(launches + 1, application.getSharedPreferences("adroit_billing_paywalls", 0).getInt("launches", 0))
         // The fake Play has no products: past every other rule, nothing can be bought.
         assertEquals(ShowDecision.Skip(SkipReason.NO_PLANS), AdroitBilling.paywalls.shouldShow(TestPaywalls.Onboarding, "home"))
+        // Counted on the IO dispatcher, but always before a rule can read it.
+        assertEquals(launches + 1, application.getSharedPreferences("adroit_billing_paywalls", 0).getInt("launches", 0))
     }
 }

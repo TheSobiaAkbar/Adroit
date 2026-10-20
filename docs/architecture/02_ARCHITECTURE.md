@@ -455,7 +455,7 @@ val adsConfig = adMobConfig {
   - Why not a sealed class declared by the host: that wouldn't work across modules.
 - Host apps declare an `object Placements { val HomeBanner = BannerPlacement("home_banner") … }`.
 - `AdUnitId` is a `@JvmInline value class` validated against the `ca-app-pub-\d{16}/\d{10}` pattern.
-- **Multiple placements may share one ad unit.** Caches are keyed by ad unit ID plus format, so a shared unit shares its cached ad. Frequency rules are per placement plus global.
+- **Multiple placements may share one ad unit.** Caches are keyed by ad unit ID plus format, so a shared unit shares its cached ad. Native pools on Google's demo units are the exception: there each placement keeps its own pool, because the demo unit stands in for units that differ in release. Frequency rules are per placement plus global.
 
 ### 20.3 Environment and test-ad safety
 

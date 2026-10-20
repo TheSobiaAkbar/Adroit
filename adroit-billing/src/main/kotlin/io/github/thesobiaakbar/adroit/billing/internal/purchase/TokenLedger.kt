@@ -22,18 +22,26 @@ internal enum class TokenState {
 
 /**
  * Processed purchase tokens in SharedPreferences `adroit_billing_ledger`, keyed by SHA-256 of the token, never the
- * token. Keeps the [capacity] most recently used; older ones are dropped.
+ * token. Keeps the [capacity] most recently used; older ones are dropped. The file is read on first use, which
+ * [warmUp] moves off the main thread.
  */
 @SuppressLint("UseKtx")
 internal class TokenLedger(context: Context, private val capacity: Int = CAPACITY) {
-    private val prefs = context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
+    private val prefs by lazy { context.getSharedPreferences(NAME, Context.MODE_PRIVATE) }
 
     /** In access order, so the first key is the least recently used. */
-    private val states = LinkedHashMap<String, TokenState>(16, 0.75f, true).apply {
-        prefs.getString(KEY, null)?.split(',')?.forEach { entry ->
-            val (hash, state) = entry.split(':').takeIf { it.size == 2 } ?: return@forEach
-            TokenState.entries.firstOrNull { it.name == state }?.let { put(hash, it) }
+    private val states by lazy {
+        LinkedHashMap<String, TokenState>(16, 0.75f, true).apply {
+            prefs.getString(KEY, null)?.split(',')?.forEach { entry ->
+                val (hash, state) = entry.split(':').takeIf { it.size == 2 } ?: return@forEach
+                TokenState.entries.firstOrNull { it.name == state }?.let { put(hash, it) }
+            }
         }
+    }
+
+    /** Reads the file now, on the calling thread. */
+    fun warmUp() {
+        states
     }
 
     @Synchronized

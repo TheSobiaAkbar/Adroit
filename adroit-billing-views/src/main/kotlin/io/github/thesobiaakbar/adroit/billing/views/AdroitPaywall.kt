@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.annotation.MainThread
 import io.github.thesobiaakbar.adroit.billing.AdroitBilling
 import io.github.thesobiaakbar.adroit.billing.PaywallCloseReason
 import io.github.thesobiaakbar.adroit.billing.PaywallController
@@ -44,6 +45,7 @@ public object AdroitPaywall {
      */
     @JvmStatic
     @JvmOverloads
+    @MainThread
     public fun show(activity: Activity, definition: PaywallDefinition, placement: String, force: Boolean = false): ShowDecision {
         val decision = if (force) ShowDecision.Show else shouldShow(definition, placement)
         if (decision == ShowDecision.Show) activity.startActivity(intent(activity, definition, placement))

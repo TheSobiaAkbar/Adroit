@@ -38,34 +38,40 @@ class SampleApplication : Application() {
         val initializeStart = SystemClock.elapsedRealtimeNanos()
         Adroit.initialize(this, config)
         val end = SystemClock.elapsedRealtimeNanos()
-        initializeBilling()
+        val billingNanos = initializeBilling()
         // The performance audit's measurements (docs/audits/PERFORMANCE_AUDIT.md): building the configuration, which
-        // reads and parses the ads file, and initialize(). Logged in every build type: release numbers are the ones
-        // that count, since debuggable builds skip ahead-of-time compilation.
-        Log.i(PERF_TAG, "config took ${(initializeStart - configStart) / 1_000} µs, initialize took ${(end - initializeStart) / 1_000} µs")
+        // reads and parses the ads file, initialize(), and AdroitBilling.initialize(). Logged in every build type:
+        // release numbers are the ones that count, since debuggable builds skip ahead-of-time compilation.
+        Log.i(
+            PERF_TAG,
+            "config took ${(initializeStart - configStart) / 1_000} µs, initialize took ${(end - initializeStart) / 1_000} µs, " +
+                "billing initialize took ${billingNanos / 1_000} µs",
+        )
     }
 
     // Billing (docs/firebase/sample_billing_remote_config.json for its Firebase keys). initialize reads the saved
     // entitlements synchronously, so a premium user from an earlier launch is ad-free before any screen asks for an ad.
-    private fun initializeBilling() {
+    // Returns how long AdroitBilling.initialize took, in nanoseconds.
+    private fun initializeBilling(): Long {
         val events = listOfNotNull(
             FirebaseBillingEvents(this),
             // Every event in logcat (tag SampleBilling), with its placement: home_banner, settings, onboarding…
             BillingEventListener { Log.i(BILLING_TAG, it.toString()) }.takeIf { BuildConfig.DEBUG },
         )
-        AdroitBilling.initialize(
-            this,
-            BillingSettings(
-                products = SampleProducts.entries,
-                paywalls = SamplePaywalls.entries,
-                config = FirebaseBillingConfig.source(),
-                events = events,
-                demo = DemoBilling(DemoMode.isOn(this)),
-            ),
+        val settings = BillingSettings(
+            products = SampleProducts.entries,
+            paywalls = SamplePaywalls.entries,
+            config = FirebaseBillingConfig.source(),
+            events = events,
+            demo = DemoBilling(DemoMode.isOn(this)),
         )
+        val start = SystemClock.elapsedRealtimeNanos()
+        AdroitBilling.initialize(this, settings)
+        val took = SystemClock.elapsedRealtimeNanos() - start
         // The ads bridge: premium means no ads anywhere, from the next ad request on.
         appScope.launch { AdroitBilling.entitlements.collect { Adroit.setAdFree(it.adFree) } }
         CoinWallet.start(this, appScope)
+        return took
     }
 
     // Fetches Remote Config (every ad's Firebase JSON) once this session, without making anything wait: at once, then

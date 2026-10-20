@@ -33,3 +33,12 @@
 # Firebase brings javax.inject into the app, so the test APK leaves it out and uses the app's copy, which R8 had
 # removed. Four annotation and interface types: keeping them changes nothing else.
 -keep class javax.inject.** { *; }
+
+# Failure fixed (StartupSmokeTest, with OnboardingShownRule, B22):
+#   NoSuchMethodError: No virtual method recordShown(Lio/github/thesobiaakbar/adroit/billing/PaywallDefinition;Ljava/lang/String;)V
+#   in class Lio/github/thesobiaakbar/adroit/billing/Paywalls;
+# The test counts the onboarding paywall as shown so it doesn't cover MainActivity; the app itself never calls
+# recordShown (its controller records the showing internally), so R8 removed it.
+-keepclassmembers,allowobfuscation class io.github.thesobiaakbar.adroit.billing.Paywalls {
+    public void recordShown(...);
+}

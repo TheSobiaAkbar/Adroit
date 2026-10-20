@@ -22,7 +22,12 @@ internal data class Attempt(val attribution: Attribution, val createdAt: Long, v
  */
 @SuppressLint("UseKtx")
 internal class AttemptStore(context: Context, private val now: () -> Long = System::currentTimeMillis) {
-    private val prefs = context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
+    private val prefs by lazy { context.getSharedPreferences(NAME, Context.MODE_PRIVATE) }
+
+    /** Reads the file now, on the calling thread, so the main thread doesn't on its first use. */
+    fun warmUp() {
+        prefs
+    }
 
     /** Writes synchronously, so the record survives the process dying while Play's sheet is open. */
     @SuppressLint("ApplySharedPref")

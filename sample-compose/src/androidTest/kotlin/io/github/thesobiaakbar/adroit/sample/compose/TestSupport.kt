@@ -11,6 +11,8 @@ import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import io.github.thesobiaakbar.adroit.Adroit
+import io.github.thesobiaakbar.adroit.billing.AdroitBilling
+import io.github.thesobiaakbar.adroit.sample.compose.billing.SamplePaywalls
 import io.github.thesobiaakbar.adroit.sample.compose.ui.Destination
 import org.junit.rules.ExternalResource
 
@@ -34,6 +36,18 @@ class AppOpenDisabledRule : ExternalResource() {
 
     private fun setEnabled(enabled: Boolean) {
         InstrumentationRegistry.getInstrumentation().runOnMainSync { Adroit.client.appOpen.setEnabled(enabled) }
+    }
+}
+
+/**
+ * Counts the onboarding paywall as shown this session, before the test's Activity starts. It shows at most once per
+ * session, after the splash, and would otherwise cover the screens a test about ads drives (PaywallLeakTest covers it).
+ */
+class OnboardingShownRule : ExternalResource() {
+    override fun before() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            AdroitBilling.paywalls.recordShown(SamplePaywalls.Onboarding, "onboarding")
+        }
     }
 }
 

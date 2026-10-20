@@ -41,6 +41,7 @@ class FeedTest {
         .outerRule(notificationsGranted())
         .around(DetectLeaksAfterTestSuccess())
         .around(AppOpenDisabledRule())
+        .around(OnboardingShownRule())
         .around(compose)
 
     private val device = uiDevice()

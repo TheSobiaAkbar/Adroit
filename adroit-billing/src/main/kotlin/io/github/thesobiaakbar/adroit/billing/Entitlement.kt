@@ -1,5 +1,7 @@
 package io.github.thesobiaakbar.adroit.billing
 
+import androidx.annotation.CheckResult
+
 /**
  * The state of one owned product.
  *
@@ -95,6 +97,7 @@ public data class EntitlementSnapshot(
         }
 
     /** Whether the user has [entitlement] now. False while [status] is [SnapshotStatus.Unknown]. */
+    @CheckResult
     public fun has(entitlement: String): Boolean = entitlement in active
 
     /** Whether the user has any of [adFreeEntitlements]: pass it to `Adroit.setAdFree`. */

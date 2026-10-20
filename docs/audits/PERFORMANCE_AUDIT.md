@@ -83,11 +83,11 @@ maintainers.
 
 ## Observations
 
-**O1: debug builds may request more native ads than release builds.** With demo ad units, every placement of a
-format uses Google's single demo ID, and, as designed (architecture §20, "a shared unit shares its cached ad"), they
-share one cache. A native pool shared by several placements takes the largest pool size and the most eager preload
-strategy: the playground makes 2 native requests at startup in debug, and would make 1 with real ad units.
-`StartupRequestsTest` pins both shapes.
+**O1: debug builds share full-screen caches, not native pools.** With demo ad units, every placement of a format
+uses Google's single demo ID, and the full-screen formats share its cache (architecture §20, "a shared unit shares its
+cached ad"). Native pools don't: each placement keeps its own pool on a demo unit, so debug loads and refills natives
+as release will (an earlier shared demo pool took the largest size and most eager preload of all its placements, and
+named every refill after its first placement). `StartupRequestsTest` pins both shapes.
 
 **O2: the 250 ms stagger is per format.** When the library becomes ready, each engine spaces its own placements 250
 ms apart, but the interstitial, rewarded and rewarded interstitial engines each start their first load at +250 ms,
@@ -174,3 +174,35 @@ the engines are spaced from each other.
   cost 60 to 80 ms. W1's lazy-construction option is left to a decision, not done.
 - No safety check was removed or relaxed: `gad_rdp` is still committed before the SDK starts, UMP is still created
   once, and the launch-count rule still blocks app open when the count is unknown.
+
+## Billing (B22)
+
+Run on 2026-10-19 against `master` (base commit `a29c454`), sample-xml and sample-compose in demo mode on the same
+Pixel 7a.
+
+| # | Measurement | Target | Result | Verdict |
+|---|---|---|---|---|
+| B1 | `AdroitBilling.initialize()` wall time on main, release, 10 cold starts | < 15 ms | **Median 4.8 ms** (4.3 to 5.3 ms); the first two starts after installing took 11.8 and 12.1 ms. Logged by sample-xml as `billing initialize took … µs` (tag `AdroitPerf`). | PASS |
+| B2 | Main-thread disk reads during `initialize()` | Only the documented read of the saved entitlements | StrictMode, debug cold start: **7 violations → 2**, both the entitlement cache (`EntitlementCache`, opening and reading it). | FAIL → **fixed** |
+| B3 | Main-thread disk access while a purchase is processed | Noted | `TokenLedger.set` and `AttemptStore.save` use `commit()` on the main thread, about 6 to 7 ms each, only when a purchase changes state. Kept on purpose (BF2). | Noted |
+
+**BF1: three stores read their files on the main thread in `initialize()`.**
+- StrictMode showed `AttemptStore`, `TokenLedger` (open and parse) and `ShowCounterStore` (open, and the launch count's
+  `edit()`, which waits for the file) reading SharedPreferences on the main thread, from `BillingRuntime`'s constructor
+  and `start()`.
+- *Fix:* the three open their file lazily, and `start()` reads all three on `Dispatchers.IO`. A store used on the main
+  thread before that finishes waits for it on the lazy's lock, but never reads the disk there. The launch is counted as
+  part of the show counter's first read, so no show rule can see the count before this launch is in it.
+- *Tests:* `PaywallEngineTest` "a launch is counted once, on the store's first use, whoever uses it first";
+  `AdroitBillingTest` checks the count after the first `shouldShow`.
+
+**BF2: purchase state is committed on the main thread (kept).** The ledger records "granted" before the purchase is
+acknowledged and the attempt before Play's sheet opens, synchronously, so a process killed right after loses neither
+(B06, B07). Moving the writes to the IO dispatcher would need an injectable dispatcher in every test that runs
+through `AdroitBilling`; at about 7 ms per write, only during a purchase, it isn't worth it now.
+
+### Billing procedures
+1. `initialize()` cost: `./gradlew :sample-xml:installRelease`, then the 10 cold starts of procedure 1; each start
+   logs `config took …, initialize took …, billing initialize took … µs`.
+2. Main-thread I/O: with the debug build, `adb logcat -d -v brief StrictMode:D '*:S'` after a cold start; count the
+   violations with an `io.github.thesobiaakbar.adroit.billing` frame. Expected: only `EntitlementCache`.

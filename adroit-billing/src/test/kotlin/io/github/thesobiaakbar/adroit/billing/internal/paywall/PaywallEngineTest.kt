@@ -127,6 +127,15 @@ class PaywallEngineTest {
     }
 
     @Test
+    fun `a launch is counted once, on the store's first use, whoever uses it first`() {
+        val before = ShowCounterStore(application).launches
+        val counting = ShowCounterStore(application, countsLaunch = true)
+        assertEquals(before + 1, counting.launches)
+        counting.warmUp()
+        assertEquals(before + 1, counting.launches)
+    }
+
+    @Test
     fun `maxPerSession and maxPerDay, with a day rollover`() = runTest {
         show("""{"maxPerSession": 2, "maxPerDay": 3}""")
         var engine = engine()
