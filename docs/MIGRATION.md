@@ -73,4 +73,24 @@ code changes.
 
 The first release: nothing to migrate.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+## Billing
+
+The billing modules (`adroit-billing`, `-views`, `-compose`, `-firebase` and `-testing`) follow the same API policy
+as the ads modules (ADR-007):
+
+- Their public API is recorded in `.api` dumps and checked on every build (`apiCheck`), so no change to it is
+  accidental.
+- Within 1.x, they stay **binary compatible**: an app compiled against 1.0 runs with any later 1.x without
+  recompiling. Breaking changes wait for 2.0, and each one gets a section here.
+- API marked `@ExperimentalAdroitBillingApi` is the exception: it may change in a minor version, and using it needs
+  `@OptIn(ExperimentalAdroitBillingApi::class)`.
+- New enum values (for example a new `BillingError` or `SkipReason`) can appear in minor versions where the type says
+  so: keep an `else` branch when matching them.
+- The Firebase JSON follows the same rule: new fields can appear, existing ones keep their meaning, and unknown fields
+  are ignored, so an older app version reads a newer value safely.
+
+Billing has no earlier version to migrate from. Apps that wrote their own Play Billing code move to it by following
+[Adding billing to a Kotlin + XML app](BILLING_NEW_APP_XML.md) or [to a Compose app](BILLING_NEW_APP_COMPOSE.md),
+and deleting their purchase handling, acknowledgement and "is premium" storage.
+
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, Play Billing Library 9.1.0, 2026-10-20

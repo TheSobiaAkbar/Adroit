@@ -50,6 +50,7 @@ apps in this repository are the finished result of each guide.
 | `io.github.thesobiaakbar:adroit-compose` | Your app uses Jetpack Compose: `AdBanner`, `AdNative`, `AdSlot`, `rememberFullScreenAdLauncher`. |
 | `io.github.thesobiaakbar:adroit-firebase` | Optional: each ad controlled from Firebase Remote Config, and ad events sent to Google Analytics. |
 | `io.github.thesobiaakbar:adroit-testing` | Unit tests without Google: `FakeAdsClient`, `AdroitTestRule`. Test scope only. |
+| `io.github.thesobiaakbar:adroit-billing-views` or `adroit-billing-compose` | In-app purchases and paywalls, with or without ads: see [Billing](docs/BILLING.md). |
 
 `adroit-views` and `adroit-compose` both bring `adroit-core`, the engine that does the work. An app with both XML and
 Compose screens adds `adroit-compose`, which includes `adroit-views`.
@@ -101,6 +102,12 @@ The guides above set this up properly, with every ad in one enum and Firebase co
 [Configuration](docs/CONFIGURATION.md) · [Consent](docs/CONSENT.md) · [Splash screen](docs/SPLASH.md) ·
 [Ad profiles](docs/AD_PROFILES.md) · [Remote config](docs/REMOTE_CONFIG.md) · [Analytics](docs/ANALYTICS.md) ·
 [Mediation](docs/MEDIATION.md)
+
+**In-app purchases and paywalls:**
+[Billing](docs/BILLING.md) · [New XML app](docs/BILLING_NEW_APP_XML.md) ·
+[New Compose app](docs/BILLING_NEW_APP_COMPOSE.md) · [Paywalls in Firebase](docs/PAYWALL_REMOTE_CONFIG.md) ·
+[Play Console setup](docs/PLAY_CONSOLE_BILLING_SETUP.md) · [Backend contract](docs/BILLING_BACKEND.md) ·
+[Billing troubleshooting](docs/BILLING_TROUBLESHOOTING.md)
 
 **Testing and help:**
 [Testing](docs/TESTING.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Migration](docs/MIGRATION.md)

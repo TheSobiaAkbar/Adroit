@@ -11,13 +11,17 @@ The app talks to the backend through `HttpPurchaseVerifier`, which ships with th
 - the URL of each endpoint;
 - a function that returns the request headers (for example your user's auth token).
 
+<!-- snippet: docs-snippets/src/billing/kotlin/io/github/thesobiaakbar/adroit/docs/billing/BillingBackend.kt#billing-http-verifier -->
 ```kotlin
 val backend = HttpPurchaseVerifier(
     url = "https://api.example.com/billing/verify",
     entitlementsUrl = "https://api.example.com/billing/entitlements",
     headers = { mapOf("Authorization" to "Bearer ${auth.freshIdToken()}") },
 )
-AdroitBilling.initialize(app, BillingSettings(…, verifier = backend, entitlementProvider = backend))
+AdroitBilling.initialize(
+    this,
+    BillingSettings(AppProducts.entries, AppPaywalls.entries, verifier = backend, entitlementProvider = backend),
+)
 ```
 
 An app can also write its own `PurchaseVerifier` and `EntitlementProvider` against a different API. The rules in
@@ -256,3 +260,7 @@ What the backend must do outside `/verify`:
       with Google before acting.
 - [ ] Refunds (voided purchases) revoke grants.
 - [ ] Responses stay under 64 KB and contain no tokens.
+
+Related: [Billing](BILLING.md), [Play Console setup](PLAY_CONSOLE_BILLING_SETUP.md).
+
+Last verified against: Play Billing Library 9.1.0, 2026-10-20

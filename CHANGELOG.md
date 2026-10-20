@@ -6,6 +6,20 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Added
+- **Adroit Billing**, in-app purchases and paywalls on Google Play Billing Library 9.1.0, in five new modules:
+  `adroit-billing` (products, purchases, entitlements, restore, attribution, paywall rules and `PaywallController`),
+  `adroit-billing-views` (`AdroitPaywall`, `PaywallView`), `adroit-billing-compose` (`Paywall`,
+  `rememberPaywallController`), `adroit-billing-firebase` (paywalls from Remote Config, events in Analytics) and
+  `adroit-billing-testing` (`FakeBilling`). They don't depend on the ads modules; one line in the app makes premium
+  users ad-free. Start with docs/BILLING.md.
+- Every paywall setting can be changed from Firebase without a release, including the close button's delay:
+  docs/PAYWALL_REMOTE_CONFIG.md (for non-developers), checked against the parser by a unit test.
+- Guides: docs/BILLING_NEW_APP_XML.md, docs/BILLING_NEW_APP_COMPOSE.md, docs/PLAY_CONSOLE_BILLING_SETUP.md,
+  docs/BILLING_TROUBLESHOOTING.md and docs/BILLING_BACKEND.md (the optional server contract, with
+  `HttpPurchaseVerifier`). Their code is compiled in `docs-snippets`.
+- Both samples sell a subscription, a lifetime product and coins, in demo mode on any device.
+
 ## [1.0.0-rc5] - 2026-10-15
 
 ### Added

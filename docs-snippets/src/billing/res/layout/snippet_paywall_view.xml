@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The billing XML guide, step 6: a paywall inside a layout. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- region billing-paywall-view -->
+    <io.github.thesobiaakbar.adroit.billing.views.PaywallView
+        android:id="@+id/coins_paywall"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:adroit_billing_paywall="Coins"
+        app:adroit_billing_placement="coins" />
+    <!-- endregion -->
+</FrameLayout>

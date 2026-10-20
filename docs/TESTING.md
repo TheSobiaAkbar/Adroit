@@ -77,6 +77,71 @@ class LevelFlowTest {
 - `FakeBannerAdHandle` and `FakeNativeAdHandle` (from `createdBanners` and `loadedNativeAds`) provide real Views for
   layout tests.
 
+## Billing with `adroit-billing-testing`
+
+`io.github.thesobiaakbar:adroit-billing-testing` has `FakeBilling`, a `BillingClientApi` with no Google Play, no
+device and no Robolectric. Code that takes `BillingClientApi` (with `AdroitBilling` as the default, or bound by
+dependency injection) gets the fake in tests:
+
+```kotlin
+testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc5")
+```
+
+<!-- snippet: docs-snippets/src/test/kotlin/io/github/thesobiaakbar/adroit/docs/billing/BillingTestingSnippets.kt#billing-fake-test -->
+```kotlin
+/** Plain JVM: no Play, no device, no Robolectric. */
+@OptIn(ExperimentalCoroutinesApi::class)
+class PremiumViewModelTest {
+    private val billing = FakeBilling()
+
+    @Before
+    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After
+    fun tearDown() = Dispatchers.resetMain()
+
+    @Test
+    fun `premium follows what the user owns`() {
+        val vm = PremiumViewModel(billing)
+        assertFalse(vm.entitlements.value.has("premium"))
+
+        billing.own(AppProducts.PremiumLifetime)
+
+        assertTrue(vm.entitlements.value.has("premium"))
+    }
+
+    @Test
+    fun `restore reports its result once`() = runTest {
+        billing.restoreResult = RestoreResult.NothingToRestore
+        val vm = PremiumViewModel(billing)
+
+        vm.restore()
+
+        assertEquals(RestoreResult.NothingToRestore, vm.restoreResults.first())
+    }
+}
+```
+
+What the fake does:
+
+- `own(…)` sets what the user owns, as Play-confirmed entitlements; `entitlements`, `catalog` and `connection` can
+  also be set directly.
+- A purchase succeeds by default and adds the product's entitlements; `nextPurchaseResult` makes the next one
+  `Cancelled`, `Failed`, `Pending` (which grants nothing, as in the library) or `AlreadyOwned`.
+  `holdNextPurchase()` keeps it waiting, to assert a "purchasing" state. `purchaseRequests` lists every request,
+  with its placement.
+- `restoreResult` and `manageSubscriptionsResult` are what `restore()` and `openManageSubscriptions` return.
+- `emitConsumable(…)` delivers a bought consumable; `confirmedConsumables` lists the ones the app confirmed.
+- `TestProducts` builds products with plans, offers and prices (`TestProducts.subscription(…) { basePlan(…) { … } }`),
+  and `TestPaywalls.model(…)` a paywall's content, for UI tests of a `PaywallController`
+  (`PaywallController.forModel`).
+
+It differs from the library in a few places: nothing runs on the main thread or talks to Play, a purchase completes
+inside the call unless held, and a consumable is delivered once whether or not it's confirmed.
+
+For a device, use demo mode (`DemoBilling(true)` in a debug build): made-up products and a dialog to pick "Buy",
+"Pending payment" or "Cancel" ([Billing](BILLING.md)).
+
 ## Manual QA
 
 - Use DEVELOPMENT, or STAGING with its default demo ad units, for every build testers get. Google's demo ads are
@@ -90,4 +155,4 @@ class LevelFlowTest {
 - `sample-xml` and `sample-compose` (the same app, in Views and in Compose) exercise every
   format, the splash, rotation, offline mode and Firebase overrides.
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-26
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, Play Billing Library 9.1.0, 2026-10-20
