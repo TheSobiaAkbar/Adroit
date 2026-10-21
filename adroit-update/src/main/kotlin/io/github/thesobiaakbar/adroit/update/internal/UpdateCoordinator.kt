@@ -57,17 +57,19 @@ internal class UpdateCoordinator(
     private var stopListening: (() -> Unit)? = null
 
     suspend fun check(activity: Activity, default: UpdateType): Unit = coroutineScope {
-        // Play and this session's Remote Config fetch, in parallel.
-        val info = async { info() }
-        withTimeoutOrNull(fetchTimeout) { awaitFetched() }
-        val config = parse(readConfig(), default)
-        if (config.type == UpdateType.OFF) {
-            info.cancel()
+        // Play and this session's Remote Config fetch, in parallel. With nothing to update, return at once: the type
+        // doesn't matter then, so a cold start doesn't wait for the fetch.
+        val fetched = async { withTimeoutOrNull(fetchTimeout) { awaitFetched() } }
+        val update = info()
+        if (update == null || !(update.available || update.inProgress || update.downloaded)) {
+            fetched.cancel()
             return@coroutineScope
         }
+        fetched.await()
+        val config = parse(readConfig(), default)
+        if (config.type == UpdateType.OFF) return@coroutineScope
         val force = config.type == UpdateType.FORCE ||
             (config.forceBelowVersionCode > 0 && installedVersionCode < config.forceBelowVersionCode)
-        val update = info.await() ?: return@coroutineScope
         if (activity.isFinishing || activity.isDestroyed) return@coroutineScope
         if (force) {
             if (update.inProgress || (update.available && update.immediateAllowed)) {

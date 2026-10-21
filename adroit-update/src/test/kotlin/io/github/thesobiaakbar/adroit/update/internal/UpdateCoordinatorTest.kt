@@ -222,6 +222,19 @@ class UpdateCoordinatorTest {
     }
 
     @Test
+    fun `nothing to update on Play - returns at once, without waiting for Remote Config`() = runTest {
+        val never = CompletableDeferred<Unit>()
+        var configRead = false
+        port.info = UpdateInfo(available = false)
+        val coordinator = UpdateCoordinator(port, { configRead = true; null }, { never.await() }, 10, ready, { warnings += it })
+        val start = currentTime
+        coordinator.check(activity, UpdateType.FLEXIBLE)
+        assertEquals("no wait for the fetch", 0L, currentTime - start)
+        assertFalse(configRead)
+        assertTrue(port.flows.isEmpty())
+    }
+
+    @Test
     fun `malformed values - the default, with a warning`() = runTest {
         config = "not json"
         assertTrue(check(default = UpdateType.OFF))

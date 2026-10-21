@@ -38,7 +38,8 @@ public object AdroitUpdate {
 
     /**
      * Checks Google Play for a newer version and offers it as Firebase `AppUpdate` says, or as [default] without
-     * Firebase or before its first fetch. Waits up to 2 seconds for this session's Remote Config fetch.
+     * Firebase or before its first fetch. When Play has an update, waits up to 2 seconds for this session's Remote
+     * Config fetch; with none, returns as soon as Play answers.
      *
      * Returns when the app may continue: no update, a flexible prompt the user answered either way, or a forced update
      * that couldn't start. Never returns when the user backs out of a forced update: the app closes

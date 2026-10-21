@@ -30,8 +30,9 @@ Both fields are optional. An invalid value is ignored with a warning in Logcat (
 applies. Without Firebase, or before the first fetch, the `default` passed to `check` applies (`flexible` unless you
 pass another).
 
-`check` waits up to 2 seconds for this session's Remote Config fetch, at the same time as it asks Google Play. After
-that it uses the last values fetched (the previous launch's).
+`check` asks Google Play first. With no update to offer (the usual launch) it returns as soon as Play answers, about a
+second. With one, it waits up to 2 seconds for this session's Remote Config fetch, which started at the same time;
+after that it uses the last values fetched (the previous launch's).
 
 ## Code
 
