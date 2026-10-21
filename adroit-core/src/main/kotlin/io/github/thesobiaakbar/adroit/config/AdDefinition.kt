@@ -386,6 +386,8 @@ public sealed class AdProfile {
  * @property showLoading a loading screen before full-screen ads and a shimmer while banners and native ads load; each
  *   ad can set its own.
  * @property loadingSeconds how long the loading screen stays up at least; each ad can set its own.
+ * @property splashAdMode whether the splash shows its ad, or only loads it or leaves it for the next screen
+ *   (docs/SPLASH.md).
  */
 public class AdSettings @JvmOverloads constructor(
     public val adsEnabled: Boolean = true,
@@ -398,6 +400,7 @@ public class AdSettings @JvmOverloads constructor(
     public val loadTimeoutSeconds: Int = AdBehavior.DEFAULT_LOAD_TIMEOUT_SECONDS,
     public val showLoading: Boolean = true,
     public val loadingSeconds: Int = AdBehavior.DEFAULT_LOADING_SECONDS,
+    public val splashAdMode: SplashAdMode = SplashAdMode.SHOW,
 ) {
     override fun equals(other: Any?): Boolean = other is AdSettings && other.toJson() == toJson()
 

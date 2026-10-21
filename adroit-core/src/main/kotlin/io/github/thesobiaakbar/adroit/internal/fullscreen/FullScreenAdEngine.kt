@@ -187,9 +187,9 @@ internal class FullScreenAdEngine(
      * loaded, is kept for the next show. Other placements, and shows the library starts itself ([mayWait] false, the
      * app open ad on return), answer `NotShown(NotReady)` at once.
      *
-     * An ad profile with `showLoading` (not the splash ad, whose screen is the splash) gets a loading screen from the
-     * wait, or from the call when the ad is ready, for at least its `loadingSeconds`; it's removed when the ad opens,
-     * fails, or isn't shown.
+     * An ad profile with `showLoading` gets a loading screen from the wait, or from the call when the ad is ready, for
+     * at least its `loadingSeconds`; it's removed when the ad opens, fails, or isn't shown. Not [onSplash] (the show
+     * from [showOnSplash], whose screen is the splash): the splash ad shown later, from another screen, gets one too.
      */
     fun show(
         activity: Activity,
@@ -197,6 +197,7 @@ internal class FullScreenAdEngine(
         prepare: (LoadedFullScreenAd) -> Unit = {},
         onRewardEarned: (Reward) -> Unit = {},
         mayWait: Boolean = true,
+        onSplash: Boolean = false,
         onResult: (FullScreenResult) -> Unit,
     ) {
         val callback = OnceCallback<FullScreenResult>({ result ->
@@ -206,7 +207,7 @@ internal class FullScreenAdEngine(
             }
             onResult(result)
         })
-        show(activity, placement, prepare, onRewardEarned, callback, afterWait = false, mayWait = mayWait)
+        show(activity, placement, prepare, onRewardEarned, callback, afterWait = false, mayWait = mayWait, onSplash = onSplash)
     }
 
     private fun show(
@@ -218,6 +219,7 @@ internal class FullScreenAdEngine(
         afterWait: Boolean,
         mayWait: Boolean = false,
         loading: LoadingScreen? = null,
+        onSplash: Boolean = false,
     ) {
         val p = placements[placement]
         val requestedUnit = slots[placement]?.adUnitId ?: p?.adUnitId
@@ -228,7 +230,7 @@ internal class FullScreenAdEngine(
         val timeout = behavior?.loadTimeout
         val waits = mayWait && !afterWait && (error == AdError.NotReady || error == AdError.Expired) &&
             timeout != null && timeout.isPositive()
-        val withLoading = !afterWait && loadingScreens != null && behavior?.showLoading == true && !p.isSplash &&
+        val withLoading = !afterWait && loadingScreens != null && behavior?.showLoading == true && !onSplash &&
             (error == null || waits)
         if (waits || withLoading) {
             prepareThenShow(activity, p!!, if (waits) timeout else null, withLoading, prepare, onRewardEarned, callback)
@@ -589,7 +591,7 @@ internal class FullScreenAdEngine(
             when {
                 waited == null -> notShown(AdError.Timeout())
                 waited.error != null -> notShown(waited.error)
-                else -> show(activity, placement) { callback(it) }
+                else -> show(activity, placement, onSplash = true) { callback(it) }
             }
         }
     }

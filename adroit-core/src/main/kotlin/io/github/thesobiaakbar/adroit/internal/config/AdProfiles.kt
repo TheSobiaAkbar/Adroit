@@ -16,6 +16,7 @@ import io.github.thesobiaakbar.adroit.config.NativeLayoutNames
 import io.github.thesobiaakbar.adroit.config.PlacementConfig
 import io.github.thesobiaakbar.adroit.config.PlacementsBuilder
 import io.github.thesobiaakbar.adroit.config.PreloadStrategy
+import io.github.thesobiaakbar.adroit.config.SplashAdMode
 import io.github.thesobiaakbar.adroit.config.SplashTimings
 import io.github.thesobiaakbar.adroit.config.remote.AdOverrides
 import io.github.thesobiaakbar.adroit.config.remote.PlacementOverride
@@ -422,7 +423,7 @@ internal object AdProfiles {
             else -> wrong("adUnitIds", "a list of ad unit IDs")
         }
 
-        /** The splash timings set here (each a positive number of seconds), or null when none is. */
+        /** The splash timings set here (each a positive number of seconds) and the splash ad mode, or null when none is. */
         fun splashTimings(): SplashTimings? {
             fun seconds(name: String): Int? = count(name)?.let { value ->
                 if (value > 0) value else null.also { issue("\"$name\" must be at least 1; ignored") }
@@ -432,8 +433,15 @@ internal object AdProfiles {
                 seconds("premiumSplashSeconds"),
                 seconds("offlineSplashSeconds"),
                 seconds("consentTimeoutSeconds"),
+                splashAdMode(),
             )
             return timings.takeUnless { it == SplashTimings() }
+        }
+
+        private fun splashAdMode(): SplashAdMode? {
+            val mode = string("splashAdMode") ?: return null
+            return SplashAdMode.entries.firstOrNull { it.name.equals(mode.trim(), ignoreCase = true) }
+                ?: wrong("splashAdMode", "show, preload or later")
         }
 
         fun bannerSize(): BannerSize? {

@@ -563,30 +563,49 @@ class AdProfilesEngineTest {
     }
 
     @Test
-    fun `showLoading false and the splash ad show without a loading screen, and loadingSeconds sets its length`() = runTest {
+    fun `showLoading false shows without a loading screen, and loadingSeconds sets its length`() = runTest {
         val h = profilesHarness(loading = true)
         val quiet = InterstitialPlacement("Quiet")
-        val splashAd = InterstitialPlacement("Splash")
         val long = InterstitialPlacement("LongLoading")
-        listOf(quiet, splashAd, long).forEach { h.engine.preload(it) }
+        listOf(quiet, long).forEach { h.engine.preload(it) }
         h.run(1_000)
         h.show(quiet)
         h.run()
         assertEquals(1, h.adsSdk.fullScreenAds[0].showCount)
         h.adsSdk.fullScreenAds[0].simulateFullShow()
         h.run(1_000)
-        h.show(splashAd)
-        h.run()
-        assertEquals(1, h.adsSdk.fullScreenAds[1].showCount)
-        h.adsSdk.fullScreenAds[1].simulateFullShow()
-        h.run(1_000)
         assertTrue("no screen so far", h.screens().isEmpty())
 
         h.show(long)
         h.run(2_900)
-        assertEquals(0, h.adsSdk.fullScreenAds[2].showCount)
+        assertEquals(0, h.adsSdk.fullScreenAds[1].showCount)
         h.run(200)
-        assertEquals(1, h.adsSdk.fullScreenAds[2].showCount)
+        assertEquals(1, h.adsSdk.fullScreenAds[1].showCount)
+    }
+
+    @Test
+    fun `the splash ad gets no loading screen on the splash, but one when it's shown later from another screen`() = runTest {
+        val h = profilesHarness(loading = true)
+        val splashAd = InterstitialPlacement("Splash")
+        h.engine.preload(splashAd)
+        h.run(1_000)
+        h.engine.showOnSplash(h.activity(), splashAd) { h.results += it }
+        h.run()
+        assertEquals(1, h.lastAd().showCount)
+        h.lastAd().simulateFullShow()
+        h.run(1_000)
+        assertTrue("the splash is its screen", h.screens().isEmpty())
+
+        // splashAdMode "later": nothing cached, AdSlots.showFullScreen waits for it behind a loading screen.
+        h.adsSdk.enqueueLoad(TestIds.unit(13), ScriptedLoad.Success(), delayMs = 2_000)
+        h.show(splashAd)
+        h.run(100)
+        assertTrue(h.loadingScreens!!.showing)
+        h.run(2_000)
+        assertEquals(1, h.lastAd().showCount)
+        h.lastAd().simulateFullShow()
+        h.run()
+        assertEquals(FullScreenResult.Dismissed(clicked = false), h.results.last())
     }
 
     @Test

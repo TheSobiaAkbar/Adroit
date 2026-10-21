@@ -13,6 +13,7 @@ import io.github.thesobiaakbar.adroit.config.BannerPlacementConfig
 import io.github.thesobiaakbar.adroit.config.InterstitialPlacementConfig
 import io.github.thesobiaakbar.adroit.config.NativePlacementConfig
 import io.github.thesobiaakbar.adroit.config.RewardedPlacementConfig
+import io.github.thesobiaakbar.adroit.config.SplashAdMode
 import io.github.thesobiaakbar.adroit.config.TestIds
 import io.github.thesobiaakbar.adroit.config.adMobConfig
 import io.github.thesobiaakbar.adroit.config.remote.PlacementOverride
@@ -322,5 +323,21 @@ class AdProfilesTest {
         val resolved = feed.orElse(settings)
         assertEquals(feed.ctaColors, resolved.ctaColors)
         assertEquals(Color.BLACK, resolved.attributionTextColor)
+    }
+
+    @Test
+    fun `splashAdMode is read in any case, and an unknown value is ignored with a warning`() {
+        fun mode(value: String) = AdProfiles.parseRemote(emptyMap(), emptyMap(), """{ "splashAdMode": $value }""")
+        assertEquals(SplashAdMode.SHOW, mode("\"show\"").overrides.splash?.splashAdMode)
+        assertEquals(SplashAdMode.PRELOAD, mode("\"Preload\"").overrides.splash?.splashAdMode)
+        assertEquals(SplashAdMode.LATER, mode("\" LATER \"").overrides.splash?.splashAdMode)
+
+        val unknown = mode("\"never\"")
+        assertNull("the app's value applies", unknown.overrides.splash)
+        assertEquals(listOf("Firebase settings: \"splashAdMode\" must be show, preload or later; ignored"), unknown.issues)
+
+        val file = AdProfiles.parseFile("""{ "settings": { "splashAdMode": "later" }, "ads": {} }""")
+        assertEquals(SplashAdMode.LATER, file.settings.splash.adMode)
+        assertEquals("the default", SplashAdMode.SHOW, AdProfiles.parseFile("""{ "settings": {}, "ads": {} }""").settings.splash.adMode)
     }
 }

@@ -6,6 +6,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Added
+- Firebase `AdSettings.splashAdMode`: `"show"` (default), `"preload"` or `"later"`. The last two keep the ad off the
+  splash, use the short timer and report the new `SplashState.Finished.showAdLater`, so the app shows the ad with
+  `AdSlots.showFullScreen` on the next screen (for example on the paywall's close button). docs/SPLASH.md.
+
 ### Changed
 - One Remote Config fetch for the whole app: `RemoteConfigSession` moved to the new `adroit-remote-config` module
   (same package and API), which `adroit-firebase` and `adroit-billing-firebase` both use. Billing's own copy of the

@@ -78,16 +78,54 @@ override fun onCreate(savedInstanceState: Bundle?) {
 - Exclude the splash Activity from automatic app open ads (`AdProfile.appOpen(excludedActivities = ...)`).
 - `start` is safe to call from every `onCreate`: after a rotation, it hands the new Activity to the running flow.
 
+## Showing the splash ad later
+
+Sometimes the splash shouldn't show its ad: the user goes to another screen first, usually the paywall, and the ad
+shows when they close it. The splash still does everything else (consent, the library's start, routing). Firebase
+chooses with the `splashAdMode` field of `AdSettings`:
+
+| `splashAdMode` | Splash loads the ad? | Splash shows it? | Splash timer | `Finished.showAdLater` |
+|---|---|---|---|---|
+| `"show"` (default) | yes | yes | `splashSeconds` | false |
+| `"preload"` | yes, and keeps it | no | `premiumSplashSeconds`, ends early when the ad is ready | true |
+| `"later"` | no | no | `premiumSplashSeconds` | true |
+
+`showAdLater` is always false for a premium user, without internet, and without a splash ad. When it's true, show
+the same splash ad with `AdSlots.showFullScreen` on the next screen, then continue:
+
+```kotlin
+is SplashState.Finished -> when {
+    paywallWanted -> openPaywall(onClose = { showAdThen(state.showAdLater) { goMain() } })
+    else -> showAdThen(state.showAdLater) { goMain() }
+}
+
+fun showAdThen(later: Boolean, next: () -> Unit) {
+    if (later) AdSlots.showFullScreen(activity, AppAds.SplashAd) { next() } else next()
+}
+```
+
+- With `"preload"` the ad is usually loaded by then and shows at once.
+- With `"later"`, or a preload that isn't ready yet, `showFullScreen` loads it behind the loading screen, for up to
+  `loadTimeoutSeconds`. Continue on any result: `onResult` is called whether the ad showed or not.
+
+When to use each:
+- `"show"`: the usual splash ad.
+- `"preload"`: a paywall or onboarding screen right after the splash, with the ad on its close button and no wait.
+- `"later"`: the same, when most users won't reach the ad (for example most subscribe or stay on the paywall), so
+  loading it on every launch would waste requests.
+
 ## Changing the timings from Firebase
 
 The timings are fields of the `AdSettings` parameter (JSON), next to the other settings:
 
 ```json
-{ "splashSeconds": 13, "premiumSplashSeconds": 3, "offlineSplashSeconds": 3, "consentTimeoutSeconds": 8 }
+{ "splashSeconds": 13, "premiumSplashSeconds": 3, "offlineSplashSeconds": 3, "consentTimeoutSeconds": 8,
+  "splashAdMode": "show" }
 ```
 
 Set their defaults in code with `AdSettings(splashSeconds = 11, ...)` (see [Ad profiles](AD_PROFILES.md#settings)).
-Each is a whole number of seconds, at least 1; an invalid value is ignored with a warning.
+Each timing is a whole number of seconds, at least 1. `splashAdMode` is `"show"`, `"preload"` or `"later"`, in any
+case. An invalid value is ignored with a warning.
 
 ## What is guaranteed
 
@@ -95,6 +133,7 @@ Each is a whole number of seconds, at least 1; an invalid value is ignored with 
   The time the consent form is on screen doesn't count: the splash waits for the user's answer.
 - The timer always ends: the splash moves on at the latest when it does, unless the splash ad is on screen.
 - A splash ad is never shown after the timer, nor while the screen is in the background.
+- With `splashAdMode` `"preload"` or `"later"` the splash never shows the ad, and `"later"` never requests it.
 - The flow doesn't restart on rotation, and `cancel()` stops it without closing an ad on screen.
 
 Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28

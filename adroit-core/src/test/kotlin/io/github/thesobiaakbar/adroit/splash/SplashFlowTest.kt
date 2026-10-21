@@ -5,6 +5,7 @@ import io.github.thesobiaakbar.adroit.AdError
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.Adroit
 import io.github.thesobiaakbar.adroit.FullScreenResult
+import io.github.thesobiaakbar.adroit.config.SplashAdMode
 import io.github.thesobiaakbar.adroit.config.SplashTimings
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,6 +15,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -272,6 +274,71 @@ class SplashFlowTest {
     fun `progress is clamped and a zero timer is complete`() {
         assertEquals(100, SplashFlow.progressOf(Duration.ZERO, Duration.ZERO))
         assertEquals(100, SplashFlow.progressOf(Duration.INFINITE, kotlin.time.Duration.parse("1s")))
+    }
+
+    // --- splashAdMode ---
+
+    @Test
+    fun `preload - requests the ad, ends early when it's ready, never shows or drops it, and asks to show it later`() = runTest {
+        ports.timings = SplashTimings(splashAdMode = SplashAdMode.PRELOAD)
+        val flow = flow()
+        assertEquals(listOf("SplashAd"), ports.requested)
+        advance(1_000)
+        ports.adReady = true
+        advance(100)
+        assertEquals(SplashState.Finished(adShown = false, showAdLater = true), flow.state.value)
+        assertNull(ports.showCallback)
+        assertTrue("kept for the next screen", ports.abandoned.isEmpty())
+    }
+
+    @Test
+    fun `preload - an ad not ready yet still ends the splash on the short timer, and stays loading`() = runTest {
+        ports.timings = SplashTimings(premiumSplashSeconds = 2, splashAdMode = SplashAdMode.PRELOAD)
+        val flow = flow()
+        advance(1_900)
+        assertTrue(flow.state.value is SplashState.Loading)
+        advance(200)
+        assertEquals(SplashState.Finished(adShown = false, showAdLater = true), flow.state.value)
+        assertTrue(ports.abandoned.isEmpty())
+    }
+
+    @Test
+    fun `later - no request, the short timer, and asks to show it later`() = runTest {
+        ports.timings = SplashTimings(splashAdMode = SplashAdMode.LATER)
+        val flow = flow()
+        ports.adReady = true
+        advance(2_900)
+        assertTrue(flow.state.value is SplashState.Loading)
+        advance(200)
+        assertEquals(SplashState.Finished(adShown = false, showAdLater = true), flow.state.value)
+        assertTrue(ports.requested.isEmpty())
+        assertNull(ports.showCallback)
+    }
+
+    @Test
+    fun `no ad to show later for a premium user, offline, or without a splash ad`() = runTest {
+        ports.timings = SplashTimings(splashAdMode = SplashAdMode.PRELOAD)
+        val premium = flow(premium = true)
+        advance(3_100)
+        assertEquals(SplashState.Finished(adShown = false), premium.state.value)
+        assertTrue(ports.requested.isEmpty())
+
+        ports.online = false
+        val offline = flow()
+        advance(3_100)
+        assertEquals(SplashState.Finished(adShown = false), offline.state.value)
+
+        ports.online = true
+        val none = flow(splashAd = null)
+        advance(11_100)
+        assertEquals(SplashState.Finished(adShown = false), none.state.value)
+        assertTrue(ports.requested.isEmpty())
+    }
+
+    @Test
+    fun `Finished keeps its one-argument constructor`() {
+        assertEquals(SplashState.Finished(adShown = true, showAdLater = false), SplashState.Finished(true))
+        assertFalse(SplashState.Finished(false).showAdLater)
     }
 
     @Test
