@@ -6,6 +6,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+## [1.0.0-rc6] - 2026-10-20
+
 ### Added
 - **Adroit Billing**, in-app purchases and paywalls on Google Play Billing Library 9.1.0, in five new modules:
   `adroit-billing` (products, purchases, entitlements, restore, attribution, paywall rules and `PaywallController`),
@@ -19,6 +21,9 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   docs/BILLING_TROUBLESHOOTING.md and docs/BILLING_BACKEND.md (the optional server contract, with
   `HttpPurchaseVerifier`). Their code is compiled in `docs-snippets`.
 - Both samples sell a subscription, a lifetime product and coins, in demo mode on any device.
+- The five billing modules are published with the others (Maven Central, `centralBundle`), and `consumer-smoke`
+  builds a Compose and an XML host that initialize billing and call a paywall (`-Psmoke.billing=false` leaves it out
+  for the Kotlin 2.1 rows of the compatibility matrix).
 
 ## [1.0.0-rc5] - 2026-10-15
 
@@ -317,7 +322,9 @@ First internal release.
 ### Google SDK
 - Built against Google Mobile Ads Next-Gen SDK `ads-mobile-sdk` 1.4.0 and UMP 4.0.0.
 
-[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc4...HEAD
+[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc6...HEAD
+[1.0.0-rc6]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc5...v1.0.0-rc6
+[1.0.0-rc5]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc4...v1.0.0-rc5
 [1.0.0-rc4]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc3...v1.0.0-rc4
 [1.0.0-rc3]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc2...v1.0.0-rc3
 [1.0.0-rc2]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc1...v1.0.0-rc2

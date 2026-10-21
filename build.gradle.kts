@@ -4,7 +4,10 @@ plugins {
 
 // Maven Central (docs/architecture/PUBLISHING_NOTES.md). Each library publishes, signed, into build/central-bundle;
 // this zips the current version's files into the bundle the Central Portal takes, and the release workflow uploads it.
-val publishedLibraries = listOf("adroit-core", "adroit-views", "adroit-compose", "adroit-testing", "adroit-firebase")
+val publishedLibraries = listOf(
+    "adroit-core", "adroit-views", "adroit-compose", "adroit-testing", "adroit-firebase",
+    "adroit-billing", "adroit-billing-views", "adroit-billing-compose", "adroit-billing-firebase", "adroit-billing-testing",
+)
 val adroitVersion = providers.gradleProperty("adroit.version").get()
 
 tasks.register<Zip>("centralBundle") {

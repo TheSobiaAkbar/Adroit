@@ -22,5 +22,6 @@ class SmokeApplication : Application() {
                 }
             },
         )
+        SmokeBilling.initialize(this)
     }
 }

@@ -54,6 +54,7 @@ jobs:
         run: |
           ./gradlew publishToMavenLocal --stacktrace
           ./gradlew -p consumer-smoke assembleDebug verifyConsumerClasspath --stacktrace
+          ./gradlew -p consumer-smoke assembleDebug verifyConsumerClasspath -Psmoke.compose=false --stacktrace
 
       - name: Upload lint reports
         if: ${{ !cancelled() }}

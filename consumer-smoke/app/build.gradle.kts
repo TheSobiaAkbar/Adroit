@@ -10,6 +10,12 @@ plugins {
  */
 val withCompose: Boolean = providers.gradleProperty("smoke.compose").getOrElse("true").toBoolean()
 
+/**
+ * Adroit Billing too (the default): adroit-billing-compose or adroit-billing-views, initialized in demo mode, with a
+ * paywall call. `-Psmoke.billing=false` for the matrix rows on Kotlin 2.1: billing needs Kotlin 2.2 (Play Billing 9).
+ */
+val withBilling: Boolean = providers.gradleProperty("smoke.billing").getOrElse("true").toBoolean()
+
 // AGP 9 compiles Kotlin itself; AGP 8 (the matrix rows below 9) needs the Kotlin Android plugin, applied before the
 // Compose compiler plugin.
 if (com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore(".").toInt() < 9) {
@@ -37,7 +43,13 @@ android {
     buildFeatures {
         compose = withCompose
     }
-    sourceSets.getByName("main").java.srcDir(if (withCompose) "src/compose/kotlin" else "src/views/kotlin")
+    // kotlin, not java: AGP 9 compiles no Kotlin from java dirs. srcDir (deprecated in AGP 9) because AGP 8.1 has no
+    // `directories`.
+    sourceSets.getByName("main").kotlin.srcDir(if (withCompose) "src/compose/kotlin" else "src/views/kotlin")
+    sourceSets.getByName("main").kotlin.srcDir(if (withBilling) "src/billing/kotlin" else "src/noBilling/kotlin")
+    if (withBilling) {
+        sourceSets.getByName("main").kotlin.srcDir(if (withCompose) "src/billingCompose/kotlin" else "src/billingViews/kotlin")
+    }
     // A Java 11 host: Java 11 bytecode from javac and kotlinc (the lowest the libraries support, ADR-010).
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -60,6 +72,10 @@ dependencies {
         implementation("io.github.thesobiaakbar:adroit-views:$adroitVersion")
         // The host's own choice, not Adroit's: activity 1.13 needs AGP 8.9.1, so the oldest rows pass an older one.
         implementation("androidx.activity:activity:${providers.gradleProperty("smoke.activity").getOrElse("1.13.0")}")
+    }
+    if (withBilling) {
+        // The only billing dependency: adroit-billing and Play Billing must arrive transitively.
+        implementation("io.github.thesobiaakbar:${if (withCompose) "adroit-billing-compose" else "adroit-billing-views"}:$adroitVersion")
     }
 }
 
@@ -85,13 +101,22 @@ val verifyConsumerClasspath by tasks.registering {
             "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk",
             "com.google.android.ump:user-messaging-platform",
         ).plus(listOfNotNull("io.github.thesobiaakbar:adroit-compose".takeIf { withCompose }))
+            .plus(
+                if (!withBilling) emptyList() else listOf(
+                    "io.github.thesobiaakbar:adroit-billing",
+                    "io.github.thesobiaakbar:${if (withCompose) "adroit-billing-compose" else "adroit-billing-views"}",
+                    "com.android.billingclient:billing",
+                ),
+            )
             .filterNot { it in onRuntime }.forEach { problems += "missing from the runtime classpath: $it" }
         listOf(
             "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk",
             "com.google.android.ump:user-messaging-platform",
+            // Play Billing is `implementation` in adroit-billing: no Play Billing types in the host's code either.
+            "com.android.billingclient:billing",
         ).filter { it in onCompile }.forEach { problems += "on the compile classpath: $it" }
         if (problems.isNotEmpty()) throw GradleException(problems.joinToString("\n"))
-        println("Consumer classpaths OK: Adroit and the Google SDKs at runtime, no Google SDK at compile time")
+        println("Consumer classpaths OK: Adroit and the Google SDKs at runtime, no Google SDK at compile time (billing: $withBilling)")
     }
 }
 

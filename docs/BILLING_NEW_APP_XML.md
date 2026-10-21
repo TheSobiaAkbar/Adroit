@@ -37,9 +37,9 @@ android {
     buildFeatures { buildConfig = true } // for BuildConfig.DEBUG in step 3; off by default since AGP 8
 }
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-billing-views:1.0.0-rc5")
-    implementation("io.github.thesobiaakbar:adroit-billing-firebase:1.0.0-rc5")
-    testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc5")
+    implementation("io.github.thesobiaakbar:adroit-billing-views:1.0.0-rc6")
+    implementation("io.github.thesobiaakbar:adroit-billing-firebase:1.0.0-rc6")
+    testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc6")
 }
 ```
 

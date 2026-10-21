@@ -98,7 +98,7 @@ The `release.yml` workflow then:
 1. checks that the tag is exactly `v` + `adroit.version`, that the version isn't a snapshot, and that
    `CHANGELOG.md` has a non-empty `## [x.y.z]` section;
 2. runs the full CI checks;
-3. publishes to GitHub Packages;
+3. publishes the signed bundle to Maven Central (`./gradlew centralBundle`, then the Publisher API);
 4. creates the GitHub Release, with the CHANGELOG section as its notes.
 
 If the workflow fails before publishing, fix the problem, delete the tag (`git push --delete origin vX.Y.Z`), and tag

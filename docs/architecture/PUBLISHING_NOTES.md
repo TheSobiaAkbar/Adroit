@@ -1,6 +1,8 @@
 # Publishing notes
 
-The libraries (`adroit-core`, `adroit-views`, `adroit-compose`, `adroit-testing`) publish with Gradle's built-in
+The libraries (`adroit-core`, `adroit-views`, `adroit-compose`, `adroit-testing`, `adroit-firebase`, and the billing
+modules `adroit-billing`, `adroit-billing-views`, `adroit-billing-compose`, `adroit-billing-firebase`,
+`adroit-billing-testing`) publish with Gradle's built-in
 `maven-publish`, configured once in `build-logic/.../PublishingConventionPlugin.kt` (plugin `adroit.publishing`).
 There's no third-party publishing plugin, and no Dokka plugin (see "Javadoc" below).
 
@@ -48,7 +50,7 @@ Commands:
 The public channel: apps add only `mavenCentral()`. Each library also publishes into `CentralBundle`, the folder
 `build/central-bundle` at the root; `./gradlew centralBundle` zips this version's files (AAR, POM, `.module`, sources
 and javadoc jars, their `.asc` signatures and checksums) into `build/central-bundle.zip`, which the Central Portal's
-Publisher API takes in one upload. The release workflow does both after GitHub Packages. `centralBundle` fails without
+Publisher API takes in one upload. The release workflow does both. `centralBundle` fails without
 `SIGNING_KEY`, or on a `-SNAPSHOT` version, since Central rejects both. A released version can never be removed or
 replaced.
 
@@ -62,7 +64,7 @@ replaced.
    - `SIGNING_KEY`: `gpg --armor --export-secret-keys <key id>`
    - `SIGNING_PASSWORD`: that key's passphrase
    - `CENTRAL_TOKEN`: base64 of `<token name>:<token password>`
-4. Tag the version (`git tag v1.0.0-rc5 && git push origin v1.0.0-rc5`). The workflow uploads it; it appears on
+4. Tag the version (`git tag v1.0.0-rc6 && git push origin v1.0.0-rc6`). The workflow uploads it; it appears on
    central.sonatype.com at once and on repo1.maven.org after Central's checks, usually within 30 minutes.
 
 By hand, from a machine with the same three values in the environment:
@@ -94,8 +96,8 @@ internal declarations are left out. So the project doesn't apply the `org.jetbra
 - `./gradlew verifyPublication` publishes each module to `build/verification-repo` and fails unless:
   - the AAR, POM, `.module`, sources jar (with `.kt` files) and javadoc jar (with HTML) are all there;
   - every `api` dependency has POM scope `compile`, and every `implementation` dependency has scope `runtime`.
-- `consumer-smoke/` is a separate host build that depends only on `io.github.thesobiaakbar:adroit-compose` from `mavenLocal()`
-  (see its README). It compiles with AGP 9's built-in Kotlin 2.2.10, older than the 2.4.20 the libraries are built
+- `consumer-smoke/` is a separate host build that depends only on `io.github.thesobiaakbar:adroit-compose` and
+  `adroit-billing-compose` from `mavenLocal()` (`-Psmoke.compose=false`: the View modules; see its README). It compiles with AGP 9's built-in Kotlin 2.2.10, older than the 2.4.20 the libraries are built
   with, and checks that:
   - Adroit and the Google SDKs resolve transitively at runtime;
   - no Google Mobile Ads or UMP artifact is on its compile classpath.
