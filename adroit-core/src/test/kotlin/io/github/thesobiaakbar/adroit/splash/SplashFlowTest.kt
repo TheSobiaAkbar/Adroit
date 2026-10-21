@@ -3,8 +3,10 @@ package io.github.thesobiaakbar.adroit.splash
 import android.app.Activity
 import io.github.thesobiaakbar.adroit.AdError
 import io.github.thesobiaakbar.adroit.AdFormat
+import io.github.thesobiaakbar.adroit.Adroit
 import io.github.thesobiaakbar.adroit.FullScreenResult
 import io.github.thesobiaakbar.adroit.config.SplashTimings
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -270,5 +272,18 @@ class SplashFlowTest {
     fun `progress is clamped and a zero timer is complete`() {
         assertEquals(100, SplashFlow.progressOf(Duration.ZERO, Duration.ZERO))
         assertEquals(100, SplashFlow.progressOf(Duration.INFINITE, kotlin.time.Duration.parse("1s")))
+    }
+
+    @Test
+    fun `create takes the premium status from Adroit isAdFree by default`() {
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        try {
+            assertFalse(SplashFlow.create(app, null).isPremium)
+            Adroit.setAdFree(true)
+            assertTrue(SplashFlow.create(app, null).isPremium)
+            assertFalse("an explicit value still wins", SplashFlow.create(app, null, isPremium = false).isPremium)
+        } finally {
+            Adroit.resetForTests()
+        }
     }
 }

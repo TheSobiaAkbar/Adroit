@@ -14,14 +14,11 @@ import io.github.thesobiaakbar.adroit.splash.SplashFlow
 import io.github.thesobiaakbar.adroit.splash.SplashState
 import kotlinx.coroutines.launch
 
-private object Premium {
-    fun isPremium(context: android.content.Context): Boolean = false
-}
-
 // region splash-viewmodel
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
-    // Survives rotation: consent, the timer and the splash ad run once per launch.
-    val flow = SplashFlow.create(application, AppAds.SplashAd, isPremium = Premium.isPremium(application))
+    // Survives rotation: consent, the timer and the splash ad run once per launch. A premium user (Adroit.isAdFree,
+    // from your Adroit.setAdFree call in Application.onCreate) skips consent and the ad.
+    val flow = SplashFlow.create(application, AppAds.SplashAd)
 
     override fun onCleared() = flow.cancel()
 }

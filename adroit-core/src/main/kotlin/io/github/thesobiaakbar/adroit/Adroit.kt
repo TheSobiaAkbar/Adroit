@@ -179,6 +179,16 @@ public object Adroit : AdsClient {
         delegate.setAdFree(adFree)
     }
 
+    /**
+     * The last value passed to [setAdFree] (before or after [initialize]); false when it was never called. The one
+     * premium source for the library: `SplashFlow` uses it by default. In an app with Adroit Billing, the bridge
+     * `AdroitBilling.entitlements.collect { Adroit.setAdFree(it.adFree) }` in `Application.onCreate` keeps it current.
+     * Any thread.
+     */
+    @JvmStatic
+    public val isAdFree: Boolean
+        get() = requestedAdFree == true
+
     override fun showInterstitial(
         activity: Activity,
         placement: InterstitialPlacement,

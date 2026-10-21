@@ -11,6 +11,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   (same package and API), which `adroit-firebase` and `adroit-billing-firebase` both use. Billing's own copy of the
   fetch is gone. Apps no longer call `RemoteConfigSession.start`: the first Adroit Firebase module used starts it
   (`RemoteConfigSession.startDefault`). `FirebaseRemoteConfigProvider`'s `autoFetch` is now ignored.
+- One premium source: the new `Adroit.isAdFree` (the last `setAdFree` value) is `SplashFlow.create`'s default
+  `isPremium`, so apps with the billing bridge no longer pass premium to the splash.
 
 ## [1.0.0-rc6] - 2026-10-20
 

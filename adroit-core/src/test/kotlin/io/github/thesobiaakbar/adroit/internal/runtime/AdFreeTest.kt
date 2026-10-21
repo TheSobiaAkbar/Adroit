@@ -8,6 +8,7 @@ import io.github.thesobiaakbar.adroit.UnavailableReason
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,6 +23,24 @@ class AdFreeTest {
 
     @After
     fun tearDown() = Adroit.resetForTests()
+
+    @Test
+    fun `isAdFree is the last setAdFree value, before and after initialize, and false after a reset`() = runTest {
+        assertFalse("never set", Adroit.isAdFree)
+        Adroit.setAdFree(true)
+        assertTrue("before initialize", Adroit.isAdFree)
+
+        val h = RuntimeHarness(this)
+        Adroit.initialize(h.app, testConfig(h.logs)) { _, _ -> h.deps() }
+        h.settle()
+        assertTrue("kept by initialize", Adroit.isAdFree)
+        Adroit.setAdFree(false)
+        assertFalse("after initialize", Adroit.isAdFree)
+
+        Adroit.setAdFree(true)
+        Adroit.resetForTests()
+        assertFalse(Adroit.isAdFree)
+    }
 
     @Test
     fun `set before initialize - applied at initialize, and start ends ad-free with the SDK initialized`() = runTest {

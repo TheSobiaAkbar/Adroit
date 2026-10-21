@@ -303,6 +303,7 @@ public final class io/github/thesobiaakbar/adroit/Adroit : io/github/thesobiaakb
 	public fun getRewardedInterstitial ()Lio/github/thesobiaakbar/adroit/RewardedInterstitialApi;
 	public fun getState ()Lkotlinx/coroutines/flow/StateFlow;
 	public static final fun initialize (Landroid/app/Application;Lio/github/thesobiaakbar/adroit/config/AdMobConfig;)V
+	public static final fun isAdFree ()Z
 	public fun isReady ()Z
 	public fun preload ([Lio/github/thesobiaakbar/adroit/AdPlacement;)V
 	public fun setAdFree (Z)V

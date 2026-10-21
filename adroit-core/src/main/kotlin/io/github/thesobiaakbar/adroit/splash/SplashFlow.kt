@@ -53,7 +53,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 public class SplashFlow internal constructor(
     private val splashAdKey: String?,
-    private val isPremium: Boolean,
+    internal val isPremium: Boolean,
     private val ports: SplashPorts,
     private val scope: CoroutineScope,
 ) {
@@ -164,12 +164,17 @@ public class SplashFlow internal constructor(
          * A flow for [application]'s splash screen, after `Adroit.initialize`.
          *
          * @param splashAd the splash ad (an interstitial, or an app open ad through a Firebase swap); null for none.
-         * @param isPremium the user's premium (ad-free) status: no consent form, no ad, the premium timer. Also call
-         *   `Adroit.setAdFree`.
+         * @param isPremium the user's premium (ad-free) status: no consent form, no ad, the premium timer. Defaults to
+         *   `Adroit.isAdFree`, so apps that call `Adroit.setAdFree` (for example through the billing bridge) pass
+         *   nothing.
          */
         @JvmStatic
         @JvmOverloads
-        public fun create(application: Application, splashAd: AdDefinition?, isPremium: Boolean = false): SplashFlow =
+        public fun create(
+            application: Application,
+            splashAd: AdDefinition?,
+            isPremium: Boolean = Adroit.isAdFree,
+        ): SplashFlow =
             SplashFlow(
                 splashAd?.name,
                 isPremium,

@@ -40,8 +40,9 @@ Keep the flow in a ViewModel:
 <!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Splash.kt#splash-viewmodel -->
 ```kotlin
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
-    // Survives rotation: consent, the timer and the splash ad run once per launch.
-    val flow = SplashFlow.create(application, AppAds.SplashAd, isPremium = Premium.isPremium(application))
+    // Survives rotation: consent, the timer and the splash ad run once per launch. A premium user (Adroit.isAdFree,
+    // from your Adroit.setAdFree call in Application.onCreate) skips consent and the ad.
+    val flow = SplashFlow.create(application, AppAds.SplashAd)
 
     override fun onCleared() = flow.cancel()
 }
@@ -71,7 +72,9 @@ override fun onCreate(savedInstanceState: Bundle?) {
 }
 ```
 
-- Call `Adroit.setAdFree(true)` for premium users as well, so no other screen shows ads.
+- Call `Adroit.setAdFree(true)` for premium users in `Application.onCreate` (with Adroit Billing, the one-line
+  bridge does it). No other screen shows ads, and `SplashFlow` reads it as `Adroit.isAdFree`, so you pass no premium
+  flag to the splash.
 - Exclude the splash Activity from automatic app open ads (`AdProfile.appOpen(excludedActivities = ...)`).
 - `start` is safe to call from every `onCreate`: after a rotation, it hands the new Activity to the running flow.
 
