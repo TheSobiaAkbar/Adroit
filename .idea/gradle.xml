@@ -4,12 +4,39 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/build-logic" name="build-logic">
+                <projects>
+                  <project path="$PROJECT_DIR$/build-logic" />
+                  <project path="$PROJECT_DIR$/build-logic/convention" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
         <option name="testRunner" value="CHOOSE_PER_TEST" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/adroit-billing" />
+            <option value="$PROJECT_DIR$/adroit-billing-compose" />
+            <option value="$PROJECT_DIR$/adroit-billing-firebase" />
+            <option value="$PROJECT_DIR$/adroit-billing-testing" />
+            <option value="$PROJECT_DIR$/adroit-billing-views" />
+            <option value="$PROJECT_DIR$/adroit-compose" />
+            <option value="$PROJECT_DIR$/adroit-core" />
+            <option value="$PROJECT_DIR$/adroit-firebase" />
+            <option value="$PROJECT_DIR$/adroit-remote-config" />
+            <option value="$PROJECT_DIR$/adroit-testing" />
+            <option value="$PROJECT_DIR$/adroit-update" />
+            <option value="$PROJECT_DIR$/adroit-views" />
+            <option value="$PROJECT_DIR$/build-logic" />
+            <option value="$PROJECT_DIR$/build-logic/convention" />
+            <option value="$PROJECT_DIR$/sample-compose" />
+            <option value="$PROJECT_DIR$/sample-xml" />
           </set>
         </option>
       </GradleProjectSettings>
