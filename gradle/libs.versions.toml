@@ -26,6 +26,8 @@ firebaseBom = "34.19.0"
 # consumers (coreLibrariesVersion is 2.2.0) for four suspend wrappers the library writes itself. PBL 9.1.0 needs
 # minSdk 23 and pulls androidx.core 1.15.0, whose AAR metadata asks consumers for compileSdk 35.
 playBilling = "9.1.0"
+# adroit-update only (setup S04): Play In-App Updates, Java artifact (startUpdateFlow returns a Task<Int>)
+playAppUpdate = "2.1.0"
 
 # Samples only
 coreKtx = "1.19.0"
@@ -97,6 +99,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 
 # adroit-billing only
 play-billing = { module = "com.android.billingclient:billing", version.ref = "playBilling" }
+play-app-update = { module = "com.google.android.play:app-update", version.ref = "playAppUpdate" }
 
 # adroit-firebase only
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

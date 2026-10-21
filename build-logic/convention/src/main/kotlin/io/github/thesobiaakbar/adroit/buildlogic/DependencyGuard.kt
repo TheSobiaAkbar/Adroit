@@ -79,6 +79,12 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
         "androidx\\.compose\\..*:.*",
         "com\\.google\\.android\\.material:.*",
     ),
+    // In-app update (setup S04): only the shared Remote Config session, so it fits all three app shapes.
+    ":adroit-update" to ADS_NEVER + BILLING_NEVER + listOf(
+        "project :adroit-(?!remote-config).*",
+        "androidx\\.compose\\..*:.*",
+        "com\\.google\\.android\\.material:.*",
+    ),
     // Billing (06_BILLING_ARCHITECTURE §2): no edge to the ads modules or the Mobile Ads SDK in any direction, so a
     // billing-only app never gets ads; each optional module stays out of the others.
     ":adroit-billing" to BILLING_NEVER + listOf(
@@ -181,6 +187,10 @@ private val FORBIDDEN_DIRECT_BY_PROJECT = mapOf(
         "androidx\\.fragment:.*",
     ),
     ":adroit-remote-config" to listOf(
+        "androidx\\.appcompat:.*",
+        "androidx\\.fragment:.*",
+    ),
+    ":adroit-update" to listOf(
         "androidx\\.appcompat:.*",
         "androidx\\.fragment:.*",
     ),

@@ -1,0 +1,18 @@
+public final class io/github/thesobiaakbar/adroit/update/AdroitUpdate {
+	public static final field INSTANCE Lio/github/thesobiaakbar/adroit/update/AdroitUpdate;
+	public static final field KEY Ljava/lang/String;
+	public final fun check (Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/update/UpdateType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun check$default (Lio/github/thesobiaakbar/adroit/update/AdroitUpdate;Landroid/app/Activity;Lio/github/thesobiaakbar/adroit/update/UpdateType;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun getReadyToInstall ()Lkotlinx/coroutines/flow/StateFlow;
+	public static final fun install ()V
+}
+
+public final class io/github/thesobiaakbar/adroit/update/UpdateType : java/lang/Enum {
+	public static final field FLEXIBLE Lio/github/thesobiaakbar/adroit/update/UpdateType;
+	public static final field FORCE Lio/github/thesobiaakbar/adroit/update/UpdateType;
+	public static final field OFF Lio/github/thesobiaakbar/adroit/update/UpdateType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/update/UpdateType;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/update/UpdateType;
+}
+

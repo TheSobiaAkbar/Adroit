@@ -10,6 +10,9 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 - Firebase `AdSettings.splashAdMode`: `"show"` (default), `"preload"` or `"later"`. The last two keep the ad off the
   splash, use the short timer and report the new `SplashState.Finished.showAdLater`, so the app shows the ad with
   `AdSlots.showFullScreen` on the next screen (for example on the paywall's close button). docs/SPLASH.md.
+- New module `adroit-update`: Google Play in-app updates (Play In-App Updates 2.1.0) controlled by the Firebase
+  `AppUpdate` parameter, `flexible` (default), `force` or `off`, with an optional `forceBelowVersionCode`.
+  `AdroitUpdate.check` at app start, `readyToInstall` and `install` for a flexible download. docs/APP_UPDATE.md.
 
 ### Changed
 - One Remote Config fetch for the whole app: `RemoteConfigSession` moved to the new `adroit-remote-config` module

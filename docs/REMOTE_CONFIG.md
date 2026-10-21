@@ -123,6 +123,9 @@ Set a short `fetchTimeoutInSeconds` (for example 10) in your `FirebaseRemoteConf
 doesn't hold off the next screen's retry, and a `minimumFetchIntervalInSeconds` of 0 in debug builds to see console
 changes on the next launch.
 
+The `AppUpdate` parameter (flexible, forced or no in-app update) is read by `adroit-update`: see
+[In-app update](APP_UPDATE.md).
+
 ## Your app's own values
 
 The same fetch also brings the app's own parameters: flags, numbers, texts and JSON that have nothing to do with ads.

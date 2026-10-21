@@ -21,6 +21,8 @@ class NoGoogleTypesInPublicApiTest {
                 "com/google/android/libraries/ads", "com/google/android/ump", "com/google/android/gms/ads",
                 // Play Billing stays behind adroit-billing's internal port (06_BILLING_ARCHITECTURE §2).
                 "com/android/billingclient",
+                // Play In-App Updates stays behind adroit-update's internal port (setup S04).
+                "com/google/android/play/core",
             ).forEach {
                 assertFalse("$module's public API exposes $it", text.contains(it))
             }
@@ -30,6 +32,7 @@ class NoGoogleTypesInPublicApiTest {
     private companion object {
         val LIBRARY_MODULES = listOf(
             "adroit-core", "adroit-views", "adroit-compose", "adroit-testing", "adroit-firebase", "adroit-remote-config",
+            "adroit-update",
             "adroit-billing", "adroit-billing-views", "adroit-billing-compose", "adroit-billing-firebase", "adroit-billing-testing",
         )
     }
