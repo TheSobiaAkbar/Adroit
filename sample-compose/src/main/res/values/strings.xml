@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">Adroit Compose sample</string>
     <string name="splash_progress">%1$d%%</string>
+    <string name="update_ready">An update is ready</string>
+    <string name="update_restart">Restart</string>
     <string name="nav_home">Home</string>
     <string name="nav_feed">Feed</string>
     <string name="nav_settings">Settings</string>
@@ -19,6 +21,7 @@
     <string name="privacy_options">Privacy options</string>
     <string name="privacy_options_error">Privacy options failed: %1$s</string>
     <string name="premium_status">Premium: %1$s (%2$s)</string>
+    <string name="firebase_modes">Firebase: splashAdMode %1$s, AppUpdate %2$s</string>
     <string name="premium_yes">active</string>
     <string name="premium_no">not active</string>
     <string name="upgrade">Upgrade</string>

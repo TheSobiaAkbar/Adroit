@@ -44,16 +44,29 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.runtime.key
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.repeatOnLifecycle
+import io.github.thesobiaakbar.adroit.AdSlots
+import io.github.thesobiaakbar.adroit.billing.AdroitBilling
+import io.github.thesobiaakbar.adroit.billing.ShowDecision
+import io.github.thesobiaakbar.adroit.billing.compose.Paywall
+import io.github.thesobiaakbar.adroit.sample.compose.ads.SampleAds
+import io.github.thesobiaakbar.adroit.sample.compose.billing.SamplePaywalls
 import io.github.thesobiaakbar.adroit.sample.compose.ui.SampleTheme
 import io.github.thesobiaakbar.adroit.splash.SplashState
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * The launcher, driven by [io.github.thesobiaakbar.adroit.splash.SplashFlow] (docs/SPLASH.md): consent, then the splash timer from
- * Firebase with a progress bar, and the splash ad (`SampleAds.SplashAd`) if it loads in time. Premium users skip
- * consent and the ad; offline users get the short timer. It continues to [MainActivity] whatever happens, and never
- * while the ad is on screen.
+ * The launcher (the AdMob + IAP setup, docs/guides/ADS_IAP_COMPOSE.md):
+ * 1. Google Play's update check (`AdroitUpdate`, Firebase `AppUpdate`): flexible, forced or off.
+ * 2. [io.github.thesobiaakbar.adroit.splash.SplashFlow] (docs/SPLASH.md): consent, then the splash timer from Firebase
+ *    with a progress bar, and the splash ad (`SampleAds.SplashAd`) if it loads in time. Premium users skip consent
+ *    and the ad; offline users get the short timer.
+ * 3. The routing ([SplashRoute]): the Onboarding paywall, drawn here, when its show rules allow; then the splash ad
+ *    if Firebase `splashAdMode` kept it for later (`showAdLater`); then [MainActivity]. It never leaves while an ad
+ *    is on screen.
  *
  * Its own Activity, not a navigation destination of [MainActivity]: the app open ad excludes it by class name
  * (`SampleAds.AppOpenAd`), and the consent form and splash ad need an Activity that nothing else is drawn over.
@@ -69,21 +82,67 @@ class SplashActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Called again after a rotation: the ViewModel's flow keeps running and takes the new Activity.
-        viewModel.flow.start(this)
+        lifecycleScope.launch {
+            // The update first: a forced update must not let consent or an ad start. After a rotation this waits for
+            // the same check, then hands the new Activity to the running flow.
+            viewModel.checkForUpdate(this@SplashActivity)
+            viewModel.flow.start(this@SplashActivity)
+        }
         setContent {
             SampleTheme {
                 val state by viewModel.flow.state.collectAsStateWithLifecycle()
                 SplashScreen(state)
+                // The paywall is drawn here, over the splash (a dialog template shows the splash behind it): the ad
+                // that may follow shows from this resumed Activity. Closing Onboarding can offer ExitDiscount:
+                // onExitPaywall runs right after onClose, so it replaces AdLater before the next frame.
+                (viewModel.route as? SplashRoute.Paywall)?.let { route ->
+                    key(route.definition) {
+                        Paywall(
+                            route.definition,
+                            placement = "onboarding",
+                            onClose = { viewModel.route = SplashRoute.AdLater },
+                            onExitPaywall = { exit -> viewModel.route = SplashRoute.Paywall(exit) },
+                        )
+                    }
+                }
+                if (viewModel.route == SplashRoute.AdLater) LaunchedEffect(Unit) { showAdLater() }
             }
         }
         lifecycleScope.launch {
             // STARTED: navigation waits until the screen is in front, so a splash sent to the background finishes
             // when the user comes back.
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.flow.state.collect { if (it is SplashState.Finished) goToMain() }
+                launch { viewModel.flow.state.collect { if (it is SplashState.Finished) route() } }
+                snapshotFlow { viewModel.route }.first { it == SplashRoute.Main }
+                goToMain()
             }
         }
+    }
+
+    /** Once per launch: the Onboarding paywall if its rules allow, else straight to the ad kept for later or main. */
+    private fun route() {
+        if (viewModel.route != SplashRoute.Splash) return
+        viewModel.route = if (AdroitBilling.paywalls.shouldShow(SamplePaywalls.Onboarding, "onboarding") == ShowDecision.Show) {
+            SplashRoute.Paywall(SamplePaywalls.Onboarding)
+        } else {
+            SplashRoute.AdLater
+        }
+    }
+
+    /**
+     * With Firebase `splashAdMode` "preload" or "later", the splash ad shows now (on the paywall's close, or right
+     * after the splash): at once if it was preloaded, after the loading screen otherwise. A user who just bought
+     * premium sees none: the billing bridge made the app ad-free.
+     */
+    private fun showAdLater() {
+        val finished = viewModel.flow.state.value as? SplashState.Finished
+        if (finished?.showAdLater != true) {
+            viewModel.route = SplashRoute.Main
+            return
+        }
+        viewModel.route = SplashRoute.ShowingAd
+        // The result goes to the ViewModel, not this Activity: a rotation may have replaced it by then.
+        AdSlots.showFullScreen(this, SampleAds.SplashAd) { viewModel.route = SplashRoute.Main }
     }
 
     private fun goToMain() {

@@ -8,10 +8,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -28,6 +33,8 @@ import io.github.thesobiaakbar.adroit.billing.compose.Paywall
 import io.github.thesobiaakbar.adroit.sample.compose.R
 import io.github.thesobiaakbar.adroit.sample.compose.billing.CreditsScreen
 import io.github.thesobiaakbar.adroit.sample.compose.billing.SamplePaywalls
+import io.github.thesobiaakbar.adroit.update.AdroitUpdate
+import kotlinx.coroutines.flow.first
 import io.github.thesobiaakbar.adroit.sample.compose.details.DetailsScreen
 import io.github.thesobiaakbar.adroit.sample.compose.feed.FeedScreen
 import io.github.thesobiaakbar.adroit.sample.compose.home.CoinsViewModel
@@ -56,19 +63,26 @@ private const val PAYWALL_ROUTE = "paywall/{name}/{placement}"
  * the screen. [CoinsViewModel] is the Activity's, so a reward delivered after its screen was left is still granted.
  *
  * A paywall is the `paywall/{name}/{placement}` destination: its controller lives in the destination's ViewModel
- * store, so a rotation keeps its selection and close countdown. [showOnboarding] opens the onboarding paywall once,
- * right after the splash.
+ * store, so a rotation keeps its selection and close countdown. The launch paywall (Onboarding) is the splash's.
+ *
+ * A flexible update that finished downloading in the background (`AdroitUpdate`) gets a "Restart" snackbar.
  */
 @Composable
-fun SampleApp(showOnboarding: Boolean = false) {
+fun SampleApp() {
     val navController = rememberNavController()
     val coins: CoinsViewModel = viewModel()
     val entry by navController.currentBackStackEntryAsState()
     val route = entry?.destination?.route
+    val snackbars = remember { SnackbarHostState() }
+    val updateReady = stringResource(R.string.update_ready)
+    val restart = stringResource(R.string.update_restart)
     LaunchedEffect(Unit) {
-        if (showOnboarding) navController.navigate(paywallRoute(SamplePaywalls.Onboarding, "onboarding"))
+        AdroitUpdate.readyToInstall.first { it }
+        val result = snackbars.showSnackbar(updateReady, actionLabel = restart, duration = SnackbarDuration.Indefinite)
+        if (result == SnackbarResult.ActionPerformed) AdroitUpdate.install()
     }
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbars) },
         bottomBar = {
             if (Destination.entries.any { it.icon != null && it.route == route }) BottomBar(navController, route)
         },

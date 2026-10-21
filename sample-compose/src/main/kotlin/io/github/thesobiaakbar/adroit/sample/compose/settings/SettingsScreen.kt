@@ -31,9 +31,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.json.JSONException
+import org.json.JSONObject
+import androidx.compose.material3.MaterialTheme
 import io.github.thesobiaakbar.adroit.Adroit
 import io.github.thesobiaakbar.adroit.billing.RestoreResult
 import io.github.thesobiaakbar.adroit.billing.SnapshotStatus
+import io.github.thesobiaakbar.adroit.firebase.RemoteConfigSession
 import io.github.thesobiaakbar.adroit.sample.compose.BuildConfig
 import io.github.thesobiaakbar.adroit.sample.compose.R
 import io.github.thesobiaakbar.adroit.sample.compose.billing.DemoMode
@@ -46,6 +50,7 @@ import io.github.thesobiaakbar.adroit.sample.compose.billing.PremiumViewModel
  *   `SettingsUpgrade` paywall), "Restore purchases" and "Manage subscription", through [PremiumViewModel]. Premium
  *   comes only from `AdroitBilling.entitlements`; `SampleApplication` turns it into `Adroit.setAdFree`.
  * - "Demo billing" (debug builds): made-up products instead of Play, from the next launch (`DemoMode`).
+ * - Debug builds: the active Firebase `AdSettings.splashAdMode` and `AppUpdate.type` (docs/SPLASH.md, APP_UPDATE.md).
  * - "Ad Inspector": Google's debugging tool; opens on test devices only.
  * - "Native styles": every native template, with a live ad.
  */
@@ -120,6 +125,14 @@ fun SettingsScreen(onOpenNativeStyles: () -> Unit, onUpgrade: () -> Unit, premiu
                     },
                 )
             }
+            Text(
+                stringResource(
+                    R.string.firebase_modes,
+                    activeValue("AdSettings", "splashAdMode", "show"),
+                    activeValue("AppUpdate", "type", "flexible"),
+                ),
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
         if (activity != null) {
             val error = stringResource(R.string.ad_inspector_error)
@@ -132,4 +145,11 @@ fun SettingsScreen(onOpenNativeStyles: () -> Unit, onUpgrade: () -> Unit, premiu
             Text(stringResource(R.string.native_styles))
         }
     }
+}
+
+/** [field] of the active Firebase JSON parameter [key], or [default] when it isn't set. */
+private fun activeValue(key: String, field: String, default: String): String = try {
+    RemoteConfigSession.startDefault()?.string(key)?.let { JSONObject(it).optString(field) }?.ifBlank { null } ?: default
+} catch (e: JSONException) {
+    "invalid"
 }
