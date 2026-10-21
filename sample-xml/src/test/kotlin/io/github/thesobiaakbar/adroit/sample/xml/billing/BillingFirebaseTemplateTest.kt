@@ -11,7 +11,8 @@ import java.io.File
 
 /**
  * Keeps `docs/firebase/sample_billing_remote_config.json` (Firebase console: Remote Config, ⋮, "Publish from a file")
- * equal to [SamplePaywalls]' defaults plus an `AdroitBilling` example. After changing an entry, regenerate it:
+ * equal to [SamplePaywalls]' defaults plus an `AdroitBilling` example. The ads and `AppUpdate` keys
+ * (`sample-xml/firebase/remote_config_template.json`) go in the same Firebase project. After changing an entry, regenerate it:
  * `./gradlew :sample-xml:testDebugUnitTest -PupdateFirebaseTemplate`.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -19,7 +20,7 @@ import java.io.File
 class BillingFirebaseTemplateTest {
     @Test
     fun `the committed billing Firebase template matches SamplePaywalls`() {
-        val parameters = JSONObject().put("AdroitBilling", parameter(GLOBAL, "Billing-wide settings (adroit-billing)"))
+        val parameters = JSONObject().put("AdroitBilling", parameter(GLOBAL, "Billing-wide settings (adroit-billing). $SAME_PROJECT"))
         SamplePaywalls.entries.forEach { parameters.put(it.name, parameter(JSONObject(it.toJson()), "The ${it.name} paywall")) }
         val expected = JSONObject().put("parameters", parameters).toString(2) + "\n"
 
@@ -38,6 +39,8 @@ class BillingFirebaseTemplateTest {
         .put("description", description)
 
     private companion object {
+        const val SAME_PROJECT = "Same Firebase project as the ads and AppUpdate keys (sample-xml/firebase/remote_config_template.json)"
+
         val GLOBAL: JSONObject = JSONObject()
             .put("enabled", true)
             .put("adFreeEntitlements", org.json.JSONArray(listOf("premium")))

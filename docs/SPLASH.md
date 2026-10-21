@@ -104,6 +104,9 @@ fun showAdThen(later: Boolean, next: () -> Unit) {
 }
 ```
 
+- Call `showFullScreen` from a resumed screen: a full-screen ad never shows over a screen in the background
+  (`NotShown(ActivityUnavailable)`). An Activity result (the paywall's close) arrives before the screen is resumed, so
+  wait for it: `lifecycleScope.launch { withResumed { showAdThen(…) } }`.
 - With `"preload"` the ad is usually loaded by then and shows at once.
 - With `"later"`, or a preload that isn't ready yet, `showFullScreen` loads it behind the loading screen, for up to
   `loadTimeoutSeconds`. Continue on any result: `onResult` is called whether the ad showed or not.

@@ -5,7 +5,7 @@
         "value": "{\"enabled\":true,\"adFreeEntitlements\":[\"premium\"],\"offlineGraceHours\":72,\"products\":{\"PremiumSub\":{\"entitlements\":[\"premium\"]}},\"configVersion\":\"sample-1\"}"
       },
       "valueType": "JSON",
-      "description": "Billing-wide settings (adroit-billing)"
+      "description": "Billing-wide settings (adroit-billing). Same Firebase project as the ads and AppUpdate keys (sample-xml\/firebase\/remote_config_template.json)"
     },
     "Onboarding": {
       "defaultValue": {

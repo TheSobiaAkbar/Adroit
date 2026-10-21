@@ -90,6 +90,13 @@
       },
       "valueType": "JSON",
       "description": "Ad ArticleNative (docs\/AD_PROFILES.md)"
+    },
+    "AppUpdate": {
+      "defaultValue": {
+        "value": "{\"type\":\"flexible\",\"forceBelowVersionCode\":0}"
+      },
+      "valueType": "JSON",
+      "description": "In-app update (docs\/APP_UPDATE.md). Same Firebase project as the ads and billing keys"
     }
   }
 }

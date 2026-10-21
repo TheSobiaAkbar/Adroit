@@ -49,6 +49,15 @@
         android:text="@string/demo_billing"
         android:visibility="gone" />
 
+    <!-- Debug builds only: the active Firebase splashAdMode and AppUpdate type. -->
+    <TextView
+        android:id="@+id/firebase_modes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="8dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:visibility="gone" />
+
     <Button
         android:id="@+id/ad_inspector"
         android:layout_width="match_parent"

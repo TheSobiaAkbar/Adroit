@@ -63,6 +63,8 @@ dependencies {
     implementation(project(":adroit-billing"))
     implementation(project(":adroit-billing-views"))
     implementation(project(":adroit-billing-firebase"))
+    // In-app update from Firebase AppUpdate (docs/APP_UPDATE.md), checked on the splash.
+    implementation(project(":adroit-update"))
 
     // Sample-only UI libraries. The Adroit libraries themselves never depend on these.
     implementation(libs.androidx.core.ktx)
