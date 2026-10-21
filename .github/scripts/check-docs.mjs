@@ -1,4 +1,4 @@
-// Checks the developer docs (README.md, CHANGELOG.md and docs/*.md). Run from the repository root:
+// Checks the developer docs (README.md, CHANGELOG.md, docs/*.md and docs/guides/*.md). Run from the repository root:
 //   node .github/scripts/check-docs.mjs
 // 1. Every `<!-- snippet: path#region -->` is followed by a code block identical to that region of the source file
 //    (`// region name` … `// endregion`, or `<!-- region name -->` … `<!-- endregion -->`), so docs can't drift
@@ -10,7 +10,12 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const docs = ["README.md", "CHANGELOG.md", ...fs.readdirSync("docs").filter((f) => f.endsWith(".md")).map((f) => `docs/${f}`)];
+const docs = [
+  "README.md",
+  "CHANGELOG.md",
+  ...fs.readdirSync("docs").filter((f) => f.endsWith(".md")).map((f) => `docs/${f}`),
+  ...fs.readdirSync("docs/guides").filter((f) => f.endsWith(".md")).map((f) => `docs/guides/${f}`),
+];
 const problems = [];
 let snippetCount = 0;
 

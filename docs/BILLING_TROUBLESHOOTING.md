@@ -41,7 +41,7 @@ The user tapped buy on something they already have: a lifetime product, or a con
 
 - The library returns `PurchaseResult.AlreadyOwned`, syncs with Play, and the user gets what they own. Nothing to do.
 - **A consumable that stays "already owned"** wasn't confirmed: the app must call `grant.confirm()` after crediting it
-  ([consumables](BILLING_NEW_APP_XML.md#8-consumables)). Unconfirmed grants are delivered again at every launch until
+  ([consumables](guides/ADS_IAP_XML.md#consumables-optional)). Unconfirmed grants are delivered again at every launch until
   confirmed.
 - By default, paywalls don't show to users who own what they sell (`show.hideIfEntitled`), so this mostly comes from
   your own buttons.

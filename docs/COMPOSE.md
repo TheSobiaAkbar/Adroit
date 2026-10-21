@@ -4,7 +4,7 @@
 navigation or DI library.
 
 Adding ads to a new Compose app, step by step, with the splash screen and every format:
-[Adding ads to a new Jetpack Compose app](NEW_APP_COMPOSE.md).
+[AdMob only](guides/ADS_COMPOSE.md) or [AdMob + in-app purchases](guides/ADS_IAP_COMPOSE.md).
 
 ## `AdSlot`
 

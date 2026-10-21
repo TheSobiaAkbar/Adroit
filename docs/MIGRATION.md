@@ -90,7 +90,7 @@ as the ads modules (ADR-007):
   are ignored, so an older app version reads a newer value safely.
 
 Billing has no earlier version to migrate from. Apps that wrote their own Play Billing code move to it by following
-[Adding billing to a Kotlin + XML app](BILLING_NEW_APP_XML.md) or [to a Compose app](BILLING_NEW_APP_COMPOSE.md),
+the guide for their app ([Getting started](GETTING_STARTED.md)),
 and deleting their purchase handling, acknowledgement and "is premium" storage.
 
 Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, Play Billing Library 9.1.0, 2026-10-20

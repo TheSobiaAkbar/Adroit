@@ -24,7 +24,6 @@ import io.github.thesobiaakbar.adroit.config.bannerPlacement
 import io.github.thesobiaakbar.adroit.config.interstitialPlacement
 import io.github.thesobiaakbar.adroit.config.nativePlacement
 import io.github.thesobiaakbar.adroit.firebase.FirebaseRemoteConfigProvider
-import io.github.thesobiaakbar.adroit.firebase.RemoteConfigSession
 import io.github.thesobiaakbar.adroit.views.AdSlotView
 
 // region profiles-enum
@@ -52,7 +51,6 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 class AdsApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        RemoteConfigSession.start(this) // fetches Firebase once this session, without making anything wait
         Adroit.initialize(
             this,
             adMobConfig {

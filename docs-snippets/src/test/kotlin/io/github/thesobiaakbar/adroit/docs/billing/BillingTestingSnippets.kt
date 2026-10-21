@@ -16,7 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-// docs/BILLING_NEW_APP_XML.md and docs/BILLING_NEW_APP_COMPOSE.md step 9, and docs/TESTING.md.
+// docs/guides/IAP_*.md and ADS_IAP_*.md step 9, and docs/TESTING.md.
 
 // region billing-fake-test
 /** Plain JVM: no Play, no device, no Robolectric. */

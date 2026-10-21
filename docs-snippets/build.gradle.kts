@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":adroit-billing-views"))
     implementation(project(":adroit-billing-compose"))
     implementation(project(":adroit-billing-firebase"))
+    implementation(project(":adroit-update"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -41,6 +42,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
+    implementation(libs.material) // the update Snackbar of the XML guides
 
     testImplementation(project(":adroit-testing"))
     testImplementation(project(":adroit-billing-testing"))

@@ -1,8 +1,8 @@
 # Play Console: products, offers and test purchases
 
 Everything a user can buy, every price and every trial is created here, in [Google Play
-Console](https://play.google.com/console). The app's `Billing.kt` ([XML guide](BILLING_NEW_APP_XML.md), [Compose
-guide](BILLING_NEW_APP_COMPOSE.md)) refers to these products by their IDs, and Firebase
+Console](https://play.google.com/console). The app's `Billing.kt` (step 4 of your
+[guide](GETTING_STARTED.md)) refers to these products by their IDs, and Firebase
 ([Paywalls in Firebase](PAYWALL_REMOTE_CONFIG.md)) chooses among the offers you create here.
 
 Before the products exist, the app can run in demo mode: made-up products with the same IDs, on any device.

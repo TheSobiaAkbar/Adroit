@@ -35,7 +35,7 @@ import io.github.thesobiaakbar.adroit.billing.ShowDecision
 import io.github.thesobiaakbar.adroit.billing.compose.Paywall
 import io.github.thesobiaakbar.adroit.billing.compose.rememberPaywallController
 
-// docs/BILLING_NEW_APP_COMPOSE.md, steps 5 to 7.
+// docs/guides/IAP_COMPOSE.md and ADS_IAP_COMPOSE.md, step 7.
 
 // region billing-show-compose
 @Composable

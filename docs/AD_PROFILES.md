@@ -46,7 +46,6 @@ Then register them:
 class AdsApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        RemoteConfigSession.start(this) // fetches Firebase once this session, without making anything wait
         Adroit.initialize(
             this,
             adMobConfig {
@@ -60,9 +59,9 @@ class AdsApp : Application() {
 }
 ```
 
-- `FirebaseRemoteConfigProvider` and `RemoteConfigSession` come from the optional `io.github.thesobiaakbar:adroit-firebase`
-  module. Without it, the enum alone configures the ads. See [Remote configuration](REMOTE_CONFIG.md) for the
-  session: it fetches once per app session, retries on later screens until it succeeds, and never makes the app wait.
+- `FirebaseRemoteConfigProvider` comes from the optional `io.github.thesobiaakbar:adroit-firebase` module. Without
+  it, the enum alone configures the ads. It starts the shared Remote Config session itself: one fetch per app session,
+  retried on later screens until it succeeds, never making the app wait ([Remote configuration](REMOTE_CONFIG.md#fetching-once-per-session)).
 - `AdSettings(...)` holds the defaults of the `AdSettings` Firebase parameter (see [Settings](#settings)).
 - `profiles()` can be combined with a `placements { }` block, but each key may be defined only once.
 - `DEVELOPMENT` swaps every ad unit ID for Google's test ads. Debug builds therefore need no separate IDs: they show
@@ -230,8 +229,9 @@ Rules:
 - Ad-free users see no ads, whatever Firebase says: `setAdFree(true)` always wins. Precedence is as in
   [Remote configuration](REMOTE_CONFIG.md#precedence).
 
-Fetch with `RemoteConfigSession.start(application)` in `Application.onCreate` (see
-[Remote configuration](REMOTE_CONFIG.md#fetching-once-per-session)): once per session, without making anything wait. Pass `settingsKey` to use a name other than `AdSettings`.
+The values are fetched once per session, without making anything wait, and with no call from the app
+([Remote configuration](REMOTE_CONFIG.md#fetching-once-per-session)). Pass `settingsKey` to use a name other than
+`AdSettings`.
 
 ## Counter and timer
 

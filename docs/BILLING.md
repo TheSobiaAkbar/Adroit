@@ -6,8 +6,9 @@ button appears, its texts and colors.
 
 It works with or without the Adroit ads libraries. In an app with ads, one line makes premium users ad-free.
 
-**Start here:** [a new Kotlin + XML app](BILLING_NEW_APP_XML.md) or [a new Jetpack Compose app](BILLING_NEW_APP_COMPOSE.md),
-from zero to a first purchase. Whoever runs the paywalls from Firebase reads
+**Start here:** the step-by-step guide for your app, from zero to a release: in-app purchases only
+([Compose](guides/IAP_COMPOSE.md), [XML](guides/IAP_XML.md)) or ads + in-app purchases
+([Compose](guides/ADS_IAP_COMPOSE.md), [XML](guides/ADS_IAP_XML.md)). Whoever runs the paywalls from Firebase reads
 [Paywalls in Firebase](PAYWALL_REMOTE_CONFIG.md); no code there.
 
 ## Which module do I add?
@@ -92,8 +93,7 @@ The client sees only what Google Play reports on the device. In particular:
 
 | Page | For |
 |---|---|
-| [New XML app](BILLING_NEW_APP_XML.md) | Developers: every step, with code, for Views |
-| [New Compose app](BILLING_NEW_APP_COMPOSE.md) | Developers: every step, with code, for Compose |
+| [Getting started](GETTING_STARTED.md) | Developers: picks the step-by-step guide for your app (Compose or XML, with or without ads) |
 | [Paywalls in Firebase](PAYWALL_REMOTE_CONFIG.md) | Anyone running the paywalls: every Firebase field |
 | [Play Console setup](PLAY_CONSOLE_BILLING_SETUP.md) | Creating products and offers, and testing purchases |
 | [Backend contract](BILLING_BACKEND.md) | Verifying purchases on a server |

@@ -13,6 +13,12 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 - New module `adroit-update`: Google Play in-app updates (Play In-App Updates 2.1.0) controlled by the Firebase
   `AppUpdate` parameter, `flexible` (default), `force` or `off`, with an optional `forceBelowVersionCode`.
   `AdroitUpdate.check` at app start, `readyToInstall` and `install` for a flexible download. docs/APP_UPDATE.md.
+- Six step-by-step guides in docs/guides/, one per app: AdMob only, in-app purchases only (a hard paywall), and AdMob +
+  in-app purchases, each for Jetpack Compose and for XML. docs/GETTING_STARTED.md picks one in three questions.
+
+### Removed
+- docs/NEW_APP_XML.md, docs/NEW_APP_COMPOSE.md, docs/BILLING_NEW_APP_XML.md and docs/BILLING_NEW_APP_COMPOSE.md: their
+  content is in the six guides and the reference docs they link to.
 
 ### Changed
 - One Remote Config fetch for the whole app: `RemoteConfigSession` moved to the new `adroit-remote-config` module

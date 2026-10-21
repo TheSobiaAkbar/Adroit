@@ -1,8 +1,7 @@
 # Integration guide: ads in a new app, step by step
 
-Starting a new Kotlin + XML app? [Adding ads to a new Kotlin + XML app](NEW_APP_XML.md) covers the same steps with
-complete files for every screen, and a sample Firebase value for every kind of ad. A Jetpack Compose app:
-[Adding ads to a new Jetpack Compose app](NEW_APP_COMPOSE.md).
+Starting a new app? The guide for your app ([Getting started](GETTING_STARTED.md)) covers the same steps with
+complete files for every screen, the app update, and a sample Firebase value for every kind of ad.
 
 This page is a checklist for adding the ads library to a new app, from nothing to ads you can tune from Firebase
 without a release. Every step says what to do and how to check it worked. You write one Kotlin file listing your ads,
@@ -98,7 +97,6 @@ Create (or open) your `Application` class, and register it in the manifest (`and
 class AdsApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        RemoteConfigSession.start(this) // fetches Firebase once this session, without making anything wait
         Adroit.initialize(
             this,
             adMobConfig {
@@ -112,8 +110,8 @@ class AdsApp : Application() {
 }
 ```
 
-- `RemoteConfigSession.start` fetches your Firebase values once per launch, in the background. The app never waits
-  for it.
+- Your Firebase values are fetched once per launch, in the background, with no call from you. The app never waits
+  for them.
 - Debug builds (`DEVELOPMENT`) always show test ads, so you can't click your own real ads by mistake while testing.
 - If the app sells an ad-free upgrade, add `if (userIsPremium) Adroit.setAdFree(true)` right after
   `initialize`.
@@ -129,8 +127,9 @@ and the splash ad, and then opens your main screen. It never gets stuck, even of
 <!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/Splash.kt#splash-viewmodel -->
 ```kotlin
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
-    // Survives rotation: consent, the timer and the splash ad run once per launch.
-    val flow = SplashFlow.create(application, AppAds.SplashAd, isPremium = Premium.isPremium(application))
+    // Survives rotation: consent, the timer and the splash ad run once per launch. A premium user (Adroit.isAdFree,
+    // from your Adroit.setAdFree call in Application.onCreate) skips consent and the ad.
+    val flow = SplashFlow.create(application, AppAds.SplashAd)
 
     override fun onCleared() = flow.cancel()
 }
@@ -249,6 +248,32 @@ for example:
 | No "Loading ad…" screen before one ad, or no shimmer on a banner or native ad | the ad's | `{ "showLoading": false }` |
 | Turn every ad off | `AdSettings` | `{ "adsEnabled": false }` |
 
+**The app start.** Two more values change what users see when they open the app.
+
+`splashAdMode`, in `AdSettings`, decides whether the splash screen shows its ad:
+
+| Value | What the user sees |
+|---|---|
+| `"show"` (the default) | The splash, with its progress bar, then the splash ad, then the next screen. |
+| `"preload"` | A short splash (3 seconds) without an ad. The ad is loaded meanwhile, and shows the moment the next screen (for example a paywall) is closed. |
+| `"later"` | A short splash without an ad, and no ad loaded. When the next screen is closed, "Loading ad…" for a moment, then the ad. |
+
+For example `{ "splashAdMode": "later" }` in `AdSettings`. The app decides where "later" is
+([Splash screen](SPLASH.md#showing-the-splash-ad-later)).
+
+`AppUpdate`, its own JSON parameter, decides how users with an older version are asked to update, as soon as the app
+opens:
+
+| `type` | What a user with an older version sees |
+|---|---|
+| `"flexible"` (the default) | Google Play's update prompt. They can say no and use the app. If they say yes, the update downloads while they use the app, and a "Restart" message installs it. |
+| `"force"` | Google Play's full-screen update. They can't use the app without updating; going back closes it. |
+| `"off"` | Nothing. |
+
+`forceBelowVersionCode` forces the update only for versions below a number, whatever `type` says: with
+`{ "type": "flexible", "forceBelowVersionCode": 40 }`, version 39 and older must update, and newer ones get the normal
+prompt. The app needs `adroit-update` and one line on its splash screen ([In-app update](APP_UPDATE.md)).
+
 Every field is listed in [Ad profiles](AD_PROFILES.md#the-json), and format changes in
 [Swapping formats](AD_PROFILES.md#swapping-formats). A value with a mistake is ignored, and the ad keeps working with
 its previous settings.
@@ -269,4 +294,4 @@ may keep Firebase's cached values for up to 12 hours.
 
 Problems? See [Troubleshooting](TROUBLESHOOTING.md).
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-29
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-10-21

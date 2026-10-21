@@ -1,8 +1,27 @@
 # Getting started
 
-This page takes an app from nothing to its first banner and interstitial. Each later page covers one topic in depth.
+Pick your guide with three questions. Each guide takes a new Android Studio project to a release-ready app, with
+complete files and a check after every step, and needs no other guide.
 
-## 1. Add the repository
+1. **Does your app show AdMob ads?**
+2. **Does it sell subscriptions or other purchases?** (An app usable only by subscribers counts: it sells.)
+3. **Are its screens Jetpack Compose or XML layouts?**
+
+| Ads? | Sells? | Jetpack Compose + Kotlin | XML + Kotlin |
+|---|---|---|---|
+| Yes | No | [AdMob only](guides/ADS_COMPOSE.md) | [AdMob only](guides/ADS_XML.md) |
+| No | Yes | [In-app purchases only](guides/IAP_COMPOSE.md) | [In-app purchases only](guides/IAP_XML.md) |
+| **Yes** | **Yes** | **[AdMob + in-app purchases](guides/ADS_IAP_COMPOSE.md)** (most apps) | **[AdMob + in-app purchases](guides/ADS_IAP_XML.md)** (most apps) |
+
+Screens in both? Take the Compose guide: `adroit-compose` includes the XML views. Every guide includes the Firebase
+setup and Google Play's in-app update ([In-app update](APP_UPDATE.md)).
+
+The rest of this page is for an existing app that wants the library's lower-level API instead of the guides' setup:
+placements declared in code, without ad profiles or Firebase.
+
+## The lower-level API
+
+### 1. Add the repository
 
 Adroit is on Maven Central: no account and no token. `settings.gradle.kts` needs `mavenCentral()`, which a new
 Android Studio project already has:
@@ -16,7 +35,7 @@ dependencyResolutionManagement {
 }
 ```
 
-## 2. Add the dependencies
+### 2. Add the dependencies
 
 ```kotlin
 dependencies {
@@ -30,7 +49,7 @@ Don't add `play-services-ads` or `ads-mobile-sdk` yourself: `adroit-core` brings
 UMP at runtime, and no Google type is needed to use it. If another dependency brings `play-services-ads` (for example a
 mediation adapter), see [Mediation](MEDIATION.md).
 
-## 3. Add the app ID to the manifest
+### 3. Add the app ID to the manifest
 
 Both the Google Mobile Ads SDK and UMP read your AdMob app ID from the manifest
 ([UMP setup](https://developers.google.com/admob/android/next-gen/privacy)). Without it the library reports
@@ -46,7 +65,7 @@ Both the Google Mobile Ads SDK and UMP read your AdMob app ID from the manifest
 
 While developing you can use Google's sample app ID, `ca-app-pub-3940256099942544~3347511713`. PRODUCTION rejects it.
 
-## 4. Declare your placements
+### 4. Declare your placements
 
 A placement is a place in your app that shows an ad. It has a stable key (used by remote config and analytics) and a
 format. Declare them once:
@@ -62,7 +81,7 @@ object Placements {
 }
 ```
 
-## 5. Initialize in `Application.onCreate`
+### 5. Initialize in `Application.onCreate`
 
 <!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/GettingStarted.kt#initialize -->
 ```kotlin
@@ -90,7 +109,7 @@ class MyApplication : Application() {
 In DEVELOPMENT the library always requests Google's demo ad units, whatever IDs you configure, so it's safe from day
 one. [Configuration](CONFIGURATION.md) covers environments and every option.
 
-## 6. Start from the launcher Activity
+### 6. Start from the launcher Activity
 
 `start()` gathers consent with UMP (showing the form when required), then initializes the Google Mobile Ads SDK. No ad
 is requested before consent allows it. See [Consent](CONSENT.md).
@@ -109,7 +128,7 @@ class LauncherActivity : AppCompatActivity() {
 }
 ```
 
-## 7. A first banner
+### 7. A first banner
 
 XML:
 
@@ -142,7 +161,7 @@ fun HomeBottomBar() {
 
 Both follow the screen's lifecycle and are destroyed with it. See [Banner](BANNER.md).
 
-## 8. A first interstitial
+### 8. A first interstitial
 
 <!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/GettingStarted.kt#first-interstitial -->
 ```kotlin
@@ -157,7 +176,7 @@ fun onLevelComplete(activity: Activity, goToNextLevel: () -> Unit) {
 The callback is always called, exactly once, on the main thread, whether an ad was shown or not. Continue your flow in
 it. See [Interstitial](INTERSTITIAL.md).
 
-## 9. Dependency injection
+### 9. Dependency injection
 
 Everything is reachable from the `Adroit` object, which also implements `AdsClient`. Code that receives an
 `AdsClient` can be tested with `FakeAdsClient` ([Testing](TESTING.md)).
@@ -189,12 +208,11 @@ object AdsModule {
 
 ## Next steps
 
-- Setting up a new app with ads tuned from Firebase? Follow the [Integration guide](INTEGRATION_GUIDE.md) checklist.
-
+- Setting up a new app? Take your guide from the table at the top of this page.
 - Read [Consent](CONSENT.md) and set up your messages in the AdMob UI before going to production.
 - Pick your formats: [Banner](BANNER.md), [Interstitial](INTERSTITIAL.md), [Rewarded](REWARDED.md),
   [Rewarded interstitial](REWARDED_INTERSTITIAL.md), [App open](APP_OPEN.md), [Native](NATIVE.md).
 - Before release: switch to PRODUCTION with your real IDs ([Configuration](CONFIGURATION.md#environments)) and check
   [Troubleshooting](TROUBLESHOOTING.md).
 
-Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-09-28
+Last verified against: ads-mobile-sdk 1.4.0, UMP 4.0.0, 2026-10-21

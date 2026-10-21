@@ -13,7 +13,7 @@ import io.github.thesobiaakbar.adroit.billing.ProductSpec
 import io.github.thesobiaakbar.adroit.billing.ShowRules
 import io.github.thesobiaakbar.adroit.billing.SuccessAction
 
-// The one file of docs/BILLING_NEW_APP_XML.md and docs/BILLING_NEW_APP_COMPOSE.md, step 2.
+// The billing enums of docs/guides/ADS_IAP_COMPOSE.md and ADS_IAP_XML.md, step 4.
 
 // region billing-enum
 /** Everything the app sells. The IDs are the product IDs in Play Console. */

@@ -24,7 +24,7 @@ import io.github.thesobiaakbar.adroit.billing.views.PaywallView
 import io.github.thesobiaakbar.adroit.docs.R
 import kotlinx.coroutines.launch
 
-// docs/BILLING_NEW_APP_XML.md, steps 5 to 7.
+// docs/guides/IAP_XML.md and ADS_IAP_XML.md, step 7.
 
 class BillingMainActivity : AppCompatActivity() {
     // region billing-show-xml

@@ -77,7 +77,7 @@ ran (the Mobile Ads SDK's network logging otherwise pushes the early lines out o
 - **WARN-2, a custom Compose layout can leave out the terms or the X.** `Paywall(…, content = { … })` replaces the
   whole layout, so an app that skips `Disclosure()` or `CloseButton()` shows no renewal terms or no X. The built-in
   templates always have both, the error states always have an X, and the guide says to keep `Disclosure()`
-  (`docs/BILLING_NEW_APP_COMPOSE.md:228`); the `content` KDoc now says so too. Owner: Sobia Akbar. Follow-up: decide
+  (the Compose billing guide of the time, now section 7 of `docs/guides/IAP_COMPOSE.md`); the `content` KDoc now says so too. Owner: Sobia Akbar. Follow-up: decide
   whether a debug build should warn when a custom layout composes no disclosure.
 
 ## Changes made during the audit

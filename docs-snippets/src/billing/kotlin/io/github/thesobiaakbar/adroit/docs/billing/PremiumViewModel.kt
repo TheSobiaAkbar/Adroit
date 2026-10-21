@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-// docs/BILLING_NEW_APP_COMPOSE.md step 7, and the FakeBilling test of step 9 (BillingTestingSnippets.kt).
+// docs/guides/*IAP_COMPOSE.md step 7 and *IAP_XML.md step 9, and the FakeBilling test (BillingTestingSnippets.kt).
 
 // region billing-viewmodel
 /** Settings' premium rows. It takes BillingClientApi, so a test passes FakeBilling. It keeps no Activity. */

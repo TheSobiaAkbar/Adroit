@@ -12,16 +12,18 @@ one Kotlin file, and every ad can then be tuned from Firebase without releasing 
 
 ## Start here
 
-| Your app | Step-by-step guide |
-|---|---|
-| **Kotlin + XML (Views, Fragments)** | **[Adding ads to a new Kotlin + XML app](docs/NEW_APP_XML.md)** |
-| **Jetpack Compose** | **[Adding ads to a new Jetpack Compose app](docs/NEW_APP_COMPOSE.md)** |
+| Your app | Jetpack Compose + Kotlin | XML + Kotlin |
+|---|---|---|
+| AdMob only | [Guide](docs/guides/ADS_COMPOSE.md) | [Guide](docs/guides/ADS_XML.md) |
+| In-app purchases only | [Guide](docs/guides/IAP_COMPOSE.md) | [Guide](docs/guides/IAP_XML.md) |
+| **AdMob + in-app purchases** (most apps) | **[Guide](docs/guides/ADS_IAP_COMPOSE.md)** | **[Guide](docs/guides/ADS_IAP_XML.md)** |
 
 Adroit is on Maven Central under the Apache 2.0 license: add the dependency, nothing else.
 
-Each guide goes from an empty app to a splash screen with consent, banners, native ads, interstitials, rewarded ads and
-app open ads, with complete files you can copy and a check after every step. The `sample-xml` and `sample-compose`
-apps in this repository are the finished result of each guide.
+Each guide goes from an empty project to a release-ready app: the in-app update, the splash screen with consent, every
+ad format and the paywalls, as your app needs them, with complete files you can copy and a check after every step.
+The `sample-xml` and `sample-compose` apps in this repository are the finished result of the AdMob + in-app purchases
+guides. Not sure which guide? [Getting started](docs/GETTING_STARTED.md) asks three questions.
 
 ## Features
 
@@ -88,8 +90,8 @@ The guides above set this up properly, with every ad in one enum and Firebase co
 
 **Start here:**
 [Getting started](docs/GETTING_STARTED.md) ·
-[New XML app](docs/NEW_APP_XML.md) · [New Compose app](docs/NEW_APP_COMPOSE.md) ·
-[Integration checklist](docs/INTEGRATION_GUIDE.md)
+[The six guides](docs/GETTING_STARTED.md) · [Integration checklist](docs/INTEGRATION_GUIDE.md) ·
+[In-app update](docs/APP_UPDATE.md)
 
 **Ad formats:**
 [Banner](docs/BANNER.md) · [Native](docs/NATIVE.md) · [Interstitial](docs/INTERSTITIAL.md) ·
@@ -104,8 +106,7 @@ The guides above set this up properly, with every ad in one enum and Firebase co
 [Mediation](docs/MEDIATION.md)
 
 **In-app purchases and paywalls:**
-[Billing](docs/BILLING.md) · [New XML app](docs/BILLING_NEW_APP_XML.md) ·
-[New Compose app](docs/BILLING_NEW_APP_COMPOSE.md) · [Paywalls in Firebase](docs/PAYWALL_REMOTE_CONFIG.md) ·
+[Billing](docs/BILLING.md) · [Paywalls in Firebase](docs/PAYWALL_REMOTE_CONFIG.md) ·
 [Play Console setup](docs/PLAY_CONSOLE_BILLING_SETUP.md) · [Backend contract](docs/BILLING_BACKEND.md) ·
 [Billing troubleshooting](docs/BILLING_TROUBLESHOOTING.md)
 
