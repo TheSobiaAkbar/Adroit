@@ -1,7 +1,6 @@
 package io.github.thesobiaakbar.adroit.firebase
 
-import io.github.thesobiaakbar.adroit.firebase.internal.ActivationSignal
-import io.github.thesobiaakbar.adroit.firebase.internal.RemoteConfigSource
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
@@ -20,20 +19,18 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class RemoteValueTest {
     private val values = mutableMapOf<String, String>()
+    private val activations = MutableSharedFlow<Unit>()
 
     @Before
     fun setUp() {
-        RemoteValue.sourceOverride = object : RemoteConfigSource {
-            override fun string(key: String): String? = values[key]
-            override fun addUpdateListener(onUpdate: () -> Unit): () -> Unit = {}
-            override fun activate(onDone: () -> Unit) = onDone()
-            override fun fetchAndActivate(onDone: (Boolean) -> Unit) = onDone(true)
-        }
+        RemoteValue.sourceOverride = { values[it] }
+        RemoteValue.activationsOverride = activations
     }
 
     @After
     fun tearDown() {
         RemoteValue.sourceOverride = null
+        RemoteValue.activationsOverride = null
     }
 
     @Test
@@ -97,9 +94,9 @@ class RemoteValueTest {
         val levels = RemoteValue.long("free_levels", default = 5)
         val seen = mutableListOf<Long>()
         val job = launch { levels.updates().take(2).toList(seen) }
-        ActivationSignal.notifyActivated() // nothing changed: no emission
+        activations.emit(Unit) // nothing changed: no emission
         values["free_levels"] = "9"
-        ActivationSignal.notifyActivated()
+        activations.emit(Unit)
         job.join()
         assertEquals(listOf(5L, 9L), seen)
     }

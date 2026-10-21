@@ -92,8 +92,8 @@ before writing code.
 │ adroit-billing-views │        │ adroit-billing-compose│   optional UI, one toolkit each
 └──────────────────────┘        └───────────────────────┘
 ┌────────────────────────┐
-│ adroit-billing-firebase│──▶ firebase-config + firebase-analytics (NOT adroit-firebase: it brings the ads SDK)
-└────────────────────────┘    RC source (fetch-once of its own) + Analytics adapter
+│ adroit-billing-firebase│──▶ adroit-remote-config + firebase-analytics (NOT adroit-firebase: it brings the ads SDK)
+└────────────────────────┘    RC source over the shared RemoteConfigSession + Analytics adapter
 ┌────────────────────────┐
 │ adroit-billing-testing │  FakeBilling, product/purchase builders (test-only consumers)
 └────────────────────────┘
@@ -109,13 +109,11 @@ Decisions:
   the samples and guides).
 - **`adroit-billing-firebase` depends on Firebase directly, not on `adroit-firebase`** (decided in B01).
   `adroit-firebase` has `api(adroit-core)`, which would put the Mobile Ads SDK into billing-only apps, and that SDK
-  needs an AdMob app ID in the manifest. Instead, billing-firebase:
-  - reads the activated values;
-  - runs its own once-per-process `fetchAndActivate`.
-
-  In an app that also uses `RemoteConfigSession`, Firebase answers the second call from its fetch cache (within
-  `minimumFetchInterval`), so there's still one network fetch per session. The dependency guard forbids every edge
-  from a billing module to an ads module or to the Mobile Ads SDK.
+  needs an AdMob app ID in the manifest. Instead, billing-firebase reads the activated values through
+  `RemoteConfigSession`, from `adroit-remote-config`. That module holds the one once-per-process fetch, shared with
+  `adroit-firebase` and `adroit-update`, and it has no ads or billing code (setup S01; until then billing had its own
+  copy of the fetch). The dependency guard forbids every edge from a billing module to an ads module or to the
+  Mobile Ads SDK.
 - **No analytics module.** `BillingEventListener` is a `fun interface` in core; the Firebase Analytics adapter lives
   in `adroit-billing-firebase`.
 - Package root: `io.github.thesobiaakbar.adroit.billing`. Resource prefix: `adroit_billing_`. Explicit API mode,

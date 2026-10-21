@@ -5,14 +5,16 @@ import io.github.thesobiaakbar.adroit.AdroitInternal
 import io.github.thesobiaakbar.adroit.InternalAdroitApi
 import io.github.thesobiaakbar.adroit.config.remote.AdConfigProvider
 import io.github.thesobiaakbar.adroit.config.remote.AdOverrides
-import io.github.thesobiaakbar.adroit.firebase.internal.ActivationSignal
 import io.github.thesobiaakbar.adroit.firebase.internal.FirebaseRemoteConfigSource
 import io.github.thesobiaakbar.adroit.firebase.internal.RemoteConfigSource
+import io.github.thesobiaakbar.adroit.firebase.internal.never
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 
 /**
  * Remote overrides from Firebase Remote Config, one parameter per ad (docs/AD_PROFILES.md). Register it with
@@ -26,13 +28,14 @@ import kotlinx.coroutines.flow.flow
  * a value keeps its configured value. An invalid value or field is logged and ignored; the rest still applies.
  *
  * It emits the activated values when collected, then again after each real-time update, which it activates, and after
- * each activation by [RemoteConfigSession]. It doesn't fetch unless [autoFetch] is true: start a [RemoteConfigSession]
- * instead, which fetches once per app session and retries on later screens.
+ * the [RemoteConfigSession]'s fetch. Collecting it starts that shared session if no one did
+ * ([RemoteConfigSession.startDefault]), so the app doesn't need to: it fetches once per app session and retries on
+ * later screens.
  *
  * Firebase must be initialized by the app (the google-services plugin).
  *
  * @param remoteConfig the instance to read, for apps with several Firebase apps.
- * @param autoFetch whether to call `fetchAndActivate` when collection starts.
+ * @param autoFetch ignored: the shared [RemoteConfigSession] always fetches. Kept for compatibility.
  * @param settingsKey the name of the settings parameter.
  */
 @OptIn(InternalAdroitApi::class)
@@ -41,6 +44,7 @@ public class FirebaseRemoteConfigProvider internal constructor(
     private val autoFetch: Boolean,
     private val settingsKey: String,
     private val formats: () -> Map<String, AdFormat>,
+    private val activations: () -> Flow<Unit>,
 ) : AdConfigProvider {
     /** Reads [remoteConfig]; see the class description for [autoFetch] and [settingsKey]. */
     @JvmOverloads
@@ -48,9 +52,15 @@ public class FirebaseRemoteConfigProvider internal constructor(
         remoteConfig: FirebaseRemoteConfig,
         autoFetch: Boolean = false,
         settingsKey: String = DEFAULT_SETTINGS_KEY,
-    ) : this(FirebaseRemoteConfigSource(remoteConfig), autoFetch, settingsKey, AdroitInternal::configuredPlacementFormats)
+    ) : this(
+        FirebaseRemoteConfigSource(remoteConfig),
+        autoFetch,
+        settingsKey,
+        AdroitInternal::configuredPlacementFormats,
+        { RemoteConfigSession.startDefault(remoteConfig)?.activations ?: never },
+    )
 
-    /** Uses the default `FirebaseRemoteConfig` instance, without fetching, and the `AdSettings` parameter. */
+    /** Uses the default `FirebaseRemoteConfig` instance and the `AdSettings` parameter. */
     public constructor() : this(FirebaseRemoteConfig.getInstance())
 
     override fun overrides(): Flow<AdOverrides> = flow {
@@ -63,16 +73,15 @@ public class FirebaseRemoteConfigProvider internal constructor(
         )
         // Firebase calls back on its own threads: a StateFlow makes the updates thread-safe and drops repeats.
         val latest = MutableStateFlow(read())
-        val refresh = { latest.value = read() }
-        val removeListener = source.addUpdateListener { source.activate(refresh) }
-        // RemoteConfigSession's activations raise no Firebase callback: it signals them here.
-        val removeSessionListener = ActivationSignal.add(refresh)
-        if (autoFetch) source.fetchAndActivate { refresh() }
+        val removeListener = source.addUpdateListener { source.activate { latest.value = read() } }
         try {
-            emitAll(latest)
+            coroutineScope {
+                // The session's activation raises no Firebase callback: re-read when it lands.
+                launch { activations().collect { latest.value = read() } }
+                emitAll(latest)
+            }
         } finally {
             removeListener()
-            removeSessionListener()
         }
     }
 

@@ -58,7 +58,7 @@ class PublicKDocTest {
 
     private companion object {
         val LIBRARY_MODULES = listOf(
-            "adroit-core", "adroit-views", "adroit-compose", "adroit-testing", "adroit-firebase",
+            "adroit-core", "adroit-views", "adroit-compose", "adroit-testing", "adroit-firebase", "adroit-remote-config",
             "adroit-billing", "adroit-billing-views", "adroit-billing-compose", "adroit-billing-firebase", "adroit-billing-testing",
         )
         val PROPERTY = Regex("""^public (?:val|var) (\w+)""")

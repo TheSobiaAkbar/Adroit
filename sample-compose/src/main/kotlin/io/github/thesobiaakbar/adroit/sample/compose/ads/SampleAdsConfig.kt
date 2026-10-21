@@ -38,7 +38,7 @@ object SampleAdsConfig {
             this.testDeviceIds += testDeviceIds
         }
         profiles(SampleAds.entries, SampleAds.settings)
-        // Firebase values override the enum's defaults, ad by ad. SampleApplication's RemoteConfigSession does the fetching.
+        // Firebase values override the enum's defaults, ad by ad. The shared RemoteConfigSession fetches them.
         if (firebase) remoteConfig = FirebaseRemoteConfigProvider()
         logging { level = if (buildType == "release") LogLevel.WARN else LogLevel.DEBUG }
         // Each ad's life in logcat (filter by AdEvents): requested, loaded, failed, not shown, displayed. A real app

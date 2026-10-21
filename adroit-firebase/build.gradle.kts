@@ -15,6 +15,8 @@ android {
 
 dependencies {
     api(project(":adroit-core"))
+    // The one Remote Config fetch, shared with adroit-billing-firebase and adroit-update (RemoteConfigSession).
+    api(project(":adroit-remote-config"))
 
     // Firebase types appear in this module's public constructors (the one exception to "no vendor types", ADR-017),
     // so both SDKs are `api`. The host applies the google-services plugin and initializes Firebase itself.

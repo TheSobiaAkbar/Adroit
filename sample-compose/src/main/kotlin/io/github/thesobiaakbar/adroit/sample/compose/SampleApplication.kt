@@ -11,7 +11,6 @@ import io.github.thesobiaakbar.adroit.billing.BillingSettings
 import io.github.thesobiaakbar.adroit.billing.DemoBilling
 import io.github.thesobiaakbar.adroit.billing.firebase.FirebaseBillingConfig
 import io.github.thesobiaakbar.adroit.billing.firebase.FirebaseBillingEvents
-import io.github.thesobiaakbar.adroit.firebase.RemoteConfigSession
 import io.github.thesobiaakbar.adroit.sample.compose.ads.SampleAdsConfig
 import io.github.thesobiaakbar.adroit.sample.compose.billing.CoinWallet
 import io.github.thesobiaakbar.adroit.sample.compose.billing.DemoMode
@@ -72,9 +71,9 @@ class SampleApplication : Application() {
         CoinWallet.start(this, appScope)
     }
 
-    // Fetches Remote Config (every ad's Firebase JSON) once this session, without making anything wait: at once, then
-    // again on each new screen or network return until one fetch succeeds. Debug and staging builds skip Firebase's
-    // cache so a console change shows on the next launch; release keeps the default 12 hours.
+    // Remote Config's settings, before the first Adroit Firebase module starts the shared fetch (RemoteConfigSession:
+    // once per session, never waiting, retried on each new screen or network return). Debug and staging builds skip
+    // Firebase's cache so a console change shows on the next launch; release keeps the default 12 hours.
     private fun configureRemoteConfig() {
         val remoteConfig = FirebaseRemoteConfig.getInstance()
         remoteConfig.setConfigSettingsAsync(
@@ -83,7 +82,6 @@ class SampleApplication : Application() {
                 fetchTimeoutInSeconds = 10 // a slow attempt must not hold off the next screen's retry for a minute
             },
         )
-        RemoteConfigSession.start(this, remoteConfig)
     }
 
     // Debug builds only: logs every disk or network access on the main thread (tag StrictMode), so a library

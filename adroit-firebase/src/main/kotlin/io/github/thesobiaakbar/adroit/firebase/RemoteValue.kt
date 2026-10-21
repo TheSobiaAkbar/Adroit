@@ -1,15 +1,12 @@
 package io.github.thesobiaakbar.adroit.firebase
 
-import io.github.thesobiaakbar.adroit.firebase.internal.ActivationSignal
-import io.github.thesobiaakbar.adroit.firebase.internal.FirebaseRemoteConfigSource
-import io.github.thesobiaakbar.adroit.firebase.internal.RemoteConfigSource
 import io.github.thesobiaakbar.adroit.firebase.internal.log
+import io.github.thesobiaakbar.adroit.firebase.internal.never
 import io.github.thesobiaakbar.adroit.logging.LogLevel
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONException
 import org.json.JSONObject
@@ -26,10 +23,10 @@ import org.json.JSONObject
  * if (AppConfig.showRateDialog.value) showRateDialog()
  * ```
  *
- * The values come from the same fetch as the ads: `RemoteConfigSession` fetches once per session and never makes the
- * app wait. Until this session's fetch lands, [value] is the one from the last session's fetch, or [default] on the
- * very first launch. A parameter missing from Firebase, or one that isn't a valid value of its type, reads as
- * [default] (an invalid one is logged).
+ * The values come from the same fetch as the ads and billing: `RemoteConfigSession` (started by the first read if no
+ * one did) fetches once per session and never makes the app wait. Until this session's fetch lands, [value] is the
+ * one from the last session's fetch, or [default] on the very first launch. A parameter missing from Firebase, or one
+ * that isn't a valid value of its type, reads as [default] (an invalid one is logged).
  *
  * @property key the parameter's name in the Firebase console.
  * @property default the value used when Firebase doesn't set a valid one.
@@ -49,19 +46,17 @@ public class RemoteValue<T : Any> internal constructor(
      * when `RemoteConfigSession`'s fetch lands). Collect it where a screen must follow a change made in Firebase
      * while the app runs.
      */
-    public fun updates(): Flow<T> = callbackFlow {
-        trySend(raw())
-        val remove = ActivationSignal.add { trySend(raw()) }
-        awaitClose(remove)
+    public fun updates(): Flow<T> = flow {
+        emit(raw())
+        emitAll((activationsOverride ?: RemoteConfigSession.startDefault()?.activations ?: never).map { raw() })
     }.distinctUntilChanged().map(::resolve)
 
     override fun toString(): String = "RemoteValue(key=$key, default=$default)"
 
-    private fun raw(): String? = try {
-        (sourceOverride ?: sessionSource())?.string(key)
-    } catch (e: Exception) {
-        // Firebase isn't initialized (no google-services.json, or a process without it).
-        null
+    // Starts the shared session if no one did; null when Firebase isn't initialized.
+    private fun raw(): String? {
+        val override = sourceOverride
+        return if (override != null) override(key) else RemoteConfigSession.startDefault()?.string(key)
     }
 
     private fun resolve(raw: String?): T {
@@ -82,12 +77,12 @@ public class RemoteValue<T : Any> internal constructor(
     public companion object {
         private const val MAX_LOGGED = 80
 
-        /** Replaces Firebase in unit tests. */
+        /** Replace Firebase in unit tests: the active value of a key, and the session's activations. */
         @Volatile
-        internal var sourceOverride: RemoteConfigSource? = null
+        internal var sourceOverride: ((String) -> String?)? = null
 
-        private fun sessionSource(): RemoteConfigSource =
-            RemoteConfigSession.current()?.source ?: FirebaseRemoteConfigSource(FirebaseRemoteConfig.getInstance())
+        @Volatile
+        internal var activationsOverride: Flow<Unit>? = null
 
         /** A true/false parameter. Firebase's `true`, `false`, `1`, `0`, `yes`, `no`, `on` and `off` are accepted. */
         @JvmStatic

@@ -6,6 +6,12 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Changed
+- One Remote Config fetch for the whole app: `RemoteConfigSession` moved to the new `adroit-remote-config` module
+  (same package and API), which `adroit-firebase` and `adroit-billing-firebase` both use. Billing's own copy of the
+  fetch is gone. Apps no longer call `RemoteConfigSession.start`: the first Adroit Firebase module used starts it
+  (`RemoteConfigSession.startDefault`). `FirebaseRemoteConfigProvider`'s `autoFetch` is now ignored.
+
 ## [1.0.0-rc6] - 2026-10-20
 
 ### Added

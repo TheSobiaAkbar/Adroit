@@ -101,19 +101,23 @@ configured, and a field left out of a value keeps its configured value.
 
 - When collected, the provider emits the currently **activated** values, then again after each real-time update, which
   it activates.
-- It doesn't fetch unless you pass `FirebaseRemoteConfigProvider(remoteConfig, autoFetch = true)`. Prefer
-  `RemoteConfigSession` ([below](#fetching-once-per-session)), or call `fetchAndActivate()` on your own schedule.
+- It never fetches itself: collecting it starts the shared `RemoteConfigSession`
+  ([below](#fetching-once-per-session)) if nothing did. `autoFetch` is ignored and kept only for compatibility.
 - An invalid value is logged and ignored; the other parameters still apply. An invalid field ignores just that field.
 - Pass a `FirebaseRemoteConfig` instance for apps with several Firebase apps, and `settingsKey` to rename
   `AdSettings`.
 
 ### Fetching once per session
 
-`RemoteConfigSession.start(application)` in `Application.onCreate` fetches and activates at once, without making
-anything wait. After the first success it never fetches again in that process (`isFetched` turns true). After a
+`RemoteConfigSession` (artifact `adroit-remote-config`, brought in by `adroit-firebase`, `adroit-billing-firebase`
+and `adroit-update`) is the one Remote Config fetch for the whole app: ads, paywalls, app update and your own values.
+You don't start it: the first of those modules used starts it. Call `RemoteConfigSession.start(application,
+remoteConfig)` in `Application.onCreate` only to use a `FirebaseRemoteConfig` other than the default instance.
+
+It fetches and activates at once, without making anything wait. After the first success it never fetches again in that process (`isFetched` turns true). After a
 failure it tries again whenever an Activity is created and whenever the device comes back online, one attempt at a
 time, and skips attempts while offline. Each activation reaches `FirebaseRemoteConfigProvider` at once, so the next ad
-request, and the next splash timer, use the new values. Use it instead of `autoFetch = true`.
+request, the next splash timer and the next paywall use the new values.
 
 Set a short `fetchTimeoutInSeconds` (for example 10) in your `FirebaseRemoteConfigSettings`, so a slow attempt
 doesn't hold off the next screen's retry, and a `minimumFetchIntervalInSeconds` of 0 in debug builds to see console

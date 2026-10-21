@@ -8,6 +8,7 @@ import io.github.thesobiaakbar.adroit.config.remote.AdOverrides
 import io.github.thesobiaakbar.adroit.config.remote.PlacementOverride
 import io.github.thesobiaakbar.adroit.firebase.internal.RemoteConfigSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -28,7 +29,6 @@ class FirebaseRemoteConfigProviderTest {
     private class FakeSource(var values: Map<String, String> = emptyMap()) : RemoteConfigSource {
         var listener: (() -> Unit)? = null
         var removed = false
-        var fetches = 0
         var pendingActivation: Map<String, String>? = null
         val read = mutableListOf<String>()
 
@@ -46,11 +46,6 @@ class FirebaseRemoteConfigProviderTest {
             pendingActivation?.let { values = it }
             onDone()
         }
-
-        override fun fetchAndActivate(onDone: (Boolean) -> Unit) {
-            fetches++
-            activate { onDone(true) }
-        }
     }
 
     private val formats = mapOf(
@@ -59,8 +54,11 @@ class FirebaseRemoteConfigProviderTest {
         "FeedNative" to AdFormat.NATIVE,
     )
 
-    private fun provider(source: FakeSource, autoFetch: Boolean = false, settingsKey: String = "AdSettings") =
-        FirebaseRemoteConfigProvider(source, autoFetch, settingsKey) { formats }
+    /** The shared session's activations. */
+    private val activations = MutableSharedFlow<Unit>()
+
+    private fun provider(source: FakeSource, settingsKey: String = "AdSettings") =
+        FirebaseRemoteConfigProvider(source, autoFetch = false, settingsKey, { formats }, { activations })
 
     private suspend fun first(vararg values: Pair<String, String>): AdOverrides =
         provider(FakeSource(values.toMap())).overrides().first()
@@ -135,16 +133,7 @@ class FirebaseRemoteConfigProviderTest {
         job.join()
 
         assertEquals(listOf(true, false), emissions.map { it.adsEnabled })
-        assertEquals(0, source.fetches)
         assertTrue("the Firebase listener is removed when collection ends", source.removed)
-    }
-
-    @Test
-    fun `autoFetch fetches and activates when collected`() = runTest {
-        val source = FakeSource().apply { pendingActivation = mapOf("FeedNative" to """{ "enabled": false }""") }
-        val overrides = provider(source, autoFetch = true).overrides().first { it.placements.isNotEmpty() }
-        assertEquals(1, source.fetches)
-        assertEquals(PlacementOverride(enabled = false), overrides.placements.getValue("FeedNative"))
     }
 
     @Test
@@ -154,7 +143,7 @@ class FirebaseRemoteConfigProviderTest {
         val job = launch { provider(source).overrides().take(2).toList(emitted) }
         runCurrent()
         source.values = mapOf("HistoryAd" to """{"counter": 5}""")
-        io.github.thesobiaakbar.adroit.firebase.internal.ActivationSignal.notifyActivated()
+        activations.emit(Unit)
         runCurrent()
         job.join()
         assertEquals(listOf(2, 5), emitted.map { it.placements.getValue("HistoryAd").counter })

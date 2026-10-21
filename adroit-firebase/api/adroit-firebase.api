@@ -40,23 +40,6 @@ public final class io/github/thesobiaakbar/adroit/firebase/FirebaseRemoteConfigP
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class io/github/thesobiaakbar/adroit/firebase/RemoteConfigSession {
-	public static final field Companion Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession$Companion;
-	public static final fun current ()Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession;
-	public final fun fetchIfNeeded ()V
-	public final fun isFetched ()Lkotlinx/coroutines/flow/StateFlow;
-	public static final fun start (Landroid/app/Application;)Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession;
-	public static final fun start (Landroid/app/Application;Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;)Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class io/github/thesobiaakbar/adroit/firebase/RemoteConfigSession$Companion {
-	public final fun current ()Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession;
-	public final fun start (Landroid/app/Application;)Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession;
-	public final fun start (Landroid/app/Application;Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;)Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession;
-	public static synthetic fun start$default (Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession$Companion;Landroid/app/Application;Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/firebase/RemoteConfigSession;
-}
-
 public final class io/github/thesobiaakbar/adroit/firebase/RemoteValue {
 	public static final field Companion Lio/github/thesobiaakbar/adroit/firebase/RemoteValue$Companion;
 	public static final fun boolean (Ljava/lang/String;Z)Lio/github/thesobiaakbar/adroit/firebase/RemoteValue;

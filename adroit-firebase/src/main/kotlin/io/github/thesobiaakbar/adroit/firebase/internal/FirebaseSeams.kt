@@ -9,8 +9,14 @@ import com.google.firebase.remoteconfig.ConfigUpdate
 import com.google.firebase.remoteconfig.ConfigUpdateListener
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
-/** The part of Firebase Remote Config the provider uses, so the mapping is testable without Firebase. */
+/**
+ * The part of Firebase Remote Config the provider reads and its real-time updates, so the mapping is testable without
+ * Firebase. Fetching belongs to `RemoteConfigSession` (adroit-remote-config).
+ */
 internal interface RemoteConfigSource {
     /** The activated value of [key], or null when neither Remote Config nor an in-app default sets it. */
     fun string(key: String): String?
@@ -20,9 +26,6 @@ internal interface RemoteConfigSource {
 
     /** Activates fetched values, then calls [onDone] (any thread). */
     fun activate(onDone: () -> Unit)
-
-    /** Fetches and activates, then calls [onDone] (any thread) with whether the fetch succeeded. */
-    fun fetchAndActivate(onDone: (success: Boolean) -> Unit)
 }
 
 /** The part of Google Analytics for Firebase the listener uses. */
@@ -52,10 +55,6 @@ internal class FirebaseRemoteConfigSource(private val remoteConfig: FirebaseRemo
     override fun activate(onDone: () -> Unit) {
         remoteConfig.activate().addOnCompleteListener { onDone() }
     }
-
-    override fun fetchAndActivate(onDone: (success: Boolean) -> Unit) {
-        remoteConfig.fetchAndActivate().addOnCompleteListener { onDone(it.isSuccessful) }
-    }
 }
 
 internal class FirebaseAnalyticsSink(private val analytics: FirebaseAnalytics) : AnalyticsSink {
@@ -79,3 +78,6 @@ internal class FirebaseAnalyticsSink(private val analytics: FirebaseAnalytics) :
 internal fun log(level: LogLevel, message: String) {
     AdroitInternal.log(level, message)
 }
+
+/** Never emits and never completes: the activations when Firebase isn't initialized, so collectors stay alive. */
+internal val never: Flow<Unit> = flow { awaitCancellation() }

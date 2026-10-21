@@ -76,6 +76,7 @@ Adroit/
 ├── adroit-compose/     → io.github.thesobiaakbar:adroit-compose      (package io.github.thesobiaakbar.adroit.compose)
 ├── adroit-testing/     → io.github.thesobiaakbar:adroit-testing      (package io.github.thesobiaakbar.adroit.testing)
 ├── adroit-firebase/    → io.github.thesobiaakbar:adroit-firebase     (optional, package io.github.thesobiaakbar.adroit.firebase)
+├── adroit-remote-config/ → io.github.thesobiaakbar:adroit-remote-config (RemoteConfigSession, shared with billing and update)
 ├── sample-xml/        (existing :app, renamed): Activity + Fragment + ViewBinding + AppCompat
 ├── sample-compose/    sample-xml's app in Compose: splash Activity + Navigation Compose destinations
 └── docs/
@@ -87,7 +88,8 @@ Adroit/
 | **adroit-views** | `AdBannerView` (XML-inflatable), `attachBanner(...)` lifecycle helpers, `AdNativeView` + default native templates (`adroit_native_small/medium/large.xml`), `NativeAdHolder` for ViewModels | core, `lifecycle-runtime` | Resources and XML attrs stay out of core. Fragment support comes through `LifecycleOwner` (`viewLifecycleOwner`), so there's **no `androidx.fragment` dependency**. |
 | **adroit-compose** | `AdBanner()`, `AdNative()`, `rememberNativeAd()`, `rememberAdAvailability()`, `rememberFullScreenAdLauncher()` | core, views (templates), Compose `runtime`/`ui`/`foundation`, `lifecycle-runtime-compose`, `lifecycle-viewmodel-compose` | Compose stays optional. No Material or Material3. |
 | **adroit-testing** | `FakeAdsClient` implementing the public `AdsClient` interface, scripted results, event recording | core | Lets host apps unit-test ViewModels without Google. |
-| **adroit-firebase** (optional, last) | `FirebaseRemoteConfigProvider : AdConfigProvider`, `FirebaseAnalyticsEventListener : AdEventListener` | core, Firebase BoM (`config`, `analytics`) | Keeps Firebase out of core. Built only if the company uses Firebase. |
+| **adroit-firebase** (optional, last) | `FirebaseRemoteConfigProvider : AdConfigProvider`, `FirebaseAnalyticsEventListener : AdEventListener` | core, adroit-remote-config, Firebase BoM (`config`, `analytics`) | Keeps Firebase out of core. Built only if the company uses Firebase. |
+| **adroit-remote-config** | `RemoteConfigSession`: the one Remote Config fetch per process | Firebase BoM (`config`), coroutines; **no `adroit-*` module** | Shared by `adroit-firebase`, `adroit-billing-firebase` and `adroit-update`, so an app fetches once whatever it uses (setup S01). |
 
 **Modules we decided not to create:**
 - **`admob-ump`**: consent is mandatory for correct ad requests, Next-Gen already pulls in UMP, and splitting it would force the consent interface to be public.
