@@ -24,7 +24,9 @@ it: a logo, the app name, and a progress bar.
    ad that loads after the timer isn't shown on the splash.
 
 Firebase Remote Config is never waited for. The timer uses the values active when it starts: this session's fetch
-if it finished during consent, otherwise the last session's (see [Remote configuration](REMOTE_CONFIG.md)).
+if it finished during consent, otherwise the last session's (see [Remote configuration](REMOTE_CONFIG.md)). If this
+session's fetch arrives during the timer and swaps the splash ad's format (interstitial ↔ app open), the splash asks
+for the ad in its new format and still shows it if it's ready before the timer ends.
 
 Internet is judged by `NetworkMonitor`: Wi-Fi without working internet (a sign-in page) counts as offline.
 

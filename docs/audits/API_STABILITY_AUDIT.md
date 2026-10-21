@@ -86,3 +86,16 @@ Listed in CHANGELOG `[1.0.0-rc1]` "Changed (breaking)":
   needs the Compose tests and the device runs again; until then, the README states AGP 9.1 and compileSdk 37 for it.
 - **Matrix in CI:** only the default row runs in CI. The AGP 8 rows need a Gradle 8 distribution, and the 8.1 row a
   JDK 17. They would fit the nightly workflow.
+
+## Billing
+
+Added by the billing readiness audit on 2026-10-21 ([BILLING_READINESS_AUDIT.md](BILLING_READINESS_AUDIT.md), check
+8). The billing modules follow the same rules as the ads modules ([RELEASE.md](../RELEASE.md) "API stability", ADR-007).
+
+- Explicit API mode and `allWarningsAsErrors`, from the shared convention plugin.
+- The five dumps (`adroit-billing*/api/*.api`) are committed, and `apiCheck` passes on them at `1.0.0-rc6`.
+- No Play Billing type is public: `NoGoogleTypesInPublicApiTest` reads all ten dumps for `com/android/billingclient`.
+- Firebase types appear only in `adroit-billing-firebase` (`FirebaseBillingConfig.source`, `FirebaseBillingEvents`),
+  the exception ADR-017 allows for the Firebase modules; the dependency guard keeps the Firebase SDK off the others.
+- Surfaces that aren't settled carry `@ExperimentalAdroitBillingApi` (opt-in, WARNING) and are exempt until the marker
+  is removed.

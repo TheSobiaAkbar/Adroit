@@ -36,7 +36,7 @@ private val FORBIDDEN_EVERYWHERE = listOf(
 
 /** Checked against the whole transitive release runtime classpath. */
 private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
-    ":adroit-core" to listOf(
+    ":adroit-core" to ADS_NEVER + listOf(
         "androidx\\.compose\\..*:.*",
         "com\\.google\\.android\\.material:.*",
         "com\\.google\\.dagger:.*",
@@ -45,14 +45,14 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
         "project :adroit-compose",
         "project :adroit-firebase",
     ),
-    ":adroit-views" to listOf(
+    ":adroit-views" to ADS_NEVER + listOf(
         "androidx\\.compose\\..*:.*",
         "com\\.google\\.firebase:.*",
         "project :adroit-compose",
         "project :adroit-firebase",
     ),
     // Compose stays design-system neutral: no Material or Material3, Navigation, Hilt or Firebase (PROMPT 14 §7).
-    ":adroit-compose" to listOf(
+    ":adroit-compose" to ADS_NEVER + listOf(
         "androidx\\.compose\\.material3?:.*",
         "com\\.google\\.android\\.material:.*",
         "androidx\\.navigation:.*",
@@ -60,12 +60,12 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
         "com\\.google\\.firebase:.*",
         "project :adroit-firebase",
     ),
-    ":adroit-testing" to listOf(
+    ":adroit-testing" to ADS_NEVER + listOf(
         "com\\.google\\.firebase:.*",
         "project :adroit-firebase",
     ),
     // Firebase is allowed only here (PROMPT 24, ADR-017). No UI toolkit, and no dependency on the UI modules.
-    ":adroit-firebase" to listOf(
+    ":adroit-firebase" to ADS_NEVER + listOf(
         "androidx\\.compose\\..*:.*",
         "com\\.google\\.android\\.material:.*",
         "com\\.google\\.dagger:.*",
@@ -110,6 +110,10 @@ private val FORBIDDEN_TRANSITIVE_BY_PROJECT = mapOf(
  * serializers, which are not Firebase products.
  */
 private const val FIREBASE_SDK = "com\\.google\\.firebase:(?!firebase-encoders).*"
+
+/** Forbidden on every ads module's release runtime classpath: billing, so an ads-only app never gets it. */
+private val ADS_NEVER: List<String>
+    get() = listOf("project :adroit-billing.*", "com\\.android\\.billingclient:.*")
 
 /** Forbidden on every billing module's release runtime classpath: the ads modules and the Mobile Ads SDK. */
 private val BILLING_NEVER: List<String>

@@ -88,3 +88,16 @@ The CI command set from `.github/workflows/ci.yml` was run locally after the fix
 | Mediation sample and its dependency guard (`-PwithMediation=true`) | pass |
 | Docs snippets module, and `check-docs.mjs` | pass: 21 files, 44 snippets |
 | `publishToMavenLocal`, then `consumer-smoke` `assembleDebug verifyConsumerClasspath` | pass |
+
+## Billing
+
+Added by the billing readiness audit on 2026-10-21 ([BILLING_READINESS_AUDIT.md](BILLING_READINESS_AUDIT.md), check
+7), for the five `adroit-billing*` modules.
+
+| # | Check | Status | Evidence |
+|---|---|---|---|
+| B1 | No purchase token, order ID with account, or person in logs, events or preferences | PASS | `TokenLeakScanTest` scans every billing `src/main`; `PurchaseProcessorTest` "no purchase token reaches the logs, the events or the ledger"; `AttributionTest` "no purchase token is stored"; `EntitlementEngineTest` "the cache holds no purchase token". Correlation uses `redact()`, `sha256(token).take(12)` (`adroit-billing/…/internal/BillingLog.kt:35`). |
+| B2 | No server credentials in the repository | PASS | `git grep` for `private_key`, `service_account`, `client_secret` and private-key headers finds only `docs/BILLING_BACKEND.md`'s warnings. The Play Developer API key belongs on the app's server ([BILLING_BACKEND.md](../BILLING_BACKEND.md)). The samples' `google-services.json` Firebase client keys are the readiness audit's WARN-1. |
+| B3 | The verifier talks HTTPS only | PASS | `HttpPurchaseVerifier` rejects other schemes, except `http://` to local hosts when allowed for development (`HttpPurchaseVerifier.kt:121`; `HttpPurchaseVerifierTest` "only https, or local http when allowed"). |
+| B4 | No grant on pending, suspended, unspecified or a failed query | PASS | `PurchaseProcessorTest` (pending, suspended, unspecified, rejected), `EntitlementSnapshotTest` "an unknown snapshot grants nothing, even with active grants", `EntitlementEngineTest` "without a cache the start is unknown and grants nothing". |
+| B5 | Client-only limits documented | PASS | [BILLING.md](../BILLING.md) "What the app can and can't know" and its security box: without a server, a rooted device can fake access, and Firebase can't grant premium. |

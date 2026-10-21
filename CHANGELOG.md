@@ -25,6 +25,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   builds a Compose and an XML host that initialize billing and call a paywall (`-Psmoke.billing=false` leaves it out
   for the Kotlin 2.1 rows of the compatibility matrix).
 
+### Fixed
+- `SplashFlow`: when this session's Firebase fetch arrived during the splash timer and swapped the splash ad's format
+  (interstitial ↔ app open), the ad requested in the old format was released and none was requested in the new one,
+  so the splash waited out its whole timer without an ad. It now requests the ad in its new format.
+
 ## [1.0.0-rc5] - 2026-10-15
 
 ### Added
@@ -101,7 +106,7 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `adroit-compose`, `adroit-testing` and `adroit-firebase`, package `io.github.thesobiaakbar.adroit`, facade `Adroit`,
   resource and XML attribute prefix `adroit_`. See [Migration](docs/MIGRATION.md#from-companyadmob-to-adroit).
 - Distributed privately through GitHub Packages, under a proprietary license (`LICENSE`); access by invitation
-  ([Getting access](docs/ACCESS.md)). The in-house Maven repository publishing is removed.
+  ([Getting access](https://github.com/TheSobiaAkbar/Adroit/blob/v1.0.0-rc4/docs/ACCESS.md)). The in-house Maven repository publishing is removed.
 - The mixed XML and Compose sample and its guide are removed; `sample-xml` and `sample-compose` remain. The
   new-app guides install Adroit from GitHub Packages.
 - `AdBanner` (and `AdSlot` showing a banner) keeps its banner for the whole screen, like `AdNative`: in a ViewModel

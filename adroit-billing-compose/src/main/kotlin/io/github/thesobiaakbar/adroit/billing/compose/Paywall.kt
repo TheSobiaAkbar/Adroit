@@ -72,6 +72,8 @@ import io.github.thesobiaakbar.adroit.billing.R as BillingR
  * @param onExitPaywall called after [onClose] with the `exitPaywall` to show next, when the configuration names one
  *   and its rules allow it.
  * @param content a custom layout of [PaywallScope] blocks, used while the plans are shown; null uses the template.
+ *   It replaces the whole layout, the close button included: keep `Disclosure()` (Play requires the renewal terms
+ *   before a purchase) and `CloseButton()` in it.
  */
 @Composable
 public fun Paywall(

@@ -35,6 +35,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 /**
  * Everything billing runs once initialized, created once per process by `AdroitBilling.initialize`. Creating it reads
@@ -141,8 +142,13 @@ internal class BillingRuntime(
 
     /** Shows Play's transactional messages over [activity]; syncs when one changed a subscription. */
     fun showInAppMessages(activity: Activity) {
+        // Weakly: the call waits for a connection, and Play keeps its callback (and this coroutine) until it answers,
+        // which can be after the Activity is destroyed. A strong capture leaked it across a rotation (B-FINAL).
+        val target = WeakReference(activity)
         scope.launch {
-            val shown = connection.call("showInAppMessages") { showInAppMessages(activity) }
+            val shown = connection.call("showInAppMessages") {
+                target.get()?.takeUnless { it.isFinishing || it.isDestroyed }?.let { showInAppMessages(it) } ?: PlayResult.Ok(null)
+            }
             if (shown is PlayResult.Ok && shown.value != null) entitlements.requestSync()
         }
     }

@@ -136,8 +136,12 @@ internal class FakePlayBillingPort : PlayBillingPort {
     var inAppMessageCalls = 0
         private set
 
+    /** When set, [showInAppMessages] waits for it, as Play does until it has an answer. */
+    var inAppMessageAnswer: kotlinx.coroutines.CompletableDeferred<PlayResult<String?>>? = null
+
     override suspend fun showInAppMessages(activity: Activity): PlayResult<String?> {
         inAppMessageCalls++
+        inAppMessageAnswer?.let { return it.await() }
         return inAppMessageResult
     }
 

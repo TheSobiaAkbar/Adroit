@@ -2,6 +2,7 @@ package io.github.thesobiaakbar.adroit.splash
 
 import android.app.Activity
 import io.github.thesobiaakbar.adroit.AdError
+import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.FullScreenResult
 import io.github.thesobiaakbar.adroit.config.SplashTimings
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -48,6 +49,8 @@ class SplashFlowTest {
             requested += key
             return adAvailable
         }
+        var format: AdFormat? = AdFormat.INTERSTITIAL
+        override fun servingFormat(key: String) = format
         override fun isAdReady(key: String) = adReady
         override fun adsUnavailable() = unavailable
         override fun isResumed(activity: Activity) = resumed
@@ -104,6 +107,22 @@ class SplashFlowTest {
         ports.showCallback!!(FullScreenResult.Dismissed(clicked = false))
         runCurrent()
         assertEquals(SplashState.Finished(adShown = true), flow.state.value)
+    }
+
+    @Test
+    fun `a format swap during the timer requests the ad again in its new format, and shows it`() = runTest {
+        val flow = flow()
+        assertEquals(listOf("SplashAd"), ports.requested)
+        advance(300)
+        // Firebase activates a value that swaps SplashAd to an app open ad: the interstitial requested is released.
+        ports.format = AdFormat.APP_OPEN
+        advance(100)
+        assertEquals(listOf("SplashAd", "SplashAd"), ports.requested)
+        advance(1_000)
+        assertEquals("no new request while the format stays", 2, ports.requested.size)
+        ports.adReady = true
+        advance(100)
+        assertEquals(SplashState.ShowingAd, flow.state.value)
     }
 
     @Test

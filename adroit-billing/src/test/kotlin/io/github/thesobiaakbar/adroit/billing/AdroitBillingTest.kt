@@ -104,6 +104,29 @@ class AdroitBillingTest {
     }
 
     @Test
+    fun `waiting for Play's in-app message answer doesn't keep a destroyed activity`() {
+        AdroitBilling.initialize(application, valid)
+        shadowOf(Looper.getMainLooper()).idle()
+        port.inAppMessageAnswer = CompletableDeferred() // Play never answers
+        val activity = java.lang.ref.WeakReference(showInAppMessagesThenDestroy())
+        assertEquals(1, port.inAppMessageCalls)
+
+        repeat(20) {
+            if (activity.get() == null) return@repeat
+            System.gc()
+            Thread.sleep(20)
+        }
+        assertNull("the destroyed activity is still reachable", activity.get())
+    }
+
+    private fun showInAppMessagesThenDestroy(): Activity {
+        val controller = Robolectric.buildActivity(Activity::class.java).setup()
+        AdroitBilling.showInAppMessages(controller.get())
+        shadowOf(Looper.getMainLooper()).idle()
+        return controller.pause().stop().destroy().get()
+    }
+
+    @Test
     fun `an in-app message that changed a subscription syncs purchases`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         AdroitBilling.initialize(application, valid)

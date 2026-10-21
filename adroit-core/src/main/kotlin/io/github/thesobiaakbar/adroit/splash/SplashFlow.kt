@@ -45,7 +45,7 @@ import kotlin.time.Duration.Companion.seconds
  *    shown on the splash), or when the ad is closed or fails to show.
  *
  * Firebase Remote Config isn't waited for: the timer and the ad use the values active when they start (see
- * `RemoteConfigSession`).
+ * `RemoteConfigSession`), except that a fetch during the timer that swaps the ad's format requests it in the new one.
  *
  * Keep it in a ViewModel, so a rotation doesn't restart it: call [start] from every `onCreate` (it hands the new
  * Activity to the running flow), collect [state] while the screen is started, and [cancel] in `onCleared`. Main
@@ -105,12 +105,22 @@ public class SplashFlow internal constructor(
             else -> timings.splash
         }
         var wantsAd = !isPremium && online && splashAdKey != null && ports.requestAd(splashAdKey)
+        var requestedFormat = if (wantsAd) ports.servingFormat(checkNotNull(splashAdKey)) else null
         ports.log("Splash timer: $duration${if (wantsAd) ", waiting for the splash ad" else ""}")
         var elapsed = Duration.ZERO
         var adReady = false
         while (elapsed < duration) {
             mutableState.value = SplashState.Loading(progressOf(elapsed, duration))
             if (wantsAd && ports.adsUnavailable()) wantsAd = false
+            // A Firebase activation during the timer can swap the ad's format, which releases the ad requested before:
+            // request it in its new format, or none would be ready until the timer ends.
+            if (wantsAd) {
+                val format = ports.servingFormat(checkNotNull(splashAdKey))
+                if (format != requestedFormat) {
+                    requestedFormat = format
+                    wantsAd = ports.requestAd(splashAdKey)
+                }
+            }
             val current = activity
             if (wantsAd && current != null && ports.isResumed(current) && ports.isAdReady(checkNotNull(splashAdKey))) {
                 adReady = true
@@ -222,6 +232,9 @@ internal interface SplashPorts {
     /** Starts loading the ad [key] in its current format. False when it can't be requested (unknown, off). */
     fun requestAd(key: String): Boolean
 
+    /** The format [key] is served in now: a Firebase swap can change it while the splash runs. */
+    fun servingFormat(key: String): AdFormat?
+
     fun isAdReady(key: String): Boolean
 
     /** Ads won't become available this launch (no consent, ad-free, remote off, failed). */
@@ -274,6 +287,8 @@ internal class RuntimeSplashPorts(private val network: NetworkMonitor) : SplashP
         engine.preload(p.placement)
         return true
     }
+
+    override fun servingFormat(key: String): AdFormat? = serving(key)?.first?.format
 
     override fun isAdReady(key: String): Boolean = serving(key)?.let { (p, engine) -> engine.isReady(p.placement) } == true
 
