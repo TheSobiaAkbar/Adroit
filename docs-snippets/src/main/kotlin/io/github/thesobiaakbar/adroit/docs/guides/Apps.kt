@@ -54,6 +54,9 @@ class AdsApp : Application() {
 
 // region guide-iap-app
 class IapApp : Application() {
+    // For app-wide work, such as crediting consumables (step 7). Remove it if you sell none.
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
     override fun onCreate() {
         super.onCreate()
         // Firebase Remote Config: debug builds see a console change on the next launch. Adroit fetches it once per
@@ -76,6 +79,7 @@ class IapApp : Application() {
                 demo = DemoBilling(BuildConfig.DEBUG), // made-up products until Play Console has yours
             ),
         )
+        // Consumables (step 7): Coins.start(this, appScope)
     }
 }
 // endregion

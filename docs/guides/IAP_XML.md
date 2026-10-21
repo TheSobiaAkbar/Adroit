@@ -230,6 +230,9 @@ in these enums (an unknown product in a paywall, duplicate IDs…).
 <!-- snippet: docs-snippets/src/main/kotlin/io/github/thesobiaakbar/adroit/docs/guides/Apps.kt#guide-iap-app -->
 ```kotlin
 class IapApp : Application() {
+    // For app-wide work, such as crediting consumables (step 7). Remove it if you sell none.
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
     override fun onCreate() {
         super.onCreate()
         // Firebase Remote Config: debug builds see a console change on the next launch. Adroit fetches it once per
@@ -252,6 +255,7 @@ class IapApp : Application() {
                 demo = DemoBilling(BuildConfig.DEBUG), // made-up products until Play Console has yours
             ),
         )
+        // Consumables (step 7): Coins.start(this, appScope)
     }
 }
 ```
@@ -502,8 +506,9 @@ into the app.
 ### Consumables (optional)
 
 Coins, lives, credits: add `Coins100(ProductSpec.consumable("coins_100"))` to `AppProducts` and a paywall that sells it.
-The app credits each purchase, then **confirms** it, which lets Play sell it again. Collect them for the whole app, from
-`Application.onCreate`:
+The app credits each purchase, then **confirms** it, which lets Play sell it again. Collect them for the whole app: in
+`IapApp.onCreate`, replace the consumables comment with `Coins.start(this, appScope)`, using the `appScope` already
+there:
 
 <!-- snippet: docs-snippets/src/billing/kotlin/io/github/thesobiaakbar/adroit/docs/billing/BillingApp.kt#billing-consumables -->
 ```kotlin
