@@ -35,7 +35,7 @@ import org.json.JSONObject
  *   `SettingsUpgrade` paywall, forced: the user asked), "Restore purchases" and "Manage subscription". Premium comes
  *   only from `AdroitBilling.entitlements`; `SampleApplication` turns it into `Adroit.setAdFree`.
  * - "Demo billing" (debug builds): made-up products instead of Play, from the next launch (`DemoMode`).
- * - Debug builds: the active Firebase `AdSettings.splashAdMode` and `AppUpdate.type` (docs/SPLASH.md, APP_UPDATE.md).
+ * - Debug builds: the active Firebase `AppUpdate.type` (docs/APP_UPDATE.md).
  * - "Ad Inspector": Google's debugging tool; opens on test devices only.
  */
 class SettingsFragment : Fragment() {
@@ -74,11 +74,7 @@ class SettingsFragment : Fragment() {
             toast(getString(R.string.demo_billing_restart))
         }
         binding.firebaseModes.isVisible = BuildConfig.DEBUG
-        binding.firebaseModes.text = getString(
-            R.string.firebase_modes,
-            activeValue("AdSettings", "splashAdMode", "show"),
-            activeValue("AppUpdate", "type", "flexible"),
-        )
+        binding.firebaseModes.text = getString(R.string.firebase_modes, activeValue("AppUpdate", "type", "flexible"))
         binding.adInspector.setOnClickListener {
             Adroit.diagnostics.openAdInspector(requireActivity()) { error ->
                 error?.let { toast(getString(R.string.ad_inspector_error, it.message)) }

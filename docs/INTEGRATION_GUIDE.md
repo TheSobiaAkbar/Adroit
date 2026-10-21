@@ -250,16 +250,8 @@ for example:
 
 **The app start.** Two more values change what users see when they open the app.
 
-`splashAdMode`, in `AdSettings`, decides whether the splash screen shows its ad:
-
-| Value | What the user sees |
-|---|---|
-| `"show"` (the default) | The splash, with its progress bar, then the splash ad, then the next screen. |
-| `"preload"` | A short splash (3 seconds) without an ad. The ad is loaded meanwhile, and shows the moment the next screen (for example a paywall) is closed. |
-| `"later"` | A short splash without an ad, and no ad loaded. When the next screen is closed, "Loading ad…" for a moment, then the ad. |
-
-For example `{ "splashAdMode": "later" }` in `AdSettings`. The app decides where "later" is
-([Splash screen](SPLASH.md#showing-the-splash-ad-later)).
+`{ "enabled": false }` in the splash ad's parameter (`SplashAd`) keeps the splash without its ad: a short splash (3
+seconds), then the next screen. `true` brings the ad back ([Splash screen](SPLASH.md#a-splash-without-an-ad)).
 
 `AppUpdate`, its own JSON parameter, decides how users with an older version are asked to update, as soon as the app
 opens:

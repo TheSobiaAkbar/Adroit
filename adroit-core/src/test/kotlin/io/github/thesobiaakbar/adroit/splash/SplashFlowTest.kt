@@ -5,7 +5,6 @@ import io.github.thesobiaakbar.adroit.AdError
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.Adroit
 import io.github.thesobiaakbar.adroit.FullScreenResult
-import io.github.thesobiaakbar.adroit.config.SplashAdMode
 import io.github.thesobiaakbar.adroit.config.SplashTimings
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,7 +14,6 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -57,6 +55,8 @@ class SplashFlowTest {
         override fun servingFormat(key: String) = format
         override fun isAdReady(key: String) = adReady
         override fun adsUnavailable() = unavailable
+        var gaveUp = false
+        override fun adGaveUp(key: String) = gaveUp
         override fun isResumed(activity: Activity) = resumed
         override fun showAd(activity: Activity, key: String, onResult: (FullScreenResult) -> Unit) {
             showCallback = onResult
@@ -240,23 +240,70 @@ class SplashFlowTest {
     }
 
     @Test
-    fun `ads unavailable (no consent) - the timer still runs, and the ad is no longer awaited`() = runTest {
+    fun `ads unavailable (no consent) - the ad is no longer awaited, and the short timer ends the splash`() = runTest {
         val flow = flow()
         ports.unavailable = true
         ports.adReady = true
-        advance(11_100)
+        advance(2_900)
+        assertTrue(flow.state.value is SplashState.Loading)
+        advance(200)
         assertEquals(SplashState.Finished(adShown = false), flow.state.value)
         assertEquals(null, ports.showCallback)
     }
 
     @Test
-    fun `no splash ad configured, or off - just the timer`() = runTest {
+    fun `ads becoming unavailable after the short timer has passed end the splash at once`() = runTest {
+        val flow = flow()
+        advance(5_000)
+        ports.unavailable = true
+        advance(200)
+        assertEquals(SplashState.Finished(adShown = false), flow.state.value)
+    }
+
+    @Test
+    fun `a splash ad that failed with no retry left ends the splash at the short timer`() = runTest {
+        val flow = flow()
+        advance(1_000)
+        ports.gaveUp = true
+        advance(1_900)
+        assertTrue(flow.state.value is SplashState.Loading)
+        advance(200)
+        assertEquals(SplashState.Finished(adShown = false), flow.state.value)
+        assertEquals("its load is dropped as before", listOf("SplashAd"), ports.abandoned)
+    }
+
+    @Test
+    fun `a splash ad still retrying keeps the full timer`() = runTest {
+        val flow = flow()
+        advance(10_900)
+        assertTrue(flow.state.value is SplashState.Loading)
+        advance(200)
+        assertEquals(SplashState.Finished(adShown = false), flow.state.value)
+    }
+
+    @Test
+    fun `splash ad off in Firebase - consent and the start run, then the short timer`() = runTest {
         ports.adAvailable = false
         val flow = flow()
+        assertEquals(1, ports.startCalls.size)
         ports.adReady = true
-        advance(11_100)
+        advance(2_900)
+        assertTrue(flow.state.value is SplashState.Loading)
+        advance(200)
         assertEquals(SplashState.Finished(adShown = false), flow.state.value)
         assertFalse(ports.showCallback != null)
+    }
+
+    @Test
+    fun `no splash ad passed - consent and the start run, nothing is requested, then the short timer`() = runTest {
+        val flow = flow(splashAd = null)
+        assertEquals(1, ports.startCalls.size)
+        assertEquals(emptyList<String>(), ports.requested)
+        advance(2_900)
+        assertTrue(flow.state.value is SplashState.Loading)
+        advance(200)
+        assertEquals(SplashState.Finished(adShown = false), flow.state.value)
+        assertEquals(emptyList<String>(), ports.abandoned)
     }
 
     @Test
@@ -274,71 +321,6 @@ class SplashFlowTest {
     fun `progress is clamped and a zero timer is complete`() {
         assertEquals(100, SplashFlow.progressOf(Duration.ZERO, Duration.ZERO))
         assertEquals(100, SplashFlow.progressOf(Duration.INFINITE, kotlin.time.Duration.parse("1s")))
-    }
-
-    // --- splashAdMode ---
-
-    @Test
-    fun `preload - requests the ad, ends early when it's ready, never shows or drops it, and asks to show it later`() = runTest {
-        ports.timings = SplashTimings(splashAdMode = SplashAdMode.PRELOAD)
-        val flow = flow()
-        assertEquals(listOf("SplashAd"), ports.requested)
-        advance(1_000)
-        ports.adReady = true
-        advance(100)
-        assertEquals(SplashState.Finished(adShown = false, showAdLater = true), flow.state.value)
-        assertNull(ports.showCallback)
-        assertTrue("kept for the next screen", ports.abandoned.isEmpty())
-    }
-
-    @Test
-    fun `preload - an ad not ready yet still ends the splash on the short timer, and stays loading`() = runTest {
-        ports.timings = SplashTimings(premiumSplashSeconds = 2, splashAdMode = SplashAdMode.PRELOAD)
-        val flow = flow()
-        advance(1_900)
-        assertTrue(flow.state.value is SplashState.Loading)
-        advance(200)
-        assertEquals(SplashState.Finished(adShown = false, showAdLater = true), flow.state.value)
-        assertTrue(ports.abandoned.isEmpty())
-    }
-
-    @Test
-    fun `later - no request, the short timer, and asks to show it later`() = runTest {
-        ports.timings = SplashTimings(splashAdMode = SplashAdMode.LATER)
-        val flow = flow()
-        ports.adReady = true
-        advance(2_900)
-        assertTrue(flow.state.value is SplashState.Loading)
-        advance(200)
-        assertEquals(SplashState.Finished(adShown = false, showAdLater = true), flow.state.value)
-        assertTrue(ports.requested.isEmpty())
-        assertNull(ports.showCallback)
-    }
-
-    @Test
-    fun `no ad to show later for a premium user, offline, or without a splash ad`() = runTest {
-        ports.timings = SplashTimings(splashAdMode = SplashAdMode.PRELOAD)
-        val premium = flow(premium = true)
-        advance(3_100)
-        assertEquals(SplashState.Finished(adShown = false), premium.state.value)
-        assertTrue(ports.requested.isEmpty())
-
-        ports.online = false
-        val offline = flow()
-        advance(3_100)
-        assertEquals(SplashState.Finished(adShown = false), offline.state.value)
-
-        ports.online = true
-        val none = flow(splashAd = null)
-        advance(11_100)
-        assertEquals(SplashState.Finished(adShown = false), none.state.value)
-        assertTrue(ports.requested.isEmpty())
-    }
-
-    @Test
-    fun `Finished keeps its one-argument constructor`() {
-        assertEquals(SplashState.Finished(adShown = true, showAdLater = false), SplashState.Finished(true))
-        assertFalse(SplashState.Finished(false).showAdLater)
     }
 
     @Test

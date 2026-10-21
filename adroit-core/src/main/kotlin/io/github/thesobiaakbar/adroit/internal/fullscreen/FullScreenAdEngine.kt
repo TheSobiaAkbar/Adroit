@@ -149,6 +149,12 @@ internal class FullScreenAdEngine(
         return slot.availability.value == AdAvailability.Ready && clock.elapsedRealtimeMillis() <= slot.expiresAtElapsed
     }
 
+    /** [placement]'s last load failed, and no load is in flight or scheduled: no ad will come without a new request. */
+    fun hasGivenUp(placement: AdPlacement): Boolean {
+        val slot = slots[placement] ?: return false
+        return slot.availability.value is AdAvailability.Failed && !slot.loading && !retry.isScheduled(slot.key)
+    }
+
     /** Explicit request: resets exhausted retries, unless a retry is already scheduled. */
     fun preload(placement: AdPlacement) {
         val p = placements[placement] ?: return log.w { "preload(): ${placement.key} isn't a configured $format placement" }

@@ -1308,8 +1308,7 @@ public final class io/github/thesobiaakbar/adroit/config/AdSettings {
 	public fun <init> (ZIIIIIII)V
 	public fun <init> (ZIIIIIIIZ)V
 	public fun <init> (ZIIIIIIIZI)V
-	public fun <init> (ZIIIIIIIZILio/github/thesobiaakbar/adroit/config/SplashAdMode;)V
-	public synthetic fun <init> (ZIIIIIIIZILio/github/thesobiaakbar/adroit/config/SplashAdMode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ZIIIIIIIZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdsEnabled ()Z
 	public final fun getConsentTimeoutSeconds ()I
@@ -1320,7 +1319,6 @@ public final class io/github/thesobiaakbar/adroit/config/AdSettings {
 	public final fun getOfflineSplashSeconds ()I
 	public final fun getPremiumSplashSeconds ()I
 	public final fun getShowLoading ()Z
-	public final fun getSplashAdMode ()Lio/github/thesobiaakbar/adroit/config/SplashAdMode;
 	public final fun getSplashSeconds ()I
 	public fun hashCode ()I
 	public final fun toJson ()Ljava/lang/String;
@@ -1628,15 +1626,6 @@ public final class io/github/thesobiaakbar/adroit/config/RewardedPlacementConfig
 	public fun getFormat ()Lio/github/thesobiaakbar/adroit/AdFormat;
 }
 
-public final class io/github/thesobiaakbar/adroit/config/SplashAdMode : java/lang/Enum {
-	public static final field LATER Lio/github/thesobiaakbar/adroit/config/SplashAdMode;
-	public static final field PRELOAD Lio/github/thesobiaakbar/adroit/config/SplashAdMode;
-	public static final field SHOW Lio/github/thesobiaakbar/adroit/config/SplashAdMode;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/SplashAdMode;
-	public static fun values ()[Lio/github/thesobiaakbar/adroit/config/SplashAdMode;
-}
-
 public final class io/github/thesobiaakbar/adroit/config/SplashTimings {
 	public static final field Companion Lio/github/thesobiaakbar/adroit/config/SplashTimings$Companion;
 	public static final field DEFAULT_CONSENT_TIMEOUT_SECONDS I
@@ -1647,10 +1636,8 @@ public final class io/github/thesobiaakbar/adroit/config/SplashTimings {
 	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;)V
 	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;)V
 	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;)V
-	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Lio/github/thesobiaakbar/adroit/config/SplashAdMode;)V
-	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Lio/github/thesobiaakbar/adroit/config/SplashAdMode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAdMode ()Lio/github/thesobiaakbar/adroit/config/SplashAdMode;
 	public final fun getConsentTimeout-UwyO8pc ()J
 	public final fun getConsentTimeoutSeconds ()Ljava/lang/Integer;
 	public final fun getOfflineSplash-UwyO8pc ()J
@@ -1658,7 +1645,6 @@ public final class io/github/thesobiaakbar/adroit/config/SplashTimings {
 	public final fun getPremiumSplash-UwyO8pc ()J
 	public final fun getPremiumSplashSeconds ()Ljava/lang/Integer;
 	public final fun getSplash-UwyO8pc ()J
-	public final fun getSplashAdMode ()Lio/github/thesobiaakbar/adroit/config/SplashAdMode;
 	public final fun getSplashSeconds ()Ljava/lang/Integer;
 	public fun hashCode ()I
 	public final fun orElse (Lio/github/thesobiaakbar/adroit/config/SplashTimings;)Lio/github/thesobiaakbar/adroit/config/SplashTimings;
@@ -2034,11 +2020,8 @@ public abstract class io/github/thesobiaakbar/adroit/splash/SplashState {
 
 public final class io/github/thesobiaakbar/adroit/splash/SplashState$Finished : io/github/thesobiaakbar/adroit/splash/SplashState {
 	public fun <init> (Z)V
-	public fun <init> (ZZ)V
-	public synthetic fun <init> (ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdShown ()Z
-	public final fun getShowAdLater ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

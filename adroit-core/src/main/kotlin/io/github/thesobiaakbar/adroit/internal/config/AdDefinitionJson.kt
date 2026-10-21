@@ -33,7 +33,6 @@ internal object AdDefinitionJson {
         .put("loadTimeoutSeconds", settings.loadTimeoutSeconds)
         .put("showLoading", settings.showLoading)
         .put("loadingSeconds", settings.loadingSeconds)
-        .put("splashAdMode", settings.splashAdMode.name.lowercase())
 
     /**
      * [profile] as JSON. With [firebase], the file-only fields (`splash`, `excludedActivities`, `poolSize`) are left

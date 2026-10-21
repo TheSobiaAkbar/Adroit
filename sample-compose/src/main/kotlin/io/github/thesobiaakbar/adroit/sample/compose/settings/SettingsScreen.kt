@@ -50,7 +50,7 @@ import io.github.thesobiaakbar.adroit.sample.compose.billing.PremiumViewModel
  *   `SettingsUpgrade` paywall), "Restore purchases" and "Manage subscription", through [PremiumViewModel]. Premium
  *   comes only from `AdroitBilling.entitlements`; `SampleApplication` turns it into `Adroit.setAdFree`.
  * - "Demo billing" (debug builds): made-up products instead of Play, from the next launch (`DemoMode`).
- * - Debug builds: the active Firebase `AdSettings.splashAdMode` and `AppUpdate.type` (docs/SPLASH.md, APP_UPDATE.md).
+ * - Debug builds: the active Firebase `AppUpdate.type` (docs/APP_UPDATE.md).
  * - "Ad Inspector": Google's debugging tool; opens on test devices only.
  * - "Native styles": every native template, with a live ad.
  */
@@ -126,11 +126,7 @@ fun SettingsScreen(onOpenNativeStyles: () -> Unit, onUpgrade: () -> Unit, premiu
                 )
             }
             Text(
-                stringResource(
-                    R.string.firebase_modes,
-                    activeValue("AdSettings", "splashAdMode", "show"),
-                    activeValue("AppUpdate", "type", "flexible"),
-                ),
+                stringResource(R.string.firebase_modes, activeValue("AppUpdate", "type", "flexible")),
                 style = MaterialTheme.typography.bodySmall,
             )
         }

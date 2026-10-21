@@ -9,7 +9,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -21,7 +20,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
-import io.github.thesobiaakbar.adroit.AdSlots
 import io.github.thesobiaakbar.adroit.billing.AdroitBilling
 import io.github.thesobiaakbar.adroit.billing.PaywallDefinition
 import io.github.thesobiaakbar.adroit.billing.ShowDecision
@@ -46,8 +44,6 @@ class MainActivity : ComponentActivity()
 sealed interface SplashRoute {
     data object Splash : SplashRoute // the splash sequence runs
     data class Paywall(val definition: PaywallDefinition) : SplashRoute // the launch paywall is on screen
-    data object AdLater : SplashRoute // next: the splash ad Firebase kept for later, if any
-    data object ShowingAd : SplashRoute // that ad is on screen
     data object Main : SplashRoute // open the main screen
 }
 
@@ -87,20 +83,18 @@ class SplashActivity : ComponentActivity() {
             MaterialTheme {
                 val state by viewModel.flow.state.collectAsStateWithLifecycle()
                 SplashScreen(state.percent())
-                // The paywall is drawn here, over the splash: the ad that may follow shows from this resumed Activity.
-                // Closing Onboarding can offer ExitDiscount: onExitPaywall runs right after onClose, so it replaces
-                // AdLater before the next frame.
+                // The paywall is drawn here, over the splash. Closing Onboarding can offer ExitDiscount: onExitPaywall
+                // runs right after onClose, in the same step, so it replaces Main before navigation sees it.
                 (viewModel.route as? SplashRoute.Paywall)?.let { route ->
                     key(route.definition) {
                         Paywall(
                             route.definition,
                             placement = "onboarding",
-                            onClose = { viewModel.route = SplashRoute.AdLater },
+                            onClose = { viewModel.route = SplashRoute.Main },
                             onExitPaywall = { exit -> viewModel.route = SplashRoute.Paywall(exit) },
                         )
                     }
                 }
-                if (viewModel.route == SplashRoute.AdLater) LaunchedEffect(Unit) { showAdLater() }
             }
         }
         lifecycleScope.launch {
@@ -113,26 +107,11 @@ class SplashActivity : ComponentActivity() {
         }
     }
 
-    /** Once per launch: the launch paywall if its rules allow, else straight to the ad kept for later or main. */
+    /** Once per launch: the launch paywall if its rules allow, else straight to main. */
     private fun route() {
         if (viewModel.route != SplashRoute.Splash) return
         val paywall = AdroitBilling.paywalls.shouldShow(AppPaywalls.Onboarding, "onboarding") == ShowDecision.Show
-        viewModel.route = if (paywall) SplashRoute.Paywall(AppPaywalls.Onboarding) else SplashRoute.AdLater
-    }
-
-    /**
-     * With Firebase `splashAdMode` "preload" or "later", the splash ad shows now (on the paywall's close, or right
-     * after the splash). A user who just bought premium sees none: the billing bridge made the app ad-free.
-     */
-    private fun showAdLater() {
-        val finished = viewModel.flow.state.value as? SplashState.Finished
-        if (finished?.showAdLater != true) {
-            viewModel.route = SplashRoute.Main
-            return
-        }
-        viewModel.route = SplashRoute.ShowingAd
-        // The result goes to the ViewModel, not this Activity: a rotation may have replaced it by then.
-        AdSlots.showFullScreen(this, AppAds.SplashAd) { viewModel.route = SplashRoute.Main }
+        viewModel.route = if (paywall) SplashRoute.Paywall(AppPaywalls.Onboarding) else SplashRoute.Main
     }
 
     private fun goToMain() {

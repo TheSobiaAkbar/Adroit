@@ -7,6 +7,11 @@ with the Pixel 7a used for the S06/S07 device checks.
 
 **Result: every check PASS.** The one FAIL found (a guide gap) is fixed; the row says how.
 
+**Later change:** `splashAdMode` (`"show"`, `"preload"`, `"later"`) and `SplashState.Finished.showAdLater` were removed
+after this audit. A splash without an ad is now the splash ad turned off (`"enabled": false`) or `null`, on the short
+timer, and where an ad shows instead is each app's choice ([Splash screen](../SPLASH.md#a-splash-without-an-ad)). The
+rows and risks below that name them describe the code as it was audited.
+
 | # | Check | Result | Evidence |
 |---|---|---|---|
 | 1 | No duplication | PASS | `fetchAndActivate` in main sources: only `adroit-remote-config` (`SessionSource.kt`, called from `RemoteConfigSession.kt`). Online check (`NET_CAPABILITY_INTERNET`): only `adroit-remote-config`; none left in `adroit-firebase` or `adroit-billing-firebase`. `registerDefaultNetworkCallback`: `adroit-remote-config` and `adroit-core`'s ad network monitor, which the session can't use (it may depend on no `adroit-*` module). `isPremium =` passed to `SplashFlow`: none in the samples, `docs-snippets` or the docs. |

@@ -49,12 +49,6 @@ sealed interface SplashRoute {
     /** The launch paywall is on screen. */
     data class Paywall(val definition: PaywallDefinition) : SplashRoute
 
-    /** Next: the splash ad Firebase kept for later (`showAdLater`), if any. */
-    data object AdLater : SplashRoute
-
-    /** That ad is on screen. */
-    data object ShowingAd : SplashRoute
-
     /** Open the main screen. */
     data object Main : SplashRoute
 }

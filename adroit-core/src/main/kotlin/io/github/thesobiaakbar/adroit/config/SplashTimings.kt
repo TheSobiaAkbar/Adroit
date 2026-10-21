@@ -8,20 +8,18 @@ import kotlin.time.Duration.Companion.seconds
  * be changed without a release. A null field keeps the value from the app's settings (or the default). Immutable.
  *
  * @property splashSeconds the splash timer after consent, for a user who may see the splash ad. Default 11.
- * @property premiumSplashSeconds the splash timer for a premium (ad-free) user, who sees no consent form and no ad.
+ * @property premiumSplashSeconds the splash timer without an ad to wait for: a premium (ad-free) user, who also sees no
+ *   consent form, or a splash without an ad (none passed, turned off in Firebase, or ads unavailable).
  *   Default 3.
  * @property offlineSplashSeconds the splash timer without internet. Default 3.
  * @property consentTimeoutSeconds how long the consent form may take to appear before the splash continues without
  *   it. Default 8.
- * @property splashAdMode whether the splash shows its ad, or only loads it or leaves it for the next screen. Default
- *   [SplashAdMode.SHOW].
  */
 public class SplashTimings @JvmOverloads constructor(
     public val splashSeconds: Int? = null,
     public val premiumSplashSeconds: Int? = null,
     public val offlineSplashSeconds: Int? = null,
     public val consentTimeoutSeconds: Int? = null,
-    public val splashAdMode: SplashAdMode? = null,
 ) {
     /** These values, with [fallback]'s where these are null. */
     public fun orElse(fallback: SplashTimings): SplashTimings = SplashTimings(
@@ -29,7 +27,6 @@ public class SplashTimings @JvmOverloads constructor(
         premiumSplashSeconds ?: fallback.premiumSplashSeconds,
         offlineSplashSeconds ?: fallback.offlineSplashSeconds,
         consentTimeoutSeconds ?: fallback.consentTimeoutSeconds,
-        splashAdMode ?: fallback.splashAdMode,
     )
 
     /** [splashSeconds] as a duration, the default when unset. */
@@ -44,26 +41,21 @@ public class SplashTimings @JvmOverloads constructor(
     /** [consentTimeoutSeconds] as a duration, the default when unset. */
     public val consentTimeout: Duration get() = (consentTimeoutSeconds ?: DEFAULT_CONSENT_TIMEOUT_SECONDS).seconds
 
-    /** [splashAdMode], [SplashAdMode.SHOW] when unset. */
-    public val adMode: SplashAdMode get() = splashAdMode ?: SplashAdMode.SHOW
-
     override fun equals(other: Any?): Boolean =
         other is SplashTimings && other.splashSeconds == splashSeconds &&
             other.premiumSplashSeconds == premiumSplashSeconds && other.offlineSplashSeconds == offlineSplashSeconds &&
-            other.consentTimeoutSeconds == consentTimeoutSeconds && other.splashAdMode == splashAdMode
+            other.consentTimeoutSeconds == consentTimeoutSeconds
 
     override fun hashCode(): Int {
         var result = splashSeconds.hashCode()
         result = 31 * result + premiumSplashSeconds.hashCode()
         result = 31 * result + offlineSplashSeconds.hashCode()
-        result = 31 * result + consentTimeoutSeconds.hashCode()
-        return 31 * result + splashAdMode.hashCode()
+        return 31 * result + consentTimeoutSeconds.hashCode()
     }
 
     override fun toString(): String =
         "SplashTimings(splashSeconds=$splashSeconds, premiumSplashSeconds=$premiumSplashSeconds, " +
-            "offlineSplashSeconds=$offlineSplashSeconds, consentTimeoutSeconds=$consentTimeoutSeconds, " +
-            "splashAdMode=$splashAdMode)"
+            "offlineSplashSeconds=$offlineSplashSeconds, consentTimeoutSeconds=$consentTimeoutSeconds)"
 
     /** The defaults. */
     public companion object {

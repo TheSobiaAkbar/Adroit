@@ -20,6 +20,7 @@ import io.github.thesobiaakbar.adroit.fakes.FakeAdsSdk.ScriptedLoad
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,6 +70,9 @@ class AdProfilesEngineTest {
         val h = EngineHarness(this, config { interstitial(history, ids) { retry = EXACT_RETRY } })
         h.adsSdk.enqueueLoad(ids[0], ScriptedLoad.Failure(AdError.NoFill(), retryable = true))
         h.ready()
+        h.run(100)
+        assertEquals(listOf(ids[0]), h.loadedUnits())
+        assertFalse("a retry is scheduled", h.engine.hasGivenUp(history))
         h.run(60_000)
         assertEquals(ids.take(2), h.loadedUnits())
         assertTrue(h.engine.isReady(history))
@@ -280,11 +284,13 @@ class AdProfilesEngineTest {
         h.engine.preload(history)
         h.run(600_000)
         assertEquals("no retry", listOf(ids[0]), h.loadedUnits())
+        assertTrue("no ad will come without a new request", h.engine.hasGivenUp(history))
 
         h.engine.preload(history)
         h.run(1_000)
         assertEquals("the next preload is the retry", ids.take(2), h.loadedUnits())
         assertTrue(h.engine.isReady(history))
+        assertFalse(h.engine.hasGivenUp(history))
     }
 
     @Test
@@ -596,7 +602,7 @@ class AdProfilesEngineTest {
         h.run(1_000)
         assertTrue("the splash is its screen", h.screens().isEmpty())
 
-        // splashAdMode "later": nothing cached, AdSlots.showFullScreen waits for it behind a loading screen.
+        // Shown later from another screen, not cached: AdSlots.showFullScreen waits behind a loading screen.
         h.adsSdk.enqueueLoad(TestIds.unit(13), ScriptedLoad.Success(), delayMs = 2_000)
         h.show(splashAd)
         h.run(100)

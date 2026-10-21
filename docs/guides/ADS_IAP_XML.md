@@ -205,7 +205,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 
     companion object {
         /** What every ad shares: the Firebase parameter "AdSettings". */
-        val settings = AdSettings(splashSeconds = 11, minSecondsBetweenFullScreenAds = 30, splashAdMode = SplashAdMode.SHOW)
+        val settings = AdSettings(splashSeconds = 11, minSecondsBetweenFullScreenAds = 30)
     }
 }
 ```
@@ -222,8 +222,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 - **Styles:** banners are `AnchoredAdaptive` (full width), `Collapsible`, `MediumRectangle` or `Standard`; native ads
   have five built-in styles or your own layout ([Native](../NATIVE.md#templates-and-custom-layouts)).
 - **`AppAds.settings`** is what every ad shares: the Firebase parameter `AdSettings`. `splashSeconds` is the splash
-  timer, `minSecondsBetweenFullScreenAds` the gap between two full-screen ads, and `splashAdMode` whether the splash
-  shows its ad (step 6).
+  timer and `minSecondsBetweenFullScreenAds` the gap between two full-screen ads.
 
 **What you sell and the paywalls**, in `billing/Billing.kt`:
 
@@ -355,9 +354,8 @@ The splash runs everything at app start, and always ends somewhere:
    who refuses a forced update leaves the app.
 2. **Consent:** Google's consent form, where the user's region needs it. The splash waits for the answer.
 3. **The timer and the splash ad:** a progress bar for `splashSeconds`, and the splash ad if it loads in time. Premium
-   users and offline users get a 3-second splash without an ad.
-4. **The routing:** the `Onboarding` paywall when its show rules allow, then the splash ad if Firebase kept it for
-   later, then the main screen.
+   users, offline users and a splash ad turned off get a 3-second splash without an ad.
+4. **The routing:** the `Onboarding` paywall when its show rules allow, then the main screen.
 
 It never gets stuck, even offline, and a rotation never restarts it: everything is kept in its ViewModel.
 
@@ -426,7 +424,7 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
     // A premium user skips consent and the ad: SplashFlow reads Adroit.isAdFree, set by the billing bridge.
     val flow = SplashFlow.create(application, AppAds.SplashAd)
 
-    /** The routing after the splash has started (the paywall or the ad is up): a rotation doesn't repeat it. */
+    /** The routing after the splash has started (the paywall is up): a rotation doesn't repeat it. */
     var routing = false
 
     /** The routing is over: open the main screen, from whichever Activity is current. */
@@ -448,11 +446,8 @@ class SplashActivity : AppCompatActivity() {
     private val viewModel: SplashViewModel by viewModels()
     private var navigated = false
 
-    // Registered in every onCreate: after a rotation, the paywall's result arrives here. It arrives before this screen
-    // is back in front, and a full-screen ad shows only over a resumed screen: wait for that.
-    private val paywall = registerForActivityResult(AdroitPaywall.contract()) {
-        lifecycleScope.launch { withResumed { showAdLaterThenMain() } }
-    }
+    // Registered in every onCreate: after a rotation, the paywall's result arrives here.
+    private val paywall = registerForActivityResult(AdroitPaywall.contract()) { viewModel.goToMain.value = true }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -481,26 +476,12 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    /** Once per launch: the launch paywall if its rules allow, else straight to the ad kept for later or main. */
+    /** Once per launch: the launch paywall if its rules allow, else straight to main. */
     private fun route() {
         if (viewModel.routing) return
         viewModel.routing = true
         if (AdroitBilling.paywalls.shouldShow(AppPaywalls.Onboarding, "onboarding") == ShowDecision.Show) {
             paywall.launch(PaywallLaunch(AppPaywalls.Onboarding, "onboarding"))
-        } else {
-            showAdLaterThenMain()
-        }
-    }
-
-    /**
-     * With Firebase `splashAdMode` "preload" or "later", the splash ad shows now (on the paywall's close, or right
-     * after the splash). A user who just bought premium sees none: the billing bridge made the app ad-free.
-     */
-    private fun showAdLaterThenMain() {
-        val finished = viewModel.flow.state.value as? SplashState.Finished
-        if (finished?.showAdLater == true) {
-            // The result goes to the ViewModel, not this Activity: a rotation may have replaced it by then.
-            AdSlots.showFullScreen(this, AppAds.SplashAd) { viewModel.goToMain.value = true }
         } else {
             viewModel.goToMain.value = true
         }
@@ -521,22 +502,16 @@ class SplashActivity : AppCompatActivity() {
   timer and the splash ad never restart.
 - **Navigation happens only while the screen is in front** (`STARTED`): a splash sent to the background moves on when
   the user comes back.
-- **The ad after the paywall waits for the splash to be in front** (`withResumed`). The paywall's result arrives before
-  the splash is resumed, and a full-screen ad never shows over a screen in the background: without the wait, it would be
-  refused and the app would go straight to main.
 
-**The splash ad, now or later.** Firebase `AdSettings.splashAdMode` decides whether the splash shows its ad ([Splash
-screen](../SPLASH.md#showing-the-splash-ad-later)):
+**A splash without an ad.** To keep the splash (the update check, consent, the timer) but drop its ad, turn the ad
+off in Firebase with `{ "enabled": false }` in `SplashAd`, or pass `null` instead of `AppAds.SplashAd` to
+`SplashFlow.create`. The splash then lasts `premiumSplashSeconds` (3 s) ([Splash
+screen](../SPLASH.md#a-splash-without-an-ad)).
 
-| `splashAdMode` | The splash | Then |
-|---|---|---|
-| `"show"` (default) | Loads and shows the splash ad, up to `splashSeconds` (11) | The paywall, then main. |
-| `"preload"` | Loads the ad but doesn't show it; short timer (3 s) | The paywall; on its close, the ad at once (no wait), then main. |
-| `"later"` | Doesn't request the ad; short timer (3 s) | The paywall; on its close, "Loading ad…", the ad, then main. |
-
-With the paywall skipped (premium, or its show rules say no), the kept ad shows right after the splash. Use `"preload"`
-or `"later"` when the paywall matters more than the splash ad: the user sees the paywall sooner, and the ad on its close
-button. `"later"` saves a request on every launch where the user never reaches the ad (for example, they subscribe).
+Whether an ad shows somewhere else instead, for example when the paywall closes, is your app's choice: call
+`AdSlots.showFullScreen` there with any full-screen ad. Wrap it in `lifecycleScope.launch { withResumed { … } }`: the
+paywall's result arrives before the splash is back in front, and a full-screen ad never shows over a screen in the
+background.
 
 **Consent in debug builds.** A debug build behaves as if you were in Europe, so the consent form shows wherever you are.
 Until it's answered it shows on every launch; once answered, clear the app's storage to see it again. The form itself
@@ -888,8 +863,7 @@ IDs from `AppAds`.
   "consentTimeoutSeconds": 8,
   "loadTimeoutSeconds": 8,
   "showLoading": true,
-  "loadingSeconds": 1,
-  "splashAdMode": "show"
+  "loadingSeconds": 1
 }
 ```
 
@@ -950,8 +924,7 @@ IDs from `AppAds`.
 { "format": "native", "enabled": true, "adUnitIds": ["ca-app-pub-XXXXXXXXXXXXXXXX/8888888888"], "style": "small_button_end", "loadAgain": true }
 ```
 
-`splashAdMode` is `"show"`, `"preload"` or `"later"` (step 6). Every field of every ad: [Ad
-profiles](../AD_PROFILES.md#the-json). Instead of typing them, you can generate all of them at once from `AppAds` with
+Every field of every ad: [Ad profiles](../AD_PROFILES.md#the-json). Instead of typing them, you can generate all of them at once from `AppAds` with
 `AdDefinitions.firebaseTemplate(AppAds.entries, AppAds.settings)` and import the file ([Ad
 profiles](../AD_PROFILES.md#getting-the-json-for-firebase)).
 
@@ -965,7 +938,7 @@ Quick changes:
 | 60 s between two shows instead | the ad's | `{ "counter": 0, "timerSeconds": 60 }` |
 | Two ad units in turn | the ad's | `{ "adUnitIds": ["ca-app-pub-…/111", "ca-app-pub-…/222"] }` |
 | A native ad instead of a banner | the banner's | `{ "format": "native", "style": "large_button_bottom", "adUnitIds": ["<a native ad unit>"] }` |
-| The splash ad on the next screen | `AdSettings` | `{ "splashAdMode": "later" }` |
+| The splash without its ad | `SplashAd` | `{ "enabled": false }` |
 
 ### Paywalls
 
@@ -1050,7 +1023,7 @@ A debug build on a phone or an emulator:
 - [ ] Logcat (`Adroit`): `Firebase parameter <Name>: {…}` per ad, then `Remote Config fetched`.
 - [ ] The consent form (first launch), the progress bar, a test ad, then the next screen.
 - [ ] Every ad is labelled "Test Ad". Full-screen ads show "Loading ad…" first; banners and native ads, a shimmer.
-- [ ] With `{ "splashAdMode": "later" }` published, the splash is short and the ad comes after the paywall.
+- [ ] With `{ "enabled": false }` published in `SplashAd`, the splash lasts 3 seconds and shows no ad.
 - [ ] In airplane mode, the splash lasts 3 seconds and the app works without ads.
 - [ ] **Demo billing:** the paywall shows "(DEMO)" prices. "Continue", then "Buy (success)" closes it, and the next
       launch knows the user is premium. Try "Pending payment" (it completes 15 seconds later) and "Cancel" too.

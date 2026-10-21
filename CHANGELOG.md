@@ -7,9 +7,6 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 ## [Unreleased]
 
 ### Added
-- Firebase `AdSettings.splashAdMode`: `"show"` (default), `"preload"` or `"later"`. The last two keep the ad off the
-  splash, use the short timer and report the new `SplashState.Finished.showAdLater`, so the app shows the ad with
-  `AdSlots.showFullScreen` on the next screen (for example on the paywall's close button). docs/SPLASH.md.
 - New module `adroit-update`: Google Play in-app updates (Play In-App Updates 2.1.0) controlled by the Firebase
   `AppUpdate` parameter, `flexible` (default), `force` or `off`, with an optional `forceBelowVersionCode`.
   `AdroitUpdate.check` at app start, `readyToInstall` and `install` for a flexible download. docs/APP_UPDATE.md.
@@ -27,6 +24,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   (`RemoteConfigSession.startDefault`). `FirebaseRemoteConfigProvider`'s `autoFetch` is now ignored.
 - One premium source: the new `Adroit.isAdFree` (the last `setAdFree` value) is `SplashFlow.create`'s default
   `isPremium`, so apps with the billing bridge no longer pass premium to the splash.
+- A splash without an ad (`SplashFlow.create(application, null)`, or the splash ad turned off in Firebase with
+  `"enabled": false`) still runs consent, the library's start and the app's routing, now on the short
+  `premiumSplashSeconds` timer instead of `splashSeconds` with nothing to wait for. So does a splash whose ads can't
+  run this launch (no consent), or whose ad failed to load with no retry left. A splash ad shown later from another screen with `AdSlots.showFullScreen` now gets the
+  loading screen. docs/SPLASH.md.
 
 ## [1.0.0-rc6] - 2026-10-20
 

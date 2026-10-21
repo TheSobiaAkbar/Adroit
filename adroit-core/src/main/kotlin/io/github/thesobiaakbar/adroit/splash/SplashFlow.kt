@@ -8,7 +8,6 @@ import io.github.thesobiaakbar.adroit.AdsState
 import io.github.thesobiaakbar.adroit.Adroit
 import io.github.thesobiaakbar.adroit.FullScreenResult
 import io.github.thesobiaakbar.adroit.config.AdDefinition
-import io.github.thesobiaakbar.adroit.config.SplashAdMode
 import io.github.thesobiaakbar.adroit.config.SplashTimings
 import io.github.thesobiaakbar.adroit.internal.threading.MainDispatcher
 import io.github.thesobiaakbar.adroit.logging.LogLevel
@@ -38,16 +37,14 @@ import kotlin.time.Duration.Companion.seconds
  *    meanwhile. Until the user answers, every splash asks again. Then the library starts (`Adroit.start`),
  *    whatever the answer. Skipped for a premium user.
  * 2. [SplashState.Loading]: the splash timer, with a [SplashState.Loading.progress] from 0 to 100 for a progress bar.
- *    It lasts `splashSeconds` (Firebase `AdSettings`, read when the timer starts), `premiumSplashSeconds` for a premium
- *    user or `offlineSplashSeconds` without internet. Meanwhile, the splash ad loads (not for premium or offline
- *    users). When it's ready and the screen is in front, progress jumps to 100 and the timer stops.
+ *    It lasts `splashSeconds` (Firebase `AdSettings`, read when the timer starts) while the splash ad loads. When it's
+ *    ready and the screen is in front, progress jumps to 100 and the timer stops. Without an ad to wait for, it's
+ *    `premiumSplashSeconds`: a premium user, no splash ad passed, the splash ad turned off in Firebase
+ *    (`"enabled": false`), ads that can't run this launch (no consent), or a splash ad that failed to load with no
+ *    retry left. Without internet: `offlineSplashSeconds`.
  * 3. [SplashState.ShowingAd] while the ad is on screen: the splash waits for the user to close it.
  * 4. [SplashState.Finished]: go to the next screen. It's reached when the timer ends (an ad that loads later isn't
  *    shown on the splash), or when the ad is closed or fails to show.
- *
- * Firebase `AdSettings.splashAdMode` can keep the ad off the splash: `preload` loads it and keeps it, `later` doesn't
- * request it. Both use the `premiumSplashSeconds` timer (`preload` ends it early when the ad is ready) and finish with
- * [SplashState.Finished.showAdLater], so the app shows the ad with `AdSlots.showFullScreen` on the next screen.
  *
  * Firebase Remote Config isn't waited for: the timer and the ad use the values active when they start (see
  * `RemoteConfigSession`), except that a fetch during the timer that swaps the ad's format requests it in the new one.
@@ -104,22 +101,26 @@ public class SplashFlow internal constructor(
         // Read now, not before consent: a Remote Config fetch may have finished meanwhile.
         val timings = ports.timings()
         val online = ports.isOnline()
-        val mayShowAd = !isPremium && online && splashAdKey != null
-        val mode = if (mayShowAd) timings.adMode else SplashAdMode.SHOW
-        val duration = when {
+        var wantsAd = !isPremium && online && splashAdKey != null && ports.requestAd(splashAdKey)
+        // No ad to wait for (premium, none passed, or turned off in Firebase): the short timer.
+        var duration = when {
             isPremium -> timings.premiumSplash
             !online -> timings.offlineSplash
-            mode != SplashAdMode.SHOW -> timings.premiumSplash
+            !wantsAd -> timings.premiumSplash
             else -> timings.splash
         }
-        var wantsAd = mayShowAd && mode != SplashAdMode.LATER && ports.requestAd(checkNotNull(splashAdKey))
         var requestedFormat = if (wantsAd) ports.servingFormat(checkNotNull(splashAdKey)) else null
-        ports.log("Splash timer: $duration${if (wantsAd) ", waiting for the splash ad" else ""}, ad mode $mode")
+        ports.log("Splash timer: $duration${if (wantsAd) ", waiting for the splash ad" else ""}")
         var elapsed = Duration.ZERO
         var adReady = false
         while (elapsed < duration) {
             mutableState.value = SplashState.Loading(progressOf(elapsed, duration))
-            if (wantsAd && ports.adsUnavailable()) wantsAd = false
+            if (wantsAd && (ports.adsUnavailable() || ports.adGaveUp(checkNotNull(splashAdKey)))) {
+                // No consent, ads can't start this launch, or the ad failed with no retry left: no ad will come, so
+                // don't keep the user waiting.
+                wantsAd = false
+                duration = minOf(duration, maxOf(elapsed, timings.premiumSplash))
+            }
             // A Firebase activation during the timer can swap the ad's format, which releases the ad requested before:
             // request it in its new format, or none would be ready until the timer ends.
             if (wantsAd) {
@@ -138,8 +139,6 @@ public class SplashFlow internal constructor(
             elapsed += TICK
         }
         mutableState.value = SplashState.Loading(100)
-        // The ad, loaded or not, is for the next screen: keep it.
-        if (mode != SplashAdMode.SHOW) return finish(adShown = false, showAdLater = true)
         val current = activity
         if (!adReady || current == null) {
             // An ad that loads after the splash would never be shown: stop its load and retries.
@@ -157,9 +156,9 @@ public class SplashFlow internal constructor(
         ports.startAds(activity, ports.timings().consentTimeout) { adsStarted.complete(Unit) }
     }
 
-    private fun finish(adShown: Boolean, showAdLater: Boolean = false) {
-        ports.log("Splash finished (ad shown: $adShown, show ad later: $showAdLater)")
-        mutableState.value = SplashState.Finished(adShown, showAdLater)
+    private fun finish(adShown: Boolean) {
+        ports.log("Splash finished (ad shown: $adShown)")
+        mutableState.value = SplashState.Finished(adShown)
     }
 
     /** Creating a flow. */
@@ -173,7 +172,8 @@ public class SplashFlow internal constructor(
         /**
          * A flow for [application]'s splash screen, after `Adroit.initialize`.
          *
-         * @param splashAd the splash ad (an interstitial, or an app open ad through a Firebase swap); null for none.
+         * @param splashAd the splash ad (an interstitial, or an app open ad through a Firebase swap); null for a splash
+         *   without an ad, which still runs consent, the library's start and the short timer.
          * @param isPremium the user's premium (ad-free) status: no consent form, no ad, the premium timer. Defaults to
          *   `Adroit.isAdFree`, so apps that call `Adroit.setAdFree` (for example through the billing bridge) pass
          *   nothing.
@@ -222,20 +222,13 @@ public sealed class SplashState {
      * Go to the next screen.
      *
      * @property adShown whether a splash ad was shown and closed.
-     * @property showAdLater Firebase `splashAdMode` is `preload` or `later`: show the splash ad with
-     *   `AdSlots.showFullScreen` on the next screen (for example when the paywall closes), then continue. False for a
-     *   premium or offline user, and without a splash ad.
      */
-    public class Finished @JvmOverloads constructor(
-        public val adShown: Boolean,
-        public val showAdLater: Boolean = false,
-    ) : SplashState() {
-        override fun equals(other: Any?): Boolean =
-            other is Finished && other.adShown == adShown && other.showAdLater == showAdLater
+    public class Finished(public val adShown: Boolean) : SplashState() {
+        override fun equals(other: Any?): Boolean = other is Finished && other.adShown == adShown
 
-        override fun hashCode(): Int = 31 * adShown.hashCode() + showAdLater.hashCode()
+        override fun hashCode(): Int = adShown.hashCode()
 
-        override fun toString(): String = "Finished(adShown=$adShown, showAdLater=$showAdLater)"
+        override fun toString(): String = "Finished(adShown=$adShown)"
     }
 }
 
@@ -261,6 +254,9 @@ internal interface SplashPorts {
 
     /** Ads won't become available this launch (no consent, ad-free, remote off, failed). */
     fun adsUnavailable(): Boolean
+
+    /** [key]'s load failed and nothing will retry it: no ad will come during this splash. */
+    fun adGaveUp(key: String): Boolean
 
     fun isResumed(activity: Activity): Boolean
 
@@ -318,6 +314,8 @@ internal class RuntimeSplashPorts(private val network: NetworkMonitor) : SplashP
         val state = runtime?.init?.state?.value ?: return true
         return state is AdsState.Unavailable || state is AdsState.Failed
     }
+
+    override fun adGaveUp(key: String): Boolean = serving(key)?.let { (p, engine) -> engine.hasGivenUp(p.placement) } == true
 
     override fun isResumed(activity: Activity): Boolean =
         runtime?.deps?.activityTracker?.isValidForShow(activity) == true

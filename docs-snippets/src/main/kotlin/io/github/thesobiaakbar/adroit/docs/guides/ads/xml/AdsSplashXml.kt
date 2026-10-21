@@ -12,8 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.withResumed
-import io.github.thesobiaakbar.adroit.AdSlots
 import io.github.thesobiaakbar.adroit.docs.R
 import io.github.thesobiaakbar.adroit.docs.guides.AppAds
 import io.github.thesobiaakbar.adroit.docs.guides.showSplashProgress
@@ -21,8 +19,6 @@ import io.github.thesobiaakbar.adroit.splash.SplashFlow
 import io.github.thesobiaakbar.adroit.splash.SplashState
 import io.github.thesobiaakbar.adroit.update.AdroitUpdate
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 // The splash of docs/guides/ADS_XML.md, step 6.
@@ -31,12 +27,6 @@ import kotlinx.coroutines.launch
 /** Keeps the splash across rotations: the update check, consent, the timer and the splash ad run once per launch. */
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
     val flow = SplashFlow.create(application, AppAds.SplashAd)
-
-    /** The routing after the splash has started: a rotation doesn't repeat it. */
-    var routing = false
-
-    /** The routing is over: open the main screen, from whichever Activity is current. */
-    val goToMain = MutableStateFlow(false)
 
     private var update: Job? = null
 
@@ -65,34 +55,14 @@ class SplashActivity : AppCompatActivity() {
         lifecycleScope.launch {
             // STARTED: a splash sent to the background moves on when the user comes back.
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.flow.state.collect { state ->
-                        when (state) {
-                            SplashState.Preparing -> showSplashProgress(null) // update check, consent: no bar yet
-                            is SplashState.Loading -> showSplashProgress(state.progress) // 0..100
-                            SplashState.ShowingAd -> showSplashProgress(100) // the splash ad is on screen
-                            is SplashState.Finished -> route(state)
-                        }
+                viewModel.flow.state.collect { state ->
+                    when (state) {
+                        SplashState.Preparing -> showSplashProgress(null) // update check, consent: no bar yet
+                        is SplashState.Loading -> showSplashProgress(state.progress) // 0..100
+                        SplashState.ShowingAd -> showSplashProgress(100) // the splash ad is on screen
+                        is SplashState.Finished -> goToMain()
                     }
                 }
-                viewModel.goToMain.first { it }
-                goToMain()
-            }
-        }
-    }
-
-    /** Firebase `splashAdMode` "preload" or "later" kept the splash ad for now (`showAdLater`): show it, then go on. */
-    private fun route(state: SplashState.Finished) {
-        if (viewModel.routing) return
-        viewModel.routing = true
-        if (!state.showAdLater) {
-            viewModel.goToMain.value = true
-            return
-        }
-        // A full-screen ad shows only over a screen in front (resumed).
-        lifecycleScope.launch {
-            withResumed {
-                AdSlots.showFullScreen(this@SplashActivity, AppAds.SplashAd) { viewModel.goToMain.value = true }
             }
         }
     }

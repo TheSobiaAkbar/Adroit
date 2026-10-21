@@ -379,15 +379,13 @@ public sealed class AdProfile {
  * @property maxInterstitialsPerSession 0 = no limit; interstitials per session, splash ones not counted.
  * @property minSecondsBetweenFullScreenAds the minimum time between any two full-screen ads.
  * @property splashSeconds the splash timer after consent (docs/SPLASH.md).
- * @property premiumSplashSeconds the splash timer for a premium user.
+ * @property premiumSplashSeconds the splash timer for a premium user, or without a splash ad.
  * @property offlineSplashSeconds the splash timer without internet.
  * @property consentTimeoutSeconds how long the consent form may take to appear on the splash screen.
  * @property loadTimeoutSeconds how long a show waits for a full-screen ad that isn't loaded yet; each ad can set its own.
  * @property showLoading a loading screen before full-screen ads and a shimmer while banners and native ads load; each
  *   ad can set its own.
  * @property loadingSeconds how long the loading screen stays up at least; each ad can set its own.
- * @property splashAdMode whether the splash shows its ad, or only loads it or leaves it for the next screen
- *   (docs/SPLASH.md).
  */
 public class AdSettings @JvmOverloads constructor(
     public val adsEnabled: Boolean = true,
@@ -400,7 +398,6 @@ public class AdSettings @JvmOverloads constructor(
     public val loadTimeoutSeconds: Int = AdBehavior.DEFAULT_LOAD_TIMEOUT_SECONDS,
     public val showLoading: Boolean = true,
     public val loadingSeconds: Int = AdBehavior.DEFAULT_LOADING_SECONDS,
-    public val splashAdMode: SplashAdMode = SplashAdMode.SHOW,
 ) {
     override fun equals(other: Any?): Boolean = other is AdSettings && other.toJson() == toJson()
 

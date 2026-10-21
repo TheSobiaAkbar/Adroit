@@ -12,8 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.withResumed
-import io.github.thesobiaakbar.adroit.AdSlots
 import io.github.thesobiaakbar.adroit.billing.AdroitBilling
 import io.github.thesobiaakbar.adroit.billing.ShowDecision
 import io.github.thesobiaakbar.adroit.billing.views.AdroitPaywall
@@ -40,7 +38,7 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
     // A premium user skips consent and the ad: SplashFlow reads Adroit.isAdFree, set by the billing bridge.
     val flow = SplashFlow.create(application, AppAds.SplashAd)
 
-    /** The routing after the splash has started (the paywall or the ad is up): a rotation doesn't repeat it. */
+    /** The routing after the splash has started (the paywall is up): a rotation doesn't repeat it. */
     var routing = false
 
     /** The routing is over: open the main screen, from whichever Activity is current. */
@@ -62,11 +60,8 @@ class SplashActivity : AppCompatActivity() {
     private val viewModel: SplashViewModel by viewModels()
     private var navigated = false
 
-    // Registered in every onCreate: after a rotation, the paywall's result arrives here. It arrives before this screen
-    // is back in front, and a full-screen ad shows only over a resumed screen: wait for that.
-    private val paywall = registerForActivityResult(AdroitPaywall.contract()) {
-        lifecycleScope.launch { withResumed { showAdLaterThenMain() } }
-    }
+    // Registered in every onCreate: after a rotation, the paywall's result arrives here.
+    private val paywall = registerForActivityResult(AdroitPaywall.contract()) { viewModel.goToMain.value = true }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,26 +90,12 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    /** Once per launch: the launch paywall if its rules allow, else straight to the ad kept for later or main. */
+    /** Once per launch: the launch paywall if its rules allow, else straight to main. */
     private fun route() {
         if (viewModel.routing) return
         viewModel.routing = true
         if (AdroitBilling.paywalls.shouldShow(AppPaywalls.Onboarding, "onboarding") == ShowDecision.Show) {
             paywall.launch(PaywallLaunch(AppPaywalls.Onboarding, "onboarding"))
-        } else {
-            showAdLaterThenMain()
-        }
-    }
-
-    /**
-     * With Firebase `splashAdMode` "preload" or "later", the splash ad shows now (on the paywall's close, or right
-     * after the splash). A user who just bought premium sees none: the billing bridge made the app ad-free.
-     */
-    private fun showAdLaterThenMain() {
-        val finished = viewModel.flow.state.value as? SplashState.Finished
-        if (finished?.showAdLater == true) {
-            // The result goes to the ViewModel, not this Activity: a rotation may have replaced it by then.
-            AdSlots.showFullScreen(this, AppAds.SplashAd) { viewModel.goToMain.value = true }
         } else {
             viewModel.goToMain.value = true
         }

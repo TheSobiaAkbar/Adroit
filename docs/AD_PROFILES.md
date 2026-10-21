@@ -196,10 +196,9 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | `maxInterstitialsPerSession` | number | `0` | 0 = no limit. Interstitials per session, splash ones not counted. When reached, no other interstitial shows, even if its own `maxPerSession` allows more. |
 | `minSecondsBetweenFullScreenAds` | number | `0` | The minimum time between any two full-screen ads |
 | `splashSeconds` | number | `11` | The splash timer ([Splash screen](SPLASH.md)) |
-| `premiumSplashSeconds` | number | `3` | The splash timer for a premium user |
+| `premiumSplashSeconds` | number | `3` | The splash timer for a premium user, or [without a splash ad](SPLASH.md#a-splash-without-an-ad) |
 | `offlineSplashSeconds` | number | `3` | The splash timer without internet |
 | `consentTimeoutSeconds` | number | `8` | How long the consent form may take to appear on the splash |
-| `splashAdMode` | text | `"show"` | `"show"`: the splash shows its ad. `"preload"`: it loads the ad for the next screen. `"later"`: it doesn't load it. The last two use the short splash timer ([Splash screen](SPLASH.md#showing-the-splash-ad-later)) |
 | `loadTimeoutSeconds` | number | `8` | The load timeout of every full-screen ad that doesn't set its own |
 | `showLoading` | true/false | `true` | The loading screen and shimmer of every ad that doesn't set its own |
 | `loadingSeconds` | number | `1` | The loading screen's minimum time for every full-screen ad that doesn't set its own |

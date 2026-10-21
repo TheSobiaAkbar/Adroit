@@ -6,7 +6,6 @@ import io.github.thesobiaakbar.adroit.NativeStyle
 import io.github.thesobiaakbar.adroit.config.AdDefinition
 import io.github.thesobiaakbar.adroit.config.AdProfile
 import io.github.thesobiaakbar.adroit.config.AdSettings
-import io.github.thesobiaakbar.adroit.config.SplashAdMode
 
 // The ads enum of docs/guides/ADS_*.md and ADS_IAP_*.md, step 4.
 
@@ -28,7 +27,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 
     companion object {
         /** What every ad shares: the Firebase parameter "AdSettings". */
-        val settings = AdSettings(splashSeconds = 11, minSecondsBetweenFullScreenAds = 30, splashAdMode = SplashAdMode.SHOW)
+        val settings = AdSettings(splashSeconds = 11, minSecondsBetweenFullScreenAds = 30)
     }
 }
 // endregion

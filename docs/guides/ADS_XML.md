@@ -193,7 +193,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 
     companion object {
         /** What every ad shares: the Firebase parameter "AdSettings". */
-        val settings = AdSettings(splashSeconds = 11, minSecondsBetweenFullScreenAds = 30, splashAdMode = SplashAdMode.SHOW)
+        val settings = AdSettings(splashSeconds = 11, minSecondsBetweenFullScreenAds = 30)
     }
 }
 ```
@@ -210,8 +210,7 @@ enum class AppAds(override val defaults: AdProfile) : AdDefinition {
 - **Styles:** banners are `AnchoredAdaptive` (full width), `Collapsible`, `MediumRectangle` or `Standard`; native ads
   have five built-in styles or your own layout ([Native](../NATIVE.md#templates-and-custom-layouts)).
 - **`AppAds.settings`** is what every ad shares: the Firebase parameter `AdSettings`. `splashSeconds` is the splash
-  timer, `minSecondsBetweenFullScreenAds` the gap between two full-screen ads, and `splashAdMode` whether the splash
-  shows its ad (step 6).
+  timer and `minSecondsBetweenFullScreenAds` the gap between two full-screen ads.
 
 
 ## 5. The Application class
@@ -262,8 +261,8 @@ The splash runs everything at app start, and always ends somewhere:
    who refuses a forced update leaves the app.
 2. **Consent:** Google's consent form, where the user's region needs it. The splash waits for the answer.
 3. **The timer and the splash ad:** a progress bar for `splashSeconds`, and the splash ad if it loads in time. Premium
-   users and offline users get a 3-second splash without an ad.
-4. **The routing:** the splash ad if Firebase kept it for later, then the main screen.
+   users, offline users and a splash ad turned off get a 3-second splash without an ad.
+4. **The routing:** the main screen.
 
 It never gets stuck, even offline, and a rotation never restarts it: everything is kept in its ViewModel.
 
@@ -331,12 +330,6 @@ fun Activity.showSplashProgress(percent: Int?) {
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
     val flow = SplashFlow.create(application, AppAds.SplashAd)
 
-    /** The routing after the splash has started: a rotation doesn't repeat it. */
-    var routing = false
-
-    /** The routing is over: open the main screen, from whichever Activity is current. */
-    val goToMain = MutableStateFlow(false)
-
     private var update: Job? = null
 
     /** Google Play's update check, once per launch: a rotation waits for the same check. */
@@ -364,34 +357,14 @@ class SplashActivity : AppCompatActivity() {
         lifecycleScope.launch {
             // STARTED: a splash sent to the background moves on when the user comes back.
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.flow.state.collect { state ->
-                        when (state) {
-                            SplashState.Preparing -> showSplashProgress(null) // update check, consent: no bar yet
-                            is SplashState.Loading -> showSplashProgress(state.progress) // 0..100
-                            SplashState.ShowingAd -> showSplashProgress(100) // the splash ad is on screen
-                            is SplashState.Finished -> route(state)
-                        }
+                viewModel.flow.state.collect { state ->
+                    when (state) {
+                        SplashState.Preparing -> showSplashProgress(null) // update check, consent: no bar yet
+                        is SplashState.Loading -> showSplashProgress(state.progress) // 0..100
+                        SplashState.ShowingAd -> showSplashProgress(100) // the splash ad is on screen
+                        is SplashState.Finished -> goToMain()
                     }
                 }
-                viewModel.goToMain.first { it }
-                goToMain()
-            }
-        }
-    }
-
-    /** Firebase `splashAdMode` "preload" or "later" kept the splash ad for now (`showAdLater`): show it, then go on. */
-    private fun route(state: SplashState.Finished) {
-        if (viewModel.routing) return
-        viewModel.routing = true
-        if (!state.showAdLater) {
-            viewModel.goToMain.value = true
-            return
-        }
-        // A full-screen ad shows only over a screen in front (resumed).
-        lifecycleScope.launch {
-            withResumed {
-                AdSlots.showFullScreen(this@SplashActivity, AppAds.SplashAd) { viewModel.goToMain.value = true }
             }
         }
     }
@@ -412,17 +385,10 @@ class SplashActivity : AppCompatActivity() {
 - **Navigation happens only while the screen is in front** (`STARTED`): a splash sent to the background moves on when
   the user comes back.
 
-**The splash ad, now or later.** Firebase `AdSettings.splashAdMode` decides whether the splash shows its ad ([Splash
-screen](../SPLASH.md#showing-the-splash-ad-later)):
-
-| `splashAdMode` | The splash | Then |
-|---|---|---|
-| `"show"` (default) | Loads and shows the splash ad, up to `splashSeconds` (11) | Main. |
-| `"preload"` | Loads the ad but doesn't show it; short timer (3 s) | The ad at once, then main. |
-| `"later"` | Doesn't request the ad; short timer (3 s) | "Loading ad…", the ad, then main. |
-
-In an app without a paywall, `"show"` is usually right. The other two are for an app that adds a screen between the
-splash and its ad.
+**A splash without an ad.** To keep the splash (the update check, consent, the timer) but drop its ad, turn the ad
+off in Firebase with `{ "enabled": false }` in `SplashAd`, or pass `null` instead of `AppAds.SplashAd` to
+`SplashFlow.create`. The splash then lasts `premiumSplashSeconds` (3 s) ([Splash
+screen](../SPLASH.md#a-splash-without-an-ad)).
 
 **Consent in debug builds.** A debug build behaves as if you were in Europe, so the consent form shows wherever you are.
 Until it's answered it shows on every launch; once answered, clear the app's storage to see it again. The form itself
@@ -625,8 +591,7 @@ IDs from `AppAds`.
   "consentTimeoutSeconds": 8,
   "loadTimeoutSeconds": 8,
   "showLoading": true,
-  "loadingSeconds": 1,
-  "splashAdMode": "show"
+  "loadingSeconds": 1
 }
 ```
 
@@ -687,8 +652,7 @@ IDs from `AppAds`.
 { "format": "native", "enabled": true, "adUnitIds": ["ca-app-pub-XXXXXXXXXXXXXXXX/8888888888"], "style": "small_button_end", "loadAgain": true }
 ```
 
-`splashAdMode` is `"show"`, `"preload"` or `"later"` (step 6). Every field of every ad: [Ad
-profiles](../AD_PROFILES.md#the-json). Instead of typing them, you can generate all of them at once from `AppAds` with
+Every field of every ad: [Ad profiles](../AD_PROFILES.md#the-json). Instead of typing them, you can generate all of them at once from `AppAds` with
 `AdDefinitions.firebaseTemplate(AppAds.entries, AppAds.settings)` and import the file ([Ad
 profiles](../AD_PROFILES.md#getting-the-json-for-firebase)).
 
@@ -702,7 +666,7 @@ Quick changes:
 | 60 s between two shows instead | the ad's | `{ "counter": 0, "timerSeconds": 60 }` |
 | Two ad units in turn | the ad's | `{ "adUnitIds": ["ca-app-pub-…/111", "ca-app-pub-…/222"] }` |
 | A native ad instead of a banner | the banner's | `{ "format": "native", "style": "large_button_bottom", "adUnitIds": ["<a native ad unit>"] }` |
-| The splash ad on the next screen | `AdSettings` | `{ "splashAdMode": "later" }` |
+| The splash without its ad | `SplashAd` | `{ "enabled": false }` |
 
 ### App update
 
@@ -733,7 +697,7 @@ A debug build on a phone or an emulator:
 - [ ] Logcat (`Adroit`): `Firebase parameter <Name>: {…}` per ad, then `Remote Config fetched`.
 - [ ] The consent form (first launch), the progress bar, a test ad, then the next screen.
 - [ ] Every ad is labelled "Test Ad". Full-screen ads show "Loading ad…" first; banners and native ads, a shimmer.
-- [ ] With `{ "splashAdMode": "later" }` published, the splash is short and the ad comes after it.
+- [ ] With `{ "enabled": false }` published in `SplashAd`, the splash lasts 3 seconds and shows no ad.
 - [ ] In airplane mode, the splash lasts 3 seconds and the app works without ads.
 - [ ] **The update check** returns at once in a debug build (it isn't installed from Play). To see the real flows,
       upload two builds to Internal App Sharing or the internal testing track, the second with a higher `versionCode`,

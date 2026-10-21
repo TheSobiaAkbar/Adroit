@@ -21,7 +21,7 @@
     <string name="privacy_options">Privacy options</string>
     <string name="privacy_options_error">Privacy options failed: %1$s</string>
     <string name="premium_status">Premium: %1$s (%2$s)</string>
-    <string name="firebase_modes">Firebase: splashAdMode %1$s, AppUpdate %2$s</string>
+    <string name="firebase_modes">Firebase: AppUpdate %1$s</string>
     <string name="premium_yes">active</string>
     <string name="premium_no">not active</string>
     <string name="upgrade">Upgrade</string>
