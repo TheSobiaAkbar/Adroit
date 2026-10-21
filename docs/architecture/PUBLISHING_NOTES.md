@@ -1,8 +1,8 @@
 # Publishing notes
 
-The libraries (`adroit-core`, `adroit-views`, `adroit-compose`, `adroit-testing`, `adroit-firebase`, and the billing
+The libraries (`adroit-core`, `adroit-views`, `adroit-compose`, `adroit-testing`, `adroit-firebase`, the billing
 modules `adroit-billing`, `adroit-billing-views`, `adroit-billing-compose`, `adroit-billing-firebase`,
-`adroit-billing-testing`) publish with Gradle's built-in
+`adroit-billing-testing`, and the shared `adroit-remote-config` and `adroit-update`) publish with Gradle's built-in
 `maven-publish`, configured once in `build-logic/.../PublishingConventionPlugin.kt` (plugin `adroit.publishing`).
 There's no third-party publishing plugin, and no Dokka plugin (see "Javadoc" below).
 

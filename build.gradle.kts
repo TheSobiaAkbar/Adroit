@@ -6,6 +6,7 @@ plugins {
 // this zips the current version's files into the bundle the Central Portal takes, and the release workflow uploads it.
 val publishedLibraries = listOf(
     "adroit-core", "adroit-views", "adroit-compose", "adroit-testing", "adroit-firebase", "adroit-remote-config",
+    "adroit-update",
     "adroit-billing", "adroit-billing-views", "adroit-billing-compose", "adroit-billing-firebase", "adroit-billing-testing",
 )
 val adroitVersion = providers.gradleProperty("adroit.version").get()

@@ -15,6 +15,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Adroit.start(this)
+        checkForUpdate(this)
         setContent {
             Column {
                 BasicText("Adroit consumer smoke")

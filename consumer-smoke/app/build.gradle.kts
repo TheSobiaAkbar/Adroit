@@ -43,6 +43,13 @@ android {
     buildFeatures {
         compose = withCompose
     }
+    // R8 over the published artifacts and their consumer rules, as a host's release build does (unsigned).
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
+    }
     // kotlin, not java: AGP 9 compiles no Kotlin from java dirs. srcDir (deprecated in AGP 9) because AGP 8.1 has no
     // `directories`.
     sourceSets.getByName("main").kotlin.srcDir(if (withCompose) "src/compose/kotlin" else "src/views/kotlin")
@@ -77,6 +84,8 @@ dependencies {
         // The only billing dependency: adroit-billing and Play Billing must arrive transitively.
         implementation("io.github.thesobiaakbar:${if (withCompose) "adroit-billing-compose" else "adroit-billing-views"}:$adroitVersion")
     }
+    // In-app update: adroit-remote-config and Play In-App Updates must arrive transitively.
+    implementation("io.github.thesobiaakbar:adroit-update:$adroitVersion")
 }
 
 /**
@@ -100,6 +109,9 @@ val verifyConsumerClasspath by tasks.registering {
             "io.github.thesobiaakbar:adroit-views",
             "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk",
             "com.google.android.ump:user-messaging-platform",
+            "io.github.thesobiaakbar:adroit-update",
+            "io.github.thesobiaakbar:adroit-remote-config",
+            "com.google.android.play:app-update",
         ).plus(listOfNotNull("io.github.thesobiaakbar:adroit-compose".takeIf { withCompose }))
             .plus(
                 if (!withBilling) emptyList() else listOf(
@@ -114,6 +126,8 @@ val verifyConsumerClasspath by tasks.registering {
             "com.google.android.ump:user-messaging-platform",
             // Play Billing is `implementation` in adroit-billing: no Play Billing types in the host's code either.
             "com.android.billingclient:billing",
+            // Play In-App Updates is `implementation` in adroit-update.
+            "com.google.android.play:app-update",
         ).filter { it in onCompile }.forEach { problems += "on the compile classpath: $it" }
         if (problems.isNotEmpty()) throw GradleException(problems.joinToString("\n"))
         println("Consumer classpaths OK: Adroit and the Google SDKs at runtime, no Google SDK at compile time (billing: $withBilling)")

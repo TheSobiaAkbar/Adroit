@@ -1,13 +1,15 @@
 # consumer-smoke
 
 A separate Gradle build, not part of the main settings. It's a minimal host app that depends only on
-`io.github.thesobiaakbar:adroit-compose` and `adroit-billing-compose` from `mavenLocal()`, calls `Adroit.initialize`
-and `start`, shows an `AdBanner`, initializes `AdroitBilling` in demo mode and compiles a `Paywall` call.
+`io.github.thesobiaakbar:adroit-compose`, `adroit-billing-compose` and `adroit-update` from `mavenLocal()`, calls
+`Adroit.initialize` and `start`, shows an `AdBanner`, initializes `AdroitBilling` in demo mode, compiles a `Paywall`
+call and runs `AdroitUpdate.check`.
 
 ```bash
 ./gradlew publishToMavenLocal
 ./gradlew -p consumer-smoke assembleDebug verifyConsumerClasspath
 ./gradlew -p consumer-smoke assembleDebug verifyConsumerClasspath -Psmoke.compose=false   # the XML host
+./gradlew -p consumer-smoke assembleRelease   # R8 over the published artifacts and their consumer rules
 ```
 
 What it proves:
@@ -17,6 +19,8 @@ What it proves:
 - No Google Mobile Ads or UMP artifact is on the host's compile classpath. A source file referencing
   `com.google.android.libraries.ads.mobile.sdk.MobileAds` fails to compile.
 - A host on AGP 9's built-in Kotlin 2.2.10 can consume the libraries (built with Kotlin 2.4.20, metadata 2.2).
+- adroit-update brings adroit-remote-config and Play In-App Updates at runtime, with no Play type at compile time.
+- The release build shrinks every published artifact with R8 (full mode) and their consumer rules.
 - A Java 11 host: `JavaSmoke.java` calls the Java surface (ADR-013), and both compilers emit Java 11 bytecode.
 
 ## Compatibility matrix

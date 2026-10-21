@@ -66,7 +66,7 @@ These rules hold from `1.0.0-rc1` ([audits/API_STABILITY_AUDIT.md](audits/API_ST
 5. Update the "Supported versions" table in the README if a requirement changed, and the "Last verified" lines if you
    re-verified the docs.
 6. Run locally: `./gradlew build lint apiCheck checkModuleDependencies testDebugUnitTest verifyPublication` and the
-   consumer smoke build (`./gradlew publishToMavenLocal`, then `./gradlew -p consumer-smoke assembleDebug`).
+   consumer smoke build (`./gradlew publishToMavenLocal`, then `./gradlew -p consumer-smoke assembleDebug assembleRelease`).
 7. Commit ("chore: release x.y.z"), then tag and push the tag (below).
 8. After the release, set the next `-SNAPSHOT` version and add an empty `## [Unreleased]`.
 
@@ -88,6 +88,15 @@ Upgrades of `ads-mobile-sdk` and `user-messaging-platform` never come from a bot
 8. Add a "Google SDK" section to the CHANGELOG entry, and update the "Last verified against" lines and the README table.
 
 ## Tag and publish
+
+Every release publishes these artifacts, all at `adroit.version`, under `io.github.thesobiaakbar`:
+
+- ads: `adroit-core`, `adroit-views`, `adroit-compose`, `adroit-testing`, `adroit-firebase`;
+- billing: `adroit-billing`, `adroit-billing-views`, `adroit-billing-compose`, `adroit-billing-firebase`,
+  `adroit-billing-testing`;
+- shared: `adroit-remote-config` (the one Remote Config fetch) and `adroit-update` (in-app update).
+
+The list lives in the root `build.gradle.kts` (`publishedLibraries`); a new module goes there too.
 
 ```bash
 git tag v0.1.0

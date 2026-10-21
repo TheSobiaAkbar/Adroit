@@ -13,6 +13,7 @@ class MainActivity : ComponentActivity() {
         val container = FrameLayout(this)
         setContentView(container)
         Adroit.start(this)
+        checkForUpdate(this)
         container.attachBanner(this, SmokeBanner)
     }
 }

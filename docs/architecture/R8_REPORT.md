@@ -175,6 +175,8 @@ Toolchain: as above, plus Play Billing Library 9.1.0 (its AAR ships its own cons
 | `adroit-billing-views` | none | `AdroitPaywallActivity` is kept by its manifest entry, `PaywallView` by AAPT when a layout uses it (`mapping.txt`: both keep their names). |
 | `adroit-billing-firebase` | none | No reflection. |
 | `adroit-billing-testing` | none | Test-only artifact. |
+| `adroit-remote-config` | none | No reflection; Firebase ships its own rules (setup S05). |
+| `adroit-update` | none | No reflection; Play In-App Updates ships its own rules. consumer-smoke's release build (R8) calls `AdroitUpdate.check` (setup S05). |
 
 **Paywall and product names.** The library finds a definition by its name with `entries.firstOrNull { it.name == … }`
 (Remote Config keys, the paywall Activity's Intent extra, `exitPaywall`), never `valueOf` by reflection, so no rule is
