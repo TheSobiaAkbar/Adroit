@@ -21,6 +21,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.time.Duration.Companion.minutes
 
+private val OTHER = NativePlacement("other")
+
 @RunWith(RobolectricTestRunner::class)
 class NativeLoaderTest {
     private fun kotlinx.coroutines.test.TestScope.pooled(size: Int = 1, preload: PreloadStrategy = PreloadStrategy.AFTER_READY) =
@@ -49,6 +51,36 @@ class NativeLoaderTest {
         assertEquals(3, n.engine.pooledCount(FEED))
         assertTrue("every request is for a single ad", n.adsSdk.loadCalls.all { it.format == AdFormat.NATIVE })
         assertEquals("one ad per request", n.loads(), n.ads.size)
+    }
+
+    private fun kotlinx.coroutines.test.TestScope.twoOnOneUnit(demo: Boolean) = NativeHarness(
+        this,
+        nativeConfig {
+            testing { useDemoAdUnits = demo }
+            placements {
+                native(FEED, TestIds.unit(9)) { preload = PreloadStrategy.NONE }
+                native(OTHER, TestIds.unit(9)) { preload = PreloadStrategy.NONE }
+            }
+        },
+    ).also { it.ready() }
+
+    @Test
+    fun `placements on the same real ad unit share one pool`() = runTest {
+        val n = twoOnOneUnit(demo = false)
+        n.engine.preload(FEED)
+        n.run()
+        n.load(OTHER)
+        assertEquals("OTHER took FEED's pooled ad", 1, n.loads())
+    }
+
+    @Test
+    fun `on Google's test ad unit each placement keeps its own pool`() = runTest {
+        val n = twoOnOneUnit(demo = true)
+        n.engine.preload(FEED)
+        n.run()
+        n.load(OTHER)
+        assertEquals("OTHER loaded its own ad", 2, n.loads())
+        assertEquals(1, n.engine.pooledCount(FEED))
     }
 
     @Test

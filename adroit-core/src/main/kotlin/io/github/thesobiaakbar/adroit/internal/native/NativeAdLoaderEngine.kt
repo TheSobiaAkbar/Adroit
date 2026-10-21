@@ -15,6 +15,7 @@ import io.github.thesobiaakbar.adroit.internal.AdsBlockedListener
 import io.github.thesobiaakbar.adroit.internal.callbacks.OnceCallback
 import io.github.thesobiaakbar.adroit.internal.config.ConfigChangeListener
 import io.github.thesobiaakbar.adroit.internal.config.EffectiveConfig
+import io.github.thesobiaakbar.adroit.internal.config.GoogleDemoAdUnits
 import io.github.thesobiaakbar.adroit.internal.config.LiveConfig
 import io.github.thesobiaakbar.adroit.internal.config.EffectivePlacement
 import io.github.thesobiaakbar.adroit.internal.config.FormatDefaults
@@ -75,7 +76,7 @@ internal class NativeAdLoaderEngine(
     /** A pooled ad and the ad unit it was loaded from. */
     private class Pooled(val ad: LoadedNativeAd, val adUnitId: String)
 
-    private inner class Pool(val adUnitIds: List<String>, placements: List<EffectivePlacement>) {
+    private inner class Pool(val key: String, val adUnitIds: List<String>, placements: List<EffectivePlacement>) {
         /** The placements sharing this pool; replaced when a remote override changes them. */
         var placements: List<EffectivePlacement> = placements
         val owner: EffectivePlacement get() = placements.first()
@@ -85,7 +86,6 @@ internal class NativeAdLoaderEngine(
         /** An ad profile's loadAgain: each ad handed to a view is replaced by a new load, whatever [strategy]. */
         val loadAgain: Boolean get() = placements.any { it.loadAgain }
         val ttl: Duration = owner.expiry ?: FormatDefaults.NATIVE_TTL
-        val key = "NATIVE:" + adUnitIds.joinToString(",")
 
         /** The ad unit of the latest load request. */
         var adUnitId: String = adUnitIds.first()
@@ -191,12 +191,22 @@ internal class NativeAdLoaderEngine(
         pools.values.toSet().filter { it !in before || it.target > it.items.size }.forEach { pump(it) }
     }
 
+    /**
+     * Placements on the same ad units share a pool. Google's test units stand in for every placement's own units
+     * (no IDs yet, or demo IDs outside PRODUCTION), so on them each placement keeps its own pool, as it will with
+     * its real IDs.
+     */
+    private fun poolKey(p: EffectivePlacement): String {
+        val units = "NATIVE:" + p.adUnitIds.joinToString(",")
+        return if (p.adUnitIds.all(GoogleDemoAdUnits::isDemo)) "$units@${p.placement.key}" else units
+    }
+
     /** Recomputes [placements] and [pools] for [current], reusing the pool of every ad unit still in use. */
     private fun rebuild(current: EffectiveConfig) {
         val enabled = current.allPlacements.filter { it.format == AdFormat.NATIVE && it.enabled }
-        val reusable = pools.values.associateBy { it.adUnitIds }
-        val byUnits = enabled.groupBy { it.adUnitIds }.mapValues { (units, sharing) ->
-            reusable[units]?.also { pool ->
+        val reusable = pools.values.associateBy { it.key }
+        val byUnits = enabled.groupBy(::poolKey).mapValues { (key, sharing) ->
+            reusable[key]?.also { pool ->
                 val before = pool.strategy
                 pool.placements = sharing
                 // A remote value switched the pool to "auto": fill it from now on.
@@ -204,9 +214,9 @@ internal class NativeAdLoaderEngine(
                     pool.target = pool.size
                     pool.autoRefill = true
                 }
-            } ?: Pool(units, sharing)
+            } ?: Pool(key, sharing.first().adUnitIds, sharing)
         }
-        val newPools = enabled.associate { it.placement to byUnits.getValue(it.adUnitIds) }
+        val newPools = enabled.associate { it.placement to byUnits.getValue(poolKey(it)) }
         (pools.values.toSet() - newPools.values.toSet()).forEach { pool ->
             val reason = current.placement(pool.owner.placement)?.disabledReason ?: UnavailableReason.DISABLED_BY_REMOTE
             log.d { "Native: releasing the pool for ${pool.adUnitIds.joinToString { current.displayAdUnitId(it) }}; no placement uses it any more" }

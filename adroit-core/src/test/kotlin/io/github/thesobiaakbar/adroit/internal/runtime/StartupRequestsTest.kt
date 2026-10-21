@@ -49,12 +49,12 @@ class StartupRequestsTest {
     }
 
     @Test
-    fun `debug shape - demo ad units are shared per format, and so are their caches`() = runTest {
+    fun `debug shape - demo ad units share the full-screen caches, but each native keeps its own pool`() = runTest {
         val requested = requestsIn10SecondsAfterReady(useDemoAdUnits = true)
-        // One interstitial for both interstitial placements. The three native placements share one pool, sized by
-        // the largest (feed's 2) and preloading because one of them is AFTER_READY (architecture §20).
+        // One interstitial for both interstitial placements. The natives load as they will on their real units:
+        // only "templates" is AFTER_READY (architecture §20).
         assertEquals(
-            listOf("app_open", "level", "rewarded", "rewarded_interstitial", "templates", "templates"),
+            listOf("app_open", "level", "rewarded", "rewarded_interstitial", "templates"),
             requested.sorted(),
         )
     }

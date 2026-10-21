@@ -47,6 +47,11 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   builds a Compose and an XML host that initialize billing and call a paywall (`-Psmoke.billing=false` leaves it out
   for the Kotlin 2.1 rows of the compatibility matrix).
 
+### Changed
+- Native ads on Google's test ad units (no IDs yet, or demo IDs outside PRODUCTION) keep one pool per placement
+  instead of sharing one per format, so debug builds load, refill and log each native as release will. Placements
+  on the same real ad unit still share a pool.
+
 ### Fixed
 - `SplashFlow`: when this session's Firebase fetch arrived during the splash timer and swapped the splash ad's format
   (interstitial ↔ app open), the ad requested in the old format was released and none was requested in the new one,
