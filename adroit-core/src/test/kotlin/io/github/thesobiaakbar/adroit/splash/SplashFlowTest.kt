@@ -244,6 +244,20 @@ class SplashFlowTest {
     }
 
     @Test
+    fun `left before the timer - no ad request until the user is back, then the timer starts`() = runTest {
+        ports.resumed = false
+        val flow = flow()
+        advance(60_000)
+        assertEquals("no request while the network is blocked", emptyList<String>(), ports.requested)
+        assertEquals(SplashState.Preparing, flow.state.value)
+
+        ports.resumed = true
+        advance(100)
+        assertEquals(listOf("SplashAd"), ports.requested)
+        assertTrue(flow.state.value is SplashState.Loading)
+    }
+
+    @Test
     fun `back in front with no ad, the rest of the timer runs`() = runTest {
         val flow = flow()
         advance(5_500)

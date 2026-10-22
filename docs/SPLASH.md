@@ -21,7 +21,9 @@ it: a logo, the app name, and a progress bar.
 
    Meanwhile the splash ad loads. When it's ready and the screen is in front, the progress jumps to 100 and the timer
    stops. The timer counts only while the splash is in front: sent to the background, it pauses, and the user comes
-   back to the splash where they left it (and to the splash ad, if it loaded meanwhile).
+   back to the splash where they left it (and to the splash ad, if it loaded meanwhile). If the user leaves before the
+   timer starts, the timer and the splash ad request wait until they're back: since Android 15, a background app's
+   network is blocked, so a request made then would fail.
 3. **The splash ad** (state `ShowingAd`): the splash waits as long as the user keeps the ad open.
 4. **Next screen** (state `Finished`): when the ad is closed, when it fails to show, or when the timer ends first. An
    ad that loads after the timer isn't shown on the splash.

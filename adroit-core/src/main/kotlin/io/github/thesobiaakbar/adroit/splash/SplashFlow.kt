@@ -37,7 +37,9 @@ import kotlin.time.Duration.Companion.seconds
  *    meanwhile. Until the user answers, every splash asks again. Then the library starts (`Adroit.start`),
  *    whatever the answer. Skipped for a premium user.
  * 2. [SplashState.Loading]: the splash timer, with a [SplashState.Loading.progress] from 0 to 100 for a progress bar.
- *    It counts only while the splash is resumed: sent to the background, it pauses until the user comes back.
+ *    It starts, and the splash ad is requested, only once the splash is resumed (since Android 15, a background
+ *    app's network is blocked). It counts only while the splash is resumed: sent to the background, it pauses until
+ *    the user comes back.
  *    It lasts `splashSeconds` (Firebase `AdSettings`, read when the timer starts) while the splash ad loads. When it's
  *    ready and the screen is in front, progress jumps to 100 and the timer stops. Without an ad to wait for, it's
  *    `premiumSplashSeconds`: a premium user, no splash ad passed, the splash ad turned off in Firebase
@@ -99,6 +101,9 @@ public class SplashFlow internal constructor(
                 waited = if (ports.consentFormShowing()) Duration.ZERO else waited + TICK
             }
         }
+        // The ad request and the timer wait until the splash is in front: since Android 15 a background app's network
+        // is blocked, so a request made while the user is away would fail.
+        while (activity?.let(ports::isResumed) != true) delay(TICK)
         // Read now, not before consent: a Remote Config fetch may have finished meanwhile.
         val timings = ports.timings()
         val online = ports.isOnline()

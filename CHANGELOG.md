@@ -9,7 +9,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 ### Changed
 - The splash timer pauses while the splash is in the background, and continues when the user comes back: before, it
   kept counting, so a user who left during the splash came back to the next screen. A splash ad that loaded meanwhile
-  shows when they're back.
+  shows when they're back. A user who leaves before the timer starts holds back the timer and the splash ad request
+  until they return: since Android 15 a background app's network is blocked, and the request failed.
 
 ### Fixed
 - The splash examples in the docs, the guides and the samples collect `SplashFlow.state` while the screen is
