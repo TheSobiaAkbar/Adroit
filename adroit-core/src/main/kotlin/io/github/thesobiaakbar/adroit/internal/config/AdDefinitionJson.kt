@@ -1,5 +1,6 @@
 package io.github.thesobiaakbar.adroit.internal.config
 
+import io.github.thesobiaakbar.adroit.AdCloseButton
 import io.github.thesobiaakbar.adroit.BannerSize
 import io.github.thesobiaakbar.adroit.CollapsibleBannerPosition
 import io.github.thesobiaakbar.adroit.NativeStyle
@@ -9,6 +10,7 @@ import io.github.thesobiaakbar.adroit.config.AdSettings
 import io.github.thesobiaakbar.adroit.config.NativeLayoutNames
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 
 /**
  * Writes [AdDefinition]s in the ads file's JSON (05_AD_PROFILES.md), so enum defaults go through the same parser and
@@ -33,6 +35,9 @@ internal object AdDefinitionJson {
         .put("loadTimeoutSeconds", settings.loadTimeoutSeconds)
         .put("showLoading", settings.showLoading)
         .put("loadingSeconds", settings.loadingSeconds)
+        // Written only when set, so the JSON of an app without a close button stays as it was.
+        .apply { if (settings.closeButton != AdCloseButton.NONE) put("closeButton", settings.closeButton.jsonName) }
+        .apply { settings.closeIcon?.let { put("closeIcon", it) } }
 
     /**
      * [profile] as JSON. With [firebase], the file-only fields (`splash`, `excludedActivities`, `poolSize`) are left
@@ -74,8 +79,10 @@ internal object AdDefinitionJson {
                     }
                 }
             is AdProfile.Banner -> json.put("style", bannerStyle(profile.style))
+                .putClose(profile.closeButton, profile.closeIcon)
             is AdProfile.Native -> json.put("style", profile.layoutName ?: nativeStyle(profile.style))
                 .apply { if (!firebase) put("poolSize", profile.poolSize) }
+                .putClose(profile.closeButton, profile.closeIcon)
         }
         if (profile !is AdProfile.Banner) json.put("loadAgain", profile.loadAgain)
         // Unset: the ad follows AdSettings.
@@ -121,6 +128,14 @@ internal object AdDefinitionJson {
             .put("counterResetOnFail", resetOnFail)
             .put("loadAhead", loadAhead)
     }
+
+    /** A banner's or native ad's own close button, when it sets one; unset, it follows the settings. */
+    private fun JSONObject.putClose(button: AdCloseButton?, icon: String?): JSONObject = apply {
+        button?.let { put("closeButton", it.jsonName) }
+        icon?.let { put("closeIcon", it) }
+    }
+
+    private val AdCloseButton.jsonName: String get() = name.lowercase(Locale.ROOT)
 
     /** 3.0 as 3, 1.5 as 1.5. */
     private fun number(value: Double): Number = if (value == Math.floor(value)) value.toLong() else value

@@ -6,6 +6,7 @@ import io.github.thesobiaakbar.adroit.AdsState
 import io.github.thesobiaakbar.adroit.BannerSize
 import io.github.thesobiaakbar.adroit.GoogleSdkEscapeHatch
 import io.github.thesobiaakbar.adroit.events.AdEvent
+import io.github.thesobiaakbar.adroit.internal.AdFrame
 import io.github.thesobiaakbar.adroit.internal.config.EffectivePlacement
 import io.github.thesobiaakbar.adroit.internal.config.LiveConfig
 import io.github.thesobiaakbar.adroit.internal.config.bannerAdUnitIds
@@ -78,7 +79,8 @@ internal class BannerPreloader(
         val size = placement.bannerSizeFor(null)
         val metrics = appContext.resources.displayMetrics
         // The width a full-width banner has: the window's, known without a view.
-        val spec = BannerSizeResolver.resolve(size, 0, metrics.density, metrics.widthPixels)
+        // As wide as the banner's frame will leave it (AdFrame), so the banner takes it.
+        val spec = BannerSizeResolver.resolve(size, 0, metrics.density, metrics.widthPixels - 2 * AdFrame.margin(appContext))
         val current = config.current
         val pick = rotation.next(AdFormat.BANNER, current.bannerAdUnitIds(placement, size))
         val entry = Entry(spec, pick.adUnitId)

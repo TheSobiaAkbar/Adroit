@@ -1,5 +1,6 @@
 package io.github.thesobiaakbar.adroit.internal.config
 
+import io.github.thesobiaakbar.adroit.AdCloseButton
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.BannerSize
 import io.github.thesobiaakbar.adroit.CollapsibleBannerPosition
@@ -246,14 +247,46 @@ class AdDefinitionTest {
     }
 
     @Test
+    fun `the close button comes from the ad, then Firebase, then AdSettings, and full-screen ads report it`() {
+        val config = adMobConfig {
+            appId = TestIds.APP_ID
+            profiles(BehaviorAds.entries, AdSettings(closeButton = AdCloseButton.TOP_END, closeIcon = "app_x"))
+        }
+        val local = EffectiveConfig.from(config)
+        assertEquals(AdCloseButton.TOP_END, local.active("Banner")?.behavior?.closeButton)
+        assertEquals("app_x", local.active("Banner")?.behavior?.closeIcon)
+
+        val remote = AdProfiles.parseRemote(
+            mapOf("Banner" to AdFormat.BANNER, "Plain" to AdFormat.INTERSTITIAL),
+            mapOf(
+                "Banner" to """{ "closeButton": "bottom_start", "closeIcon": "promo_x" }""",
+                "Plain" to """{ "closeButton": "top_end" }""",
+            ),
+            settings = """{ "closeButton": "none" }""",
+        )
+        assertEquals(listOf("\"closeButton\" applies to banners and native ads only; ignored"), remote.issues.map { it.substringAfter(": ") })
+        val live = local.withOverrides(remote.overrides)
+        assertEquals("the ad's Firebase value wins", AdCloseButton.BOTTOM_START, live.active("Banner")?.behavior?.closeButton)
+        assertEquals("promo_x", live.active("Banner")?.behavior?.closeIcon)
+
+        val wrong = AdProfiles.parseRemote(mapOf("Banner" to AdFormat.BANNER), mapOf("Banner" to """{ "closeButton": "middle" }"""), settings = null)
+        assertEquals(1, wrong.issues.size)
+        assertEquals(null, wrong.overrides.placements["Banner"]?.behavior?.closeButton)
+
+        val json = JSONObject(AdProfile.native(closeButton = AdCloseButton.TOP_START, closeIcon = "x").toJson())
+        assertEquals("top_start", json.getString("closeButton"))
+        assertEquals("x", json.getString("closeIcon"))
+    }
+
+    @Test
     fun `loading fields resolve from the ad, then Firebase, then AdSettings, then the defaults`() {
         val config = adMobConfig {
             appId = TestIds.APP_ID
             profiles(BehaviorAds.entries, AdSettings(loadTimeoutSeconds = 6))
         }
         val local = EffectiveConfig.from(config)
-        assertEquals(AdBehavior(6.seconds, true, 1.seconds), local.active("Plain")?.behavior)
-        assertEquals(AdBehavior(4.seconds, false, 2.seconds), local.active("Own")?.behavior)
+        assertEquals(AdBehavior(6.seconds, true, 1.seconds, closeButton = AdCloseButton.NONE), local.active("Plain")?.behavior)
+        assertEquals(AdBehavior(4.seconds, false, 2.seconds, closeButton = AdCloseButton.NONE), local.active("Own")?.behavior)
         assertEquals(false, local.active("Banner")?.behavior?.showLoading)
 
         val remote = AdProfiles.parseRemote(
@@ -263,7 +296,7 @@ class AdDefinitionTest {
         )
         assertEquals(emptyList<String>(), remote.issues)
         val live = local.withOverrides(remote.overrides)
-        assertEquals("Firebase AdSettings beat the app's", AdBehavior(3.seconds, false, 1.seconds), live.active("Plain")?.behavior)
+        assertEquals("Firebase AdSettings beat the app's", AdBehavior(3.seconds, false, 1.seconds, closeButton = AdCloseButton.NONE), live.active("Plain")?.behavior)
         assertEquals("the ad's Firebase value beats everything", 9.seconds, live.active("Own")?.behavior?.loadTimeout)
         assertEquals("the ad's own value beats AdSettings", false, live.active("Own")?.behavior?.showLoading)
 

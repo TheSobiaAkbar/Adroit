@@ -34,7 +34,7 @@ class BannerPreloadTest {
         b.preload()
         val preload = b.adsSdk.bannerPreloads.single()
         assertEquals(TestIds.unit(7), preload.adUnitId)
-        assertEquals(windowDp, preload.widthDp)
+        assertEquals("the window less the frame's margins", windowDp - 2 * b.margin, preload.widthDp)
         preload.succeed()
         b.run()
 

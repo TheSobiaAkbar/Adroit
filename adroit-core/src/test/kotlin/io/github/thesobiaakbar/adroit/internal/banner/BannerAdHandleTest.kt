@@ -44,7 +44,7 @@ class BannerAdHandleTest {
         val load = b.views.single().loadCalls.single()
         assertEquals(TestIds.unit(7), load.adUnitId)
         assertEquals(BannerSize.AnchoredAdaptive, load.size)
-        assertEquals(400, load.widthDp)
+        assertEquals("the container less the frame's margins", 400 - 2 * b.margin, load.widthDp)
         assertSame("the SDK view is added at the first load", handle.view, b.views.single().view.parent)
 
         b.readiness.state.value = AdsState.Ready
@@ -61,7 +61,7 @@ class BannerAdHandleTest {
 
         b.layout(0)
         val windowDp = BannerSizeResolver.windowWidthPx(b.activity) / b.activity.resources.displayMetrics.density
-        assertEquals(windowDp.toInt(), b.views.single().loadCalls.single().widthDp)
+        assertEquals(windowDp.toInt() - 2 * b.margin, b.views.single().loadCalls.single().widthDp)
     }
 
     @Test
@@ -74,7 +74,26 @@ class BannerAdHandleTest {
 
         val view = b.views.single()
         assertEquals(150, handle.expectedHeightPx)
-        assertEquals(listOf(150), view.parentMinHeightAtLoad)
+        assertEquals("the ad and its margins", listOf(150 + 2 * b.margin), view.parentMinHeightAtLoad)
+    }
+
+    @Test
+    fun `a failed load gives the reserved height back, and the retry reserves it again`() = runTest {
+        val b = BannerHarness(this)
+        b.ready()
+        val handle = b.create()
+        b.layout(400)
+        val sdkView = b.views.single()
+
+        sdkView.simulateFailedToLoad(AdError.NetworkError())
+        b.run()
+        assertEquals(0, handle.view.minimumHeight)
+        assertEquals(View.GONE, sdkView.view.visibility)
+
+        b.run(15_000)
+        assertEquals("retried", 2, sdkView.loadCalls.size)
+        assertEquals(150 + 2 * b.margin, handle.view.minimumHeight)
+        assertEquals(View.VISIBLE, sdkView.view.visibility)
     }
 
     @Test
@@ -255,7 +274,7 @@ class BannerAdHandleTest {
         b.layout(700) // for example, rotation with the host handling configuration changes
         assertEquals(2, b.views.size)
         assertTrue(b.views.first().destroyed)
-        assertEquals(700, b.views.last().loadCalls.single().widthDp)
+        assertEquals(700 - 2 * b.margin, b.views.last().loadCalls.single().widthDp)
     }
 
     @Test

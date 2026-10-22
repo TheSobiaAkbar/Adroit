@@ -17,6 +17,7 @@ import io.github.thesobiaakbar.adroit.fakes.FakeAppForegroundSource
 import io.github.thesobiaakbar.adroit.fakes.FakeReadiness
 import io.github.thesobiaakbar.adroit.fakes.FakeSdkBannerView
 import io.github.thesobiaakbar.adroit.fakes.TestClock
+import io.github.thesobiaakbar.adroit.internal.AdFrame
 import io.github.thesobiaakbar.adroit.internal.config.EffectiveConfig
 import io.github.thesobiaakbar.adroit.internal.config.LiveConfig
 import io.github.thesobiaakbar.adroit.internal.events.EventBus
@@ -84,6 +85,9 @@ internal class BannerHarness(val scope: TestScope, config: AdMobConfig = bannerC
     )
     val activityController: ActivityController<Activity> = Robolectric.buildActivity(Activity::class.java).setup()
     val activity: Activity get() = activityController.get()
+
+    /** The ad frame's margin (AdFrame) at the test density, where a pixel is a dp: on each side of the ad. */
+    val margin: Int get() = AdFrame.margin(activity)
     val root = FrameLayout(activity).also { activity.setContentView(it) }
 
     /** Where banners go. Its width is set by [layout], and a real layout pass sizes the banner. */

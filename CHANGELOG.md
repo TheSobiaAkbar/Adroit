@@ -54,6 +54,20 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   instead of sharing one per format, so debug builds load, refill and log each native as release will. Placements
   on the same real ad unit still share a pool.
 
+### Added
+- An ad frame around every banner and native ad: a margin on each side (`adroit_ad_margin`, 8dp; override the dimen,
+  `0dp` turns it off), applied to the loading shimmer too. A slot without an ad still takes no space. Banners load at
+  the width the frame leaves them.
+- A close button for banners and native ads (docs/AD_PROFILES.md, "Close button"): `closeButton` (`none`, `top_start`,
+  `top_end`, `bottom_start`, `bottom_end`) and `closeIcon` (a drawable name in the app), per ad or in `AdSettings`,
+  from the code (`AdProfile.banner`/`native`, `AdSettings`) or Firebase. It sits in its own row above or below the ad;
+  a tap emits the new `AdEvent.CloseClicked` and leaves the ad in place. Add a branch for it if you match `AdEvent`
+  exhaustively.
+
+### Fixed
+- A banner whose load failed kept the height reserved for it (`reserveSpace`, the default), leaving an empty gap
+  the size of the ad. A failed load now gives the space back and hides the empty ad view; each retry reserves it again.
+
 ### Fixed
 - `SplashFlow`: when this session's Firebase fetch arrived during the splash timer and swapped the splash ad's format
   (interstitial ↔ app open), the ad requested in the old format was released and none was requested in the new one,

@@ -1,12 +1,15 @@
 package io.github.thesobiaakbar.adroit.compose.internal
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.thesobiaakbar.adroit.AdroitInternal
 import io.github.thesobiaakbar.adroit.InternalAdroitApi
 import io.github.thesobiaakbar.adroit.NativeAdLayout
 import io.github.thesobiaakbar.adroit.NativePlacement
+import io.github.thesobiaakbar.adroit.R as CoreR
 import io.github.thesobiaakbar.adroit.views.AdShimmerView
 import io.github.thesobiaakbar.adroit.views.NativeTemplates
 
@@ -14,15 +17,19 @@ import io.github.thesobiaakbar.adroit.views.NativeTemplates
 @OptIn(InternalAdroitApi::class)
 @Composable
 internal fun BannerShimmer(heightPx: Int, modifier: Modifier = Modifier) {
-    AndroidView(factory = { AdShimmerView(it) }, modifier = modifier, update = { it.showBanner(heightPx) })
+    AndroidView(factory = { AdShimmerView(it) }, modifier = modifier.adFrameMargin(), update = { it.showBanner(heightPx) })
 }
 
 /** The shimmer of a loading native ad shown in [layout], built from the layout's own views. */
 @OptIn(InternalAdroitApi::class)
 @Composable
 internal fun NativeShimmer(layout: NativeAdLayout, modifier: Modifier = Modifier) {
-    AndroidView(factory = { AdShimmerView(it) }, modifier = modifier, update = { it.showLayout(layout) })
+    AndroidView(factory = { AdShimmerView(it) }, modifier = modifier.adFrameMargin(), update = { it.showLayout(layout) })
 }
+
+/** The margin of the ad's frame (`adroit_ad_margin`), so the ad takes the shimmer's place exactly. */
+@Composable
+private fun Modifier.adFrameMargin(): Modifier = padding(dimensionResource(CoreR.dimen.adroit_ad_margin))
 
 /**
  * The layout [placement]'s ads show in now: the app layout registered under the name its ad profile or Firebase

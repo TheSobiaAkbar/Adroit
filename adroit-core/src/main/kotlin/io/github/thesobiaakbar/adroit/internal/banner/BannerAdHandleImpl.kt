@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import io.github.thesobiaakbar.adroit.AdCloseButton
 import io.github.thesobiaakbar.adroit.AdError
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.AdsState
@@ -21,6 +22,7 @@ import io.github.thesobiaakbar.adroit.UnavailableReason
 import io.github.thesobiaakbar.adroit.events.AdEvent
 import io.github.thesobiaakbar.adroit.events.AdRevenue
 import io.github.thesobiaakbar.adroit.events.AdSourceInfo
+import io.github.thesobiaakbar.adroit.internal.AdFrame
 import io.github.thesobiaakbar.adroit.internal.config.EffectiveConfig
 import io.github.thesobiaakbar.adroit.internal.config.EffectivePlacement
 import io.github.thesobiaakbar.adroit.internal.config.LiveConfig
@@ -109,6 +111,7 @@ internal class BannerAdHandleImpl(
     /** Waiting for this placement's banner loading ahead of its view, instead of requesting another. */
     private var waitingForPreload = false
     private var collector: Job? = null
+    private var closeButtonView: View? = null
     private var boundOwner: LifecycleOwner? = null
     private var ownerObserver: LifecycleEventObserver? = null
     private var destroyed = false
@@ -254,11 +257,13 @@ internal class BannerAdHandleImpl(
         waitingForLayout = false
         if (waitingForPreload) return
         val activity = container.context as Activity
+        // The ad is as wide as the frame leaves it (AdFrame): the container's width less a margin each side.
+        val margins = 2 * AdFrame.margin(activity)
         val spec = BannerSizeResolver.resolve(
             size,
-            container.width,
+            (container.width - margins).coerceAtLeast(0),
             container.resources.displayMetrics.density,
-            BannerSizeResolver.windowWidthPx(activity),
+            BannerSizeResolver.windowWidthPx(activity) - margins,
         )
         if (sdkView == null && preloader != null) {
             val token = ++generation
@@ -281,17 +286,9 @@ internal class BannerAdHandleImpl(
         val bannerView = sdkView ?: adsSdk.createBannerView(activity).also { created ->
             sdkView = created
             loadsOnView = 0
-            container.addView(
-                created.view,
-                FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    Gravity.CENTER_HORIZONTAL,
-                ),
-            )
+            container.addView(created.view, framed(container))
         }
         expectedHeightPx = bannerView.expectedHeightPx(spec.size, spec.widthDp)
-        if (options.reserveSpace) container.minimumHeight = expectedHeightPx
         load(bannerView, spec)
     }
 
@@ -304,23 +301,20 @@ internal class BannerAdHandleImpl(
         loadsOnView = 1
         loadedSpec = spec
         adUnitId = fromAdUnitId
-        container.addView(
-            bannerView.view,
-            FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER_HORIZONTAL,
-            ),
-        )
+        container.addView(bannerView.view, framed(container))
         expectedHeightPx = bannerView.expectedHeightPx(spec.size, spec.widthDp)
-        if (options.reserveSpace) container.minimumHeight = expectedHeightPx
+        if (options.reserveSpace) container.minimumHeight = framedHeight(container)
         failedAttempts = 0
         mutableState.value = BannerState.Loaded
+        showCloseButton()
         log.i { "Banner $placementKey $how (${logId()})" }
     }
 
     private fun load(bannerView: SdkBannerView, spec: BannerSizeSpec) {
         loadedSpec = spec
+        // Reserved again for each attempt: a failed one gave the space back (onFailedToLoad).
+        bannerView.view.visibility = View.VISIBLE
+        container?.let { if (options.reserveSpace) it.minimumHeight = framedHeight(it) }
         val loadGeneration = ++generation
         loadStartedAt = clock.elapsedRealtimeMillis()
         if (mutableState.value !is BannerState.Loaded) mutableState.value = BannerState.Loading
@@ -335,6 +329,55 @@ internal class BannerAdHandleImpl(
         bannerView.load(adUnitId, spec.size, spec.widthDp, extras, Listener(loadGeneration))
     }
 
+    /** The close button this banner shows, or null for none: its profile, Firebase or the settings. */
+    private fun closePosition(): AdCloseButton? =
+        config.current.active(placementKey)?.behavior?.closeButton?.takeIf { it != AdCloseButton.NONE }
+
+    /** The SDK view's place in the ad frame (AdFrame): centred, a margin each side, past the close row if any. */
+    private fun framed(container: BannerContainer): FrameLayout.LayoutParams {
+        val margin = AdFrame.margin(container.context)
+        val close = closePosition()
+        val row = if (close != null) AdFrame.closeRow(container.context) else 0
+        return FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.CENTER_HORIZONTAL,
+        ).apply {
+            setMargins(margin, margin + if (close?.isTop == true) row else 0, margin, margin + if (close?.isTop == false) row else 0)
+        }
+    }
+
+    /** The space the framed ad takes: the ad, its margins and its close row. */
+    private fun framedHeight(container: BannerContainer): Int {
+        val row = if (closePosition() != null) AdFrame.closeRow(container.context) else 0
+        return expectedHeightPx + 2 * AdFrame.margin(container.context) + row
+    }
+
+    /** Puts the close button over the frame's close row once an ad shows, if the banner has one. */
+    private fun showCloseButton() {
+        val container = container ?: return
+        if (closeButtonView != null) return
+        val close = closePosition() ?: return
+        val icon = config.current.active(placementKey)?.behavior?.closeIcon
+        val button = AdFrame.closeButton(container.context, close, icon, log, ::onCloseClicked)
+        val margin = AdFrame.margin(container.context)
+        (button.layoutParams as FrameLayout.LayoutParams).setMargins(margin, margin, margin, margin)
+        container.addView(button)
+        closeButtonView = button
+    }
+
+    private fun removeCloseButton() {
+        closeButtonView?.let { (it.parent as? ViewGroup)?.removeView(it) }
+        closeButtonView = null
+    }
+
+    /** The user tapped the close button: `AdEvent.CloseClicked`, for the app to act on. The banner stays. */
+    private fun onCloseClicked() {
+        if (destroyed) return
+        emit(AdEvent.CloseClicked(placementKey, AdFormat.BANNER, adUnitId, now()))
+        log.d { "Banner $placementKey: close button tapped" }
+    }
+
     /** Destroys the SDK view, if any, and stops retrying. The container and handle stay usable. */
     private fun tearDownAd() {
         generation++
@@ -347,6 +390,7 @@ internal class BannerAdHandleImpl(
         parked?.destroy()
         parked = null
         parkedSpec = null
+        removeCloseButton()
         val bannerView = sdkView ?: return
         sdkView = null
         container?.removeView(bannerView.view)
@@ -365,6 +409,7 @@ internal class BannerAdHandleImpl(
             retryPending = false
             lastSource = source
             mutableState.value = BannerState.Loaded
+            showCloseButton()
             val latency = if (isRefresh) 0L else clock.elapsedRealtimeMillis() - loadStartedAt
             emit(AdEvent.Loaded(placementKey, AdFormat.BANNER, adUnitId, now(), latency, source))
             log.i { "Banner $placementKey ${if (isRefresh) "refreshed" else "loaded in $latency ms"} (${logId()})" }
@@ -380,6 +425,11 @@ internal class BannerAdHandleImpl(
             }
             val attempt = ++failedAttempts
             lastError = error
+            // No ad to make room for: the slot takes no space until the next attempt, even if the SDK's empty
+            // view would keep its ad size.
+            container?.minimumHeight = 0
+            sdkView?.view?.visibility = View.GONE
+            removeCloseButton()
             mutableState.value = BannerState.Failed(error)
             val willRetry = retryable && attempt <= retryPolicy.maxAttempts
             if (willRetry) scheduleRetry(error)
@@ -439,7 +489,10 @@ internal class BannerAdHandleImpl(
     /** A width change (layout or configuration change): an adaptive banner reloads when it moved by 8 dp or more. */
     internal fun onWidthChanged(widthPx: Int) {
         val spec = loadedSpec ?: return
-        val newWidthDp = (widthPx / (container ?: return).resources.displayMetrics.density).toInt()
+        val container = container ?: return
+        // The ad's width inside the frame's margins (AdFrame), as it was loaded.
+        val adWidthPx = widthPx - 2 * AdFrame.margin(container.context)
+        val newWidthDp = (adWidthPx / container.resources.displayMetrics.density).toInt()
         if (!BannerSizeResolver.needsReload(spec, newWidthDp)) return
         log.d { "Banner $placementKey: width ${spec.widthDp} → $newWidthDp dp; reloading" }
         // Not during the layout pass that reported it.

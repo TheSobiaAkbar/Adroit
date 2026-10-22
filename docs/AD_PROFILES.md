@@ -187,6 +187,8 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | native | `ctaColors` | One color, or two for a left-to-right gradient: the call-to-action's background, `["#FF6D00", "#FFC107"]` |
 | native | `ctaTextColor`, `attributionColor`, `attributionTextColor` | The button's text, and the "Ad" badge's background and text: `"#RRGGBB"` or `"#AARRGGBB"` ([Native](NATIVE.md#colors-from-firebase)) |
 | native | `poolSize` | File only. Ads kept loaded, 1 to 3 (default 1) |
+| banner, native | `closeButton` | `none`, `top_start`, `top_end`, `bottom_start` or `bottom_end`: whether the ad shows a [close button](#close-button), and where. Unset: from `AdSettings` (`none`) |
+| banner, native | `closeIcon` | The name of a drawable in your app for the close button, `"ic_close_red"`. Unset: from `AdSettings`, else the library's red cross |
 
 ### Settings
 
@@ -203,6 +205,7 @@ Replace the placeholder IDs with your real ad unit IDs, or leave `adUnitIds` out
 | `showLoading` | true/false | `true` | The loading screen and shimmer of every ad that doesn't set its own |
 | `loadingSeconds` | number | `1` | The loading screen's minimum time for every full-screen ad that doesn't set its own |
 | `ctaColors`, `ctaTextColor`, `attributionColor`, `attributionTextColor` | colors | the app's resources | The button and "Ad" badge colors of every native ad that doesn't set its own ([Native](NATIVE.md#colors-from-firebase)) |
+| `closeButton`, `closeIcon` | text | `none`, the library's icon | The [close button](#close-button) of every banner and native ad that doesn't set its own |
 
 Unknown fields are ignored, so an older app version accepts newer JSON.
 
@@ -476,6 +479,48 @@ fun TypedAds() {
 Without a `adroit_bannerSize` or `adroit_template` attribute, or a size or layout in code, they also
 take the style from the profile. A new style applies to banners and native ads created after the new values arrive;
 one already on screen keeps its style.
+
+## Ad frame and close button
+
+Every banner and native ad is drawn in a frame: a margin on each side, `adroit_ad_margin` (8dp). The margin goes with
+the ad: a slot whose ad didn't load takes no space, and the loading shimmer sits inside the same margin, so the ad
+takes its place exactly. Override the dimen in your app to change it for every ad; `0dp` turns it off.
+
+```xml
+<!-- res/values/dimens.xml -->
+<dimen name="adroit_ad_margin">12dp</dimen>
+```
+
+### Close button
+
+A banner or native ad can show a close button: `closeButton` says whether and where, `closeIcon` which drawable, per
+ad or for every ad in `AdSettings`, from the code or from Firebase. Firebase can move it or turn it off without a
+release:
+
+```json
+{ "format": "native", "closeButton": "top_end", "closeIcon": "ic_close_red" }
+```
+
+```kotlin
+HomeNative(AdProfile.native(closeButton = AdCloseButton.TOP_END, closeIcon = "ic_close_red")),
+```
+
+- The button sits in a row of its own above (`top_*`) or below (`bottom_*`) the ad, at its start or end, inside the
+  frame. It never covers the ad's content or its AdChoices icon. Its size is `adroit_ad_close_size` (28dp), and
+  TalkBack reads `adroit_ad_close` ("Close ad"); override either in your app.
+- `closeIcon` names a drawable in your app (`res/drawable/ic_close_red.xml` is `"ic_close_red"`). A name that isn't one
+  is logged, and the library's red cross shows.
+- A tap changes nothing in the slot: it emits `AdEvent.CloseClicked` with the ad's key, and your app decides what
+  follows (hide the slot, open your remove-ads screen…). A banner's button shows once its ad has loaded.
+
+```kotlin
+Adroit.events.filterIsInstance<AdEvent.CloseClicked>().collect { event ->
+    if (event.placementKey == AppAds.HomeNative.name) openRemoveAds()
+}
+```
+
+Google's policies apply to whatever the tap does: a button that looks like a close button and doesn't close anything,
+or that opens something the user didn't expect, can count as misleading. Keep what follows a tap clear to the user.
 
 ## Swapping formats
 

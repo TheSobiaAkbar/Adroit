@@ -1,5 +1,6 @@
 package io.github.thesobiaakbar.adroit.internal.native
 
+import android.view.View
 import android.view.ViewGroup
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.NativeAdAssets
@@ -36,6 +37,9 @@ internal class NativeAdHandleImpl(
 ) : NativeAdHandle {
     private val mutableState = MutableStateFlow<NativeAdHandleState>(NativeAdHandleState.Active)
     private var boundView: ViewGroup? = null
+
+    /** What was added to the host's container: [boundView] in its frame (AdFrame). */
+    private var boundRoot: View? = null
     private var releaseBoundView: ((ViewGroup) -> Unit)? = null
 
     override val assets: NativeAdAssets get() = ad.assets
@@ -58,20 +62,29 @@ internal class NativeAdHandleImpl(
     }
 
     /** Records the view the ad is now rendered into, detaching it from the previous one first. */
-    fun attachView(adView: ViewGroup, release: (ViewGroup) -> Unit) {
+    fun attachView(adView: ViewGroup, release: (ViewGroup) -> Unit, root: View = adView) {
         detachView()
         boundView = adView
+        boundRoot = root
         releaseBoundView = release
     }
 
-    /** Removes the rendered view from its parent and releases it. */
+    /** Removes the rendered view (with its frame) from its parent and releases it. */
     fun detachView() {
         val view = boundView ?: return
+        val root = boundRoot ?: view
         val release = releaseBoundView
         boundView = null
+        boundRoot = null
         releaseBoundView = null
-        (view.parent as? ViewGroup)?.removeView(view)
+        (root.parent as? ViewGroup)?.removeView(root)
         release?.invoke(view)
+    }
+
+    /** The user tapped the ad's close button: `AdEvent.CloseClicked`, for the app to act on. The ad stays. */
+    fun onCloseClicked() {
+        emit { AdEvent.CloseClicked(placement.key, AdFormat.NATIVE, adUnitId, it) }
+        log.d { "Native ad ${placement.key}: close button tapped" }
     }
 
     override fun destroy() {

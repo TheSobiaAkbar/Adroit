@@ -167,6 +167,19 @@ public sealed interface AdEvent {
         override fun toString(): String = describe("Expired")
     }
 
+    /**
+     * The user tapped a banner's or native ad's close button ([io.github.thesobiaakbar.adroit.AdCloseButton]). The ad
+     * stays where it is: the app decides what follows, for example hiding the slot or offering to remove ads.
+     */
+    public class CloseClicked(
+        override val placementKey: String,
+        override val format: AdFormat,
+        override val adUnitId: String,
+        override val timestampMillis: Long,
+    ) : PlacementEvent {
+        override fun toString(): String = describe("CloseClicked")
+    }
+
     /** A banner or native ad was destroyed and its resources released. */
     public class Destroyed(
         override val placementKey: String,

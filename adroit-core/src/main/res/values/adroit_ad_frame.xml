@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The frame around every banner and native ad. An app overrides any of these with a resource of the same name.
+        A margin of 0dp turns the frame off.
+    -->
+
+    <!-- Space on every side of a banner or native ad. It goes with the ad: a slot without an ad takes no space. -->
+    <dimen name="adroit_ad_margin">8dp</dimen>
+
+    <!-- The close button's square, and the row it sits in above or below the ad. -->
+    <dimen name="adroit_ad_close_size">28dp</dimen>
+
+    <!-- What TalkBack says for the close button. -->
+    <string name="adroit_ad_close">Close ad</string>
+</resources>

@@ -40,6 +40,17 @@ public final class io/github/thesobiaakbar/adroit/AdAvailability$Unavailable : i
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/thesobiaakbar/adroit/AdCloseButton : java/lang/Enum {
+	public static final field BOTTOM_END Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public static final field BOTTOM_START Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public static final field NONE Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public static final field TOP_END Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public static final field TOP_START Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public static fun values ()[Lio/github/thesobiaakbar/adroit/AdCloseButton;
+}
+
 public abstract interface class io/github/thesobiaakbar/adroit/AdError {
 	public abstract fun getCode ()Ljava/lang/String;
 	public abstract fun getMessage ()Ljava/lang/String;
@@ -1071,6 +1082,8 @@ public abstract class io/github/thesobiaakbar/adroit/config/AdProfile {
 	public static final fun banner (Ljava/util/List;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
 	public static final fun banner (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
 	public static final fun banner (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;Ljava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
+	public static final fun banner (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;Ljava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
+	public static final fun banner (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;Ljava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
 	public fun equals (Ljava/lang/Object;)Z
 	public abstract fun getAdUnitIds ()Ljava/util/List;
 	public abstract fun getEnabled ()Z
@@ -1104,12 +1117,16 @@ public abstract class io/github/thesobiaakbar/adroit/config/AdProfile {
 	public static final fun native (Ljava/lang/String;Ljava/util/List;ZI)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/lang/String;Ljava/util/List;ZIZ)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public static final fun native (Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public static final fun native (Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;I)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZ)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZLjava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public static final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public static final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public static final fun rewarded ()Lio/github/thesobiaakbar/adroit/config/AdProfile$Rewarded;
 	public static final fun rewarded (Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Rewarded;
 	public static final fun rewarded (Ljava/util/List;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Rewarded;
@@ -1152,6 +1169,8 @@ public final class io/github/thesobiaakbar/adroit/config/AdProfile$AppOpen : io/
 
 public final class io/github/thesobiaakbar/adroit/config/AdProfile$Banner : io/github/thesobiaakbar/adroit/config/AdProfile {
 	public fun getAdUnitIds ()Ljava/util/List;
+	public final fun getCloseButton ()Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public final fun getCloseIcon ()Ljava/lang/String;
 	public fun getEnabled ()Z
 	public fun getFormat ()Lio/github/thesobiaakbar/adroit/AdFormat;
 	public fun getShowLoading ()Ljava/lang/Boolean;
@@ -1175,7 +1194,9 @@ public final class io/github/thesobiaakbar/adroit/config/AdProfile$Companion {
 	public final fun banner (Ljava/util/List;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
 	public final fun banner (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
 	public final fun banner (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;Ljava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
-	public static synthetic fun banner$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
+	public final fun banner (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;Ljava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
+	public final fun banner (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;Ljava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
+	public static synthetic fun banner$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/util/List;ZLio/github/thesobiaakbar/adroit/BannerSize;Ljava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Banner;
 	public final fun interstitial ()Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
 	public final fun interstitial (Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
 	public final fun interstitial (Ljava/util/List;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Interstitial;
@@ -1201,14 +1222,18 @@ public final class io/github/thesobiaakbar/adroit/config/AdProfile$Companion {
 	public final fun native (Ljava/lang/String;Ljava/util/List;ZI)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/lang/String;Ljava/util/List;ZIZ)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public final fun native (Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public final fun native (Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;I)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZ)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZLjava/lang/Boolean;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
-	public static synthetic fun native$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
-	public static synthetic fun native$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZLjava/lang/Boolean;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public final fun native (Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public static synthetic fun native$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/lang/String;Ljava/util/List;ZIZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
+	public static synthetic fun native$default (Lio/github/thesobiaakbar/adroit/config/AdProfile$Companion;Ljava/util/List;ZLio/github/thesobiaakbar/adroit/NativeStyle;IZLjava/lang/Boolean;Lio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;ILjava/lang/Object;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Native;
 	public final fun rewarded ()Lio/github/thesobiaakbar/adroit/config/AdProfile$Rewarded;
 	public final fun rewarded (Ljava/util/List;)Lio/github/thesobiaakbar/adroit/config/AdProfile$Rewarded;
 	public final fun rewarded (Ljava/util/List;Z)Lio/github/thesobiaakbar/adroit/config/AdProfile$Rewarded;
@@ -1258,6 +1283,8 @@ public final class io/github/thesobiaakbar/adroit/config/AdProfile$Interstitial 
 
 public final class io/github/thesobiaakbar/adroit/config/AdProfile$Native : io/github/thesobiaakbar/adroit/config/AdProfile {
 	public fun getAdUnitIds ()Ljava/util/List;
+	public final fun getCloseButton ()Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public final fun getCloseIcon ()Ljava/lang/String;
 	public fun getEnabled ()Z
 	public fun getFormat ()Lio/github/thesobiaakbar/adroit/AdFormat;
 	public final fun getLayoutName ()Ljava/lang/String;
@@ -1308,9 +1335,13 @@ public final class io/github/thesobiaakbar/adroit/config/AdSettings {
 	public fun <init> (ZIIIIIII)V
 	public fun <init> (ZIIIIIIIZ)V
 	public fun <init> (ZIIIIIIIZI)V
-	public synthetic fun <init> (ZIIIIIIIZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZIIIIIIIZILio/github/thesobiaakbar/adroit/AdCloseButton;)V
+	public fun <init> (ZIIIIIIIZILio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;)V
+	public synthetic fun <init> (ZIIIIIIIZILio/github/thesobiaakbar/adroit/AdCloseButton;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdsEnabled ()Z
+	public final fun getCloseButton ()Lio/github/thesobiaakbar/adroit/AdCloseButton;
+	public final fun getCloseIcon ()Ljava/lang/String;
 	public final fun getConsentTimeoutSeconds ()I
 	public final fun getLoadTimeoutSeconds ()I
 	public final fun getLoadingSeconds ()I
@@ -1724,6 +1755,15 @@ public abstract interface class io/github/thesobiaakbar/adroit/events/AdEvent {
 }
 
 public final class io/github/thesobiaakbar/adroit/events/AdEvent$Clicked : io/github/thesobiaakbar/adroit/events/AdEvent$PlacementEvent {
+	public fun <init> (Ljava/lang/String;Lio/github/thesobiaakbar/adroit/AdFormat;Ljava/lang/String;J)V
+	public fun getAdUnitId ()Ljava/lang/String;
+	public fun getFormat ()Lio/github/thesobiaakbar/adroit/AdFormat;
+	public fun getPlacementKey ()Ljava/lang/String;
+	public fun getTimestampMillis ()J
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/thesobiaakbar/adroit/events/AdEvent$CloseClicked : io/github/thesobiaakbar/adroit/events/AdEvent$PlacementEvent {
 	public fun <init> (Ljava/lang/String;Lio/github/thesobiaakbar/adroit/AdFormat;Ljava/lang/String;J)V
 	public fun getAdUnitId ()Ljava/lang/String;
 	public fun getFormat ()Lio/github/thesobiaakbar/adroit/AdFormat;

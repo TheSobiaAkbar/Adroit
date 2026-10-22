@@ -1,5 +1,6 @@
 package io.github.thesobiaakbar.adroit.internal.config
 
+import io.github.thesobiaakbar.adroit.AdCloseButton
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -16,6 +17,8 @@ import kotlin.time.Duration.Companion.seconds
  * @property ctaTextColor a native ad's call-to-action text color.
  * @property attributionColor a native ad's "Ad" badge background.
  * @property attributionTextColor a native ad's "Ad" badge text color.
+ * @property closeButton where a banner or native ad shows its close button; [AdCloseButton.NONE] for none.
+ * @property closeIcon the name of a drawable in the app for the close button; null keeps the library's.
  */
 internal data class AdBehavior(
     val loadTimeout: Duration? = null,
@@ -25,6 +28,8 @@ internal data class AdBehavior(
     val ctaTextColor: Int? = null,
     val attributionColor: Int? = null,
     val attributionTextColor: Int? = null,
+    val closeButton: AdCloseButton? = null,
+    val closeIcon: String? = null,
 ) {
     /** This, with each unset field taken from [fallback]. */
     fun orElse(fallback: AdBehavior?): AdBehavior = if (fallback == null) this else AdBehavior(
@@ -35,6 +40,8 @@ internal data class AdBehavior(
         ctaTextColor ?: fallback.ctaTextColor,
         attributionColor ?: fallback.attributionColor,
         attributionTextColor ?: fallback.attributionTextColor,
+        closeButton ?: fallback.closeButton,
+        closeIcon ?: fallback.closeIcon,
     )
 
     /** Null when nothing is set, so an empty JSON value changes nothing. */
@@ -48,6 +55,11 @@ internal data class AdBehavior(
         const val DEFAULT_LOAD_TIMEOUT_SECONDS: Int = 8
         const val DEFAULT_LOADING_SECONDS: Int = 1
 
-        val DEFAULTS: AdBehavior = AdBehavior(DEFAULT_LOAD_TIMEOUT_SECONDS.seconds, true, DEFAULT_LOADING_SECONDS.seconds)
+        val DEFAULTS: AdBehavior = AdBehavior(
+            DEFAULT_LOAD_TIMEOUT_SECONDS.seconds,
+            true,
+            DEFAULT_LOADING_SECONDS.seconds,
+            closeButton = AdCloseButton.NONE,
+        )
     }
 }

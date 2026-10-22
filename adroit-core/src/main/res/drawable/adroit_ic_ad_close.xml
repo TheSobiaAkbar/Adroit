@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The library's close button: a white cross on a red rounded square. An app replaces it per ad with "closeIcon". -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#E53935"
+        android:pathData="M5,1h14a4,4 0,0 1,4 4v14a4,4 0,0 1,-4 4h-14a4,4 0,0 1,-4 -4v-14a4,4 0,0 1,4 -4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16.6,6L18,7.4L13.4,12L18,16.6L16.6,18L12,13.4L7.4,18L6,16.6L10.6,12L6,7.4L7.4,6L12,10.6Z" />
+</vector>

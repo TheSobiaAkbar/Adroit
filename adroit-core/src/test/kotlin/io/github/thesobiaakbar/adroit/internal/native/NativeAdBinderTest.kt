@@ -3,14 +3,22 @@ package io.github.thesobiaakbar.adroit.internal.native
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
+import io.github.thesobiaakbar.adroit.AdCloseButton
 import io.github.thesobiaakbar.adroit.NativeAdAssets
+import io.github.thesobiaakbar.adroit.NativeAdHandleState
 import io.github.thesobiaakbar.adroit.NativeAdLayout
+import io.github.thesobiaakbar.adroit.events.AdEvent
 import io.github.thesobiaakbar.adroit.fakes.FakeLoadedNativeAd
 import io.github.thesobiaakbar.adroit.fakes.FakeNativeRenderPort
+import io.github.thesobiaakbar.adroit.internal.AdFrame
 import io.github.thesobiaakbar.adroit.internal.config.AdBehavior
 import io.github.thesobiaakbar.adroit.internal.google.NextGenNativeAdBinder
 import io.github.thesobiaakbar.adroit.internal.logging.AdLog
@@ -47,12 +55,45 @@ class NativeAdBinderTest {
         }
 
     @Test
+    fun `the ad sits in a frame with the margin on every side, and no close button by default`() = runTest {
+        val (n, handle) = handle()
+        val container = n.container()
+        val root = n.api.render(handle, container, FULL_LAYOUT)
+
+        val frame = container.getChildAt(0) as ViewGroup
+        val margin = AdFrame.margin(container.context)
+        assertEquals(listOf(margin, margin, margin, margin), listOf(frame.paddingLeft, frame.paddingTop, frame.paddingRight, frame.paddingBottom))
+        assertEquals("the ad alone", listOf(root), (0 until frame.childCount).map(frame::getChildAt))
+    }
+
+    @Test
+    fun `a close button sits in its own row outside the ad, and a tap is only reported`() = runTest {
+        val (n, handle) = handle()
+        n.look = AdBehavior(closeButton = AdCloseButton.BOTTOM_START)
+        val container = n.container()
+        val root = n.api.render(handle, container, FULL_LAYOUT)
+
+        val frame = container.getChildAt(0) as ViewGroup
+        val close = frame.getChildAt(1) as ImageButton
+        val row = AdFrame.closeRow(container.context)
+        assertEquals("the ad leaves the row below it", row, (root.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin)
+        assertEquals(Gravity.BOTTOM or Gravity.START, (close.layoutParams as FrameLayout.LayoutParams).gravity)
+        assertEquals("Close ad", close.contentDescription)
+
+        close.performClick()
+        n.run()
+        assertEquals(listOf("CloseClicked"), n.events.recent().filterIsInstance<AdEvent.CloseClicked>().map { "CloseClicked" })
+        assertEquals("the ad stays", NativeAdHandleState.Active, handle.state.value)
+        assertSame(frame, container.getChildAt(0))
+    }
+
+    @Test
     fun `binds every asset view, adds the media view, registers, then replaces the container's children`() = runTest {
         val (n, handle) = handle()
         val container = n.container().apply { addView(View(context)) }
         val root = n.api.render(handle, container, FULL_LAYOUT)
 
-        assertSame(root, container.getChildAt(0))
+        assertSame("in its frame", root, (container.getChildAt(0) as ViewGroup).getChildAt(0))
         assertEquals(1, container.childCount)
         assertTrue(root is FakeNativeRenderPort.FakeAdView)
         assertEquals("Test headline", root.findViewById<TextView>(R.id.adroit_test_headline).text)

@@ -1,5 +1,6 @@
 package io.github.thesobiaakbar.adroit.config
 
+import io.github.thesobiaakbar.adroit.AdCloseButton
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.AppOpenPlacement
 import io.github.thesobiaakbar.adroit.BannerPlacement
@@ -200,12 +201,16 @@ public sealed class AdProfile {
      *
      * @property style the banner size. An [BannerSize.InlineAdaptive] is written as `inline_adaptive`, whose maximum
      *   height is always 250 dp.
+     * @property closeButton where the banner shows its close button; null follows [AdSettings.closeButton].
+     * @property closeIcon the name of a drawable in the app for the close button; null follows [AdSettings.closeIcon].
      */
     public class Banner internal constructor(
         override val adUnitIds: List<String>,
         override val enabled: Boolean,
         public val style: BannerSize,
         override val showLoading: Boolean?,
+        public val closeButton: AdCloseButton? = null,
+        public val closeIcon: String? = null,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.BANNER
     }
@@ -218,6 +223,8 @@ public sealed class AdProfile {
      *   instead of [style]; null for a library template. An unregistered name shows the [style] template.
      * @property poolSize ads kept loaded, 1 to 3.
      * @property loadAgain see [AdProfile.loadAgain]; for a native ad, "shown" means handed to a view.
+     * @property closeButton where the ad shows its close button; null follows [AdSettings.closeButton].
+     * @property closeIcon the name of a drawable in the app for the close button; null follows [AdSettings.closeIcon].
      */
     public class Native internal constructor(
         override val adUnitIds: List<String>,
@@ -227,6 +234,8 @@ public sealed class AdProfile {
         override val loadAgain: Boolean,
         override val showLoading: Boolean?,
         public val layoutName: String? = null,
+        public val closeButton: AdCloseButton? = null,
+        public val closeIcon: String? = null,
     ) : AdProfile() {
         override val format: AdFormat get() = AdFormat.NATIVE
     }
@@ -337,7 +346,9 @@ public sealed class AdProfile {
             enabled: Boolean = true,
             style: BannerSize = BannerSize.AnchoredAdaptive,
             showLoading: Boolean? = null,
-        ): Banner = Banner(ids.toList(), enabled, style, showLoading)
+            closeButton: AdCloseButton? = null,
+            closeIcon: String? = null,
+        ): Banner = Banner(ids.toList(), enabled, style, showLoading, closeButton, closeIcon)
 
         /** A native profile; see [Native]. */
         @JvmStatic
@@ -349,7 +360,12 @@ public sealed class AdProfile {
             poolSize: Int = 1,
             loadAgain: Boolean = false,
             showLoading: Boolean? = null,
-        ): Native = Native(ids.toList(), enabled, style, poolSize, loadAgain, showLoading)
+            closeButton: AdCloseButton? = null,
+            closeIcon: String? = null,
+        ): Native = Native(
+            ids.toList(), enabled, style, poolSize, loadAgain, showLoading,
+            closeButton = closeButton, closeIcon = closeIcon,
+        )
 
         /**
          * A native profile shown in the app's own layout, registered under [layout] with `NativeTemplates.register`
@@ -365,9 +381,11 @@ public sealed class AdProfile {
             poolSize: Int = 1,
             loadAgain: Boolean = false,
             showLoading: Boolean? = null,
+            closeButton: AdCloseButton? = null,
+            closeIcon: String? = null,
         ): Native = Native(
             ids.toList(), enabled, NativeStyle.DEFAULT, poolSize, loadAgain, showLoading,
-            layoutName = NativeLayoutNames.normalize(layout),
+            layoutName = NativeLayoutNames.normalize(layout), closeButton = closeButton, closeIcon = closeIcon,
         )
     }
 }
@@ -386,6 +404,10 @@ public sealed class AdProfile {
  * @property showLoading a loading screen before full-screen ads and a shimmer while banners and native ads load; each
  *   ad can set its own.
  * @property loadingSeconds how long the loading screen stays up at least; each ad can set its own.
+ * @property closeButton where banners and native ads show a close button ([AdCloseButton.NONE]: none); each ad can set
+ *   its own.
+ * @property closeIcon the name of a drawable in the app for the close button, null for the library's; each ad can set
+ *   its own.
  */
 public class AdSettings @JvmOverloads constructor(
     public val adsEnabled: Boolean = true,
@@ -398,6 +420,8 @@ public class AdSettings @JvmOverloads constructor(
     public val loadTimeoutSeconds: Int = AdBehavior.DEFAULT_LOAD_TIMEOUT_SECONDS,
     public val showLoading: Boolean = true,
     public val loadingSeconds: Int = AdBehavior.DEFAULT_LOADING_SECONDS,
+    public val closeButton: AdCloseButton = AdCloseButton.NONE,
+    public val closeIcon: String? = null,
 ) {
     override fun equals(other: Any?): Boolean = other is AdSettings && other.toJson() == toJson()
 

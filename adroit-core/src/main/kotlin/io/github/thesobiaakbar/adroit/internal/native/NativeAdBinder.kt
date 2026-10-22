@@ -10,9 +10,11 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
+import io.github.thesobiaakbar.adroit.AdCloseButton
 import io.github.thesobiaakbar.adroit.NativeAdAssets
 import io.github.thesobiaakbar.adroit.NativeAdLayout
 import io.github.thesobiaakbar.adroit.NativeAdRenderer
+import io.github.thesobiaakbar.adroit.internal.AdFrame
 import io.github.thesobiaakbar.adroit.internal.config.AdBehavior
 import io.github.thesobiaakbar.adroit.internal.logging.AdLog
 import io.github.thesobiaakbar.adroit.internal.port.NativeAssetViews
@@ -68,13 +70,37 @@ internal class NativeAdBinder(
             }
         }
         port.register(adView, handle.ad, views, mediaView)
-        behaviorOf(handle.placement.key)?.takeIf { it.setsNativeColors }?.let { applyColors(adView, layout, it) }
+        val look = behaviorOf(handle.placement.key)
+        look?.takeIf { it.setsNativeColors }?.let { applyColors(adView, layout, it) }
         renderer?.onBind(adView, assets)
 
+        val frame = frame(adView, look, handle)
         container.removeAllViews()
-        container.addView(adView)
-        handle.attachView(adView, port::release)
+        container.addView(frame)
+        handle.attachView(adView, port::release, root = frame)
         return adView
+    }
+
+    /**
+     * [adView] in the ad frame (AdFrame): the margin on every side and, when [look] has one, the close button in a row
+     * above or below the ad, never over it.
+     */
+    private fun frame(adView: ViewGroup, look: AdBehavior?, handle: NativeAdHandleImpl): FrameLayout {
+        val context = adView.context
+        val margin = AdFrame.margin(context)
+        val close = look?.closeButton?.takeIf { it != AdCloseButton.NONE }
+        val row = if (close != null) AdFrame.closeRow(context) else 0
+        return FrameLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            setPadding(margin, margin, margin, margin)
+            addView(
+                adView,
+                FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                    if (close?.isTop == true) topMargin = row else bottomMargin = row
+                },
+            )
+            if (close != null) addView(AdFrame.closeButton(context, close, look.closeIcon, log, handle::onCloseClicked))
+        }
     }
 
     private fun optional(adView: ViewGroup, layout: NativeAdLayout, id: Int): View? {

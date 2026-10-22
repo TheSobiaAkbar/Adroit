@@ -1,6 +1,7 @@
 package io.github.thesobiaakbar.adroit.internal.config
 
 import android.graphics.Color
+import io.github.thesobiaakbar.adroit.AdCloseButton
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.AppOpenPlacement
 import io.github.thesobiaakbar.adroit.BannerPlacement
@@ -219,8 +220,8 @@ internal object AdProfiles {
     /**
      * The loading and look fields of an ad of [format], or of the settings (null format): `loadTimeoutSeconds` and
      * `loadingSeconds` apply to full-screen ads only, `showLoading` to every ad, and the colors (`ctaColors`,
-     * `ctaTextColor`, `attributionColor`, `attributionTextColor`) to native ads, and to a banner that becomes one.
-     * Null when none is set.
+     * `ctaTextColor`, `attributionColor`, `attributionTextColor`) to native ads, and to a banner that becomes one. The
+     * close button (`closeButton`, `closeIcon`) applies to banners and native ads. Null when none is set.
      */
     private fun behaviorOf(json: JSONObject, format: AdFormat?, issue: (String) -> Unit): AdBehavior? {
         val fields = Fields(json, issue)
@@ -233,6 +234,7 @@ internal object AdProfiles {
         val colored = format == null || inline
         if (!colored) {
             for (name in COLOR_FIELDS) if (json.has(name)) issue("\"$name\" applies to native ads only; ignored")
+            for (name in CLOSE_FIELDS) if (json.has(name)) issue("\"$name\" applies to banners and native ads only; ignored")
         }
         return AdBehavior(
             loadTimeout = if (inline) null else fields.count("loadTimeoutSeconds")?.seconds,
@@ -242,6 +244,8 @@ internal object AdProfiles {
             ctaTextColor = if (colored) fields.color("ctaTextColor") else null,
             attributionColor = if (colored) fields.color("attributionColor") else null,
             attributionTextColor = if (colored) fields.color("attributionTextColor") else null,
+            closeButton = if (colored) fields.closeButton("closeButton") else null,
+            closeIcon = if (colored) fields.string("closeIcon")?.trim()?.takeIf { it.isNotEmpty() } else null,
         ).takeIfSet()
     }
 
@@ -319,6 +323,7 @@ internal object AdProfiles {
     private val KEY_PATTERN = Regex("[A-Za-z0-9_]{1,40}")
     private val COLOR_PATTERN = Regex("#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})")
     private val COLOR_FIELDS = listOf("ctaColors", "ctaTextColor", "attributionColor", "attributionTextColor")
+    private val CLOSE_FIELDS = listOf("closeButton", "closeIcon")
 
     /** Typed reads of one JSON object; a wrong type is reported through [issue] and read as absent. */
     private class Fields(private val json: JSONObject, private val issue: (String) -> Unit) {
@@ -378,6 +383,13 @@ internal object AdProfiles {
                     ?: null.also { issue("\"$name\" item ${i + 1} isn't text; ignored") }
             }
             else -> wrong(name, "a list of strings")
+        }
+
+        /** A close button position: `"none"`, `"top_start"`, `"top_end"`, `"bottom_start"` or `"bottom_end"`. */
+        fun closeButton(name: String): AdCloseButton? {
+            val text = string(name) ?: return null
+            return AdCloseButton.entries.firstOrNull { it.name.equals(text.trim(), ignoreCase = true) }
+                ?: wrong(name, "\"none\", \"top_start\", \"top_end\", \"bottom_start\" or \"bottom_end\"")
         }
 
         /** A color: `"#RRGGBB"` or `"#AARRGGBB"`. */

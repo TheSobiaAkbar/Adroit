@@ -1,6 +1,7 @@
 package io.github.thesobiaakbar.adroit.internal.native
 
 import android.app.Activity
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import io.github.thesobiaakbar.adroit.AdFormat
 import io.github.thesobiaakbar.adroit.NativeAdHandleState
@@ -63,7 +64,7 @@ class NativeAdHandleImplTest {
         val secondView = n.api.render(handle, second, FULL_LAYOUT)
 
         assertEquals(0, first.childCount)
-        assertSame(secondView, second.getChildAt(0))
+        assertSame(secondView, (second.getChildAt(0) as ViewGroup).getChildAt(0))
         assertEquals(listOf(firstView), n.port.released)
         assertEquals(2, n.port.registrations.size)
         assertEquals(0, (handle.ad as FakeLoadedNativeAd).destroyCount)

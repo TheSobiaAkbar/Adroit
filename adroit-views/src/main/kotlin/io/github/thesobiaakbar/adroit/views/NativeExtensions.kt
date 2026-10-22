@@ -1,6 +1,5 @@
 package io.github.thesobiaakbar.adroit.views
 
-import io.github.thesobiaakbar.adroit.InternalAdroitApi
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
@@ -8,12 +7,14 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import io.github.thesobiaakbar.adroit.AdError
+import io.github.thesobiaakbar.adroit.InternalAdroitApi
 import io.github.thesobiaakbar.adroit.NativeAdHandle
 import io.github.thesobiaakbar.adroit.NativeAdHandleState
 import io.github.thesobiaakbar.adroit.NativeAdLayout
 import io.github.thesobiaakbar.adroit.NativeAdRenderer
 import io.github.thesobiaakbar.adroit.NativeAdResult
 import io.github.thesobiaakbar.adroit.NativePlacement
+import io.github.thesobiaakbar.adroit.R as CoreR
 import io.github.thesobiaakbar.adroit.views.internal.ViewAdRetainer
 import io.github.thesobiaakbar.adroit.views.internal.ViewsRuntime
 import kotlinx.coroutines.launch
@@ -102,9 +103,13 @@ private class AttachedNative(val placement: NativePlacement) {
 internal fun showNativeShimmer(container: ViewGroup, placement: NativePlacement, layout: NativeAdLayout) {
     if (!ViewsRuntime.showsLoading(placement.key)) return
     container.removeAllViews()
+    // Inside the same margin as the ad's frame, so the ad takes the shimmer's place exactly.
+    val margin = container.resources.getDimensionPixelSize(CoreR.dimen.adroit_ad_margin)
     container.addView(
         AdShimmerView(container.context).apply { showLayout(layout) },
-        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+        ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            setMargins(margin, margin, margin, margin)
+        },
     )
     container.visibility = View.VISIBLE
 }

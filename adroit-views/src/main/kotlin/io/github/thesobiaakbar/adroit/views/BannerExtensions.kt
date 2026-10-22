@@ -1,9 +1,8 @@
 package io.github.thesobiaakbar.adroit.views
 
-import io.github.thesobiaakbar.adroit.InternalAdroitApi
-import android.widget.FrameLayout
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -14,6 +13,8 @@ import io.github.thesobiaakbar.adroit.BannerAdHandle
 import io.github.thesobiaakbar.adroit.BannerOptions
 import io.github.thesobiaakbar.adroit.BannerPlacement
 import io.github.thesobiaakbar.adroit.BannerState
+import io.github.thesobiaakbar.adroit.InternalAdroitApi
+import io.github.thesobiaakbar.adroit.R as CoreR
 import io.github.thesobiaakbar.adroit.views.internal.ViewAdRetainer
 import io.github.thesobiaakbar.adroit.views.internal.ViewsRuntime
 import io.github.thesobiaakbar.adroit.views.internal.findActivity
@@ -194,7 +195,14 @@ internal fun addBannerShimmer(handle: BannerAdHandle): AdShimmerView? {
     val fallback = (AdShimmerView.DEFAULT_BANNER_HEIGHT_DP * container.resources.displayMetrics.density).toInt()
     val shimmer = AdShimmerView(container.context)
     shimmer.showBanner(handle.expectedHeightPx.takeIf { it > 0 } ?: fallback)
-    container.addView(shimmer, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+    // Inside the same margin as the banner's frame.
+    val margin = container.resources.getDimensionPixelSize(CoreR.dimen.adroit_ad_margin)
+    container.addView(
+        shimmer,
+        FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            setMargins(margin, margin, margin, margin)
+        },
+    )
     container.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
         val height = handle.expectedHeightPx
         // Posted: a layout change inside a layout pass would be ignored.
