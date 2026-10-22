@@ -6,7 +6,31 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+## [1.0.0-rc6] - 2026-10-22
+
 ### Added
+- **Adroit Billing**, in-app purchases and paywalls on Google Play Billing Library 9.1.0, in five new modules:
+  `adroit-billing` (products, purchases, entitlements, restore, attribution, paywall rules and `PaywallController`),
+  `adroit-billing-views` (`AdroitPaywall`, `PaywallView`), `adroit-billing-compose` (`Paywall`,
+  `rememberPaywallController`), `adroit-billing-firebase` (paywalls from Remote Config, events in Analytics) and
+  `adroit-billing-testing` (`FakeBilling`). They don't depend on the ads modules; one line in the app makes premium
+  users ad-free. Start with docs/BILLING.md.
+- Every paywall setting can be changed from Firebase without a release, including the close button's delay:
+  docs/PAYWALL_REMOTE_CONFIG.md (for non-developers), checked against the parser by a unit test.
+- Guides: docs/PLAY_CONSOLE_BILLING_SETUP.md, docs/BILLING_TROUBLESHOOTING.md and docs/BILLING_BACKEND.md (the optional server contract, with
+  `HttpPurchaseVerifier`). Their code is compiled in `docs-snippets`.
+- Both samples sell a subscription, a lifetime product and coins, in demo mode on any device.
+- The five billing modules are published with the others (Maven Central, `centralBundle`), and `consumer-smoke`
+  builds a Compose and an XML host that initialize billing and call a paywall (`-Psmoke.billing=false` leaves it out
+  for the Kotlin 2.1 rows of the compatibility matrix).
+- An ad frame around every banner and native ad: a margin on each side (`adroit_ad_margin`, 8dp; override the dimen,
+  `0dp` turns it off), applied to the loading shimmer too. A slot without an ad still takes no space. Banners load at
+  the width the frame leaves them.
+- A close button for banners and native ads (docs/AD_PROFILES.md, "Close button"): `closeButton` (`none`, `top_start`,
+  `top_end`, `bottom_start`, `bottom_end`) and `closeIcon` (a drawable name in the app), per ad or in `AdSettings`,
+  from the code (`AdProfile.banner`/`native`, `AdSettings`) or Firebase. It sits in its own row above or below the ad;
+  a tap emits the new `AdEvent.CloseClicked` and leaves the ad in place. Add a branch for it if you match `AdEvent`
+  exhaustively.
 - New module `adroit-update`: Google Play in-app updates (Play In-App Updates 2.1.0) controlled by the Firebase
   `AppUpdate` parameter, `flexible` (default), `force` or `off`, with an optional `forceBelowVersionCode`.
   `AdroitUpdate.check` at app start, `readyToInstall` and `install` for a flexible download. docs/APP_UPDATE.md.
@@ -14,8 +38,8 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   in-app purchases, each for Jetpack Compose and for XML. docs/GETTING_STARTED.md picks one in three questions.
 
 ### Removed
-- docs/NEW_APP_XML.md, docs/NEW_APP_COMPOSE.md, docs/BILLING_NEW_APP_XML.md and docs/BILLING_NEW_APP_COMPOSE.md: their
-  content is in the six guides and the reference docs they link to.
+- docs/NEW_APP_XML.md and docs/NEW_APP_COMPOSE.md: their content is in the six guides and the reference docs they
+  link to.
 
 ### Changed
 - One Remote Config fetch for the whole app: `RemoteConfigSession` moved to the new `adroit-remote-config` module
@@ -29,46 +53,15 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   `premiumSplashSeconds` timer instead of `splashSeconds` with nothing to wait for. So does a splash whose ads can't
   run this launch (no consent), or whose ad failed to load with no retry left. A splash ad shown later from another screen with `AdSlots.showFullScreen` now gets the
   loading screen. docs/SPLASH.md.
-
-## [1.0.0-rc6] - 2026-10-20
-
-### Added
-- **Adroit Billing**, in-app purchases and paywalls on Google Play Billing Library 9.1.0, in five new modules:
-  `adroit-billing` (products, purchases, entitlements, restore, attribution, paywall rules and `PaywallController`),
-  `adroit-billing-views` (`AdroitPaywall`, `PaywallView`), `adroit-billing-compose` (`Paywall`,
-  `rememberPaywallController`), `adroit-billing-firebase` (paywalls from Remote Config, events in Analytics) and
-  `adroit-billing-testing` (`FakeBilling`). They don't depend on the ads modules; one line in the app makes premium
-  users ad-free. Start with docs/BILLING.md.
-- Every paywall setting can be changed from Firebase without a release, including the close button's delay:
-  docs/PAYWALL_REMOTE_CONFIG.md (for non-developers), checked against the parser by a unit test.
-- Guides: docs/BILLING_NEW_APP_XML.md, docs/BILLING_NEW_APP_COMPOSE.md, docs/PLAY_CONSOLE_BILLING_SETUP.md,
-  docs/BILLING_TROUBLESHOOTING.md and docs/BILLING_BACKEND.md (the optional server contract, with
-  `HttpPurchaseVerifier`). Their code is compiled in `docs-snippets`.
-- Both samples sell a subscription, a lifetime product and coins, in demo mode on any device.
-- The five billing modules are published with the others (Maven Central, `centralBundle`), and `consumer-smoke`
-  builds a Compose and an XML host that initialize billing and call a paywall (`-Psmoke.billing=false` leaves it out
-  for the Kotlin 2.1 rows of the compatibility matrix).
-
-### Changed
 - Native ads on Google's test ad units (no IDs yet, or demo IDs outside PRODUCTION) keep one pool per placement
   instead of sharing one per format, so debug builds load, refill and log each native as release will. Placements
   on the same real ad unit still share a pool.
-
-### Added
-- An ad frame around every banner and native ad: a margin on each side (`adroit_ad_margin`, 8dp; override the dimen,
-  `0dp` turns it off), applied to the loading shimmer too. A slot without an ad still takes no space. Banners load at
-  the width the frame leaves them.
-- A close button for banners and native ads (docs/AD_PROFILES.md, "Close button"): `closeButton` (`none`, `top_start`,
-  `top_end`, `bottom_start`, `bottom_end`) and `closeIcon` (a drawable name in the app), per ad or in `AdSettings`,
-  from the code (`AdProfile.banner`/`native`, `AdSettings`) or Firebase. It sits in its own row above or below the ad;
-  a tap emits the new `AdEvent.CloseClicked` and leaves the ad in place. Add a branch for it if you match `AdEvent`
-  exhaustively.
+- `AdProfile.banner`, both `AdProfile.native` functions and the `AdSettings` constructor take the new close button
+  parameters (`closeButton`, `closeIcon`) last. Recompile code that calls them.
 
 ### Fixed
 - A banner whose load failed kept the height reserved for it (`reserveSpace`, the default), leaving an empty gap
   the size of the ad. A failed load now gives the space back and hides the empty ad view; each retry reserves it again.
-
-### Fixed
 - `SplashFlow`: when this session's Firebase fetch arrived during the splash timer and swapped the splash ad's format
   (interstitial ↔ app open), the ad requested in the old format was released and none was requested in the new one,
   so the splash waited out its whole timer without an ad. It now requests the ad in its new format.
