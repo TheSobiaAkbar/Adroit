@@ -1,0 +1,7 @@
+# JitPack (https://jitpack.io/#TheSobiaAkbar/Adroit) builds any tag, commit or branch on request and serves every
+# module as com.github.TheSobiaAkbar.Adroit:<module>:<tag | commit | branch-SNAPSHOT>, so the modules depend on each
+# other at that same version. Maven Central releases keep io.github.thesobiaakbar (gradle.properties).
+jdk:
+  - openjdk21
+install:
+  - ./gradlew publishToMavenLocal -Padroit.group=com.github.TheSobiaAkbar.Adroit -Padroit.version=$VERSION
