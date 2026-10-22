@@ -361,7 +361,9 @@ class SplashActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+            // RESUMED, not STARTED: Android can take seconds to stop an Activity after Home, and the next screen
+            // must not open unseen.
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 when (snapshotFlow { viewModel.step }.first { it == SplashStep.Main || it == SplashStep.Leave }) {
                     SplashStep.Main -> startActivity(Intent(this@SplashActivity, MainActivity::class.java))
                     else -> Unit

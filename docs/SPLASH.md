@@ -59,8 +59,10 @@ override fun onCreate(savedInstanceState: Bundle?) {
     setContentView(R.layout.snippet_banner) // your splash layout: logo, app name, progress bar
     viewModel.flow.start(this) // after a rotation, hands the new Activity to the running flow
     lifecycleScope.launch {
-        // STARTED: a splash sent to the background moves on when the user comes back.
-        repeatOnLifecycle(Lifecycle.State.STARTED) {
+        // RESUMED, not STARTED: a splash sent to the background moves on when the user comes back. Android
+        // can take seconds to stop an Activity after Home; while it's paused but started, the timer could end
+        // and open the next screen unseen.
+        repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.flow.state.collect { state ->
                 when (state) {
                     SplashState.Preparing -> hideProgress() // consent: no progress bar yet

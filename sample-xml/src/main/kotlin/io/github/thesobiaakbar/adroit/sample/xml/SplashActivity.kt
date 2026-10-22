@@ -58,9 +58,9 @@ class SplashActivity : AppCompatActivity() {
             viewModel.flow.start(this@SplashActivity)
         }
         lifecycleScope.launch {
-            // STARTED: navigation waits until the screen is in front, so a splash sent to the background finishes
-            // when the user comes back.
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+            // RESUMED, not STARTED: navigation waits until the screen is resumed, so a splash sent to the
+            // background finishes when the user comes back. Android can take seconds to stop it after Home.
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 launch { viewModel.flow.state.collect(::render) }
                 viewModel.goToMain.first { it }
                 goToMain()

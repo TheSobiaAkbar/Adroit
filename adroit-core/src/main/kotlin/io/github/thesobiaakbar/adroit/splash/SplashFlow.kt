@@ -50,8 +50,8 @@ import kotlin.time.Duration.Companion.seconds
  * `RemoteConfigSession`), except that a fetch during the timer that swaps the ad's format requests it in the new one.
  *
  * Keep it in a ViewModel, so a rotation doesn't restart it: call [start] from every `onCreate` (it hands the new
- * Activity to the running flow), collect [state] while the screen is started, and [cancel] in `onCleared`. Main
- * thread only.
+ * Activity to the running flow), collect [state] while the screen is resumed (`Lifecycle.State.RESUMED`: a paused but
+ * still started splash could navigate unseen), and [cancel] in `onCleared`. Main thread only.
  */
 public class SplashFlow internal constructor(
     private val splashAdKey: String?,

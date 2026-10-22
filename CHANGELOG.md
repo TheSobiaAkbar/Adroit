@@ -6,6 +6,12 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+### Fixed
+- The splash examples in the docs, the guides and the samples collect `SplashFlow.state` while the screen is
+  `RESUMED`, not `STARTED`. After Home, Android can take seconds to stop the Activity; while it was paused but still
+  started, the timer could end and open the main screen in the background. Make the same one-word change in your
+  splash Activity.
+
 ## [1.0.0-rc6] - 2026-10-22
 
 ### Added
