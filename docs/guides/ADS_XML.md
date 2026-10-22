@@ -355,9 +355,8 @@ class SplashActivity : AppCompatActivity() {
             viewModel.flow.start(this@SplashActivity) // after a rotation, hands the new Activity to the running flow
         }
         lifecycleScope.launch {
-            // RESUMED, not STARTED: a splash sent to the background moves on when the user comes back. Android
-            // can take seconds to stop an Activity after Home; while it's paused but started, the timer could end
-            // and open the next screen unseen.
+            // RESUMED, not STARTED: never navigate while the splash is in the background. Android can take
+            // seconds to stop an Activity after Home, and a paused Activity is still STARTED.
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.flow.state.collect { state ->
                     when (state) {
@@ -384,9 +383,9 @@ class SplashActivity : AppCompatActivity() {
   check instead of starting a second one.
 - **`flow.start(this)` in `onCreate`:** after a rotation it hands the new Activity to the running flow. Consent, the
   timer and the splash ad never restart.
-- **Navigation happens only while the screen is resumed** (`RESUMED`, not `STARTED`): a splash sent to the background
-  moves on when the user comes back. After Home, Android can take seconds to stop the Activity, and while it's paused
-  but still started, the timer could end and open the main screen unseen.
+- **The splash pauses in the background:** its timer stops while the screen isn't resumed, and the user comes back to
+  the splash where they left it. Navigation also waits for `RESUMED`, not `STARTED`: after Home, Android can take
+  seconds to stop the Activity.
 
 **A splash without an ad.** To keep the splash (the update check, consent, the timer) but drop its ad, turn the ad
 off in Firebase with `{ "enabled": false }` in `SplashAd`, or pass `null` instead of `AppAds.SplashAd` to

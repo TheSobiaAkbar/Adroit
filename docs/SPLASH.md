@@ -20,7 +20,8 @@ it: a logo, the app name, and a progress bar.
    - `offlineSplashSeconds` (3) without internet (no ad is requested; the library still starts).
 
    Meanwhile the splash ad loads. When it's ready and the screen is in front, the progress jumps to 100 and the timer
-   stops.
+   stops. The timer counts only while the splash is in front: sent to the background, it pauses, and the user comes
+   back to the splash where they left it (and to the splash ad, if it loaded meanwhile).
 3. **The splash ad** (state `ShowingAd`): the splash waits as long as the user keeps the ad open.
 4. **Next screen** (state `Finished`): when the ad is closed, when it fails to show, or when the timer ends first. An
    ad that loads after the timer isn't shown on the splash.
@@ -59,9 +60,8 @@ override fun onCreate(savedInstanceState: Bundle?) {
     setContentView(R.layout.snippet_banner) // your splash layout: logo, app name, progress bar
     viewModel.flow.start(this) // after a rotation, hands the new Activity to the running flow
     lifecycleScope.launch {
-        // RESUMED, not STARTED: a splash sent to the background moves on when the user comes back. Android
-        // can take seconds to stop an Activity after Home; while it's paused but started, the timer could end
-        // and open the next screen unseen.
+        // RESUMED, not STARTED: never navigate while the splash is in the background. Android can take
+        // seconds to stop an Activity after Home, and a paused Activity is still STARTED.
         repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.flow.state.collect { state ->
                 when (state) {
@@ -111,7 +111,8 @@ Each timing is a whole number of seconds, at least 1. An invalid value is ignore
 
 - The consent step ends within `consentTimeoutSeconds` plus 2 seconds, even if Google's consent service never answers.
   The time the consent form is on screen doesn't count: the splash waits for the user's answer.
-- The timer always ends: the splash moves on at the latest when it does, unless the splash ad is on screen.
+- The timer always ends while the splash is in front: the splash moves on at the latest when it does, unless the splash
+  ad is on screen. In the background it pauses, so the splash never finishes unseen.
 - A splash ad is never shown after the timer, nor while the screen is in the background.
 - The flow doesn't restart on rotation, and `cancel()` stops it without closing an ad on screen.
 

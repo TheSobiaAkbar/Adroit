@@ -455,9 +455,8 @@ class SplashActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch {
-            // RESUMED, not STARTED: a splash sent to the background moves on when the user comes back. Android
-            // can take seconds to stop an Activity after Home; while it's paused but started, the timer could end
-            // and open the next screen unseen.
+            // RESUMED, not STARTED: never navigate while the splash is in the background. Android can take
+            // seconds to stop an Activity after Home, and a paused Activity is still STARTED.
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 launch { viewModel.flow.state.collect { if (it is SplashState.Finished) route() } }
                 snapshotFlow { viewModel.route }.first { it == SplashRoute.Main }
@@ -488,9 +487,9 @@ class SplashActivity : ComponentActivity() {
   check instead of starting a second one.
 - **`flow.start(this)` in `onCreate`:** after a rotation it hands the new Activity to the running flow. Consent, the
   timer and the splash ad never restart.
-- **Navigation happens only while the screen is resumed** (`RESUMED`, not `STARTED`): a splash sent to the background
-  moves on when the user comes back. After Home, Android can take seconds to stop the Activity, and while it's paused
-  but still started, the timer could end and open the main screen unseen.
+- **The splash pauses in the background:** its timer stops while the screen isn't resumed, and the user comes back to
+  the splash where they left it. Navigation also waits for `RESUMED`, not `STARTED`: after Home, Android can take
+  seconds to stop the Activity.
 - **The paywall is drawn inside the splash,** over its screen. The ad that may follow then shows from the splash
   Activity, which is already in front. Closing `Onboarding` can offer its `exitPaywall`, which simply replaces it.
 

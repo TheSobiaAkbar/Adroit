@@ -63,9 +63,8 @@ class SplashActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch {
-            // RESUMED, not STARTED: a splash sent to the background moves on when the user comes back. Android
-            // can take seconds to stop an Activity after Home; while it's paused but started, the timer could end
-            // and open the next screen unseen.
+            // RESUMED, not STARTED: never navigate while the splash is in the background. Android can take
+            // seconds to stop an Activity after Home, and a paused Activity is still STARTED.
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.flow.state.collect { if (it is SplashState.Finished) goToMain() }
             }

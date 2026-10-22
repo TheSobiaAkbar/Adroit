@@ -228,15 +228,32 @@ class SplashFlowTest {
     }
 
     @Test
-    fun `an ad ready while the screen is in the background waits for it, and is never shown after the timer`() = runTest {
+    fun `in the background the timer pauses and no ad shows - back in front, the splash continues and shows it`() = runTest {
         val flow = flow()
+        advance(5_500)
+        assertEquals(SplashState.Loading(50), flow.state.value)
         ports.resumed = false
         ports.adReady = true
-        advance(5_000)
-        assertTrue(flow.state.value is SplashState.Loading)
-        advance(6_100)
-        assertEquals(SplashState.Finished(adShown = false), flow.state.value)
+        advance(60_000)
+        assertEquals("paused where the user left", SplashState.Loading(50), flow.state.value)
         assertEquals(null, ports.showCallback)
+
+        ports.resumed = true
+        advance(100)
+        assertEquals(SplashState.ShowingAd, flow.state.value)
+    }
+
+    @Test
+    fun `back in front with no ad, the rest of the timer runs`() = runTest {
+        val flow = flow()
+        advance(5_500)
+        ports.resumed = false
+        advance(60_000)
+        ports.resumed = true
+        advance(5_400)
+        assertTrue(flow.state.value is SplashState.Loading)
+        advance(200)
+        assertEquals(SplashState.Finished(adShown = false), flow.state.value)
     }
 
     @Test
