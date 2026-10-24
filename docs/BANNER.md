@@ -19,6 +19,9 @@ The size comes from the placement (`size` in `placements { }`, or `style` in the
 code passes one, so the configuration or Firebase can change it for banners created afterwards. Collapsible banners
 follow Google's rules: only the first load of each banner is collapsible (automatic refreshes aren't), and mediated
 ads show as normal banners ([Google's guide](https://developers.google.com/admob/android/next-gen/banner/collapsible)).
+The expanded ad is a popup window over the whole Activity. In Compose, when a collapsible banner's screen is left
+while it's expanded (another screen opened over it, another tab), the popup is hidden, not closed, and shows again,
+still expanded, when the screen comes back.
 
 ## Integration
 

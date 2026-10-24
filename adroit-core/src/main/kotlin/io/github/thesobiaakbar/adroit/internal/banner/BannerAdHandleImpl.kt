@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 /**
  * One banner (architecture §16). The host gets [view], a library [FrameLayout]; the SDK banner view is created and
@@ -86,6 +87,9 @@ internal class BannerAdHandleImpl(
     /** The loaded ad while the banner is off screen ([park]), with the size it was loaded at. */
     private var parked: PreloadedBanner? = null
     private var parkedSpec: BannerSizeSpec? = null
+
+    /** The parked ad's expanded panel (a collapsible banner left open), hidden until the ad is shown again. */
+    private var hiddenPanels: List<WeakReference<View>> = emptyList()
     private val mutableState = MutableStateFlow<BannerState>(BannerState.Loading)
     private val bannerPlacement = placement.placement
     private val retryPolicy = placement.retry
@@ -148,6 +152,7 @@ internal class BannerAdHandleImpl(
         collector = null
         unbind()
         tearDownAd()
+        hiddenPanels = emptyList()
         // The container stays readable ([view]) after destroy, only emptied and detached.
         container?.let {
             (it.parent as? ViewGroup)?.removeView(it)
@@ -171,6 +176,11 @@ internal class BannerAdHandleImpl(
         } else {
             null
         }
+        // A collapsible ad left expanded: its panel is a window over the Activity, so it would cover the next screen.
+        val activity = container?.context as? Activity
+        if (ad != null && spec?.size is BannerSize.Collapsible && activity != null) {
+            hiddenPanels = ExpandedBannerPanels.hide(activity, log)
+        }
         tearDownAd()
         parked = ad
         parkedSpec = spec.takeIf { ad != null }
@@ -190,8 +200,11 @@ internal class BannerAdHandleImpl(
         val spec = parkedSpec
         parked = null
         parkedSpec = null
+        val panels = hiddenPanels
+        hiddenPanels = emptyList()
         if (ad != null && spec != null) {
             show(ad, adUnitId, spec, activity, "shown again, same ad")
+            ExpandedBannerPanels.show(panels, log)
         } else if (mutableState.value !is BannerState.Hidden) {
             requestLoad()
         }

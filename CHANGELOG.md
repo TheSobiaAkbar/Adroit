@@ -13,6 +13,9 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   until they return: since Android 15 a background app's network is blocked, and the request failed.
 
 ### Fixed
+- An expanded collapsible banner no longer stays over the next screen. Its expanded ad is a popup window over the
+  whole Activity, so it covered any screen opened after it. While its screen is away the popup is now hidden (the ad
+  stays expanded), and it shows again when the screen comes back.
 - The splash examples in the docs, the guides and the samples collect `SplashFlow.state` while the screen is
   `RESUMED`, not `STARTED`. After Home, Android can take seconds to stop the Activity; while it was paused but still
   started, the timer could end and open the main screen in the background. Make the same one-word change in your
