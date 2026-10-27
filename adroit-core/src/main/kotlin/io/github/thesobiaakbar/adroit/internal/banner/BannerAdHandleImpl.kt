@@ -153,6 +153,7 @@ internal class BannerAdHandleImpl(
         unbind()
         tearDownAd()
         hiddenPanels = emptyList()
+        ExpandedBannerPanels.forget(this)
         // The container stays readable ([view]) after destroy, only emptied and detached.
         container?.let {
             (it.parent as? ViewGroup)?.removeView(it)
@@ -179,7 +180,7 @@ internal class BannerAdHandleImpl(
         // A collapsible ad left expanded: its panel is a window over the Activity, so it would cover the next screen.
         val activity = container?.context as? Activity
         if (ad != null && spec?.size is BannerSize.Collapsible && activity != null) {
-            hiddenPanels = ExpandedBannerPanels.hide(activity, log)
+            hiddenPanels = ExpandedBannerPanels.hide(activity, this, log)
         }
         tearDownAd()
         parked = ad
@@ -204,7 +205,7 @@ internal class BannerAdHandleImpl(
         hiddenPanels = emptyList()
         if (ad != null && spec != null) {
             show(ad, adUnitId, spec, activity, "shown again, same ad")
-            ExpandedBannerPanels.show(panels, log)
+            ExpandedBannerPanels.show(panels, this, log)
         } else if (mutableState.value !is BannerState.Hidden) {
             requestLoad()
         }

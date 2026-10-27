@@ -10,6 +10,7 @@ import android.view.inspector.WindowInspector
 import android.webkit.WebView
 import io.github.thesobiaakbar.adroit.internal.logging.AdLog
 import java.lang.ref.WeakReference
+import java.util.WeakHashMap
 
 /**
  * A collapsible banner's expanded panel is a window of its own (a popup the Google SDK opens over the Activity), so
@@ -18,10 +19,17 @@ import java.lang.ref.WeakReference
  */
 internal object ExpandedBannerPanels {
     /**
-     * Hides [activity]'s ad panels (popups holding web content) that are showing, and returns them for [show], weakly
-     * held: a parked banner keeps no View or Activity.
+     * The panels shown again by [show], each with the banner it belongs to. Two screens' panels look alike, and a
+     * screen that comes back is shown before the one it replaces leaves: without this, the one leaving would hide the
+     * panel just shown again.
      */
-    fun hide(activity: Activity, log: AdLog): List<WeakReference<View>> {
+    private val owners = WeakHashMap<View, Any>()
+
+    /**
+     * Hides [activity]'s ad panels (popups holding web content) that are showing and aren't another banner's, and returns
+     * them for [show], weakly held: a parked banner keeps no View or Activity. [owner] is the banner leaving.
+     */
+    fun hide(activity: Activity, owner: Any, log: AdLog): List<WeakReference<View>> {
         val token = activity.window?.decorView?.windowToken ?: return emptyList()
         val panels = roots(log).filter { root ->
             val params = root.layoutParams as? WindowManager.LayoutParams
@@ -30,18 +38,30 @@ internal object ExpandedBannerPanels {
                 params.token === token &&
                 root.isAttachedToWindow &&
                 root.visibility == View.VISIBLE &&
+                owners[root].let { it == null || it === owner } &&
                 root.holdsWebView()
         }
-        panels.forEach { it.visibility = View.INVISIBLE }
+        panels.forEach {
+            it.visibility = View.INVISIBLE
+            owners.remove(it)
+        }
         if (panels.isNotEmpty()) log.d { "Expanded banner panel hidden while its screen is away" }
         return panels.map(::WeakReference)
     }
 
-    /** Shows [panels] hidden by [hide] again, those still open. */
-    fun show(panels: List<WeakReference<View>>, log: AdLog) {
+    /** Shows [panels] hidden by [hide] again, those still open, as [owner]'s. */
+    fun show(panels: List<WeakReference<View>>, owner: Any, log: AdLog) {
         val open = panels.mapNotNull { it.get() }.filter { it.isAttachedToWindow }
-        open.forEach { it.visibility = View.VISIBLE }
+        open.forEach {
+            it.visibility = View.VISIBLE
+            owners[it] = owner
+        }
         if (open.isNotEmpty()) log.d { "Expanded banner panel shown again" }
+    }
+
+    /** [owner] is destroyed: its panels are no one's. */
+    fun forget(owner: Any) {
+        owners.values.removeAll { it === owner }
     }
 
     /** The root view of every window of this process. */

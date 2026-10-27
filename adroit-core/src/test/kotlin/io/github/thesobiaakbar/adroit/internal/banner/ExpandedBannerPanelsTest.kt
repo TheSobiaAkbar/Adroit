@@ -64,6 +64,34 @@ class ExpandedBannerPanelsTest {
     }
 
     @Test
+    fun `two screens' panels - the screen coming back keeps its panel when the other one leaves`() = runTest {
+        val h = harness(BannerSize.Collapsible(CollapsibleBannerPosition.BOTTOM))
+        val home = h.create()
+        h.layout(400)
+        h.views.last().simulateLoaded()
+        val homePanel = popup(h, web = true)
+        // Another tab: its screen is shown first, then Home leaves.
+        val other = h.create()
+        h.layout(400)
+        AdroitInternal.parkBanner(home)
+        h.views.last().simulateLoaded()
+        val otherPanel = popup(h, web = true)
+        assertEquals(View.INVISIBLE, homePanel.visibility)
+
+        // Back to Home: Home is shown again first, then the other tab leaves.
+        AdroitInternal.showBannerIn(home, h.activity)
+        AdroitInternal.parkBanner(other)
+        assertEquals(View.VISIBLE, homePanel.visibility)
+        assertEquals(View.INVISIBLE, otherPanel.visibility)
+
+        // And to the other tab again.
+        AdroitInternal.showBannerIn(other, h.activity)
+        AdroitInternal.parkBanner(home)
+        assertEquals(View.INVISIBLE, homePanel.visibility)
+        assertEquals(View.VISIBLE, otherPanel.visibility)
+    }
+
+    @Test
     fun `a banner that isn't collapsible leaves every popup alone`() = runTest {
         val h = harness(BannerSize.AnchoredAdaptive)
         val handle = h.create()
