@@ -1,10 +1,13 @@
 package io.github.thesobiaakbar.adroit.internal.runtime
 
 import android.app.Activity
-import io.github.thesobiaakbar.adroit.AdsState
 import io.github.thesobiaakbar.adroit.Adroit
+import io.github.thesobiaakbar.adroit.AdsState
+import io.github.thesobiaakbar.adroit.BannerPlacement
+import io.github.thesobiaakbar.adroit.BannerState
 import io.github.thesobiaakbar.adroit.ConsentStatus
 import io.github.thesobiaakbar.adroit.UnavailableReason
+import io.github.thesobiaakbar.adroit.config.TestIds
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -152,4 +155,26 @@ class AdFreeTest {
         assertEquals(1, h.adsSdk.initializeCalls.size)
         assertEquals(emptyList<String>(), h.logs.errors)
     }
+
+    @Test
+    fun `ad-free with start() never called - a banner is Hidden, not Loading for ever, and loads again once turned off`() =
+        runTest {
+            val h = RuntimeHarness(this)
+            val runtime = h.runtime(
+                testConfig(h.logs) { placements { banner(BannerPlacement("home"), TestIds.unit(2)) } },
+            )
+            h.settle()
+            // An app may skip start() for a premium user (no consent form): ads stay AwaitingStart.
+            runtime.client.setAdFree(true)
+            val banner = runtime.client.banner.create(newActivity(), BannerPlacement("home"))
+            h.settle()
+
+            assertEquals(AdsState.AwaitingStart, h.state.value)
+            assertEquals(BannerState.Hidden(UnavailableReason.AD_FREE_USER), banner.state.value)
+
+            runtime.client.setAdFree(false)
+            h.settle()
+            assertEquals(BannerState.Loading, banner.state.value)
+            banner.destroy()
+        }
 }

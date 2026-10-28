@@ -13,6 +13,10 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
   until they return: since Android 15 a background app's network is blocked, and the request failed.
 
 ### Fixed
+- An ad-free user no longer sees a banner's loading shimmer for ever. An app that skips `start()` for an ad-free user
+  (no consent form, no splash ad) left ads `AwaitingStart`, which `setAdFree(true)` doesn't change, so banners
+  stayed `Loading`. Banners now follow the ad-free flag themselves: `Hidden(AD_FREE_USER)` at once, and loading again
+  when it's turned off.
 - An expanded collapsible banner no longer stays over the next screen. Its expanded ad is a popup window over the
   whole Activity, so it covered any screen opened after it. While its screen is away the popup is now hidden (the ad
   stays expanded), and it shows again when the screen comes back.

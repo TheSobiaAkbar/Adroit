@@ -220,7 +220,7 @@ internal class AdsRuntime(
         appOpen = AppOpenApiImpl(appOpenController),
         banner = BannerApiImpl(
             liveConfig, deps.adsSdk, init, retryScheduler, events, deps.clock, scope, log, hardwareAcceleration,
-            adUnitRotation, bannerPreloader,
+            adUnitRotation, bannerPreloader, adFree.flow,
         ),
         native = NativeApiImpl(
             nativeEngine,

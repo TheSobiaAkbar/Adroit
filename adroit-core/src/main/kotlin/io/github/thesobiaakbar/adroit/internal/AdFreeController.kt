@@ -2,6 +2,9 @@ package io.github.thesobiaakbar.adroit.internal
 
 import io.github.thesobiaakbar.adroit.UnavailableReason
 import io.github.thesobiaakbar.adroit.internal.logging.AdLog
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /** Told when ads get blocked (ad-free, consent withdrawn, remote disable), so engines can release what they hold. */
 internal fun interface AdsBlockedListener {
@@ -18,15 +21,19 @@ internal fun interface AdsBlockedListener {
  * current value on every launch instead.
  */
 internal class AdFreeController(private val log: AdLog) {
-    var isAdFree: Boolean = false
-        private set
+    private val mutableFlow = MutableStateFlow(false)
+
+    /** [isAdFree], for what follows it rather than being told (banners: ad-free hides them before `start()` too). */
+    val flow: StateFlow<Boolean> = mutableFlow.asStateFlow()
+
+    val isAdFree: Boolean get() = mutableFlow.value
 
     private val listeners = mutableListOf<AdsBlockedListener>()
 
     /** Returns true if the value changed. */
     fun setAdFree(adFree: Boolean): Boolean {
         if (isAdFree == adFree) return false
-        isAdFree = adFree
+        mutableFlow.value = adFree
         return true
     }
 

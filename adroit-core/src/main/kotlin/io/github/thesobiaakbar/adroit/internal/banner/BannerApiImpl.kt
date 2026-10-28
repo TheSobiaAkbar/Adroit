@@ -44,6 +44,8 @@ internal class BannerApiImpl(
     private val hardwareAcceleration: HardwareAccelerationCheck = HardwareAccelerationCheck(log),
     private val rotation: AdUnitRotation = AdUnitRotation(),
     private val preloader: BannerPreloader? = null,
+    /** The host's ad-free flag: it hides every banner, even before `start()`. */
+    private val adFree: StateFlow<Boolean> = MutableStateFlow(false),
 ) : BannerApi {
     override fun create(activity: Activity, placement: BannerPlacement, options: BannerOptions): BannerAdHandle {
         val onMain = isMainThread()
@@ -63,7 +65,7 @@ internal class BannerApiImpl(
         val size = p.bannerSizeFor(options.size)
         val handle = BannerAdHandleImpl(
             activity, p, current.bannerAdUnitIds(p, size), size, options, config, adsSdk, readiness, retry, events,
-            clock, scope, log, rotation, preloader,
+            clock, scope, log, rotation, preloader, adFree,
         )
         if (onMain) handle.start() else postToMain { handle.start() }
         return handle

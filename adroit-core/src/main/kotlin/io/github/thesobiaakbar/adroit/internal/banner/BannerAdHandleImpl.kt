@@ -80,6 +80,11 @@ internal class BannerAdHandleImpl(
     private val rotation: AdUnitRotation,
     /** Banners loaded ahead of their view (`AdSlots.load`): the first load takes one when it fits. */
     private val preloader: BannerPreloader? = null,
+    /**
+     * The host's ad-free flag. Followed on its own, not only through [readiness]: an ad-free app may never call
+     * `start()` (it skips consent), and ads then stay `AwaitingStart`, which would leave the banner Loading for ever.
+     */
+    private val adFree: StateFlow<Boolean> = MutableStateFlow(false),
 ) : BannerAdHandle {
     /** The host-facing view; null while off screen ([park]). */
     private var container: BannerContainer? = BannerContainer(activity, this)
@@ -131,7 +136,9 @@ internal class BannerAdHandleImpl(
     fun start() {
         if (destroyed || collector != null) return
         collector = scope.launch {
-            combine(readiness.state, config.flow, ::Pair).collect { (state, current) -> onChange(state, current) }
+            combine(readiness.state, config.flow, adFree, ::Triple).collect { (state, current, free) ->
+                if (free) hideAdFree() else onChange(state, current)
+            }
         }
     }
 
@@ -246,6 +253,12 @@ internal class BannerAdHandleImpl(
         }
         if (mutableState.value is BannerState.Hidden && state !is AdsState.Unavailable) mutableState.value = BannerState.Loading
         onReadiness(state)
+    }
+
+    private fun hideAdFree() {
+        if (sdkView != null) log.i { "Banner $placementKey hidden: ${UnavailableReason.AD_FREE_USER}" }
+        tearDownAd()
+        mutableState.value = BannerState.Hidden(UnavailableReason.AD_FREE_USER)
     }
 
     private fun onReadiness(state: AdsState) {
