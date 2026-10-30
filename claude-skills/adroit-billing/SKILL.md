@@ -14,8 +14,7 @@ Adroit Billing wraps Google Play Billing Library 9.1 behind one Kotlin API:
   the rules for when a paywall shows.
 - **What the app writes:** the products, the paywalls, and where they open.
 
-**Version.** This skill is verified against Adroit `1.0.0-rc6` and master `b0df3c8` (2026-10); the billing API is
-the same in both. If the project pins a
+**Version.** This skill is verified against Adroit `1.0.0-rc7` (2026-10). If the project pins a
 newer version, check the library's `CHANGELOG.md` before you trust a signature here.
 
 ## 1. Settle the scenario first

@@ -62,7 +62,7 @@ In `gradle/libs.versions.toml`, add to the existing sections:
 
 ```toml
 [versions]
-adroit = "1.0.0-rc6"
+adroit = "1.0.0-rc7"
 googleServices = "4.5.0"
 
 [libraries]
@@ -695,7 +695,7 @@ A debug build on a phone or an emulator:
       install the first from Play, then open it ([In-app update: Testing](../APP_UPDATE.md#testing)).
 
 **Unit tests without Google Play.** Add
-`testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc6")`. Code that takes `BillingClientApi`
+`testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc7")`. Code that takes `BillingClientApi`
 (here `PremiumViewModel`, step 7) gets `FakeBilling` in tests:
 
 <!-- snippet: docs-snippets/src/test/kotlin/io/github/thesobiaakbar/adroit/docs/billing/BillingTestingSnippets.kt#billing-fake-test -->

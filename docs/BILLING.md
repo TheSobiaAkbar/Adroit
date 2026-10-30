@@ -27,9 +27,9 @@ doesn't get the Mobile Ads SDK, and an ads-only app doesn't get Play Billing.
 ```kotlin
 // app/build.gradle.kts
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-billing-views:1.0.0-rc6") // or adroit-billing-compose
-    implementation("io.github.thesobiaakbar:adroit-billing-firebase:1.0.0-rc6")
-    testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc6")
+    implementation("io.github.thesobiaakbar:adroit-billing-views:1.0.0-rc7") // or adroit-billing-compose
+    implementation("io.github.thesobiaakbar:adroit-billing-firebase:1.0.0-rc7")
+    testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc7")
 }
 ```
 

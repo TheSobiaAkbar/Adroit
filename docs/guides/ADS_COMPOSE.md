@@ -61,7 +61,7 @@ In `gradle/libs.versions.toml`, add to the existing sections:
 
 ```toml
 [versions]
-adroit = "1.0.0-rc6"
+adroit = "1.0.0-rc7"
 googleServices = "4.5.0"
 
 [libraries]

@@ -6,7 +6,15 @@ with the rules in [docs/RELEASE.md](docs/RELEASE.md). Google SDK upgrades get th
 
 ## [Unreleased]
 
+## [1.0.0-rc7] - 2026-10-30
+
+### Added
+- JitPack builds every module (`jitpack.yml`): an app can take a tag or a commit of the GitHub repository as
+  `com.github.TheSobiaAkbar.Adroit:<module>:<tag | commit>` before it is released to Maven Central.
+- Claude skills for integrating Adroit, `claude-skills/adroit-admob` and `claude-skills/adroit-billing`.
+
 ### Changed
+- `build-logic` downloads its Java 17 toolchain when the machine has none.
 - The splash timer pauses while the splash is in the background, and continues when the user comes back: before, it
   kept counting, so a user who left during the splash came back to the next screen. A splash ad that loaded meanwhile
   shows when they're back. A user who leaves before the timer starts holds back the timer and the splash ad request
@@ -382,7 +390,8 @@ First internal release.
 ### Google SDK
 - Built against Google Mobile Ads Next-Gen SDK `ads-mobile-sdk` 1.4.0 and UMP 4.0.0.
 
-[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc6...HEAD
+[Unreleased]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc7...HEAD
+[1.0.0-rc7]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc6...v1.0.0-rc7
 [1.0.0-rc6]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc5...v1.0.0-rc6
 [1.0.0-rc5]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc4...v1.0.0-rc5
 [1.0.0-rc4]: https://github.com/TheSobiaAkbar/Adroit/compare/v1.0.0-rc3...v1.0.0-rc4

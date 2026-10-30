@@ -9,10 +9,9 @@ Adroit wraps Google's Next-Gen Mobile Ads SDK (`ads-mobile-sdk` 1.4.0) and UMP c
 The app lists every ad once, in an enum. Each enum entry is also a Firebase Remote Config parameter, so any ad can be
 re-tuned or turned off without a new release. The Google SDKs are internal: app code never imports a Google ads type.
 
-**Version.** This skill is verified against Adroit `1.0.0-rc6` and the master commit `b0df3c8` (2026-10). The two
-have the same API, but the Maven Central `1.0.0-rc6` release lacks two fixes that are on master (collapsible banners,
-ad-free shimmer): see `references/setup.md` §1. If the project pins a newer version, read the library's
-`CHANGELOG.md` before you trust a signature here.
+**Version.** This skill is verified against Adroit `1.0.0-rc7` (2026-10). Older releases lack the splash,
+collapsible banner and ad-free shimmer fixes: use `1.0.0-rc7` or newer. If the project pins a newer version, read the
+library's `CHANGELOG.md` before you trust a signature here.
 
 ## 1. Settle the scenario first
 

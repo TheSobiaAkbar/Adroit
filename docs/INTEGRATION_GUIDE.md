@@ -30,8 +30,8 @@ plugins {
     id("com.google.gms.google-services") // reads google-services.json
 }
 dependencies {
-    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc6") // or adroit-compose for Compose apps
-    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc6") // Remote Config and Analytics; brings Firebase itself
+    implementation("io.github.thesobiaakbar:adroit-views:1.0.0-rc7") // or adroit-compose for Compose apps
+    implementation("io.github.thesobiaakbar:adroit-firebase:1.0.0-rc7") // Remote Config and Analytics; brings Firebase itself
 }
 ```
 

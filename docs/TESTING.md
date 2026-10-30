@@ -6,7 +6,7 @@
 screens that show ads can be tested on the JVM or with Robolectric.
 
 ```kotlin
-testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0-rc6")
+testImplementation("io.github.thesobiaakbar:adroit-testing:1.0.0-rc7")
 ```
 
 ### `FakeAdsClient`
@@ -84,7 +84,7 @@ device and no Robolectric. Code that takes `BillingClientApi` (with `AdroitBilli
 dependency injection) gets the fake in tests:
 
 ```kotlin
-testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc6")
+testImplementation("io.github.thesobiaakbar:adroit-billing-testing:1.0.0-rc7")
 ```
 
 <!-- snippet: docs-snippets/src/test/kotlin/io/github/thesobiaakbar/adroit/docs/billing/BillingTestingSnippets.kt#billing-fake-test -->

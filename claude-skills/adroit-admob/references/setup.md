@@ -16,7 +16,7 @@
 ```toml
 # gradle/libs.versions.toml
 [versions]
-adroit = "1.0.0-rc6"
+adroit = "1.0.0-rc7"
 googleServices = "4.5.0"
 
 [libraries]
@@ -58,32 +58,26 @@ the versions they were tested with. Apply the `google-services` plugin in `:app`
 `adroit-views` uses the lifecycle ones internally but doesn't expose them, and AppCompat brings `activity`. Add
 whichever ones the project doesn't already have, at the versions it already uses.
 
-**Version: what Maven Central's `1.0.0-rc6` lacks.** These fixes are on the Adroit master branch but in no release
-tag yet:
-- `2577f26` / `51d7c2f`: the splash timer pauses in the background, and the splash ad is requested only once the
-  splash is in front. Android 15+ blocks a background app's network.
-- `c6c4298` / `af73065`: an expanded collapsible banner stays on its own screen, instead of covering the next one.
-- `b0df3c8`: an ad-free user sees no banner shimmer.
+**Version: `1.0.0-rc7` or newer.** Earlier releases lack the splash fixes (the timer pauses in the background,
+and the splash ad is requested only once the splash is in front, since Android 15+ blocks a background app's network),
+the collapsible banner fix (an expanded banner stays on its own screen) and the ad-free fix (no banner shimmer for a
+premium user).
 
-The public API is identical. Until the next release ships, take a commit at `b0df3c8` or later from JitPack (below),
-as PhotoRecovery does, for any app with a splash ad, a collapsible banner or premium users. In practice that is most
-apps.
-
-**Alternative: JitPack, pinned to a commit.** Use this when the app needs a fix that is on the Adroit master branch
-but not yet released (PhotoRecovery does this):
+**Alternative: JitPack, pinned to a tag or a commit.** Use this when the app needs a fix that is on the Adroit master
+branch but not yet released:
 
 ```kotlin
 // settings.gradle.kts, dependencyResolutionManagement.repositories: only Adroit comes from JitPack
 maven("https://jitpack.io") { content { includeGroup("com.github.thesobiaakbar.adroit") } }
 ```
 ```toml
-adroit = "b0df3c8fda"   # a commit of github.com/TheSobiaAkbar/Adroit that contains jitpack.yml (d0f86f3 or later)
+adroit = "v1.0.0-rc7"   # a tag (with its v), or a commit of github.com/TheSobiaAkbar/Adroit (d0f86f3 or later)
 adroit-compose = { group = "com.github.thesobiaakbar.adroit", name = "adroit-compose", version.ref = "adroit" }
 # same group for every other adroit-* artifact
 ```
 - To take an Adroit change: push it to GitHub, then put its commit hash here. The first build of a new commit is slow,
   because JitPack builds it then.
-- Release tags up to `v1.0.0-rc6` don't contain `jitpack.yml`, so use a commit hash, not a tag.
+- Tags from `v1.0.0-rc7` on build on JitPack; earlier tags don't contain `jitpack.yml`.
 - The Kotlin package is `io.github.thesobiaakbar.adroit.*` whichever way you install it; only the Maven group differs.
 
 ## 2. Requirements

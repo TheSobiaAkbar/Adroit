@@ -29,8 +29,7 @@ Start a new Claude Code session. Both skills then appear in its skill list.
 
 ## Keep them in sync with the library
 
-The skills are verified against a specific Adroit version, which each `SKILL.md` states (currently `1.0.0-rc6`,
-master `b0df3c8`). When a change alters the public API, a default, or a recommended pattern:
+The skills are verified against a specific Adroit version, which each `SKILL.md` states (currently `1.0.0-rc7`). When a change alters the public API, a default, or a recommended pattern:
 
 1. Update the matching `references/*.md` file, and the version line in `SKILL.md`.
 2. Check that every API name in the skills still exists. For example, take the backticked identifiers in the skill
