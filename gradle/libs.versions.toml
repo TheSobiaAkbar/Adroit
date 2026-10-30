@@ -18,7 +18,7 @@ adsMobileSdk = "1.4.0"
 ump = "4.0.0"
 androidxLifecycle = "2.11.0"
 androidxAnnotation = "1.11.0"
-kotlinxCoroutines = "1.10.2"
+kotlinxCoroutines = "1.11.0"
 composeBom = "2026.09.00"
 # adroit-firebase only (PROMPT 24): the BoM sets firebase-config and firebase-analytics
 firebaseBom = "34.19.0"
