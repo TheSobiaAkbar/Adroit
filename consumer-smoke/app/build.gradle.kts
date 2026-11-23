@@ -72,7 +72,7 @@ dependencies {
     // The only Adroit dependency: the other modules and the Google SDKs must arrive transitively.
     if (withCompose) {
         implementation("io.github.thesobiaakbar:adroit-compose:$adroitVersion")
-        implementation(platform("androidx.compose:compose-bom:2026.09.00"))
+        implementation(platform("androidx.compose:compose-bom:2026.11.01"))
         implementation("androidx.compose.foundation:foundation")
         implementation("androidx.activity:activity-compose:1.13.0")
     } else {
